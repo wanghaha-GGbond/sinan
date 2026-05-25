@@ -1,65 +1,91 @@
-import Image from "next/image";
+import Link from "next/link"
+import { ArrowRight, Route } from "lucide-react"
 
-export default function Home() {
+import { MetricPill } from "@/components/ui/metric-pill"
+import { ScoreChip } from "@/components/ui/score-chip"
+import { SolidButton } from "@/components/ui/solid-button"
+import { SolidCard } from "@/components/ui/solid-card"
+import { TagPill } from "@/components/ui/tag-pill"
+import { recommendedCompanyItems, userPreference } from "@/lib/mock-data"
+
+export default function HomePage() {
+  const quickPrefs = [
+    userPreference.targetIndustries[0],
+    userPreference.targetIndustries[1],
+    userPreference.targetCities[0],
+  ].filter(Boolean)
+  const extraCount =
+    userPreference.targetIndustries.length +
+    userPreference.targetCities.length +
+    userPreference.concerns.length -
+    quickPrefs.length
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <section className="mx-auto w-full max-w-[860px] px-4 py-4 sm:px-6" data-testid="home-recommend-feed">
+      <div data-testid="home-brand-hero" className="mb-4 rounded-3xl bg-[#F1F5EF] px-4 py-3 shadow-[0_5px_0_rgba(17,24,39,0.03)]">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-base font-semibold text-[#111827]">推荐</h2>
+            <p className="text-sm text-[#6B7280]">最近被关注</p>
+          </div>
+          <Route className="size-4 text-[#19C37D]" />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+        <p className="mt-2 inline-flex rounded-full bg-[#DFF8EC] px-2.5 py-1 text-xs text-[#07563A]" data-testid="home-preference-hint">
+          你的方向：{quickPrefs.join(" / ")} {extraCount > 0 ? `+${extraCount}` : ""}
+        </p>
+      </div>
+
+      <div className="grid gap-4">
+        {recommendedCompanyItems.map((item) => (
+          <SolidCard key={item.id} data-testid="recommend-company-card" variant="default" className="p-5 transition-transform hover:-translate-y-0.5">
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <TagPill tone="match" className="" selected={false}>{item.recommendReason}</TagPill>
+                <span className="text-xs text-[#6B7280]">匹配：{item.matchedPreferences.slice(0, 2).join(" / ")}</span>
+              </div>
+
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 className="truncate text-lg font-semibold text-[#111827]">{item.companyName}</h3>
+                  <p className="mt-1 text-sm text-[#6B7280]">
+                    {item.industry} · {item.city} · {item.size}
+                  </p>
+                </div>
+                <ScoreChip score={item.directionScore} className="shrink-0" data-testid="recommend-direction-score" />
+              </div>
+
+              <p className="text-xs text-[#6B7280]">{item.reviewCount} 条评价 · {item.recommendationRate}% 推荐</p>
+
+              <div className="grid gap-2 sm:grid-cols-3" data-testid="recommend-metrics">
+                {item.highlightedMetrics.slice(0, 3).map((metric) => (
+                  <MetricPill key={metric.label} label={metric.label} score={metric.score} />
+                ))}
+              </div>
+
+              <TagPill tone="match" data-testid="recommend-cbti-tag">
+                C-BTI：{item.cbtiCode} · {item.cbtiTitle}
+              </TagPill>
+              {typeof item.officeExperienceScore === "number" ? (
+                <p className="text-xs text-[#6B7280]" data-testid="recommend-office-experience">
+                  办公体验 {item.officeExperienceScore.toFixed(1)}
+                </p>
+              ) : null}
+
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <p className="text-[#6B7280]">近 7 天新增 {item.recentReviewCount} 条评价</p>
+                <SolidButton asChild variant="primary" size="sm">
+                  <Link href={`/company/${item.companyId}`} className="shrink-0">
+                    看这家公司
+                    <ArrowRight className="size-4" />
+                  </Link>
+                </SolidButton>
+              </div>
+            </div>
+          </SolidCard>
+        ))}
+      </div>
+
+      <div className="mt-4 rounded-2xl bg-[#F1F5EF] p-4 text-sm text-[#6B7280]">继续下滑，看更多过来人评价。</div>
+    </section>
+  )
 }

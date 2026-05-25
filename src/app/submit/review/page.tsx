@@ -1,0 +1,746 @@
+"use client"
+
+import { useMemo, useReducer, useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Controller, useForm, useWatch } from "react-hook-form"
+import { CheckCircle2, Gift, ShieldCheck } from "lucide-react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { toast } from "sonner"
+import { z } from "zod"
+
+import { FullscreenQuestionnaire } from "@/components/questionnaire/fullscreen-questionnaire"
+import { RatingSlider } from "@/components/rating/rating-slider"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Progress } from "@/components/ui/progress"
+import { SolidButton } from "@/components/ui/solid-button"
+import { Textarea } from "@/components/ui/textarea"
+import { companies } from "@/lib/mock-data"
+import { buildQuestionnaireSession } from "@/lib/questionnaire/question-bank"
+import type { Company } from "@/lib/types"
+import { cn } from "@/lib/utils"
+
+const relations = ["在职员工", "离职员工", "面试者", "实习生", "外包 / 派遣"] as const
+const paceValues = ["very_fast", "fast", "stable", "very_stable"] as const
+const managementValues = ["flexible", "balanced_process", "process_clear", "process_heavy"] as const
+const growthValues = ["very_fast", "team_dependent", "average", "limited"] as const
+const collaborationValues = ["cross_team", "within_team", "individual", "high_friction"] as const
+const overtimeValues = ["very_high", "high", "normal", "low"] as const
+const promiseValues = ["mostly_kept", "partially_kept", "often_changed", "unknown"] as const
+
+const reviewSchema = z.object({
+  companyId: z.string().optional(),
+  companyName: z.string().min(2, "请填写公司名称"),
+  relation: z.enum(relations),
+  role: z.string().min(2, "请填写岗位"),
+  title: z.string().min(6, "标题至少 6 个字"),
+  content: z.string().min(30, "评价至少 30 个字，避免过短结论"),
+  salaryRange: z.string().optional(),
+  directionScore: z.number().min(0).max(10),
+  interviewDifficulty: z.number().min(0).max(10),
+  salaryScore: z.number().min(1).max(10).optional(),
+  growthScore: z.number().min(1).max(10).optional(),
+  workLifeBalanceScore: z.number().min(1).max(10).optional(),
+  managementClarityScore: z.number().min(1).max(10).optional(),
+  collaborationScore: z.number().min(1).max(10).optional(),
+  stabilityScore: z.number().min(1).max(10).optional(),
+  integrityScore: z.number().min(1).max(10).optional(),
+  interviewExperienceScore: z.number().min(1).max(10).optional(),
+  canteenScore: z.number().min(1).max(10).optional(),
+  officeEnvironmentScore: z.number().min(1).max(10).optional(),
+  restroomScore: z.number().min(1).max(10).optional(),
+  afternoonTeaScore: z.number().min(1).max(10).optional(),
+  workstationComfortScore: z.number().min(1).max(10).optional(),
+  commuteConvenienceScore: z.number().min(1).max(10).optional(),
+  officeEquipmentScore: z.number().min(1).max(10).optional(),
+  overallOfficeExperienceScore: z.number().min(1).max(10).optional(),
+  companyPace: z.enum(paceValues).optional(),
+  managementStyle: z.enum(managementValues).optional(),
+  growthExperience: z.enum(growthValues).optional(),
+  collaborationStyle: z.enum(collaborationValues).optional(),
+  overtimeLevel: z.enum(overtimeValues).optional(),
+  promiseKeeping: z.enum(promiseValues).optional(),
+  safetyChecked: z.boolean().refine(Boolean, "请确认匿名安全检查"),
+})
+
+type ReviewForm = z.infer<typeof reviewSchema>
+
+const steps = [
+  { title: "选择公司", description: "先选择公司，找不到可以直接新增" },
+  { title: "方向评分", description: "给后来者一个 0-10 的方向判断" },
+  { title: "真实体验", description: "写事实、写风险、先做匿名安全检查" },
+]
+
+type NewCompanyDraft = {
+  companyName: string
+  city: string
+  industry: string
+  size?: string
+  alias?: string
+  website?: string
+  financingStage?: string
+}
+
+type CompanySelectionState = {
+  query: string
+  selectedCompany: Company | null
+  addedCompanies: Company[]
+  mode: "searching" | "selected" | "adding"
+  newCompanyDraft: NewCompanyDraft
+  feedback?: string
+}
+
+type CompanySelectionAction =
+  | { type: "INPUT_CHANGED"; value: string }
+  | { type: "SELECT_EXISTING_COMPANY"; company: Company }
+  | { type: "START_ADD_COMPANY" }
+  | { type: "UPDATE_NEW_COMPANY_DRAFT"; patch: Partial<NewCompanyDraft> }
+  | { type: "SAVE_NEW_COMPANY"; company: Company }
+  | { type: "CANCEL_ADD_COMPANY" }
+  | { type: "CLEAR_SELECTION" }
+
+function createInitialCompanySelection(): CompanySelectionState {
+  return {
+    query: companies[0]?.name ?? "",
+    selectedCompany: companies[0] ?? null,
+    addedCompanies: [],
+    mode: companies[0] ? "selected" : "searching",
+    newCompanyDraft: {
+      companyName: "",
+      city: "",
+      industry: "",
+      size: "",
+      alias: "",
+      website: "",
+      financingStage: "",
+    },
+    feedback: undefined,
+  }
+}
+
+function companySelectionReducer(state: CompanySelectionState, action: CompanySelectionAction): CompanySelectionState {
+  switch (action.type) {
+    case "INPUT_CHANGED": {
+      const nextValue = action.value
+      const keepSelected = state.selectedCompany && nextValue.trim() === state.selectedCompany.name
+      return {
+        ...state,
+        query: nextValue,
+        selectedCompany: keepSelected ? state.selectedCompany : null,
+        mode: keepSelected ? "selected" : "searching",
+        feedback: undefined,
+      }
+    }
+    case "SELECT_EXISTING_COMPANY":
+      return {
+        ...state,
+        selectedCompany: action.company,
+        query: action.company.name,
+        mode: "selected",
+        feedback: undefined,
+      }
+    case "START_ADD_COMPANY":
+      return {
+        ...state,
+        mode: "adding",
+        selectedCompany: null,
+        newCompanyDraft: {
+          ...state.newCompanyDraft,
+          companyName: state.query.trim() || state.newCompanyDraft.companyName,
+        },
+      }
+    case "UPDATE_NEW_COMPANY_DRAFT":
+      return {
+        ...state,
+        newCompanyDraft: { ...state.newCompanyDraft, ...action.patch },
+      }
+    case "SAVE_NEW_COMPANY":
+      return {
+        ...state,
+        addedCompanies: [action.company, ...state.addedCompanies],
+        selectedCompany: action.company,
+        query: action.company.name,
+        mode: "selected",
+        feedback: "已添加公司，继续评价",
+        newCompanyDraft: {
+          companyName: "",
+          city: "",
+          industry: "",
+          size: "",
+          alias: "",
+          website: "",
+          financingStage: "",
+        },
+      }
+    case "CANCEL_ADD_COMPANY":
+      return { ...state, mode: "searching", selectedCompany: null }
+    case "CLEAR_SELECTION":
+      return { ...state, selectedCompany: null, query: "", mode: "searching", feedback: undefined }
+    default:
+      return state
+  }
+}
+
+function SolidCardNoResult({ query, onAdd, dataTestId }: { query: string; onAdd: () => void; dataTestId?: string }) {
+  return (
+    <Card className="solid-card-subtle border border-[#E5E7DB]/60" data-testid={dataTestId}>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base">还没有这家公司</CardTitle>
+        <CardDescription>你可以先补充公司信息，再继续评价。</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-wrap items-center gap-2">
+        <p className="text-sm text-[#6B7280]">当前输入：{query || "未命名公司"}</p>
+        <SolidButton type="button" size="sm" onClick={onAdd} data-testid="add-company-button">
+          新增这家公司
+        </SolidButton>
+      </CardContent>
+    </Card>
+  )
+}
+
+export default function SubmitReviewPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [step, setStep] = useState(0)
+  const [success, setSuccess] = useState(false)
+  const [companySelection, dispatchCompanySelection] = useReducer(companySelectionReducer, undefined, createInitialCompanySelection)
+  const [questionnaireDone, setQuestionnaireDone] = useState(false)
+  const [questionnaireReward, setQuestionnaireReward] = useState(0)
+  const [questionnaireSession] = useState<ReturnType<typeof buildQuestionnaireSession> | null>(() =>
+    buildQuestionnaireSession({
+      includeOfficeExperience: true,
+      includeCBTIQuestions: true,
+      maxQuestions: 10,
+      focusGroups: ["office_experience"],
+    })
+  )
+  const {
+    control,
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<ReviewForm>({
+    resolver: zodResolver(reviewSchema),
+    defaultValues: {
+      companyId: companies[0].id,
+      companyName: companies[0].name,
+      relation: "离职员工",
+      role: "",
+      title: "",
+      content: "",
+      salaryRange: "",
+      directionScore: 7,
+      interviewDifficulty: 5,
+      safetyChecked: false,
+    },
+  })
+
+  const watched = useWatch({ control })
+  const progress = Math.round(((step + 1) / steps.length) * 100)
+  const openFromQuery = searchParams.get("questionnaire") === "1"
+  const allCompanies = useMemo(() => [...companies, ...companySelection.addedCompanies], [companySelection.addedCompanies])
+  const normalizedCompanyQuery = companySelection.query.trim().toLowerCase()
+  const matchedCompanies = useMemo(() => {
+    if (!normalizedCompanyQuery) return []
+    return allCompanies.filter((company) => {
+      const aliases = [company.name, company.shortName].join(" ").toLowerCase()
+      return aliases.includes(normalizedCompanyQuery)
+    })
+  }, [allCompanies, normalizedCompanyQuery])
+  const shouldShowNoResult =
+    normalizedCompanyQuery.length >= 2 &&
+    matchedCompanies.length === 0 &&
+    companySelection.selectedCompany === null &&
+    companySelection.mode === "searching"
+  const canContinueCompanyStep = companySelection.selectedCompany !== null
+  const completion = useMemo(() => {
+    const fields = [
+      watched.companyName,
+      watched.relation,
+      watched.role,
+      watched.title,
+      watched.content,
+      watched.directionScore,
+      watched.safetyChecked,
+    ]
+    return Math.round((fields.filter(Boolean).length / fields.length) * 100)
+  }, [watched])
+
+  function nextStep() {
+    if (step === 0) {
+      if (!companySelection.selectedCompany) {
+        return
+      }
+      setValue("companyId", companySelection.selectedCompany.id, { shouldDirty: true, shouldValidate: true })
+      setValue("companyName", companySelection.selectedCompany.name, { shouldDirty: true, shouldValidate: true })
+    }
+    setStep((current) => Math.min(current + 1, steps.length - 1))
+  }
+
+  async function onSubmit(values: ReviewForm) {
+    await new Promise((resolve) => setTimeout(resolve, 400))
+    setSuccess(true)
+    toast.success("方向已点亮，方向值 +20")
+    console.info("mock review submitted", values)
+  }
+
+  function selectCompany(company: Company) {
+    setValue("companyId", company.id, { shouldDirty: true })
+    setValue("companyName", company.name, { shouldDirty: true, shouldValidate: true })
+    dispatchCompanySelection({ type: "SELECT_EXISTING_COMPANY", company })
+  }
+
+  function openAddCompany() {
+    dispatchCompanySelection({ type: "START_ADD_COMPANY" })
+  }
+
+  function saveCompanyAndContinue() {
+    const newCompanyDraft = companySelection.newCompanyDraft
+    if (!newCompanyDraft.companyName.trim() || !newCompanyDraft.city.trim() || !newCompanyDraft.industry.trim()) {
+      toast.error("请补充公司名称、城市和行业")
+      return
+    }
+    const template = companies[0]
+    const id = `company-custom-${Date.now()}`
+    const newCompany: Company = {
+      ...template,
+      id,
+      claimedStatus: "unclaimed",
+      name: newCompanyDraft.companyName.trim(),
+      shortName: newCompanyDraft.companyName.trim().slice(0, 8),
+      city: newCompanyDraft.city.trim(),
+      industry: newCompanyDraft.industry.trim(),
+      size: newCompanyDraft.size?.trim() || "规模待补充",
+      stage: newCompanyDraft.financingStage?.trim() || "阶段待补充",
+      reviewCount: 0,
+      dimensions: template.dimensions.map((item) => ({ ...item, score: 0 })),
+      reviews: [],
+      source: "user_added",
+      createdByUser: true,
+      pendingReview: true,
+    }
+    dispatchCompanySelection({ type: "SAVE_NEW_COMPANY", company: newCompany })
+    setValue("companyId", newCompany.id, { shouldDirty: true, shouldValidate: true })
+    setValue("companyName", newCompany.name, { shouldDirty: true, shouldValidate: true })
+    toast.success("已添加公司，继续评价")
+    setStep((current) => Math.min(current + 1, steps.length - 1))
+  }
+
+  if (success) {
+    return (
+      <section className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
+        <Card className="solid-card border border-[#E5E7DB]/60" data-testid="submit-review-success">
+          <CardHeader>
+            <div className="mb-3 flex size-12 items-center justify-center rounded-xl bg-secondary text-secondary-foreground">
+              <Gift />
+            </div>
+            <CardTitle className="text-2xl">评价已进入匿名预览</CardTitle>
+            <CardDescription>
+              你的评价会在审核后展示。正式版本会先完成匿名保护和真实性校验，再进入公开样本。
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3 sm:grid-cols-3">
+            {["方向值 +20", "连续点灯 +1", "司南徽章进度 +1"].map((item) => (
+              <div key={item} className="rounded-2xl bg-[#F1F5EF] p-4 text-sm font-medium text-[#1F2937]">
+                {item}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </section>
+    )
+  }
+
+  return (
+    <section className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[1fr_22rem]">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex min-w-0 flex-col gap-5">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">发布评价</h1>
+          <p className="mt-3 max-w-2xl text-muted-foreground">
+            三步完成匿名评价。司南鼓励描述事实、流程和决策信息，不鼓励攻击性表达。
+          </p>
+        </div>
+
+        <Card className="solid-card-subtle border border-[#E5E7DB]/60" data-testid="optional-questionnaire">
+          <CardHeader>
+            <CardTitle>补充办公体验问卷</CardTitle>
+            <CardDescription>约 30 秒，可跳过。每次只问一个问题。</CardDescription>
+            <p className="text-xs text-[#6B7280]">办公体验，可选</p>
+          </CardHeader>
+          <CardContent className="flex flex-wrap items-center gap-3">
+            <SolidButton asChild size="sm" data-testid="start-questionnaire-button">
+              <a href="/submit/review?questionnaire=1">开始答题</a>
+            </SolidButton>
+            <SolidButton type="button" variant="secondary" size="sm">
+              跳过
+            </SolidButton>
+            {questionnaireDone ? <p className="text-sm font-medium text-[#047857]">已完成办公体验问卷 · 方向值 +{questionnaireReward}</p> : null}
+            <span data-testid="questionnaire-open-flag" className="sr-only">
+              {openFromQuery ? "open" : "closed"}
+            </span>
+          </CardContent>
+        </Card>
+
+        <Card className="solid-card border border-[#E5E7DB]/60">
+          <CardHeader>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <CardTitle>{steps[step].title}</CardTitle>
+                <CardDescription>{steps[step].description}</CardDescription>
+              </div>
+              <span className="text-sm text-muted-foreground">
+                第 {step + 1} 步 / 共 {steps.length} 步
+              </span>
+            </div>
+            <div className="rounded-2xl bg-[#F1F5EF] p-2">
+              <Progress data-testid="review-progress" value={progress} />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className={cn("grid gap-4", step === 0 ? "md:grid-cols-2" : "")}>
+              {step === 0 ? (
+                <>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="companyName">搜索公司 *</Label>
+                    <Controller
+                      control={control}
+                      name="companyName"
+                      render={({ field }) => (
+                        <Input
+                          id="companyName"
+                          data-testid="company-search-input"
+                          value={companySelection.query}
+                          onChange={(event) => {
+                            dispatchCompanySelection({ type: "INPUT_CHANGED", value: event.target.value })
+                            field.onChange(event)
+                          }}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                          aria-invalid={Boolean(errors.companyName)}
+                          placeholder="输入公司名称"
+                          className="rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]"
+                        />
+                      )}
+                    />
+                    {errors.companyName ? <p className="text-sm text-destructive">{errors.companyName.message}</p> : null}
+                    <div className="mt-2 space-y-2">
+                      {matchedCompanies.slice(0, 4).map((company) => (
+                        <SolidButton
+                          key={company.id}
+                          data-testid="company-result-option"
+                          type="button"
+                          variant={companySelection.selectedCompany?.id === company.id ? "dark" : "secondary"}
+                          size="sm"
+                          className="w-full justify-start"
+                          onClick={() => selectCompany(company)}
+                        >
+                          {company.name} · {company.industry} · {company.city}
+                        </SolidButton>
+                      ))}
+                    </div>
+                    {shouldShowNoResult ? <SolidCardNoResult query={companySelection.query} onAdd={openAddCompany} dataTestId="no-company-result-card" /> : null}
+                    {companySelection.selectedCompany ? (
+                      <div data-testid="selected-company-pill" className="rounded-xl bg-[#F1F5EF] p-3 text-sm text-[#1F2937]">
+                        {companySelection.selectedCompany.name} · {companySelection.selectedCompany.city} · {companySelection.selectedCompany.industry}
+                        {companySelection.selectedCompany.pendingReview ? (
+                          <span className="ml-2 text-xs text-[#6B7280]">信息待确认</span>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="role">岗位 *</Label>
+                    <Controller
+                      control={control}
+                      name="role"
+                      render={({ field }) => (
+                        <Input
+                          id="role"
+                          placeholder="例如：前端工程师"
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                          aria-invalid={Boolean(errors.role)}
+                          className="rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]"
+                        />
+                      )}
+                    />
+                    {errors.role ? <p className="text-sm text-destructive">{errors.role.message}</p> : null}
+                  </div>
+                  {companySelection.mode === "adding" ? (
+                    <Card className="md:col-span-2 solid-card-subtle border border-[#E5E7DB]/60">
+                      <CardHeader>
+                        <CardTitle>新增这家公司</CardTitle>
+                        <CardDescription>公司信息会先作为未认领公司展示</CardDescription>
+                      </CardHeader>
+                      <CardContent className="grid gap-3 md:grid-cols-2">
+                        <Input
+                          data-testid="new-company-name-input"
+                          value={companySelection.newCompanyDraft.companyName}
+                          onChange={(event) => dispatchCompanySelection({ type: "UPDATE_NEW_COMPANY_DRAFT", patch: { companyName: event.target.value } })}
+                          placeholder="公司名称"
+                          className="rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]"
+                        />
+                        <Input
+                          data-testid="new-company-city-input"
+                          value={companySelection.newCompanyDraft.city}
+                          onChange={(event) => dispatchCompanySelection({ type: "UPDATE_NEW_COMPANY_DRAFT", patch: { city: event.target.value } })}
+                          placeholder="所在城市"
+                          className="rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]"
+                        />
+                        <Input
+                          data-testid="new-company-industry-input"
+                          value={companySelection.newCompanyDraft.industry}
+                          onChange={(event) => dispatchCompanySelection({ type: "UPDATE_NEW_COMPANY_DRAFT", patch: { industry: event.target.value } })}
+                          placeholder="行业"
+                          className="rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]"
+                        />
+                        <Input
+                          data-testid="new-company-size-input"
+                          value={companySelection.newCompanyDraft.size ?? ""}
+                          onChange={(event) => dispatchCompanySelection({ type: "UPDATE_NEW_COMPANY_DRAFT", patch: { size: event.target.value } })}
+                          placeholder="公司规模（可选）"
+                          className="rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]"
+                        />
+                        <Input
+                          data-testid="new-company-alias-input"
+                          value={companySelection.newCompanyDraft.alias ?? ""}
+                          onChange={(event) => dispatchCompanySelection({ type: "UPDATE_NEW_COMPANY_DRAFT", patch: { alias: event.target.value } })}
+                          placeholder="公司别名（可选）"
+                          className="rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]"
+                        />
+                        <Input
+                          data-testid="new-company-financing-input"
+                          value={companySelection.newCompanyDraft.financingStage ?? ""}
+                          onChange={(event) => dispatchCompanySelection({ type: "UPDATE_NEW_COMPANY_DRAFT", patch: { financingStage: event.target.value } })}
+                          placeholder="融资阶段（可选）"
+                          className="rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]"
+                        />
+                        <Input
+                          data-testid="new-company-website-input"
+                          value={companySelection.newCompanyDraft.website ?? ""}
+                          onChange={(event) => dispatchCompanySelection({ type: "UPDATE_NEW_COMPANY_DRAFT", patch: { website: event.target.value } })}
+                          placeholder="官网（可选）"
+                          className="md:col-span-2 rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]"
+                        />
+                      </CardContent>
+                      <CardFooter className="gap-2">
+                        <SolidButton type="button" variant="primary" onClick={saveCompanyAndContinue} data-testid="save-company-and-continue-button">
+                          保存并继续评价
+                        </SolidButton>
+                        <SolidButton type="button" variant="ghost" onClick={() => dispatchCompanySelection({ type: "CANCEL_ADD_COMPANY" })}>
+                          取消
+                        </SolidButton>
+                      </CardFooter>
+                    </Card>
+                  ) : null}
+                  {companySelection.feedback ? <p className="md:col-span-2 text-sm font-medium text-[#047857]">{companySelection.feedback}</p> : null}
+                  <div className="flex flex-col gap-2 md:col-span-2">
+                    <Label>身份关系 *</Label>
+                    <Controller
+                      control={control}
+                      name="relation"
+                      render={({ field }) => (
+                        <div className="flex flex-wrap gap-2">
+                          {relations.map((relation) => (
+                            <SolidButton
+                              key={relation}
+                              type="button"
+                              variant={field.value === relation ? "dark" : "secondary"}
+                              size="sm"
+                              onClick={() => field.onChange(relation)}
+                            >
+                              {relation}
+                            </SolidButton>
+                          ))}
+                        </div>
+                      )}
+                    />
+                  </div>
+                </>
+              ) : null}
+
+              {step === 1 ? (
+                <>
+                  <Controller
+                    control={control}
+                    name="directionScore"
+                    render={({ field }) => (
+                      <RatingSlider
+                        label="方向分"
+                        description="结合成长、管理、负荷、薪资兑现与尊重边界给出综合判断。"
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    )}
+                  />
+                  <Controller
+                    control={control}
+                    name="interviewDifficulty"
+                    render={({ field }) => (
+                      <RatingSlider
+                        label="面试难度"
+                        description="0 代表轻松，10 代表高强度或流程复杂。"
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    )}
+                  />
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="salaryRange">薪资区间，可跳过</Label>
+                    <Input id="salaryRange" placeholder="例如：25k-35k x 14" {...register("salaryRange")} />
+                  </div>
+                </>
+              ) : null}
+
+              {step === 2 ? (
+                <>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="title">标题 *</Label>
+                    <Controller
+                      control={control}
+                      name="title"
+                      render={({ field }) => (
+                        <Input
+                          data-testid="review-title-input"
+                          id="title"
+                          placeholder="例如：节奏快，但工程氛围比较稳定"
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                          aria-invalid={Boolean(errors.title)}
+                        />
+                      )}
+                    />
+                    {errors.title ? <p className="text-sm text-destructive">{errors.title.message}</p> : null}
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="content">评价内容 *</Label>
+                    <Controller
+                      control={control}
+                      name="content"
+                      render={({ field }) => (
+                        <Textarea
+                          data-testid="review-content-input"
+                          id="content"
+                          rows={7}
+                          placeholder="写下管理方式、工作负荷、成长机会、薪资兑现、面试体验等。"
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                          aria-invalid={Boolean(errors.content)}
+                        />
+                      )}
+                    />
+                    {errors.content ? <p className="text-sm text-destructive">{errors.content.message}</p> : null}
+                  </div>
+                  <Controller
+                    control={control}
+                    name="safetyChecked"
+                    render={({ field }) => (
+                      <button
+                        data-testid="anonymous-safety-checkbox"
+                        type="button"
+                        onClick={() => {
+                          field.onChange(!field.value)
+                          setValue("safetyChecked", !field.value)
+                        }}
+                        className={cn(
+                          "flex items-start gap-3 rounded-2xl border p-4 text-left text-sm transition-colors",
+                          field.value ? "border-primary bg-secondary" : "bg-background"
+                        )}
+                      >
+                        <ShieldCheck className="mt-0.5 shrink-0" />
+                        <span>
+                          <span className="block font-medium">匿名安全检查 *</span>
+                          <span className="mt-1 block text-muted-foreground">
+                            我确认没有写入姓名、工号、手机号、具体团队小群、住址等可识别信息。
+                          </span>
+                        </span>
+                      </button>
+                    )}
+                  />
+                  {errors.safetyChecked ? <p className="text-sm text-destructive">{errors.safetyChecked.message}</p> : null}
+                </>
+              ) : null}
+            </div>
+          </CardContent>
+          <CardFooter className="flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <SolidButton
+              type="button"
+              variant="secondary"
+              disabled={step === 0}
+              onClick={() => setStep((current) => Math.max(current - 1, 0))}
+            >
+              上一步
+            </SolidButton>
+            {step < steps.length - 1 ? (
+              <SolidButton
+                type="button"
+                data-testid={step === 0 ? "company-step-next-button" : "review-next"}
+                onClick={nextStep}
+                disabled={step === 0 && !canContinueCompanyStep}
+              >
+                下一步
+              </SolidButton>
+            ) : (
+              <SolidButton data-testid="submit-review-button" type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "提交中..." : "发布匿名评价"}
+              </SolidButton>
+            )}
+          </CardFooter>
+        </Card>
+      </form>
+
+      {!openFromQuery ? (
+      <aside className="lg:sticky lg:top-20 lg:self-start">
+        <Card className="glass-panel rounded-[28px]">
+          <CardHeader>
+            <CardTitle>发布状态</CardTitle>
+            <CardDescription>每一步只收集必要信息，避免超长问卷。</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <div className="rounded-xl bg-muted p-4">
+              <p className="text-sm text-muted-foreground">完成度</p>
+              <p className="mt-1 text-3xl font-semibold">{completion}%</p>
+            </div>
+            <div className="rounded-xl border p-4 text-sm">
+              <div className="flex items-center gap-2 font-medium">
+                <CheckCircle2 />
+                当前步骤：{steps[step].title}
+              </div>
+              <p className="mt-2 text-muted-foreground">
+                通过匿名安全检查后，评价会进入本地 mock 成功状态，不写入真实 API。
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </aside>
+      ) : null}
+
+      <FullscreenQuestionnaire
+        open={openFromQuery}
+        session={questionnaireSession}
+        onClose={() => {
+          if (openFromQuery) {
+            router.replace("/submit/review", { scroll: false })
+          }
+        }}
+        onComplete={({ questionnaire }) => {
+          Object.entries(questionnaire).forEach(([key, value]) => {
+            if (typeof value !== "undefined") {
+              setValue(key as keyof ReviewForm, value as never)
+            }
+          })
+          setQuestionnaireDone(true)
+          setQuestionnaireReward(8)
+        }}
+      />
+    </section>
+  )
+}

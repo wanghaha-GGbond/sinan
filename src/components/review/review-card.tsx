@@ -1,0 +1,154 @@
+"use client"
+
+import Link from "next/link"
+import { useMemo, useState } from "react"
+import { Flag, MessageCircle, ThumbsUp } from "lucide-react"
+import { toast } from "sonner"
+
+import { ScoreChip } from "@/components/ui/score-chip"
+import { SolidButton } from "@/components/ui/solid-button"
+import { SolidCard } from "@/components/ui/solid-card"
+import { TagPill } from "@/components/ui/tag-pill"
+import type { Review } from "@/lib/types"
+import { isReviewUseful, toggleReviewUseful } from "@/lib/useful-storage"
+
+function tagTone(tag: string): "risk" | "positive" | "neutral" {
+  if (/(风险|慎重|压力|加班|不确定|波动|限制|慢)/.test(tag)) {
+    return "risk"
+  }
+  if (/(成熟|稳定|清晰|不错|含金量|透明|成长|高)/.test(tag)) {
+    return "positive"
+  }
+  return "neutral"
+}
+
+export function ReviewCard({
+  review,
+  companyId,
+  expanded = false,
+  showDetailLink = true,
+}: {
+  review: Review
+  companyId?: string
+  expanded?: boolean
+  showDetailLink?: boolean
+}) {
+  const [liked, setLiked] = useState(() => isReviewUseful(review.id))
+  const [isExpanded, setIsExpanded] = useState(expanded)
+  const isLong = useMemo(() => review.content.replace(/\s/g, "").length > 180, [review.content])
+  const likeCount = review.helpful + (liked ? 1 : 0)
+  const detailHref = companyId ? `/company/${companyId}/reviews/${review.id}` : undefined
+
+  return (
+    <SolidCard variant="subtle" className="border border-[#E5E7DB]/60 p-5 transition-transform hover:-translate-y-0.5">
+      <div className="space-y-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 space-y-1">
+            <p className="text-sm text-[#6B7280]">
+              匿名评价者 · L{review.trustLevel} · {review.employmentStatus}
+            </p>
+            {detailHref ? (
+              <Link href={detailHref} className="block text-base font-semibold leading-6 text-[#111827] hover:text-[#0E8F5F]">
+                {review.shortComment}
+              </Link>
+            ) : (
+              <h3 className="text-base font-semibold leading-6 text-[#111827]">{review.shortComment}</h3>
+            )}
+          </div>
+          <ScoreChip score={review.score} compact className="shrink-0" />
+        </div>
+
+        <div className="space-y-2">
+          {detailHref ? (
+            <Link href={detailHref} className="block">
+              <p
+                className={`whitespace-pre-line text-sm leading-7 text-[#334155] ${
+                  isLong && !isExpanded ? "line-clamp-5" : ""
+                }`}
+              >
+                {review.content}
+              </p>
+            </Link>
+          ) : (
+            <p
+              className={`whitespace-pre-line text-sm leading-7 text-[#334155] ${
+                isLong && !isExpanded ? "line-clamp-5" : ""
+              }`}
+            >
+              {review.content}
+            </p>
+          )}
+          {isLong ? (
+            <button
+              type="button"
+              data-testid={`toggle-expand-${review.id}`}
+              className="text-sm font-medium text-[#0E8F5F] hover:text-[#07563A]"
+              onClick={() => setIsExpanded((prev) => !prev)}
+            >
+              {isExpanded ? "收起" : "展开全文"}
+            </button>
+          ) : null}
+          {showDetailLink && detailHref ? (
+            <Link href={detailHref} className="inline-block text-sm font-medium text-[#0E8F5F] hover:text-[#07563A]">
+              阅读全文
+            </Link>
+          ) : null}
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {review.tags.map((tag) => (
+            <TagPill key={tag} tone={tagTone(tag)}>
+              #{tag}
+            </TagPill>
+          ))}
+        </div>
+
+        <p className="text-xs text-[#6B7280]">
+          {review.jobCategory} · {review.city} · {review.createdAt}
+        </p>
+
+        <div className="flex flex-wrap items-center gap-3 text-sm text-[#6B7280]">
+          <SolidButton
+            type="button"
+            variant="secondary"
+            size="sm"
+            aria-pressed={liked}
+            data-testid={`like-review-${review.id}`}
+            className="rounded-full aria-pressed:bg-[#DFF8EC] aria-pressed:text-[#07563A] aria-pressed:shadow-[0_3px_0_rgba(14,143,95,0.22)]"
+            onClick={() => {
+              const next = toggleReviewUseful(review.id)
+              setLiked(next)
+              toast.success(next ? "已记录，你帮后来者筛出了一条有用评价" : "已取消有用标记")
+            }}
+          >
+            <ThumbsUp className="size-4" />
+            有用 {likeCount}
+          </SolidButton>
+          {detailHref ? (
+            <SolidButton asChild variant="secondary" size="sm" className="rounded-full">
+              <Link href={`${detailHref}#followups`}>
+                <MessageCircle className="size-4" />
+                回复 {review.commentCount}
+              </Link>
+            </SolidButton>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2 py-1">
+              <MessageCircle className="size-4" />
+              回复 {review.commentCount}
+            </span>
+          )}
+          <SolidButton
+            type="button"
+            variant="risk"
+            size="sm"
+            className="rounded-full"
+            onClick={() => toast("已收到反馈，我们会优先保护匿名和事实表达")}
+          >
+            <Flag className="size-4" />
+            举报
+          </SolidButton>
+        </div>
+      </div>
+    </SolidCard>
+  )
+}
