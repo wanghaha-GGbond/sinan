@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useReducer, useState } from "react"
+import { useEffect, useMemo, useReducer, useRef, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm, useWatch } from "react-hook-form"
 import { CheckCircle2, Gift, ShieldCheck } from "lucide-react"
@@ -16,6 +16,8 @@ import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { SolidButton } from "@/components/ui/solid-button"
 import { Textarea } from "@/components/ui/textarea"
+import { findSimilarCompanies } from "@/lib/company-dedupe"
+import { validateCompanySubmission } from "@/lib/content-guard"
 import { companies } from "@/lib/mock-data"
 import { buildQuestionnaireSession } from "@/lib/questionnaire/question-bank"
 import type { Company } from "@/lib/types"
@@ -74,10 +76,16 @@ const steps = [
 
 type NewCompanyDraft = {
   companyName: string
+  registeredAddress: string
+  legalRepresentative: string
   city: string
   industry: string
+  unifiedSocialCreditCode: string
+  shortName?: string
+  businessStatus?: string
+  foundedDate?: string
+  note?: string
   size?: string
-  alias?: string
   website?: string
   financingStage?: string
 }
@@ -108,12 +116,18 @@ function createInitialCompanySelection(): CompanySelectionState {
     mode: companies[0] ? "selected" : "searching",
     newCompanyDraft: {
       companyName: "",
+      unifiedSocialCreditCode: "",
+      registeredAddress: "",
+      legalRepresentative: "",
       city: "",
       industry: "",
+      shortName: "",
       size: "",
-      alias: "",
       website: "",
       financingStage: "",
+      businessStatus: "",
+      foundedDate: "",
+      note: "",
     },
     feedback: undefined,
   }
@@ -162,15 +176,21 @@ function companySelectionReducer(state: CompanySelectionState, action: CompanySe
         selectedCompany: action.company,
         query: action.company.name,
         mode: "selected",
-        feedback: "已添加公司，继续评价",
+        feedback: "已提交公司信息，等待审核",
         newCompanyDraft: {
           companyName: "",
+          unifiedSocialCreditCode: "",
+          registeredAddress: "",
+          legalRepresentative: "",
           city: "",
           industry: "",
+          shortName: "",
           size: "",
-          alias: "",
           website: "",
           financingStage: "",
+          businessStatus: "",
+          foundedDate: "",
+          note: "",
         },
       }
     case "CANCEL_ADD_COMPANY":
@@ -187,16 +207,20 @@ function SolidCardNoResult({ query, onAdd, dataTestId }: { query: string; onAdd:
     <Card className="solid-card-subtle border border-[#E5E7DB]/60" data-testid={dataTestId}>
       <CardHeader className="pb-2">
         <CardTitle className="text-base">还没有这家公司</CardTitle>
-        <CardDescription>你可以先补充公司信息，再继续评价。</CardDescription>
+        <CardDescription>你可以提交公司注册信息，审核通过后开放评价。</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-wrap items-center gap-2">
         <p className="text-sm text-[#6B7280]">当前输入：{query || "未命名公司"}</p>
         <SolidButton type="button" size="sm" onClick={onAdd} data-testid="add-company-button">
-          新增这家公司
+          添加未收录公司
         </SolidButton>
       </CardContent>
     </Card>
   )
+}
+
+function FieldError({ message }: { message?: string }) {
+  return message ? <span className="text-xs font-medium text-[#92400E]">{message}</span> : null
 }
 
 export default function SubmitReviewPage() {
@@ -207,6 +231,9 @@ export default function SubmitReviewPage() {
   const [companySelection, dispatchCompanySelection] = useReducer(companySelectionReducer, undefined, createInitialCompanySelection)
   const [questionnaireDone, setQuestionnaireDone] = useState(false)
   const [questionnaireReward, setQuestionnaireReward] = useState(0)
+  const [companySubmissionErrors, setCompanySubmissionErrors] = useState<Record<string, string>>({})
+  const [allowDuplicateSubmission, setAllowDuplicateSubmission] = useState(false)
+  const addCompanyModeInitializedRef = useRef(false)
   const [questionnaireSession] = useState<ReturnType<typeof buildQuestionnaireSession> | null>(() =>
     buildQuestionnaireSession({
       includeOfficeExperience: true,
@@ -240,21 +267,40 @@ export default function SubmitReviewPage() {
   const watched = useWatch({ control })
   const progress = Math.round(((step + 1) / steps.length) * 100)
   const openFromQuery = searchParams.get("questionnaire") === "1"
+  const addCompanyMode = searchParams.get("mode") === "add-company"
+  const addCompanyName = searchParams.get("name") ?? ""
   const allCompanies = useMemo(() => [...companies, ...companySelection.addedCompanies], [companySelection.addedCompanies])
   const normalizedCompanyQuery = companySelection.query.trim().toLowerCase()
   const matchedCompanies = useMemo(() => {
     if (!normalizedCompanyQuery) return []
     return allCompanies.filter((company) => {
-      const aliases = [company.name, company.shortName].join(" ").toLowerCase()
+      const aliases = [company.name, company.registeredName, company.shortName, company.englishName, ...(company.alias ?? [])].join(" ").toLowerCase()
       return aliases.includes(normalizedCompanyQuery)
     })
   }, [allCompanies, normalizedCompanyQuery])
+  const similarCompanies = useMemo(
+    () =>
+      companySelection.mode === "adding"
+        ? findSimilarCompanies(
+            {
+              name: companySelection.newCompanyDraft.companyName,
+              registeredName: companySelection.newCompanyDraft.companyName,
+              unifiedSocialCreditCode: companySelection.newCompanyDraft.unifiedSocialCreditCode,
+              city: companySelection.newCompanyDraft.city,
+              industry: companySelection.newCompanyDraft.industry,
+            },
+            allCompanies
+          )
+        : [],
+    [allCompanies, companySelection.mode, companySelection.newCompanyDraft]
+  )
   const shouldShowNoResult =
     normalizedCompanyQuery.length >= 2 &&
     matchedCompanies.length === 0 &&
     companySelection.selectedCompany === null &&
     companySelection.mode === "searching"
-  const canContinueCompanyStep = companySelection.selectedCompany !== null
+  const selectedCompanyReviewable = companySelection.selectedCompany?.reviewStatus !== "pending_review" && companySelection.selectedCompany?.reviewStatus !== "rejected"
+  const canContinueCompanyStep = companySelection.selectedCompany !== null && selectedCompanyReviewable
   const completion = useMemo(() => {
     const fields = [
       watched.companyName,
@@ -268,6 +314,22 @@ export default function SubmitReviewPage() {
     return Math.round((fields.filter(Boolean).length / fields.length) * 100)
   }, [watched])
 
+  useEffect(() => {
+    if (addCompanyMode && !addCompanyModeInitializedRef.current) {
+      if (addCompanyName) {
+        dispatchCompanySelection({ type: "INPUT_CHANGED", value: addCompanyName })
+        dispatchCompanySelection({ type: "UPDATE_NEW_COMPANY_DRAFT", patch: { companyName: addCompanyName } })
+      } else {
+        dispatchCompanySelection({ type: "CLEAR_SELECTION" })
+      }
+      dispatchCompanySelection({ type: "START_ADD_COMPANY" })
+      addCompanyModeInitializedRef.current = true
+    }
+    if (!addCompanyMode && addCompanyModeInitializedRef.current) {
+      addCompanyModeInitializedRef.current = false
+    }
+  }, [addCompanyMode, addCompanyName])
+
   function nextStep() {
     if (step === 0) {
       if (!companySelection.selectedCompany) {
@@ -280,6 +342,10 @@ export default function SubmitReviewPage() {
   }
 
   async function onSubmit(values: ReviewForm) {
+    if (!companySelection.selectedCompany || companySelection.selectedCompany.reviewStatus !== "reviewable") {
+      toast.error("公司信息审核通过后才可以发布评价")
+      return
+    }
     await new Promise((resolve) => setTimeout(resolve, 400))
     setSuccess(true)
     toast.success("方向已点亮，方向值 +20")
@@ -298,34 +364,68 @@ export default function SubmitReviewPage() {
 
   function saveCompanyAndContinue() {
     const newCompanyDraft = companySelection.newCompanyDraft
-    if (!newCompanyDraft.companyName.trim() || !newCompanyDraft.city.trim() || !newCompanyDraft.industry.trim()) {
-      toast.error("请补充公司名称、城市和行业")
+    const validation = validateCompanySubmission({
+      companyName: newCompanyDraft.companyName,
+      unifiedSocialCreditCode: newCompanyDraft.unifiedSocialCreditCode,
+      registeredAddress: newCompanyDraft.registeredAddress,
+      legalRepresentative: newCompanyDraft.legalRepresentative,
+      city: newCompanyDraft.city,
+      industry: newCompanyDraft.industry,
+      note: newCompanyDraft.note,
+    })
+    setCompanySubmissionErrors(validation.errors)
+    if (!validation.ok) {
+      toast.error(Object.values(validation.errors)[0] ?? "请检查公司注册信息")
+      return
+    }
+    if (similarCompanies.length > 0 && !allowDuplicateSubmission) {
+      toast.error("请先确认疑似重复公司")
       return
     }
     const template = companies[0]
     const id = `company-custom-${Date.now()}`
+    const registeredName = newCompanyDraft.companyName.trim()
+    const shortName = newCompanyDraft.shortName?.trim() || registeredName.slice(0, 8)
     const newCompany: Company = {
       ...template,
       id,
       claimedStatus: "unclaimed",
-      name: newCompanyDraft.companyName.trim(),
-      shortName: newCompanyDraft.companyName.trim().slice(0, 8),
+      name: registeredName,
+      registeredName,
+      shortName,
+      unifiedSocialCreditCode: newCompanyDraft.unifiedSocialCreditCode.trim(),
+      registeredAddress: newCompanyDraft.registeredAddress.trim(),
+      legalRepresentative: newCompanyDraft.legalRepresentative.trim(),
+      businessStatus: newCompanyDraft.businessStatus?.trim() || "待确认",
+      foundedDate: newCompanyDraft.foundedDate?.trim(),
       city: newCompanyDraft.city.trim(),
       industry: newCompanyDraft.industry.trim(),
       size: newCompanyDraft.size?.trim() || "规模待补充",
       stage: newCompanyDraft.financingStage?.trim() || "阶段待补充",
+      financingStage: newCompanyDraft.financingStage?.trim(),
+      website: newCompanyDraft.website?.trim(),
+      description: newCompanyDraft.note?.trim(),
       reviewCount: 0,
       dimensions: template.dimensions.map((item) => ({ ...item, score: 0 })),
       reviews: [],
       source: "user_added",
       createdByUser: true,
       pendingReview: true,
+      reviewStatus: "pending_review",
     }
     dispatchCompanySelection({ type: "SAVE_NEW_COMPANY", company: newCompany })
     setValue("companyId", newCompany.id, { shouldDirty: true, shouldValidate: true })
     setValue("companyName", newCompany.name, { shouldDirty: true, shouldValidate: true })
-    toast.success("已添加公司，继续评价")
-    setStep((current) => Math.min(current + 1, steps.length - 1))
+    toast.success("已提交公司信息，等待审核")
+  }
+
+  function updateNewCompanyDraft(patch: Partial<NewCompanyDraft>) {
+    setCompanySubmissionErrors({})
+    setAllowDuplicateSubmission(false)
+    const nextPatch = patch.unifiedSocialCreditCode
+      ? { ...patch, unifiedSocialCreditCode: patch.unifiedSocialCreditCode.toUpperCase() }
+      : patch
+    dispatchCompanySelection({ type: "UPDATE_NEW_COMPANY_DRAFT", patch: nextPatch })
   }
 
   if (success) {
@@ -357,13 +457,13 @@ export default function SubmitReviewPage() {
     <section className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[1fr_22rem]">
       <form onSubmit={handleSubmit(onSubmit)} className="flex min-w-0 flex-col gap-5">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">发布评价</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">{addCompanyMode ? "添加未收录公司" : "发布评价"}</h1>
           <p className="mt-3 max-w-2xl text-muted-foreground">
-            三步完成匿名评价。司南鼓励描述事实、流程和决策信息，不鼓励攻击性表达。
+            {addCompanyMode ? "提交公司注册信息，审核通过后开放评价。" : "三步完成匿名评价。司南鼓励描述事实、流程和决策信息，不鼓励攻击性表达。"}
           </p>
         </div>
 
-        <Card className="solid-card-subtle border border-[#E5E7DB]/60" data-testid="optional-questionnaire">
+        {!addCompanyMode ? <Card className="solid-card-subtle border border-[#E5E7DB]/60" data-testid="optional-questionnaire">
           <CardHeader>
             <CardTitle>补充办公体验问卷</CardTitle>
             <CardDescription>约 30 秒，可跳过。每次只问一个问题。</CardDescription>
@@ -381,7 +481,7 @@ export default function SubmitReviewPage() {
               {openFromQuery ? "open" : "closed"}
             </span>
           </CardContent>
-        </Card>
+        </Card> : null}
 
         <Card className="solid-card border border-[#E5E7DB]/60">
           <CardHeader>
@@ -444,13 +544,13 @@ export default function SubmitReviewPage() {
                     {companySelection.selectedCompany ? (
                       <div data-testid="selected-company-pill" className="rounded-xl bg-[#F1F5EF] p-3 text-sm text-[#1F2937]">
                         {companySelection.selectedCompany.name} · {companySelection.selectedCompany.city} · {companySelection.selectedCompany.industry}
-                        {companySelection.selectedCompany.pendingReview ? (
-                          <span className="ml-2 text-xs text-[#6B7280]">信息待确认</span>
+                        {companySelection.selectedCompany.reviewStatus === "pending_review" ? (
+                          <span className="ml-2 text-xs text-[#6B7280]">当前状态：待审核</span>
                         ) : null}
                       </div>
                     ) : null}
                   </div>
-                  <div className="flex flex-col gap-2">
+                  {!addCompanyMode ? <div className="flex flex-col gap-2">
                     <Label htmlFor="role">岗位 *</Label>
                     <Controller
                       control={control}
@@ -469,67 +569,114 @@ export default function SubmitReviewPage() {
                       )}
                     />
                     {errors.role ? <p className="text-sm text-destructive">{errors.role.message}</p> : null}
-                  </div>
+                  </div> : null}
                   {companySelection.mode === "adding" ? (
                     <Card className="md:col-span-2 solid-card-subtle border border-[#E5E7DB]/60">
                       <CardHeader>
-                        <CardTitle>新增这家公司</CardTitle>
-                        <CardDescription>公司信息会先作为未认领公司展示</CardDescription>
+                        <CardTitle>添加未收录公司</CardTitle>
+                        <CardDescription>
+                          请补充公司的基础注册信息，审核通过后即可评价。公司信息用于确认主体，不会创建企业账号。
+                        </CardDescription>
                       </CardHeader>
                       <CardContent className="grid gap-3 md:grid-cols-2">
-                        <Input
-                          data-testid="new-company-name-input"
-                          value={companySelection.newCompanyDraft.companyName}
-                          onChange={(event) => dispatchCompanySelection({ type: "UPDATE_NEW_COMPANY_DRAFT", patch: { companyName: event.target.value } })}
-                          placeholder="公司名称"
-                          className="rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]"
-                        />
-                        <Input
-                          data-testid="new-company-city-input"
-                          value={companySelection.newCompanyDraft.city}
-                          onChange={(event) => dispatchCompanySelection({ type: "UPDATE_NEW_COMPANY_DRAFT", patch: { city: event.target.value } })}
-                          placeholder="所在城市"
-                          className="rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]"
-                        />
-                        <Input
-                          data-testid="new-company-industry-input"
-                          value={companySelection.newCompanyDraft.industry}
-                          onChange={(event) => dispatchCompanySelection({ type: "UPDATE_NEW_COMPANY_DRAFT", patch: { industry: event.target.value } })}
-                          placeholder="行业"
-                          className="rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]"
-                        />
-                        <Input
-                          data-testid="new-company-size-input"
-                          value={companySelection.newCompanyDraft.size ?? ""}
-                          onChange={(event) => dispatchCompanySelection({ type: "UPDATE_NEW_COMPANY_DRAFT", patch: { size: event.target.value } })}
-                          placeholder="公司规模（可选）"
-                          className="rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]"
-                        />
-                        <Input
-                          data-testid="new-company-alias-input"
-                          value={companySelection.newCompanyDraft.alias ?? ""}
-                          onChange={(event) => dispatchCompanySelection({ type: "UPDATE_NEW_COMPANY_DRAFT", patch: { alias: event.target.value } })}
-                          placeholder="公司别名（可选）"
-                          className="rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]"
-                        />
-                        <Input
-                          data-testid="new-company-financing-input"
-                          value={companySelection.newCompanyDraft.financingStage ?? ""}
-                          onChange={(event) => dispatchCompanySelection({ type: "UPDATE_NEW_COMPANY_DRAFT", patch: { financingStage: event.target.value } })}
-                          placeholder="融资阶段（可选）"
-                          className="rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]"
-                        />
-                        <Input
-                          data-testid="new-company-website-input"
-                          value={companySelection.newCompanyDraft.website ?? ""}
-                          onChange={(event) => dispatchCompanySelection({ type: "UPDATE_NEW_COMPANY_DRAFT", patch: { website: event.target.value } })}
-                          placeholder="官网（可选）"
-                          className="md:col-span-2 rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]"
-                        />
+                        <label className="grid gap-1 text-sm font-medium text-[#1F2937]">
+                          公司名称 *
+                          <Input data-testid="new-company-name-input" value={companySelection.newCompanyDraft.companyName} onChange={(event) => updateNewCompanyDraft({ companyName: event.target.value })} placeholder="完整公司名称" className="rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
+                          <FieldError message={companySubmissionErrors.companyName} />
+                        </label>
+                        <label className="grid gap-1 text-sm font-medium text-[#1F2937]">
+                          统一社会信用代码 *
+                          <Input data-testid="new-company-credit-code-input" value={companySelection.newCompanyDraft.unifiedSocialCreditCode} onChange={(event) => updateNewCompanyDraft({ unifiedSocialCreditCode: event.target.value })} placeholder="例如：91310000XXXXXXXXXX" className="rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
+                          <FieldError message={companySubmissionErrors.unifiedSocialCreditCode} />
+                        </label>
+                        <label className="grid gap-1 text-sm font-medium text-[#1F2937]">
+                          注册地址 *
+                          <Input data-testid="new-company-address-input" value={companySelection.newCompanyDraft.registeredAddress} onChange={(event) => updateNewCompanyDraft({ registeredAddress: event.target.value })} placeholder="公司注册登记地址" className="rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
+                          <FieldError message={companySubmissionErrors.registeredAddress} />
+                        </label>
+                        <label className="grid gap-1 text-sm font-medium text-[#1F2937]">
+                          法定代表人 *
+                          <Input data-testid="new-company-legal-representative-input" value={companySelection.newCompanyDraft.legalRepresentative} onChange={(event) => updateNewCompanyDraft({ legalRepresentative: event.target.value })} placeholder="法定代表人姓名" className="rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
+                          <FieldError message={companySubmissionErrors.legalRepresentative} />
+                        </label>
+                        <label className="grid gap-1 text-sm font-medium text-[#1F2937]">
+                          注册城市 *
+                          <Input data-testid="new-company-city-input" value={companySelection.newCompanyDraft.city} onChange={(event) => updateNewCompanyDraft({ city: event.target.value })} placeholder="注册城市" className="rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
+                          <FieldError message={companySubmissionErrors.city} />
+                        </label>
+                        <label className="grid gap-1 text-sm font-medium text-[#1F2937]">
+                          所属行业 *
+                          <Input data-testid="new-company-industry-input" value={companySelection.newCompanyDraft.industry} onChange={(event) => updateNewCompanyDraft({ industry: event.target.value })} placeholder="所属行业" className="rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
+                          <FieldError message={companySubmissionErrors.industry} />
+                        </label>
+                        <label className="grid gap-1 text-sm font-medium text-[#1F2937]">
+                          公司简称
+                          <Input data-testid="new-company-short-name-input" value={companySelection.newCompanyDraft.shortName ?? ""} onChange={(event) => updateNewCompanyDraft({ shortName: event.target.value })} placeholder="可选" className="rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
+                        </label>
+                        <label className="grid gap-1 text-sm font-medium text-[#1F2937]">
+                          公司规模
+                          <Input data-testid="new-company-size-input" value={companySelection.newCompanyDraft.size ?? ""} onChange={(event) => updateNewCompanyDraft({ size: event.target.value })} placeholder="可选" className="rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
+                        </label>
+                        <label className="grid gap-1 text-sm font-medium text-[#1F2937]">
+                          融资阶段
+                          <Input data-testid="new-company-financing-input" value={companySelection.newCompanyDraft.financingStage ?? ""} onChange={(event) => updateNewCompanyDraft({ financingStage: event.target.value })} placeholder="可选" className="rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
+                        </label>
+                        <label className="grid gap-1 text-sm font-medium text-[#1F2937]">
+                          经营状态
+                          <Input data-testid="new-company-business-status-input" value={companySelection.newCompanyDraft.businessStatus ?? ""} onChange={(event) => updateNewCompanyDraft({ businessStatus: event.target.value })} placeholder="可选，例如：存续" className="rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
+                        </label>
+                        <label className="grid gap-1 text-sm font-medium text-[#1F2937]">
+                          成立时间
+                          <Input data-testid="new-company-founded-date-input" value={companySelection.newCompanyDraft.foundedDate ?? ""} onChange={(event) => updateNewCompanyDraft({ foundedDate: event.target.value })} placeholder="可选，例如：2020-01-01" className="rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
+                        </label>
+                        <label className="grid gap-1 text-sm font-medium text-[#1F2937] md:col-span-2">
+                          官网
+                          <Input data-testid="new-company-website-input" value={companySelection.newCompanyDraft.website ?? ""} onChange={(event) => updateNewCompanyDraft({ website: event.target.value })} placeholder="可选" className="rounded-[18px] border-[#E5E7DB]/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
+                        </label>
+                        <label className="grid gap-1 text-sm font-medium text-[#1F2937] md:col-span-2">
+                          备注
+                          <Textarea data-testid="new-company-note-input" value={companySelection.newCompanyDraft.note ?? ""} onChange={(event) => updateNewCompanyDraft({ note: event.target.value })} placeholder="可选，补充信息来源或需要核对的地方。" />
+                          <FieldError message={companySubmissionErrors.note} />
+                        </label>
+                        {similarCompanies.length > 0 ? (
+                          <div className="md:col-span-2 rounded-3xl bg-[#FFF1D6] p-4" data-testid="similar-company-warning">
+                            <p className="text-sm font-semibold text-[#92400E]">可能已经收录这些公司</p>
+                            <div className="mt-3 grid gap-2">
+                              {similarCompanies.slice(0, 3).map(({ company, reasons }) => (
+                                <div key={company.id} className="flex flex-col gap-2 rounded-2xl bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
+                                  <div>
+                                    <p className="text-sm font-semibold text-[#111827]">{company.name}</p>
+                                    <p className="text-xs text-[#6B7280]">
+                                      {company.city} · {company.industry} · {company.reviewStatus === "reviewable" ? "可评价" : "待审核"} · {reasons.join(" / ")}
+                                    </p>
+                                  </div>
+                                  <SolidButton
+                                    type="button"
+                                    variant="dark"
+                                    size="sm"
+                                    onClick={() => {
+                                      selectCompany(company)
+                                      router.replace("/submit/review", { scroll: false })
+                                    }}
+                                  >
+                                    选择这家公司
+                                  </SolidButton>
+                                </div>
+                              ))}
+                            </div>
+                            <SolidButton type="button" variant="secondary" size="sm" className="mt-3" onClick={() => setAllowDuplicateSubmission(true)}>
+                              仍然提交新公司
+                            </SolidButton>
+                            {allowDuplicateSubmission ? <p className="mt-2 text-xs text-[#92400E]">已确认继续提交新公司。</p> : null}
+                          </div>
+                        ) : null}
+                        <p className="md:col-span-2 rounded-2xl bg-[#F1F5EF] p-3 text-xs text-[#6B7280]">
+                          企业不能通过该流程获得控评能力。审核通过前，该公司不会开放正式评价。
+                        </p>
                       </CardContent>
                       <CardFooter className="gap-2">
                         <SolidButton type="button" variant="primary" onClick={saveCompanyAndContinue} data-testid="save-company-and-continue-button">
-                          保存并继续评价
+                          提交公司信息
                         </SolidButton>
                         <SolidButton type="button" variant="ghost" onClick={() => dispatchCompanySelection({ type: "CANCEL_ADD_COMPANY" })}>
                           取消
@@ -537,8 +684,28 @@ export default function SubmitReviewPage() {
                       </CardFooter>
                     </Card>
                   ) : null}
+                  {companySelection.selectedCompany?.reviewStatus === "pending_review" ? (
+                    <Card className="md:col-span-2 solid-card-subtle border border-[#E5E7DB]/60" data-testid="company-pending-review-card">
+                      <CardHeader>
+                        <CardTitle>公司信息已提交审核</CardTitle>
+                        <CardDescription>审核通过后即可评价</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-2 text-sm text-[#6B7280]">
+                        <p>当前状态：待审核</p>
+                        <p>司南采用社区共建公司库。公司信息通过审核后，求职者和真实经历者可以发布匿名评价。</p>
+                      </CardContent>
+                      <CardFooter className="gap-2">
+                        <SolidButton type="button" variant="primary" onClick={() => router.push("/")}>
+                          返回推荐
+                        </SolidButton>
+                        <SolidButton type="button" variant="secondary" onClick={() => dispatchCompanySelection({ type: "CLEAR_SELECTION" })}>
+                          继续了解其他公司
+                        </SolidButton>
+                      </CardFooter>
+                    </Card>
+                  ) : null}
                   {companySelection.feedback ? <p className="md:col-span-2 text-sm font-medium text-[#047857]">{companySelection.feedback}</p> : null}
-                  <div className="flex flex-col gap-2 md:col-span-2">
+                  {!addCompanyMode ? <div className="flex flex-col gap-2 md:col-span-2">
                     <Label>身份关系 *</Label>
                     <Controller
                       control={control}
@@ -559,7 +726,7 @@ export default function SubmitReviewPage() {
                         </div>
                       )}
                     />
-                  </div>
+                  </div> : null}
                 </>
               ) : null}
 
@@ -670,7 +837,7 @@ export default function SubmitReviewPage() {
               ) : null}
             </div>
           </CardContent>
-          <CardFooter className="flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
+          {!addCompanyMode ? <CardFooter className="flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
             <SolidButton
               type="button"
               variant="secondary"
@@ -693,11 +860,11 @@ export default function SubmitReviewPage() {
                 {isSubmitting ? "提交中..." : "发布匿名评价"}
               </SolidButton>
             )}
-          </CardFooter>
+          </CardFooter> : null}
         </Card>
       </form>
 
-      {!openFromQuery ? (
+      {!openFromQuery && !addCompanyMode ? (
       <aside className="lg:sticky lg:top-20 lg:self-start">
         <Card className="glass-panel rounded-[28px]">
           <CardHeader>

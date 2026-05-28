@@ -5,11 +5,31 @@ import { CompanyReviewFeed } from "@/components/company/company-review-feed"
 import { EmptyState } from "@/components/common/state-blocks"
 import { Badge } from "@/components/ui/badge"
 import { SolidButton } from "@/components/ui/solid-button"
+import { SolidCard } from "@/components/ui/solid-card"
 import { getCompany } from "@/lib/mock-data"
 
 export default async function CompanyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const company = getCompany(id)
+
+  if (company.reviewStatus === "pending_review") {
+    return (
+      <section className="mx-auto w-full max-w-[760px] px-4 py-10 sm:px-6">
+        <SolidCard variant="subtle" className="p-6" data-testid="company-pending-review-page">
+          <p className="text-sm font-medium text-[#6B7280]">{company.name}</p>
+          <h1 className="mt-2 text-2xl font-semibold text-[#111827]">该公司信息待审核</h1>
+          <p className="mt-3 text-sm leading-6 text-[#6B7280]">
+            已有用户提交公司注册信息，审核通过后即可评价。审核前不展示方向分、公司体感和评论流。
+          </p>
+          <div className="mt-5">
+            <SolidButton asChild variant="primary">
+              <Link href="/">返回推荐</Link>
+            </SolidButton>
+          </div>
+        </SolidCard>
+      </section>
+    )
+  }
 
   return (
     <section className="mx-auto w-full max-w-[920px] px-4 py-4 sm:px-6">
@@ -23,7 +43,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
             <p className="truncate text-xs text-[#6B7280] sm:text-sm">
               {company.industry} · {company.city} · 方向分 {company.directionScore.toFixed(1)} · {company.reviews.length} 条评价
             </p>
-            {company.cbti ? <p className="truncate text-xs text-[#6B7280]">C-BTI {company.cbti.code} · {company.cbti.title}</p> : null}
+            {company.vibeTag ? <p className="truncate text-xs text-[#6B7280]">公司体感：{company.vibeTag.name}</p> : null}
           </div>
           <SolidButton asChild size="sm">
             <Link href="/submit/review">
@@ -40,10 +60,10 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
         <span>推荐入职率 {company.recommendationRate}%</span>
         <span>｜</span>
         <span>{company.reviews.length} 条评价</span>
-        {company.cbti ? (
+        {company.vibeTag ? (
           <>
             <span>｜</span>
-            <span data-testid="company-cbti">C-BTI {company.cbti.code} · {company.cbti.title}</span>
+            <span data-testid="company-vibe-tag">公司体感 {company.vibeTag.name}</span>
           </>
         ) : null}
         {typeof company.scoreOfficeExperience === "number" ? (

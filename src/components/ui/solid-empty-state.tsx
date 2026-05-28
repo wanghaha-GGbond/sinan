@@ -1,3 +1,5 @@
+import type { ReactNode } from "react"
+
 import { SolidCard } from "@/components/ui/solid-card"
 import { SolidButton } from "@/components/ui/solid-button"
 
@@ -6,11 +8,13 @@ export function SolidEmptyState({
   description = "等第一位过来人来指路。",
   ctaLabel,
   onCtaClick,
+  action,
 }: {
   title?: string
   description?: string
   ctaLabel?: string
   onCtaClick?: () => void
+  action?: ReactNode
 }) {
   return (
     <SolidCard variant="subtle" className="p-5 text-center">
@@ -23,7 +27,7 @@ export function SolidEmptyState({
           </SolidButton>
         </div>
       ) : null}
+      {action ? <div className="mt-4 flex justify-center">{action}</div> : null}
     </SolidCard>
   )
 }
-

@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1779977424958,
+      "tag": "0000_jittery_cargill",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1779978105743,
+      "tag": "0001_nappy_ego",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779979703224,
+      "tag": "0002_demonic_toxin",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1779980149129,
+      "tag": "0003_lazy_jane_foster",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1779980689779,
+      "tag": "0004_flat_thor",
+      "breakpoints": true
+    }
+  ]
+}

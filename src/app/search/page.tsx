@@ -32,7 +32,15 @@ export default function SearchPage() {
       </div>
 
       {companies.length === 0 ? (
-        <SolidEmptyState title="还没有相关评价。" description="成为第一个为后来者补上这段经历的人。" />
+        <SolidEmptyState
+          title="没有找到这家公司"
+          description="你可以提交公司注册信息，审核通过后开放评价。"
+          action={
+            <SolidButton asChild variant="primary">
+              <Link href={`/submit/review?mode=add-company&name=${encodeURIComponent(query.trim())}`}>添加公司</Link>
+            </SolidButton>
+          }
+        />
       ) : null}
       <div className="grid gap-4 md:grid-cols-2">
         {companies.map((company) => (

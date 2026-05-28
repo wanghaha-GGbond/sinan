@@ -1,4 +1,13 @@
-import type { CBTIProfile, Company, CurrentUser, DailyTask, RecommendedCompanyItem, Review } from "@/lib/types"
+import type {
+  CBTIProfile,
+  Company,
+  CompanyVibeTag,
+  CurrentUser,
+  DailyTask,
+  RecommendedCompanyItem,
+  Review,
+  ReviewDiscussionItem,
+} from "@/lib/types"
 
 type ReviewSeed = Omit<
   Review,
@@ -674,6 +683,211 @@ const allReviews: Review[] = [...reviews, ...northstarExtraReviews].map((review)
   questionnaire: reviewQuestionnaireById[review.id],
 }))
 
+export const reviewDiscussions: ReviewDiscussionItem[] = [
+  {
+    id: "discussion-1",
+    reviewId: "review-1",
+    companyId: "northstar-tech",
+    type: "question",
+    authorRole: "job_seeker",
+    authorLabel: "匿名求职者",
+    content: "想问下这个节奏快是整个公司都这样，还是主要集中在产品和研发？",
+    createdAt: "2026-05-20",
+    usefulCount: 31,
+    status: "visible",
+    source: "mock",
+    moderationReason: "none",
+    tags: ["加班", "团队差异"],
+  },
+  {
+    id: "discussion-2",
+    reviewId: "review-1",
+    companyId: "northstar-tech",
+    type: "supplement",
+    authorRole: "former_employee",
+    authorLabel: "匿名过来人",
+    content: "我补充一下，节奏快主要看团队。有些业务线比较稳定，但新项目组变化会明显多一些。",
+    createdAt: "2026-05-21",
+    usefulCount: 58,
+    status: "visible",
+    source: "mock",
+    moderationReason: "none",
+    tags: ["团队差异", "节奏"],
+  },
+  {
+    id: "discussion-3",
+    reviewId: "review-1",
+    companyId: "northstar-tech",
+    type: "question",
+    authorRole: "interviewee",
+    authorLabel: "匿名面试者",
+    content: "面试里说试用期目标会单独确认，实际入职后会不会临时变很多？",
+    createdAt: "2026-05-22",
+    usefulCount: 24,
+    status: "visible",
+    source: "mock",
+    moderationReason: "none",
+    tags: ["面试", "试用期"],
+  },
+  {
+    id: "discussion-4",
+    reviewId: "review-1",
+    companyId: "northstar-tech",
+    type: "supplement",
+    authorRole: "current_employee",
+    authorLabel: "匿名在职员工",
+    content: "现在研发这边每周会同步一次优先级，临时变化还是有，但比去年少一些。最好问清楚你要去的具体小组。",
+    createdAt: "2026-05-23",
+    usefulCount: 46,
+    status: "visible",
+    source: "mock",
+    moderationReason: "none",
+    tags: ["现在情况", "研发"],
+  },
+  {
+    id: "discussion-5",
+    reviewId: "review-1",
+    companyId: "northstar-tech",
+    type: "question",
+    authorRole: "job_seeker",
+    authorLabel: "匿名求职者",
+    content: "想了解薪资兑现情况，绩效奖金会不会因为需求变化导致评价口径变掉？",
+    createdAt: "2026-05-24",
+    usefulCount: 19,
+    status: "visible",
+    source: "mock",
+    moderationReason: "none",
+    tags: ["薪资", "绩效"],
+  },
+  {
+    id: "discussion-6",
+    reviewId: "review-1",
+    companyId: "northstar-tech",
+    type: "supplement",
+    authorRole: "former_employee",
+    authorLabel: "离职匿名评价者",
+    content: "办公体验我觉得还行，通勤一般，食堂中等。厕所维护比以前好，但高峰期还是会排队。",
+    createdAt: "2026-05-25",
+    usefulCount: 37,
+    status: "visible",
+    source: "mock",
+    moderationReason: "none",
+    tags: ["办公体验", "通勤", "厕所"],
+  },
+  {
+    id: "discussion-7",
+    reviewId: "review-1",
+    companyId: "northstar-tech",
+    type: "question",
+    authorRole: "intern",
+    authorLabel: "匿名实习生",
+    content: "实习生会参与核心项目吗，还是更多做边缘需求和修小问题？",
+    createdAt: "2026-05-26",
+    usefulCount: 12,
+    status: "visible",
+    source: "mock",
+    moderationReason: "none",
+    tags: ["实习", "成长空间"],
+  },
+  {
+    id: "discussion-8",
+    reviewId: "review-1",
+    companyId: "northstar-tech",
+    type: "supplement",
+    authorRole: "former_employee",
+    authorLabel: "匿名过来人",
+    content: "我补充一下，高赞排序应该优先看到这类真实补充：节奏快主要看团队，新项目更忙，老业务线稳定很多。",
+    createdAt: "2026-05-18",
+    usefulCount: 82,
+    replyCount: 3,
+    status: "visible",
+    source: "mock",
+    moderationReason: "none",
+    tags: ["高赞补充", "团队差异"],
+  },
+  {
+    id: "discussion-9",
+    reviewId: "review-1",
+    companyId: "northstar-tech",
+    type: "question",
+    authorRole: "job_seeker",
+    authorLabel: "匿名求职者",
+    content: "最近一周还有人面过这个岗位吗，想确认现在面试难度有没有变化？",
+    createdAt: "2026-05-27",
+    usefulCount: 4,
+    status: "visible",
+    source: "mock",
+    moderationReason: "none",
+    tags: ["最新追问", "面试"],
+  },
+  {
+    id: "discussion-10",
+    reviewId: "review-1",
+    companyId: "northstar-tech",
+    type: "supplement",
+    authorRole: "anonymous",
+    authorLabel: "匿名过来人",
+    content: "我刚写了一段补充，内容还在审核中，主要是关于具体团队差异的描述。",
+    createdAt: "2026-05-27",
+    usefulCount: 0,
+    status: "pending_review",
+    moderationReason: "none",
+    source: "mock",
+    createdByCurrentUser: true,
+    pendingSync: false,
+    tags: ["审核中"],
+  },
+  {
+    id: "discussion-11",
+    reviewId: "review-1",
+    companyId: "northstar-tech",
+    type: "supplement",
+    authorRole: "former_employee",
+    authorLabel: "匿名过来人",
+    content: "通勤这块之前有人直接留了手机号 13812345678 说可以私聊，公开展示时应该打码。",
+    maskedContent: "通勤这块之前有人直接留了手机号 [手机号已隐藏] 说可以私聊，公开展示时应该打码。",
+    createdAt: "2026-05-26",
+    reviewedAt: "2026-05-27",
+    usefulCount: 21,
+    status: "limited_visible",
+    source: "mock",
+    moderationReason: "sensitive_info",
+    tags: ["打码展示", "通勤"],
+  },
+  {
+    id: "discussion-12",
+    reviewId: "review-1",
+    companyId: "northstar-tech",
+    type: "question",
+    authorRole: "job_seeker",
+    authorLabel: "匿名求职者",
+    content: "这条非作者待审核内容不应该出现在公开列表。",
+    createdAt: "2026-05-27",
+    usefulCount: 0,
+    status: "pending_review",
+    source: "mock",
+    moderationReason: "none",
+    tags: ["非公开"],
+  },
+  {
+    id: "discussion-13",
+    reviewId: "review-1",
+    companyId: "northstar-tech",
+    type: "supplement",
+    authorRole: "anonymous",
+    authorLabel: "匿名过来人",
+    content: "这条补充未通过审核，作者可以看到状态，普通用户不应进入公开排序。",
+    createdAt: "2026-05-27",
+    usefulCount: 0,
+    status: "rejected",
+    source: "mock",
+    createdByCurrentUser: true,
+    pendingSync: false,
+    moderationReason: "off_topic",
+    tags: ["未通过"],
+  },
+]
+
 function cbtiTitleFromCode(code: string) {
   if (code.startsWith("RF") && code.includes("G")) return "快节奏成长型"
   if (code.startsWith("SP")) return "稳定流程型"
@@ -709,6 +923,107 @@ export function inferMockCBTI(company: Pick<Company, "dimensions" | "riskTags">)
   }
 }
 
+const VIBE_TAG_LIBRARY: Record<string, Omit<CompanyVibeTag, "confidence" | "generatedBy" | "updatedAt">> = {
+  hamster_cage: {
+    id: "hamster_cage",
+    name: "仓鼠笼公司",
+    shortName: "仓鼠笼",
+    summary: "公司不大、事情很多，节奏密集，容易一直转。",
+    signals: ["节奏快", "事务碎", "变化多", "平衡偏低"],
+    riskLevel: "high",
+    tone: "caution",
+  },
+  rocket_pad: {
+    id: "rocket_pad",
+    name: "火箭发射台公司",
+    shortName: "火箭发射台",
+    summary: "节奏和压力都高，但成长与项目密度也高。",
+    signals: ["成长高", "项目密度高", "节奏快", "加班偏高"],
+    riskLevel: "medium",
+    tone: "neutral",
+  },
+  warm_tank: {
+    id: "warm_tank",
+    name: "温水鱼缸公司",
+    shortName: "温水鱼缸",
+    summary: "环境稳定、压力不大，但成长速度可能偏慢。",
+    signals: ["稳定高", "平衡较好", "成长一般", "加班较少"],
+    riskLevel: "low",
+    tone: "neutral",
+  },
+  maze_factory: {
+    id: "maze_factory",
+    name: "迷宫工厂公司",
+    shortName: "迷宫工厂",
+    summary: "流程和层级偏多，推进事情常常要绕路。",
+    signals: ["流程重", "审批多", "协作成本高", "决策慢"],
+    riskLevel: "high",
+    tone: "caution",
+  },
+  screw_role: {
+    id: "screw_role",
+    name: "螺丝钉公司",
+    shortName: "螺丝钉",
+    summary: "分工细且稳定，但个人发挥空间相对有限。",
+    signals: ["分工细", "流程明确", "职责窄", "稳定"],
+    riskLevel: "medium",
+    tone: "neutral",
+  },
+  honey_pot: {
+    id: "honey_pot",
+    name: "蜜罐公司",
+    shortName: "蜜罐",
+    summary: "福利和环境不错，挑战强度可能没那么高。",
+    signals: ["食堂高", "环境高", "下午茶高", "平衡较好"],
+    riskLevel: "low",
+    tone: "positive",
+  },
+  spring_bed: {
+    id: "spring_bed",
+    name: "弹簧床公司",
+    shortName: "弹簧床",
+    summary: "压力存在，但团队有缓冲，整体弹性较好。",
+    signals: ["节奏中等", "协作较好", "管理灵活", "平衡中上"],
+    riskLevel: "low",
+    tone: "positive",
+  },
+  toll_station: {
+    id: "toll_station",
+    name: "高速收费站公司",
+    shortName: "高速收费站",
+    summary: "流程清楚、节奏固定，但每一步都要过关。",
+    signals: ["流程清楚", "审批偏多", "稳定高", "灵活性低"],
+    riskLevel: "medium",
+    tone: "caution",
+  },
+}
+
+function buildVibeTag(tagId: keyof typeof VIBE_TAG_LIBRARY, confidence: number): CompanyVibeTag {
+  const base = VIBE_TAG_LIBRARY[tagId]
+  return {
+    ...base,
+    confidence,
+    generatedBy: "mock",
+    updatedAt: "2026-05-25",
+  }
+}
+
+export function inferCompanyVibeTag(company: Pick<Company, "size" | "dimensions" | "riskTags">, reviewList: Review[]): CompanyVibeTag {
+  const growth = company.dimensions.find((d) => d.key === "growth")?.score ?? 6
+  const management = company.dimensions.find((d) => d.key === "management")?.score ?? 6
+  const workload = company.dimensions.find((d) => d.key === "workload")?.score ?? 6
+  const paceFast = reviewList.some((review) => /忙|杂|变化快|节奏快|事情多/.test(review.content + review.title))
+  const smallSize = /100-|300-|500-/.test(company.size)
+  const hasProcessHeavy = company.riskTags.some((tag) => /流程|审批/.test(tag)) || management >= 7.6
+
+  if (smallSize && workload <= 6.2 && paceFast) return buildVibeTag("hamster_cage", 0.79)
+  if (growth >= 8 && workload <= 6.4) return buildVibeTag("rocket_pad", 0.76)
+  if (growth <= 7 && workload >= 7.1) return buildVibeTag("warm_tank", 0.73)
+  if (hasProcessHeavy && growth < 7.8) return buildVibeTag("maze_factory", 0.74)
+  if (management >= 7.8 && growth <= 7.4) return buildVibeTag("toll_station", 0.71)
+  return buildVibeTag("spring_bed", 0.68)
+}
+
 export function calculateOfficeExperienceScore(questionnaire?: Review["questionnaire"]) {
   if (!questionnaire) return undefined
   if (questionnaire.overallOfficeExperienceScore) return questionnaire.overallOfficeExperienceScore
@@ -729,6 +1044,9 @@ export const companies: Company[] = [
   {
     id: "northstar-tech",
     claimedStatus: "unclaimed",
+    source: "mock",
+    pendingReview: false,
+    reviewStatus: "reviewable",
     name: "北辰智造科技",
     shortName: "北辰智造",
     industry: "AI 工具 / 企业协作",
@@ -830,6 +1148,7 @@ export const companies: Company[] = [
       generatedBy: "mock",
       updatedAt: "2026-05-24",
     },
+    vibeTag: buildVibeTag("hamster_cage", 0.79),
     scoreCanteen: 7.8,
     scoreOfficeEnvironment: 7.2,
     scoreRestroom: 6.1,
@@ -843,6 +1162,9 @@ export const companies: Company[] = [
   {
     id: "lighthouse-media",
     claimedStatus: "unclaimed",
+    source: "mock",
+    pendingReview: false,
+    reviewStatus: "reviewable",
     name: "灯塔互动传媒",
     shortName: "灯塔互动",
     industry: "内容平台 / 增长营销",
@@ -920,6 +1242,7 @@ export const companies: Company[] = [
       generatedBy: "mock",
       updatedAt: "2026-05-24",
     },
+    vibeTag: buildVibeTag("rocket_pad", 0.74),
     scoreCanteen: 6.9,
     scoreOfficeEnvironment: 7.4,
     scoreRestroom: 6.2,
@@ -933,6 +1256,9 @@ export const companies: Company[] = [
   {
     id: "river-finance",
     claimedStatus: "unclaimed",
+    source: "mock",
+    pendingReview: false,
+    reviewStatus: "reviewable",
     name: "江流数科",
     shortName: "江流数科",
     industry: "金融科技",
@@ -1005,6 +1331,7 @@ export const companies: Company[] = [
       generatedBy: "mock",
       updatedAt: "2026-05-24",
     },
+    vibeTag: buildVibeTag("toll_station", 0.73),
     scoreCanteen: 6.1,
     scoreOfficeEnvironment: 8.2,
     scoreRestroom: 7.5,
@@ -1026,6 +1353,42 @@ export function getCompanyReview(companyId: string, reviewId: string) {
   return company.reviews.find((review) => review.id === reviewId) ?? null
 }
 
+export function getReviewDiscussions(reviewId: string) {
+  return reviewDiscussions.filter(
+    (item) =>
+      item.reviewId === reviewId &&
+      (item.status === "visible" ||
+        item.status === "limited_visible" ||
+        (["local_pending", "pending_review", "hidden", "rejected", "deleted_by_author"].includes(item.status) &&
+          item.createdByCurrentUser))
+  )
+}
+
+export function createLocalDiscussion(
+  input: Pick<ReviewDiscussionItem, "reviewId" | "companyId" | "type" | "authorRole" | "authorLabel" | "content"> & {
+    tags?: string[]
+  }
+): ReviewDiscussionItem {
+  return {
+    id: `discussion-local-${Date.now()}`,
+    reviewId: input.reviewId,
+    companyId: input.companyId,
+    type: input.type,
+    authorRole: input.authorRole,
+    authorLabel: input.authorLabel,
+    content: input.content.trim(),
+    createdAt: "刚刚",
+    usefulCount: 0,
+    isUsefulByCurrentUser: false,
+    status: "local_pending",
+    source: "local",
+    createdByCurrentUser: true,
+    pendingSync: true,
+    moderationReason: "none",
+    tags: input.tags ?? [],
+  }
+}
+
 export function searchCompanies(query: string) {
   const normalized = query.trim().toLowerCase()
   if (!normalized) {
@@ -1033,7 +1396,7 @@ export function searchCompanies(query: string) {
   }
 
   return companies.filter((company) =>
-    [company.name, company.shortName, company.industry, company.city]
+    [company.name, company.registeredName, company.shortName, company.englishName, ...(company.alias ?? []), company.industry, company.city]
       .join(" ")
       .toLowerCase()
       .includes(normalized)
@@ -1106,8 +1469,8 @@ export const recommendedCompanyItems: RecommendedCompanyItem[] = [
       { label: "工作生活平衡", score: 6.1 },
       { label: "管理水平", score: 6.5 },
     ],
-    cbtiCode: "RFGC",
-    cbtiTitle: "快节奏成长型",
+    vibeTagName: "仓鼠笼公司",
+    vibeTagSummary: "公司不大、事情很多，节奏密集。",
     officeExperienceScore: 7.0,
     recentReviewCount: 12,
     recentViewCount: 36,
@@ -1130,8 +1493,8 @@ export const recommendedCompanyItems: RecommendedCompanyItem[] = [
       { label: "薪资福利", score: 7.4 },
       { label: "管理水平", score: 6.2 },
     ],
-    cbtiCode: "RFGC",
-    cbtiTitle: "快节奏成长型",
+    vibeTagName: "火箭发射台公司",
+    vibeTagSummary: "节奏快、压力高，但成长与项目密度也高。",
     officeExperienceScore: 6.8,
     recentReviewCount: 9,
     recentViewCount: 28,
@@ -1154,8 +1517,8 @@ export const recommendedCompanyItems: RecommendedCompanyItem[] = [
       { label: "稳定性", score: 7.2 },
       { label: "管理水平", score: 7.1 },
     ],
-    cbtiCode: "SPBI",
-    cbtiTitle: "稳定流程型",
+    vibeTagName: "高速收费站公司",
+    vibeTagSummary: "流程清楚、节奏固定，但每一步都要过关。",
     officeExperienceScore: 7.1,
     recentReviewCount: 7,
     recentViewCount: 31,
@@ -1178,8 +1541,8 @@ export const recommendedCompanyItems: RecommendedCompanyItem[] = [
       { label: "工作生活平衡", score: 5.7 },
       { label: "管理水平", score: 6.1 },
     ],
-    cbtiCode: "SFGC",
-    cbtiTitle: "稳定协作型",
+    vibeTagName: "弹簧床公司",
+    vibeTagSummary: "压力有，但缓冲也多，整体弹性较好。",
     officeExperienceScore: 6.9,
     recentReviewCount: 10,
     recentViewCount: 27,
@@ -1202,8 +1565,8 @@ export const recommendedCompanyItems: RecommendedCompanyItem[] = [
       { label: "工作生活平衡", score: 4.9 },
       { label: "管理水平", score: 6.0 },
     ],
-    cbtiCode: "RFGC",
-    cbtiTitle: "快节奏成长型",
+    vibeTagName: "迷宫工厂公司",
+    vibeTagSummary: "流程与协作链路偏重，推进常要绕路。",
     officeExperienceScore: 6.4,
     recentReviewCount: 14,
     recentViewCount: 42,
@@ -1226,8 +1589,8 @@ export const recommendedCompanyItems: RecommendedCompanyItem[] = [
       { label: "薪资福利", score: 7.8 },
       { label: "管理水平", score: 7.0 },
     ],
-    cbtiCode: "SPBI",
-    cbtiTitle: "稳定流程型",
+    vibeTagName: "螺丝钉公司",
+    vibeTagSummary: "分工细且稳定，但个人发挥空间有限。",
     officeExperienceScore: 7.2,
     recentReviewCount: 8,
     recentViewCount: 23,
@@ -1250,8 +1613,8 @@ export const recommendedCompanyItems: RecommendedCompanyItem[] = [
       { label: "工作生活平衡", score: 5.5 },
       { label: "管理水平", score: 6.2 },
     ],
-    cbtiCode: "SFGC",
-    cbtiTitle: "稳定协作型",
+    vibeTagName: "温水鱼缸公司",
+    vibeTagSummary: "环境稳定、压力不大，成长速度可能偏慢。",
     officeExperienceScore: 6.7,
     recentReviewCount: 11,
     recentViewCount: 34,
@@ -1274,8 +1637,8 @@ export const recommendedCompanyItems: RecommendedCompanyItem[] = [
       { label: "工作生活平衡", score: 5.8 },
       { label: "管理水平", score: 6.3 },
     ],
-    cbtiCode: "RFGC",
-    cbtiTitle: "快节奏成长型",
+    vibeTagName: "蜜罐公司",
+    vibeTagSummary: "福利和环境不错，但挑战强度不一定高。",
     officeExperienceScore: 6.6,
     recentReviewCount: 13,
     recentViewCount: 39,

@@ -106,19 +106,20 @@ ReviewCard 已迁移到 SolidCard、SolidButton、ScoreChip、TagPill 等 solid 
 视觉测试从简单截图生成升级为 Playwright toHaveScreenshot baseline，对 desktop/mobile 核心页面进行视觉回归保护。
 后续 UI 改动必须同步更新视觉基线，避免 solid 风格回退。
 
-## 推荐流简化 + 结构化问卷 + C-BTI（本轮）
+## 推荐流简化 + 结构化问卷 + 公司体感标签（本轮）
 
-首页推荐卡改为短结构：推荐理由、公司基础信息、方向分、评价数、推荐率、关键评分、C-BTI、进入公司页。
+首页推荐卡改为短结构：推荐理由、公司基础信息、方向分、评价数、推荐率、关键评分、公司体感标签、进入公司页。
 首页不再展示长评价、适合/慎重、大量标签，推荐流目标回到“快速判断并进入公司页”。
 发布评价新增“结构化问卷，可跳过”，用于补充评分和公司行为信号。
-引入 C-BTI（Company Behavior Type Indicator）公司性格标签，并在首页推荐卡与公司页展示。
-当前 C-BTI 由 mock 推断逻辑生成；真实 AI 分析接口见 `docs/ai-cbti-api.md`。
+前台主展示升级为“公司体感标签”，例如：仓鼠笼公司、火箭发射台公司、温水鱼缸公司。
+C-BTI（Company Behavior Type Indicator）保留为内部结构字段，不再作为前台主品牌文案。
+当前体感标签由 mock 推导逻辑生成；真实 AI 分析接口见 `docs/ai-cbti-api.md`。
 
 ## 办公体验问卷补充（本轮）
 
 结构化问卷新增“办公体验”分组：食堂、办公环境、厕所、下午茶、工位舒适度、通勤便利度、办公设备、办公体验指数。
 办公体验字段为可选，不影响快速发布评价。
-办公体验指数可作为公司日常体验辅助判断，也可作为 C-BTI AI 分析辅助输入，但不直接决定 C-BTI。
+办公体验指数可作为公司日常体验辅助判断，也可作为公司体感 / C-BTI 分析辅助输入，但不直接决定 C-BTI。
 首页与公司页可轻量展示办公体验指数，不展示全部细项。
 
 ## 发布链路补齐（本轮）
@@ -147,3 +148,34 @@ ReviewCard 已迁移到 SolidCard、SolidButton、ScoreChip、TagPill 等 solid 
 - `/submit/review` 公司选择状态已统一到 `selectedCompany` 单一来源：Step 1 下一步仅依赖 `selectedCompany !== null`。
 - 无结果卡由 `query + matchedCompanies + selectedCompany + mode` 派生，不再常驻。
 - e2e 已拆分为已有公司提交、新增公司提交、问卷完成返回、新增公司+问卷提交等独立用例。
+
+## 社区共建公司库（新增）
+
+司南采用社区共建公司库理念：求职者、在职员工、离职员工、面试者都可以提交未收录公司。
+添加公司需要提交基础注册信息，包括公司名称、统一社会信用代码、注册地址、法定代表人、注册城市和所属行业。
+公司提交后默认 `reviewStatus=pending_review`，审核通过后变为 `reviewable` 才开放评价。
+`pending_review` 公司仅提交者本地可见，不进入推荐流和公共搜索；`reviewable` 公司全站可评价；`rejected` 公司不可评价。
+新增公司不是企业入驻，不产生企业账号，不赋予企业控评能力。公司在司南中是被评价对象，不是平台客户。
+
+## 评价详情页追问与补充
+
+- 评价详情页新增“追问与补充”，让求职者可以围绕单条评价继续追问，也让过来人补充真实经历。
+- 追问与补充当前使用 mock 数据和本地状态，不接真实后端。
+- 追问与补充支持有用反馈，用于把高质量补充顶上来。
+- 内容发布前会做基础安全过滤，拦截手机号、邮箱、人身攻击、挂人曝光等不适合公开展示的信息。
+
+## 追问与补充规则层
+
+- 追问与补充支持高赞 / 最新排序。
+- 高赞排序不只看有用数，还会综合补充类型、作者角色、新鲜度和审核状态。
+- 合法内容当前本地立即显示，并标记为本地保存；未来接后端后可进入 pending_review。
+- 输入中的追问 / 补充会保存到浏览器本地草稿，发布成功后清除。
+- 内容安全继续拦截手机号、邮箱、身份证号、人身攻击和挂人曝光表达。
+
+## 追问与补充 Moderation 状态机
+
+- 追问与补充定义完整状态：draft、local_pending、pending_review、visible、limited_visible、hidden、rejected、deleted_by_author。
+- 公开列表只展示 visible / limited_visible，并且只有这两类内容进入公开排序和有用反馈。
+- pending_review / rejected / hidden 仅作者或未来 moderator 可见。
+- limited_visible 表示内容有价值但敏感信息已打码。
+- 企业不能参与审核、隐藏、拒绝，也不能通过 moderation 控评。

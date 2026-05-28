@@ -70,9 +70,9 @@ export function RatingsClient({ id }: { id: string }) {
                 这里优先展示这家公司下面的匿名体验。方向分只是辅助判断，真正有用的信息在评论里。
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
-                {company.cbti ? (
-                  <Badge variant="secondary" data-testid="ratings-cbti">
-                    C-BTI {company.cbti.code} · {company.cbti.title}
+                {company.vibeTag ? (
+                  <Badge variant="secondary" data-testid="ratings-vibe-tag">
+                    公司体感 {company.vibeTag.name}
                   </Badge>
                 ) : null}
                 {company.riskTags.map((tag) => (

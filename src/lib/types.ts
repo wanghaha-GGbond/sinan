@@ -1,4 +1,5 @@
 export type CompanyRiskLevel = "低" | "中" | "高"
+export type CompanyReviewStatus = "pending_review" | "reviewable" | "rejected"
 
 export type RatingDimension = {
   key: string
@@ -28,6 +29,67 @@ export type Review = {
   createdAt: string
   verifiedHint: string
   questionnaire?: ReviewQuestionnaire
+}
+
+export type ReviewDiscussionType = "question" | "supplement"
+export type ReviewDiscussionStatus =
+  | "draft"
+  | "local_pending"
+  | "pending_review"
+  | "visible"
+  | "limited_visible"
+  | "hidden"
+  | "rejected"
+  | "deleted_by_author"
+export type ReviewDiscussionModerationReason =
+  | "sensitive_info"
+  | "personal_attack"
+  | "privacy"
+  | "spam"
+  | "off_topic"
+  | "duplicate"
+  | "author_deleted"
+  | "none"
+
+export type ReviewDiscussionVisibility = {
+  visibleToAuthor: boolean
+  visibleToPublic: boolean
+  participatesInRanking: boolean
+  statusLabel?: string
+}
+
+export type ReviewDiscussionItem = {
+  id: string
+  reviewId: string
+  companyId: string
+  type: ReviewDiscussionType
+  authorRole:
+    | "job_seeker"
+    | "current_employee"
+    | "former_employee"
+    | "interviewee"
+    | "intern"
+    | "contractor"
+    | "anonymous"
+  authorLabel: string
+  content: string
+  maskedContent?: string
+  createdAt: string
+  updatedAt?: string
+  usefulCount: number
+  replyCount?: number
+  isUsefulByCurrentUser?: boolean
+  status: ReviewDiscussionStatus
+  moderationReason?: ReviewDiscussionModerationReason
+  tags?: string[]
+  source?: "mock" | "local"
+  createdByCurrentUser?: boolean
+  pendingSync?: boolean
+  visibleToAuthor?: boolean
+  visibleToPublic?: boolean
+  participatesInRanking?: boolean
+  reviewedAt?: string
+  score?: number
 }
 
 export type ReviewQuestionnaire = {
@@ -72,6 +134,19 @@ export type CBTIProfile = {
   updatedAt: string
 }
 
+export type CompanyVibeTag = {
+  id: string
+  name: string
+  shortName: string
+  summary: string
+  signals: string[]
+  riskLevel: "low" | "medium" | "high"
+  tone: "positive" | "neutral" | "caution"
+  confidence: number
+  generatedBy: "mock" | "ai"
+  updatedAt: string
+}
+
 export type RatingInsight = {
   label: string
   count: number
@@ -90,11 +165,22 @@ export type Company = {
   id: string
   claimedStatus: "unclaimed" | "claimed"
   name: string
+  registeredName?: string
   shortName: string
+  alias?: string[]
+  englishName?: string
+  unifiedSocialCreditCode?: string
+  registeredAddress?: string
+  legalRepresentative?: string
+  businessStatus?: string
+  foundedDate?: string
   industry: string
   city: string
   size: string
   stage: string
+  financingStage?: string
+  website?: string
+  description?: string
   directionScore: number
   recommendationRate: number
   reviewCount: number
@@ -111,6 +197,7 @@ export type Company = {
   trend: { month: string; score: number; reviews: number }[]
   reviews: Review[]
   cbti?: CBTIProfile
+  vibeTag?: CompanyVibeTag
   scoreCanteen?: number
   scoreOfficeEnvironment?: number
   scoreRestroom?: number
@@ -119,9 +206,10 @@ export type Company = {
   scoreCommuteConvenience?: number
   scoreOfficeEquipment?: number
   scoreOfficeExperience?: number
-  source?: "mock" | "user_added"
+  source?: "mock" | "user_added" | "platform_verified"
   createdByUser?: boolean
   pendingReview?: boolean
+  reviewStatus?: CompanyReviewStatus
 }
 
 export type RatingDraft = {
@@ -175,6 +263,8 @@ export type RecommendedCompanyItem = {
   }[]
   cbtiCode?: string
   cbtiTitle?: string
+  vibeTagName?: string
+  vibeTagSummary?: string
   officeExperienceScore?: number
   recentReviewCount: number
   recentViewCount: number

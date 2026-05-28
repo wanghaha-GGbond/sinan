@@ -113,6 +113,8 @@ ReviewCard 已迁移到 SolidCard、SolidButton、ScoreChip、TagPill 等 solid 
 ## 发布与问卷视觉收口（本轮）
 
 - 发布评价 Step 1 增加“新增未收录公司”表单卡，沿用 SolidCard + SolidButton + solid 输入框。
+- 新增公司表单升级为注册信息提交：必填公司名称、统一社会信用代码、注册地址、法定代表人、注册城市、所属行业。
+- 新增公司提交后展示待审核状态卡，审核前不进入正式评价步骤。
 - 全屏问卷主视觉保持“单题卡片”，状态信息降级为顶部轻量进度与底部弱提示。
 - 发布链路按钮统一到 SolidButton，减少 shadcn 默认 outline/ghost 残留。
 
@@ -122,3 +124,9 @@ ReviewCard 已迁移到 SolidCard、SolidButton、ScoreChip、TagPill 等 solid 
 - 新增公司入口文案限定为 C 端流程语义：`还没有这家公司 / 新增这家公司 / 保存并继续评价`。
 - 问卷场景继续保持“中央题卡主导”，不引入右侧大状态栏。
 - 问卷完成态保留 `方向值 +8` 强反馈，避免在答题过程中堆叠冗余状态卡。
+
+## 追问与补充 UI
+
+- 追问与补充区继续使用 solid 视觉体系：SolidCard、SolidButton、TagPill。
+- 输入区采用实体卡片和高对比输入框，避免评论区线框化或论坛噪音感。
+- 追问 / 补充 badge 使用克制色彩区分，阅读内容优先。

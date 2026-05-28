@@ -62,9 +62,12 @@ export default function HomePage() {
                 ))}
               </div>
 
-              <TagPill tone="match" data-testid="recommend-cbti-tag">
-                C-BTI：{item.cbtiCode} · {item.cbtiTitle}
-              </TagPill>
+              {item.vibeTagName ? (
+                <TagPill tone="neutral" data-testid="recommend-vibe-tag">
+                  公司体感：{item.vibeTagName}
+                </TagPill>
+              ) : null}
+              {item.vibeTagSummary ? <p className="text-xs text-[#6B7280]">{item.vibeTagSummary}</p> : null}
               {typeof item.officeExperienceScore === "number" ? (
                 <p className="text-xs text-[#6B7280]" data-testid="recommend-office-experience">
                   办公体验 {item.officeExperienceScore.toFixed(1)}

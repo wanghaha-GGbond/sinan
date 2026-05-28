@@ -42,9 +42,9 @@ export function CompanyCard({ company }: { company: Company }) {
       </div>
 
       <p className="mt-3 text-sm text-[#6B7280]">{company.reviewCount.toLocaleString()} 条真实体验</p>
-      {company.cbti ? (
+      {company.vibeTag ? (
         <p className="mt-2 text-xs text-[#6B7280]">
-          C-BTI：{company.cbti.code} · {company.cbti.title}
+          公司体感：{company.vibeTag.name}
         </p>
       ) : null}
       <div className="mt-3">

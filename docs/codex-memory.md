@@ -90,19 +90,20 @@ ReviewCard 已迁移到 SolidCard、SolidButton、ScoreChip、TagPill 等 solid 
 视觉测试从简单截图生成升级为 Playwright toHaveScreenshot baseline，对 desktop/mobile 核心页面进行视觉回归保护。
 后续 UI 改动必须同步更新视觉基线，避免 solid 风格回退。
 
-## 推荐流简化 + 结构化问卷 + C-BTI（本轮）
+## 推荐流简化 + 结构化问卷 + 公司体感标签（本轮）
 
-首页推荐卡改为短结构：推荐理由、公司基础信息、方向分、评价数、推荐率、关键评分、C-BTI、进入公司页。
+首页推荐卡改为短结构：推荐理由、公司基础信息、方向分、评价数、推荐率、关键评分、公司体感标签、进入公司页。
 首页不再展示长评价、适合/慎重、大量标签，推荐流目标回到“快速判断并进入公司页”。
 发布评价新增“结构化问卷，可跳过”，用于补充评分和公司行为信号。
-引入 C-BTI（Company Behavior Type Indicator）公司性格标签，并在首页推荐卡与公司页展示。
-当前 C-BTI 由 mock 推断逻辑生成；真实 AI 分析接口见 `docs/ai-cbti-api.md`。
+前台主展示升级为“公司体感标签”（如：仓鼠笼公司、火箭发射台公司、温水鱼缸公司）。
+C-BTI（Company Behavior Type Indicator）保留为内部结构字段，不再作为前台主展示文案。
+当前体感标签由 mock 推断逻辑生成；真实 AI 分析接口见 `docs/ai-cbti-api.md`。
 
 ## 办公体验问卷补充（本轮）
 
 结构化问卷新增“办公体验”分组：食堂、办公环境、厕所、下午茶、工位舒适度、通勤便利度、办公设备、办公体验指数。
 办公体验字段为可选，不影响快速发布评价。
-办公体验指数可作为公司日常体验辅助判断，也可作为 C-BTI AI 分析辅助输入，但不直接决定 C-BTI。
+办公体验指数可作为公司日常体验辅助判断，也可作为公司体感 / C-BTI AI 分析辅助输入，但不直接决定 C-BTI。
 首页与公司页可轻量展示办公体验指数，不展示全部细项。
 
 ## 发布评价链路修正（本轮）
@@ -125,3 +126,133 @@ ReviewCard 已迁移到 SolidCard、SolidButton、ScoreChip、TagPill 等 solid 
 - 发布路径关键按钮继续统一到 `SolidButton`，减少旧样式残留。
 - `/submit/review` 以 `selectedCompany` 作为公司选择唯一状态源；`companyId`/`companyName` 在选择或新增后同步绑定。
 - 无结果卡仅在 `mode=searching` 且 `query` 命中无匹配且未选中公司时显示。
+
+## 社区共建公司库原则（新增）
+
+司南公司库由求职者和真实经历者社区共建，不由企业入驻控制。
+未收录公司需要提交注册信息：公司名称、统一社会信用代码、注册地址、法定代表人、注册城市、所属行业。
+新增公司默认进入 `pending_review`，审核通过后才进入 `reviewable` 可评价状态。
+`pending_review` 公司仅提交者本地可见，不进入推荐流或公共搜索；`rejected` 公司不可评价。
+新增公司表单已接入疑似重复公司提示、注册信息格式校验、敏感信息与攻击性表达过滤。
+当前仍使用 mock 状态模拟，不接真实后端、不做审核后台。
+新增公司不是企业入驻，不产生企业账号，不赋予企业控评能力。
+
+## 评价详情页追问与补充
+
+- 新增 ReviewDiscussionItem 数据结构与 mock 讨论数据。
+- 评价详情页接入 ReviewDiscussionSection，支持发布追问、发布补充、有用切换、高赞/最新排序。
+- 追问与补充内容复用基础内容安全规则，禁止手机号、邮箱、人身攻击、挂人曝光等内容。
+- 本轮仅使用本地状态，不接真实后端。
+
+## 追问与补充规则增强
+
+- ReviewDiscussionItem 已增强状态字段：updatedAt、replyCount、moderationReason、source、createdByCurrentUser、pendingSync、score。
+- 高赞排序由 `src/lib/review-discussion-sort.ts` 计算，综合 usefulCount、补充类型、作者角色、新鲜度和 pending 惩罚。
+- Composer 使用 `src/lib/discussion-draft-storage.ts` 保存本地草稿，发布成功后清除。
+- API contract 已补充 discussion 列表、发布和有用反馈接口草案。
+
+## Discussion Moderation 前置设计
+
+- ReviewDiscussionStatus 已扩展为 draft、local_pending、pending_review、visible、limited_visible、hidden、rejected、deleted_by_author。
+- `src/lib/review-discussion-sort.ts` 提供 public / author status 过滤，公开排序只处理 visible / limited_visible。
+- `maskSensitiveContent` 用于 limited_visible 打码，手机号、邮箱、身份证号分别替换为占位文本。
+- ReviewDiscussionSection 分为公开列表和”我的待处理内容”，非公开状态不展示有用按钮。
+
+## 真实 API 前 Schema 草案（本轮）
+
+- 已完成 `docs/backend-schema.md`，设计 reviews、review_discussions、discussion_moderation_events、discussion_useful_votes 四张核心表。
+- `docs/api-contract.md` 已补充完整的 discussion moderation 状态机、publicDiscussions/myDiscussions 返回格式、useful votes 权限规则、DELETE/PATCH 端点定义。
+- 企业不能成为 moderation actor — `actor_role` 枚举禁止 `company`、`employer`、`hr`。
+- `local_pending` 是前端本地状态，服务端不持久化。真实后端 POST 后返回 `pending_review` / `visible` / `limited_visible` 之一。
+- `visible` 和 `limited_visible` 才进入公开排序和公开展示；`pending_review` / `hidden` / `rejected` / `deleted_by_author` 仅作者和 moderator 可见。
+- `limited_visible` 对外返回 `maskedContent`（打码版），对作者本人返回原始 `content`。
+- 有用投票通过 `discussion_useful_votes` 去重，支持软删除取消投票，保留审计线索。
+- `discussion_moderation_events` 记录每一次状态变更的完整历史，支持可追溯审核。
+- 索引设计以 partial index 为主（`WHERE status IN ('visible', 'limited_visible')`），覆盖最常用的公开列表查询。
+- 本轮只改 docs，不改 UI、不改业务代码、不改测试。
+
+## 真实 API 前基础实体 Schema 草案（本轮）
+
+- 已完成 `users`、`anonymous_profiles`、`companies` 三个基础实体的 schema 设计，补充进 `docs/backend-schema.md`。
+- `users` 是账户实体，不等于企业账号。role 枚举只允许 `user` / `moderator` / `admin`，明确禁止 `company`、`employer`、`hr`。
+- `anonymous_profiles` 是匿名身份核心安全基础设施。一个 user 可以有多个 anonymous_profile，MVP 推荐 `scope_type=company`（每用户每公司一个稳定匿名身份）。
+- anonymous_profile 对外只暴露 `id`、`display_label`、`avatar_seed`；`user_id`、`fingerprint_hash` 永远不对外返回。
+- 企业永远不能获取 `user_id`、`fingerprint_hash`、跨公司 anonymous_profile 映射关系。
+- `companies` 是被评价对象，不是平台客户。`review_status` 三态：`pending_review`（待审核，不可评价）、`reviewable`（可评价，进入公开搜索）、`rejected`（不通过，仅提交者可见）。
+- `reviews.company_id` 和 `review_discussions.company_id` 只能引用 `review_status = 'reviewable'` 的公司。
+- `claimed_status` 字段预留但本阶段不实现企业认领或企业权限。
+- 公司提交者身份（`submitted_by_user_id`、`submitted_by_anonymous_profile_id`）不对外公开。
+- `company_submissions` 独立表方案 B 已设计，MVP 建议先用方案 A（companies 表直接承载提交记录）。
+- `docs/api-contract.md` 已补充 `GET /api/companies/search`、`GET /api/me/company-submissions`、更新 `GET /api/companies/:id` 可见性规则、精细化 `POST /api/companies/community-submissions`。
+- 本轮只改 docs，不改 UI、不改业务代码、不改测试。
+
+## Phase 1 后端基础设施（本轮）
+
+Phase 1 后端基础设施开始：项目选择 PostgreSQL + Neon + Drizzle ORM。
+当前只接入 Drizzle 配置（drizzle.config.ts）、db client（src/db/client.ts）、schema/migrations 目录（src/db/schema/、src/db/migrations/）和 .env.example。
+本阶段不创建业务表、不实现 API、不改 UI、不删除 mock。
+后续 Phase 2 才定义 users 与 anonymous_profiles。
+后续 Phase 3 才实现 companies search / community submissions API。
+
+## Phase 2 后端基础表（本轮）
+
+Phase 2 后端基础表已定义：users 与 anonymous_profiles 的 Drizzle schema 完成，migration 已生成。
+user_role 只允许 user / moderator / admin，不允许 company / employer / hr。
+user_status 枚举：active / suspended / deleted。
+anonymous_scope_type 枚举：global / company / review / discussion，MVP 默认采用 company scope。
+匿名身份核心约束：公开 API 只返回 anonymous_profile_id、display_label、avatar_seed，永远不返回 user_id 或 fingerprint_hash。
+server 端匿名身份工具函数已建立（src/lib/server/anonymous-profile.ts），当前为纯函数+TODO，待 Phase 3 API routes 就绪后接入 db。
+本阶段不做登录系统、不实现 API routes、不改 UI、不改 mock-data。
+
+## Phase 3 公司库 Schema 与 API（本轮）
+
+Phase 3 公司库后端开始：companies 表 Drizzle schema 已定义（29 列，8 index，2 FK），migration 已生成。
+company_review_status 三态：pending_review（待审核，不可评价，不公开搜索）、reviewable（通过，可搜索可评价）、rejected（拒绝，仅提交者可见）。
+company_claimed_status 预留字段（unclaimed/claimed），本阶段不实现企业认领。
+company_source 枚举：platform_seed / user_added / platform_verified / import。
+第一批公司库 API 已实现：
+- GET /api/companies/search — 搜索可评价公司（默认只返回 reviewable，ILIKE 匹配 name/shortName/registeredName/englishName）
+- POST /api/companies/community-submissions — 提交未收录公司（校验信用代码格式 + content-guard，查重，默认 pending_review）
+- GET /api/me/company-submissions — 获取我的提交（当前返回空，待 auth 就绪）
+PublicCompanyView 白名单脱敏：永远不返回 submittedByUserId、submittedByAnonymousProfileId、rejectionReason、deletedAt。
+Data access layer 已建立（src/lib/data/companies.ts），默认 NEXT_PUBLIC_API_ENABLED=false，走 mock fallback。
+企业仍无入驻、认领、控评权限。
+
+## Phase 4 评价 Schema 与 API（本轮）
+
+Phase 4 评价后端开始：reviews 表 Drizzle schema 已定义（27 列，5 partial index，3 FK），migration 已生成。
+review_status 七态：draft / pending_review / visible / limited_visible / hidden / rejected / deleted_by_author。
+review_author_role 枚举：job_seeker / current_employee / former_employee / interviewee / intern / contractor / anonymous。
+明确禁止 company / employer / hr 作为 author_role 或 moderation actor。
+评价 API 已实现：
+- GET /api/companies/:id/reviews — 获取公司公开评价列表（验证 company 存在且 reviewable，只返回 visible/limited_visible，支持 sort=useful|latest 和 cursor 分页）
+- POST /api/reviews — 发布评价（验证 reviewable 公司约束 + content-guard 安全检查，默认 pending_review，不直接 visible）
+PublicReviewView 白名单脱敏：永远不返回 authorUserId、anonymousProfileId、authorFingerprintHash、moderationReason、deletedAt；limited_visible 评价使用 maskedContent。
+Data access layer 已建立（src/lib/data/reviews.ts），默认 NEXT_PUBLIC_API_ENABLED=false，走 mock fallback。
+企业仍无控评、删评、审核权限。pending_review 公司不可被评价。
+
+## Phase 5 讨论 Schema 与 API（本轮）
+
+Phase 5 讨论后端开始：review_discussions 表 Drizzle schema 已定义（27 列，6 partial index，4 FK），discussion_useful_votes 表已定义（9 列，6 index + 3 partial unique，3 FK），migration 已生成。
+review_discussion_type 枚举：question / supplement。
+review_discussion_status 八态：draft / local_pending / pending_review / visible / limited_visible / hidden / rejected / deleted_by_author。
+讨论 API 已实现：
+- GET /api/reviews/:reviewId/discussions — 获取评价下的公开讨论（验证 review 存在且公开，只返回 visible/limited_visible 到 publicDiscussions，myDiscussions 当前为空，支持 sort/cursor 分页）
+- POST /api/reviews/:reviewId/discussions — 发布追问/补充（验证 review 公开 + companyId 匹配 + content-guard 安全检查，默认 pending_review）
+- POST /api/review-discussions/:discussionId/useful — 有用投票（验证 discussion 公开，无 voter identity 时返回 401 防匿名刷票，future auth 就绪后实现 upsert + 计数更新）
+PublicReviewDiscussionView 白名单脱敏：永远不返回 authorUserId、anonymousProfileId、authorFingerprintHash、moderationReason、deletedAt；limited_visible 返回 maskedContent。
+useful_votes 三种去重维度：user_id partial unique、anonymous_profile_id partial unique、voter_fingerprint_hash partial unique（均 WHERE deleted_at IS NULL）。
+Data access layer 已建立（src/lib/data/discussions.ts），mock fallback 绕过 voter identity 限制支持本地 +1/-1。
+企业仍无审核、隐藏、删除、控评权限。
+
+## Phase 6 Moderation 审计与作者删除 API（本轮）
+
+Phase 6 审核基础设施完成：discussion_moderation_events 表 Drizzle schema 已定义（11 列，3 index，2 FK），migration 已生成。
+discussion_moderation_actor_role 枚举：system / moderator / author。明确禁止 company / employer / hr 作为 actor_role。
+moderation_events 记录每次状态变更的完整审计历史：discussion_id, actor, from_status → to_status, reason, note, raw/masked content snapshots, created_at。
+审核与删除 API 已实现：
+- PATCH /api/moderation/review-discussions/:discussionId — moderator 状态变更（visible/limited_visible/hidden/rejected，无 moderator auth 时返回 401）
+- DELETE /api/review-discussions/:discussionId — 作者删除（deleted_by_author 终态不可逆，无 author auth 时返回 401）
+Data access layer mock fallback：deleteReviewDiscussionData（仅 createdByCurrentUser 可删除）+ moderateReviewDiscussionData（直接修改 status + visibility flags）。
+Phase 3-6 全量 API 均已完成（companies search/submit, reviews read/write, discussions read/write/useful, moderation, author delete）。
+企业仍无审核、隐藏、删除、控评权限。
