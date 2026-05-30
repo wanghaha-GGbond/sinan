@@ -1,11 +1,14 @@
 # 司南 Web MVP API Contract
 
-Phase 6 已实现 moderation 与 author delete API。全量 Phase 3-6 API 均已完成。
+Phase 7 已完成认证与授权，全量 API 均已实现并可支持真实登录。
 
 ## 实现状态
 
 | API | 状态 | Phase |
 |---|---|---|
+| `POST /api/auth/register` | 已实现 | Phase 7 |
+| `POST /api/auth/login` | 已实现 | Phase 7 |
+| `GET /api/auth/me` | 已实现 | Phase 7 |
 | `GET /api/companies/search` | 已实现 | Phase 3 |
 | `POST /api/companies/community-submissions` | 已实现 | Phase 3 |
 | `GET /api/me/company-submissions` | 已实现 | Phase 3 |
@@ -14,10 +17,10 @@ Phase 6 已实现 moderation 与 author delete API。全量 Phase 3-6 API 均已
 | `GET /api/reviews/:reviewId/discussions` | 已实现 | Phase 5 |
 | `POST /api/reviews/:reviewId/discussions` | 已实现 | Phase 5 |
 | `POST /api/review-discussions/:discussionId/useful` | 已实现 | Phase 5 |
-| `GET /api/companies/:id` | 契约已定义 | Phase 4+ |
-| `GET /api/companies/:id/ratings` | 契约已定义 | Phase 4+ |
 | `DELETE /api/review-discussions/:discussionId` | 已实现 | Phase 6 |
 | `PATCH /api/moderation/review-discussions/:discussionId` | 已实现 | Phase 6 |
+| `GET /api/companies/:id` | 契约已定义 | 后续 |
+| `GET /api/companies/:id/ratings` | 契约已定义 | 后续 |
 
 ---
 

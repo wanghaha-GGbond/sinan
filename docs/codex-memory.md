@@ -256,3 +256,16 @@ moderation_events 记录每次状态变更的完整审计历史：discussion_id,
 Data access layer mock fallback：deleteReviewDiscussionData（仅 createdByCurrentUser 可删除）+ moderateReviewDiscussionData（直接修改 status + visibility flags）。
 Phase 3-6 全量 API 均已完成（companies search/submit, reviews read/write, discussions read/write/useful, moderation, author delete）。
 企业仍无审核、隐藏、删除、控评权限。
+
+## Phase 7 认证与授权（本轮）
+
+Phase 7 认证系统完成。JWT auth 工具已建立（src/lib/server/auth.ts）：scrypt 密码哈希 + jose JWT 签名/验证 + httpOnly cookie（auth_token, secure, sameSite=lax, 30 天）。
+Auth API：POST /api/auth/register（email/phone + password 注册自动登录）、POST /api/auth/login（验证凭证设置 cookie）、GET /api/auth/me（返回用户信息）。
+anonymous_profile 真实实现：getOrCreateAnonymousProfile DB 查询/创建，scope_type=company 策略。
+所有 auth-gated API 已启用真实逻辑：
+- POST /api/reviews → 写入 authorUserId/anonymousProfileId
+- POST/GET /api/reviews/:reviewId/discussions → 写入作者身份 + myDiscussions 查询
+- POST useful → 真实 upsert + usefulCount 更新
+- DELETE discussion → requireAuthUser → 验证 authorUserId → soft delete + moderation event
+- PATCH moderation → requireModerator → status 变更 + visibility flags + moderation event
+无登录时 API 兼容（authorUserId 为 null），不影响匿名使用。

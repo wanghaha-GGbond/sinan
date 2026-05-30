@@ -1,6 +1,6 @@
 # 司南 Backend Schema
 
-真实 API 前置设计与实现。Phase 2 已进入 Drizzle schema 实现阶段。
+真实 API 前置设计与实现。Phase 7 已完成认证与授权，全量 API 已可支持真实登录。
 
 ## 实现状态
 

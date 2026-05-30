@@ -88,19 +88,23 @@ Phase 1：Drizzle ORM + Neon PostgreSQL 基础设施接入。
 - [x] 建立 discussions data access layer（src/lib/data/discussions.ts）
 - [x] mock fallback 保留，默认 NEXT_PUBLIC_API_ENABLED=false
 
-### Phase 6：moderation 最小队列（已完成）
+### Phase 7：认证与授权（已完成）
 
-- [x] 定义 discussion_moderation_events 表 Drizzle schema（11 列，3 index，2 FK）
-- [x] 定义 discussion_moderation_actor_role 枚举（system/moderator/author，禁止 company/employer/hr）
-- [x] 生成 migration
-- [x] 实现 PATCH /api/moderation/review-discussions/:discussionId（moderator-only，无 auth 返回 401）
-- [x] 实现 DELETE /api/review-discussions/:discussionId（author-only，deleted_by_author 终态，无 auth 返回 401）
-- [x] 建立 moderation + delete data access layer mock fallback
-- [x] 不做复杂审核后台 UI
+- [x] 创建 JWT auth 工具（src/lib/server/auth.ts）— scrypt 密码哈希 + jose JWT + httpOnly cookie
+- [x] 实现 POST /api/auth/register（email/phone + password，自动登录）
+- [x] 实现 POST /api/auth/login（验证凭证，设置 auth cookie）
+- [x] 实现 GET /api/auth/me（返回当前用户信息）
+- [x] 实现 getOrCreateAnonymousProfile 真实 DB 查询（src/lib/server/anonymous-profile.ts）
+- [x] POST /api/reviews 写入 authorUserId + anonymousProfileId
+- [x] POST /api/reviews/:reviewId/discussions 写入作者身份 + myDiscussions 查询
+- [x] POST /api/review-discussions/:discussionId/useful 真实 upsert + 计数更新
+- [x] DELETE /api/review-discussions/:discussionId 验证作者身份 + 软删除 + moderation event
+- [x] PATCH /api/moderation/review-discussions/:discussionId 验证 moderator 角色 + 状态变更 + event 写入
+- [x] 所有 data access layer fetch 调用添加 credentials: 'include'
+- [x] AUTH_SECRET 写入 .env.example
 
 ## 当前不做
 
-- 不实现登录
 - 不实现审核后台 UI
 - 不替换 mock-data
 - 不接真实 AI
