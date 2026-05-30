@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "司南",
+    "slug": "sinan",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "sinan",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sinan.app"
+    },
+    "platforms": ["ios"],
+    "plugins": ["expo-router"]
+  }
+}
