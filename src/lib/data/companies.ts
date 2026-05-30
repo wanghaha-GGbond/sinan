@@ -35,7 +35,9 @@ export async function searchCompaniesData(
       if (options?.city) params.set("city", options.city)
       if (options?.industry) params.set("industry", options.industry)
 
-      const res = await fetch(`/api/companies/search?${params.toString()}`)
+      const res = await fetch(`/api/companies/search?${params.toString()}`, {
+        credentials: "include",
+      })
       if (!res.ok) return []
       const data = await res.json()
       return (data.companies ?? []) as Company[]
@@ -79,6 +81,7 @@ export async function submitCompanyCommunitySubmission(
     try {
       const res = await fetch("/api/companies/community-submissions", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(input),
       })

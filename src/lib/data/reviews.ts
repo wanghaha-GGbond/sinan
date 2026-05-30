@@ -45,7 +45,8 @@ export async function getCompanyReviewsData(
       if (options?.cursor) params.set("cursor", options.cursor)
 
       const res = await fetch(
-        `/api/companies/${companyId}/reviews?${params.toString()}`
+        `/api/companies/${companyId}/reviews?${params.toString()}`,
+        { credentials: "include" }
       )
       if (!res.ok) return { reviews: [], nextCursor: null }
       const data = await res.json()
@@ -113,6 +114,7 @@ export async function submitReviewData(
     try {
       const res = await fetch("/api/reviews", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(input),
       })

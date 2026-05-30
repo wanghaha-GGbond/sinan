@@ -53,7 +53,8 @@ export async function getReviewDiscussionsData(
       if (options?.cursor) params.set("cursor", options.cursor)
 
       const res = await fetch(
-        `/api/reviews/${reviewId}/discussions?${params.toString()}`
+        `/api/reviews/${reviewId}/discussions?${params.toString()}`,
+        { credentials: "include" }
       )
       if (!res.ok) {
         return { publicDiscussions: [], myDiscussions: [], nextCursor: null }
@@ -111,6 +112,7 @@ export async function submitReviewDiscussionData(
     try {
       const res = await fetch(`/api/reviews/${reviewId}/discussions`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           companyId: input.companyId,
@@ -182,6 +184,7 @@ export async function toggleReviewDiscussionUsefulData(
         `/api/review-discussions/${discussionId}/useful`,
         {
           method: "POST",
+          credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ useful }),
         }
@@ -247,7 +250,7 @@ export async function deleteReviewDiscussionData(
     try {
       const res = await fetch(
         `/api/review-discussions/${discussionId}`,
-        { method: "DELETE" }
+        { method: "DELETE", credentials: "include" }
       )
 
       const data = await res.json()
@@ -310,6 +313,7 @@ export async function moderateReviewDiscussionData(
         `/api/moderation/review-discussions/${discussionId}`,
         {
           method: "PATCH",
+          credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(input),
         }
