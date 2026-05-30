@@ -25,11 +25,11 @@ const idCardPattern = /\d{17}[\dXx]/
 const creditCodePattern = /^[0-9A-Z]{18}$/
 const attackWords = ["垃圾", "傻逼", "黑心", "压榨", "坑人", "骗子", "狗公司", "曝光", "挂人", "爆雷"]
 
-function hasSensitive(value: string) {
+export function hasSensitive(value: string) {
   return phonePattern.test(value) || emailPattern.test(value) || idCardPattern.test(value)
 }
 
-function hasAttackWord(value: string) {
+export function hasAttackWord(value: string) {
   return attackWords.some((word) => value.includes(word))
 }
 

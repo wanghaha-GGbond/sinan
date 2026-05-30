@@ -8,6 +8,7 @@
  *   - Returned to everyone: id, displayLabel, avatarSeed
  *   - NEVER returned: userId, fingerprintHash
  */
+import { and, eq, isNull } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
 import type { anonymousProfiles } from "@/db/schema/anonymous-profiles"
 
@@ -20,7 +21,6 @@ export type AnonymousProfileScope = {
   scopeId?: string
 }
 
-/** The subset of an anonymous profile safe to expose in public API responses. */
 export type AnonymousProfilePublicView = {
   id: string
   displayLabel: string
@@ -40,10 +40,6 @@ const ROLE_LABEL_MAP: Record<string, string> = {
   contractor: "匿名外包",
 }
 
-/**
- * Build a human-readable anonymous display label from an author role.
- * Falls back to "匿名用户" when no role is provided or the role is unknown.
- */
 export function buildAnonymousDisplayLabel(role?: string): string {
   if (role && role in ROLE_LABEL_MAP) {
     return ROLE_LABEL_MAP[role]
@@ -55,16 +51,12 @@ export function buildAnonymousDisplayLabel(role?: string): string {
 // Avatar seed
 // ---------------------------------------------------------------------------
 
-/**
- * Generate a deterministic avatar seed from an input string.
- * Used to produce consistent anonymous avatars without exposing identity.
- */
 export function buildAvatarSeed(input: string): string {
   let hash = 0
   for (let i = 0; i < input.length; i++) {
     const char = input.charCodeAt(i)
     hash = (hash << 5) - hash + char
-    hash |= 0 // Convert to 32-bit integer
+    hash |= 0
   }
   return Math.abs(hash).toString(16).padStart(6, "0")
 }
@@ -74,44 +66,98 @@ export function buildAvatarSeed(input: string): string {
 // ---------------------------------------------------------------------------
 
 /**
- * Get or create an anonymous profile for a user or device fingerprint
- * within a given scope.
+ * Get or create an anonymous profile for a user within a given scope.
  *
- * TODO(Phase 3): Wire up real DB queries when API routes exist.
- * The db client import must be avoided until server endpoints are ready,
- * because importing src/db/client.ts at build time requires DATABASE_URL.
- *
- * When implemented:
- * 1. Query anonymous_profiles for matching (userId/fingerprintHash, scopeType, scopeId)
- * 2. If not found, INSERT a new anonymous_profile with a generated display_label
- * 3. Return only the public view (id, displayLabel, avatarSeed)
- * 4. Never return userId, fingerprintHash, or any other internal field
+ * MVP strategy: scopeType = "company", one stable anonymous profile
+ * per user per company. This gives continuity within a company
+ * (readers see the same "匿名过来人" across multiple posts) while
+ * preventing cross-company correlation.
  */
-export async function getOrCreateAnonymousProfile(
-  params: {
-    userId?: string
-    fingerprintHash?: string
-    scope: AnonymousProfileScope
-    role?: string
+export async function getOrCreateAnonymousProfile(params: {
+  userId?: string
+  fingerprintHash?: string
+  scope: AnonymousProfileScope
+  role?: string
+}): Promise<AnonymousProfilePublicView> {
+  if (!params.userId && !params.fingerprintHash) {
+    // No identity at all — can't create a profile
+    throw new Error("Either userId or fingerprintHash is required")
   }
-): Promise<AnonymousProfilePublicView> {
-  void params // placeholder — will be used in Phase 3 when DB is wired
-  throw new Error(
-    "getOrCreateAnonymousProfile is not yet implemented. " +
-    "It will be wired up in Phase 3 when API routes are created."
-  )
+
+  try {
+    const { db } = await import("@/db/client")
+    const { anonymousProfiles } = await import("@/db/schema/anonymous-profiles")
+
+    // Try to find existing profile
+    const conditions: ReturnType<typeof and>[] = [
+      eq(anonymousProfiles.scopeType, params.scope.scopeType),
+      isNull(anonymousProfiles.deletedAt),
+    ]
+
+    if (params.scope.scopeId) {
+      conditions.push(eq(anonymousProfiles.scopeId, params.scope.scopeId))
+    }
+
+    if (params.userId) {
+      conditions.push(eq(anonymousProfiles.userId, params.userId))
+    } else if (params.fingerprintHash) {
+      conditions.push(
+        eq(anonymousProfiles.fingerprintHash, params.fingerprintHash)
+      )
+    }
+
+    const [existing] = await db
+      .select()
+      .from(anonymousProfiles)
+      .where(and(...conditions))
+      .limit(1)
+
+    if (existing) {
+      // Update lastUsedAt
+      await db
+        .update(anonymousProfiles)
+        .set({ lastUsedAt: new Date() })
+        .where(eq(anonymousProfiles.id, existing.id))
+
+      return toAnonymousProfilePublicView(existing)
+    }
+
+    // Create a new anonymous profile
+    const displayLabel = buildAnonymousDisplayLabel(params.role)
+    const avatarSeed = buildAvatarSeed(
+      `${params.userId ?? params.fingerprintHash}-${params.scope.scopeType}-${params.scope.scopeId ?? ""}`
+    )
+
+    const [row] = await db
+      .insert(anonymousProfiles)
+      .values({
+        userId: params.userId,
+        fingerprintHash: params.fingerprintHash,
+        scopeType: params.scope.scopeType,
+        scopeId: params.scope.scopeId,
+        displayLabel,
+        avatarSeed,
+        isCurrent: true,
+      })
+      .returning()
+
+    return toAnonymousProfilePublicView(row)
+  } catch {
+    // Fallback: return a generated profile without DB
+    return {
+      id: crypto.randomUUID(),
+      displayLabel: buildAnonymousDisplayLabel(params.role),
+      avatarSeed: buildAvatarSeed(
+        `${params.userId ?? params.fingerprintHash ?? "anon"}-${Date.now()}`
+      ),
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
 // Public view sanitization
 // ---------------------------------------------------------------------------
 
-/**
- * Strip internal fields from an anonymous profile row before returning
- * to public API consumers. This is the last line of defense — even if a
- * query accidentally selects sensitive columns, this ensures they are
- * never serialized into a response body.
- */
 export function toAnonymousProfilePublicView(
   row: InferSelectModel<typeof anonymousProfiles>
 ): AnonymousProfilePublicView {

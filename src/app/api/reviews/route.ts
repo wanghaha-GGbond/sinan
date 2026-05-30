@@ -3,6 +3,9 @@ import { and, eq, isNull } from "drizzle-orm"
 import { companies } from "@/db/schema/companies"
 import { reviews } from "@/db/schema/reviews"
 import { toPublicReviewView } from "@/lib/server/review-view"
+import { getAuthUser } from "@/lib/server/auth"
+import { getOrCreateAnonymousProfile } from "@/lib/server/anonymous-profile"
+import { hasSensitive, hasAttackWord } from "@/lib/content-guard"
 
 const VALID_ROLES = [
   "job_seeker",
@@ -24,22 +27,6 @@ const ROLE_LABELS: Record<string, string> = {
   anonymous: "匿名评价者",
 }
 
-const phonePattern = /1[3-9]\d{9}/
-const emailPattern = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i
-const idCardPattern = /\d{17}[\dXx]/
-const attackWords = [
-  "垃圾", "傻逼", "黑心", "压榨", "坑人", "骗子",
-  "狗公司", "曝光", "挂人", "爆雷",
-]
-
-function hasSensitive(value: string) {
-  return phonePattern.test(value) || emailPattern.test(value) || idCardPattern.test(value)
-}
-
-function hasAttackWord(value: string) {
-  return attackWords.some((word) => value.includes(word))
-}
-
 export async function POST(request: NextRequest) {
   let body: Record<string, unknown>
   try {
@@ -54,7 +41,6 @@ export async function POST(request: NextRequest) {
   const content = String(body.content ?? "").trim()
   const directionScore = Number(body.directionScore)
 
-  // Validate required fields
   if (!companyId) {
     return NextResponse.json({ error: "companyId is required" }, { status: 400 })
   }
@@ -67,50 +53,30 @@ export async function POST(request: NextRequest) {
   }
 
   if (title.length < 2 || title.length > 80) {
-    return NextResponse.json(
-      { error: "Title must be 2–80 characters" },
-      { status: 400 }
-    )
+    return NextResponse.json({ error: "Title must be 2–80 characters" }, { status: 400 })
   }
 
   if (content.length < 20 || content.length > 3000) {
-    return NextResponse.json(
-      { error: "Content must be 20–3000 characters" },
-      { status: 400 }
-    )
+    return NextResponse.json({ error: "Content must be 20–3000 characters" }, { status: 400 })
   }
 
   if (isNaN(directionScore) || directionScore < 0 || directionScore > 10) {
-    return NextResponse.json(
-      { error: "directionScore must be 0–10" },
-      { status: 400 }
-    )
+    return NextResponse.json({ error: "directionScore must be 0–10" }, { status: 400 })
   }
 
-  // Content safety
   if (hasSensitive(title) || hasAttackWord(title)) {
-    return NextResponse.json(
-      { error: "Title contains inappropriate content" },
-      { status: 400 }
-    )
+    return NextResponse.json({ error: "Title contains inappropriate content" }, { status: 400 })
   }
 
   if (hasSensitive(content) || hasAttackWord(content)) {
-    return NextResponse.json(
-      { error: "Content contains inappropriate information" },
-      { status: 400 }
-    )
+    return NextResponse.json({ error: "Content contains inappropriate information" }, { status: 400 })
   }
 
   try {
     const { db } = await import("@/db/client")
 
-    // Verify company is reviewable
     const [company] = await db
-      .select({
-        id: companies.id,
-        reviewStatus: companies.reviewStatus,
-      })
+      .select({ id: companies.id, reviewStatus: companies.reviewStatus })
       .from(companies)
       .where(and(eq(companies.id, companyId), isNull(companies.deletedAt)))
       .limit(1)
@@ -126,12 +92,29 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Extract auth user (optional — works without login too)
+    const authUser = await getAuthUser()
+    let anonProfile = null
+    if (authUser) {
+      try {
+        anonProfile = await getOrCreateAnonymousProfile({
+          userId: authUser.userId,
+          scope: { scopeType: "company", scopeId: companyId },
+          role: authorRole,
+        })
+      } catch {
+        // Non-fatal: continue without anonymous profile
+      }
+    }
+
     const authorLabel = ROLE_LABELS[authorRole] ?? "匿名评价者"
 
     const [row] = await db
       .insert(reviews)
       .values({
         companyId,
+        authorUserId: authUser?.userId ?? null,
+        anonymousProfileId: anonProfile?.id ?? null,
         authorRole: authorRole as (typeof VALID_ROLES)[number],
         authorLabel,
         title,
@@ -151,17 +134,11 @@ export async function POST(request: NextRequest) {
       .returning()
 
     return NextResponse.json(
-      {
-        review: toPublicReviewView(row),
-        message: "评价已提交，等待审核",
-      },
+      { review: toPublicReviewView(row), message: "评价已提交，等待审核" },
       { status: 201 }
     )
   } catch (error) {
     console.error("POST /api/reviews failed:", error)
-    return NextResponse.json(
-      { error: "Database not configured" },
-      { status: 503 }
-    )
+    return NextResponse.json({ error: "Database not configured" }, { status: 503 })
   }
 }

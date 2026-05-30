@@ -3,22 +3,9 @@ import { and, eq, isNull, inArray, desc, sql } from "drizzle-orm"
 import { reviews } from "@/db/schema/reviews"
 import { reviewDiscussions } from "@/db/schema/review-discussions"
 import { toPublicReviewDiscussionView } from "@/lib/server/review-discussion-view"
-
-const phonePattern = /1[3-9]\d{9}/
-const emailPattern = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i
-const idCardPattern = /\d{17}[\dXx]/
-const attackWords = [
-  "垃圾", "傻逼", "黑心", "压榨", "坑人", "骗子",
-  "狗公司", "曝光", "挂人", "爆雷",
-]
-
-function hasSensitive(value: string) {
-  return phonePattern.test(value) || emailPattern.test(value) || idCardPattern.test(value)
-}
-
-function hasAttackWord(value: string) {
-  return attackWords.some((word) => value.includes(word))
-}
+import { getAuthUser } from "@/lib/server/auth"
+import { getOrCreateAnonymousProfile } from "@/lib/server/anonymous-profile"
+import { hasSensitive, hasAttackWord } from "@/lib/content-guard"
 
 export async function GET(
   request: NextRequest,
@@ -33,12 +20,8 @@ export async function GET(
   try {
     const { db } = await import("@/db/client")
 
-    // Verify review exists and is public
     const [review] = await db
-      .select({
-        id: reviews.id,
-        status: reviews.status,
-      })
+      .select({ id: reviews.id, status: reviews.status })
       .from(reviews)
       .where(and(eq(reviews.id, reviewId), isNull(reviews.deletedAt)))
       .limit(1)
@@ -48,13 +31,10 @@ export async function GET(
     }
 
     if (!["visible", "limited_visible"].includes(review.status)) {
-      return NextResponse.json(
-        { error: "Review is not public" },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: "Review is not public" }, { status: 403 })
     }
 
-    // Build query conditions
+    // Public discussions
     const conditions: ReturnType<typeof and>[] = [
       eq(reviewDiscussions.reviewId, reviewId),
       inArray(reviewDiscussions.status, ["visible", "limited_visible"]),
@@ -80,17 +60,47 @@ export async function GET(
     const hasMore = rows.length > limit
     const resultRows = hasMore ? rows.slice(0, limit) : rows
 
+    // My discussions (if authenticated)
+    const authUser = await getAuthUser()
+    let myDiscussions: typeof rows = []
+
+    if (authUser) {
+      const myConditions: ReturnType<typeof and>[] = [
+        eq(reviewDiscussions.reviewId, reviewId),
+        isNull(reviewDiscussions.deletedAt),
+      ]
+
+      if (authUser.userId) {
+        myConditions.push(eq(reviewDiscussions.authorUserId, authUser.userId))
+      }
+
+      const nonPublicStatuses: Array<
+        "pending_review" | "hidden" | "rejected" | "deleted_by_author"
+      > = ["pending_review", "hidden", "rejected", "deleted_by_author"]
+
+      const myRows = await db
+        .select()
+        .from(reviewDiscussions)
+        .where(
+          and(
+            ...myConditions,
+            inArray(reviewDiscussions.status, nonPublicStatuses)
+          )
+        )
+        .orderBy(desc(reviewDiscussions.createdAt))
+        .limit(20)
+
+      myDiscussions = myRows
+    }
+
     return NextResponse.json({
       publicDiscussions: resultRows.map(toPublicReviewDiscussionView),
-      myDiscussions: [],
+      myDiscussions: myDiscussions.map(toPublicReviewDiscussionView),
       nextCursor: hasMore ? resultRows[resultRows.length - 1].id : null,
     })
   } catch (error) {
     console.error("GET /api/reviews/:reviewId/discussions failed:", error)
-    return NextResponse.json(
-      { error: "Database not configured" },
-      { status: 503 }
-    )
+    return NextResponse.json({ error: "Database not configured" }, { status: 503 })
   }
 }
 
@@ -114,7 +124,6 @@ export async function POST(
     ? (body.tags as string[])
     : undefined
 
-  // Validate required fields
   if (!companyId) {
     return NextResponse.json({ error: "companyId is required" }, { status: 400 })
   }
@@ -126,19 +135,12 @@ export async function POST(
     )
   }
 
-  // Content validation (aligns with content-guard)
   if (content.length < 5) {
-    return NextResponse.json(
-      { error: "Content must be at least 5 characters" },
-      { status: 400 }
-    )
+    return NextResponse.json({ error: "Content must be at least 5 characters" }, { status: 400 })
   }
 
   if (content.length > 300) {
-    return NextResponse.json(
-      { error: "Content must be at most 300 characters" },
-      { status: 400 }
-    )
+    return NextResponse.json({ error: "Content must be at most 300 characters" }, { status: 400 })
   }
 
   if (hasSensitive(content) || hasAttackWord(content)) {
@@ -151,13 +153,8 @@ export async function POST(
   try {
     const { db } = await import("@/db/client")
 
-    // Verify review exists, is public, and companyId matches
     const [review] = await db
-      .select({
-        id: reviews.id,
-        status: reviews.status,
-        companyId: reviews.companyId,
-      })
+      .select({ id: reviews.id, status: reviews.status, companyId: reviews.companyId })
       .from(reviews)
       .where(and(eq(reviews.id, reviewId), isNull(reviews.deletedAt)))
       .limit(1)
@@ -167,17 +164,25 @@ export async function POST(
     }
 
     if (!["visible", "limited_visible"].includes(review.status)) {
-      return NextResponse.json(
-        { error: "Review is not public" },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: "Review is not public" }, { status: 403 })
     }
 
     if (review.companyId !== companyId) {
-      return NextResponse.json(
-        { error: "companyId does not match review" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "companyId does not match review" }, { status: 400 })
+    }
+
+    // Extract auth user + anonymous profile
+    const authUser = await getAuthUser()
+    let anonProfile = null
+    if (authUser) {
+      try {
+        anonProfile = await getOrCreateAnonymousProfile({
+          userId: authUser.userId,
+          scope: { scopeType: "company", scopeId: companyId },
+        })
+      } catch {
+        // Non-fatal
+      }
     }
 
     const [row] = await db
@@ -186,6 +191,8 @@ export async function POST(
         reviewId,
         companyId,
         type: type as "question" | "supplement",
+        authorUserId: authUser?.userId ?? null,
+        anonymousProfileId: anonProfile?.id ?? null,
         authorRole: "anonymous",
         authorLabel: "匿名评价者",
         content,
@@ -207,9 +214,6 @@ export async function POST(
     )
   } catch (error) {
     console.error("POST /api/reviews/:reviewId/discussions failed:", error)
-    return NextResponse.json(
-      { error: "Database not configured" },
-      { status: 503 }
-    )
+    return NextResponse.json({ error: "Database not configured" }, { status: 503 })
   }
 }

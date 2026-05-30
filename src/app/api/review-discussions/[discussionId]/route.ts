@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { and, eq, isNull } from "drizzle-orm"
 import { reviewDiscussions } from "@/db/schema/review-discussions"
+import { discussionModerationEvents } from "@/db/schema/discussion-moderation-events"
+import { requireAuthUser } from "@/lib/server/auth"
 
 export async function DELETE(
   request: NextRequest,
@@ -9,13 +11,23 @@ export async function DELETE(
   const { discussionId } = await params
 
   try {
+    // Require authentication
+    let authUser
+    try {
+      authUser = await requireAuthUser()
+    } catch (e) {
+      if (e instanceof Response) return e
+      throw e
+    }
+
     const { db } = await import("@/db/client")
 
-    // Verify discussion exists
     const [discussion] = await db
       .select({
         id: reviewDiscussions.id,
         status: reviewDiscussions.status,
+        authorUserId: reviewDiscussions.authorUserId,
+        content: reviewDiscussions.content,
       })
       .from(reviewDiscussions)
       .where(
@@ -24,33 +36,52 @@ export async function DELETE(
       .limit(1)
 
     if (!discussion) {
+      return NextResponse.json({ error: "Discussion not found" }, { status: 404 })
+    }
+
+    // Verify caller is the author
+    if (discussion.authorUserId !== authUser.userId) {
       return NextResponse.json(
-        { error: "Discussion not found" },
-        { status: 404 }
+        { error: "Only the author can delete their discussion" },
+        { status: 403 }
       )
     }
 
-    // Author identity is required
-    // Currently no auth — return 401 until auth is in place
-    return NextResponse.json(
-      { error: "Author identity is required" },
-      { status: 401 }
-    )
+    const previousStatus = discussion.status
+    const now = new Date()
 
-    // Future implementation (when auth exists):
-    // 1. Verify caller is the discussion author (match authorUserId or anonymousProfileId)
-    // 2. Update discussion: status=deleted_by_author, deletedAt=now()
-    // 3. Insert moderation event: actorRole=author, reason=author_deleted,
-    //    fromStatus=current, toStatus=deleted_by_author
-    // 4. Return { discussion: { id, status: "deleted_by_author", deletedAt } }
+    // Soft delete the discussion
+    await db
+      .update(reviewDiscussions)
+      .set({
+        status: "deleted_by_author",
+        deletedAt: now,
+        visibleToPublic: false,
+        participatesInRanking: false,
+      })
+      .where(eq(reviewDiscussions.id, discussionId))
+
+    // Write moderation event
+    await db.insert(discussionModerationEvents).values({
+      discussionId,
+      actorUserId: authUser.userId,
+      actorRole: "author",
+      fromStatus: previousStatus,
+      toStatus: "deleted_by_author",
+      reason: "author_deleted",
+      rawContentSnapshot: discussion.content,
+    })
+
+    return NextResponse.json({
+      discussion: {
+        id: discussionId,
+        status: "deleted_by_author",
+        deletedAt: now.toISOString(),
+      },
+    })
   } catch (error) {
-    console.error(
-      "DELETE /api/review-discussions/:discussionId failed:",
-      error
-    )
-    return NextResponse.json(
-      { error: "Database not configured" },
-      { status: 503 }
-    )
+    if (error instanceof Response) throw error
+    console.error("DELETE /api/review-discussions/:discussionId failed:", error)
+    return NextResponse.json({ error: "Database not configured" }, { status: 503 })
   }
 }
