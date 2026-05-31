@@ -1,12 +1,57 @@
 "use client"
 
 import Link from "next/link"
-import { Compass, PenLine, Search, User, LogOut } from "lucide-react"
+import {
+  BriefcaseBusiness,
+  Compass,
+  Gift,
+  LogOut,
+  MessageSquareText,
+  PenLine,
+  ReceiptText,
+  Search,
+  User,
+  UsersRound,
+} from "lucide-react"
 import { usePathname } from "next/navigation"
 
 import { SolidButton } from "@/components/ui/solid-button"
 import { SolidTopbar } from "@/components/ui/solid-topbar"
 import { useAuth } from "@/lib/auth-context"
+
+const intelLinks = [
+  { href: "/salaries", label: "薪资", icon: ReceiptText },
+  { href: "/interviews", label: "面试", icon: MessageSquareText },
+  { href: "/jobs", label: "机会", icon: BriefcaseBusiness },
+  { href: "/benefits", label: "福利", icon: Gift },
+  { href: "/community", label: "社区", icon: UsersRound },
+]
+
+function IntelNav() {
+  const pathname = usePathname()
+
+  return (
+    <nav className="mx-auto flex w-full max-w-[920px] gap-2 overflow-x-auto px-4 py-2 sm:px-6" aria-label="职场情报导航">
+      {intelLinks.map((item) => {
+        const active = pathname.startsWith(item.href)
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold transition ${
+              active
+                ? "bg-[#111827] text-white shadow-[0_4px_0_rgba(17,24,39,0.22)]"
+                : "bg-[#F1F5EF] text-[#374151] hover:bg-[#E8EEE5]"
+            }`}
+          >
+            <item.icon className="size-3.5" />
+            {item.label}
+          </Link>
+        )
+      })}
+    </nav>
+  )
+}
 
 function HomeHeader() {
   const { user, logout } = useAuth()
@@ -131,10 +176,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const isHome = pathname === "/"
   const isCompany = pathname.startsWith("/company")
   const isSearch = pathname.startsWith("/search")
+  const showIntelNav = isHome || isCompany || isSearch || intelLinks.some((item) => pathname.startsWith(item.href))
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       {isHome ? <HomeHeader /> : isSearch ? <SearchHeader /> : isCompany ? <CompanyHeader /> : <CompanyHeader />}
+      {showIntelNav ? <IntelNav /> : null}
       <main>{children}</main>
       <footer className="border-t">
         <div className="mx-auto flex w-full max-w-[920px] flex-col gap-2 px-4 py-6 text-sm text-muted-foreground sm:px-6 md:flex-row md:items-center md:justify-between">

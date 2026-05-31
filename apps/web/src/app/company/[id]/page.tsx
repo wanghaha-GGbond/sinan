@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { PenLine } from "lucide-react"
 
+import { CompanyIntelligencePanel } from "@/components/company/company-intelligence-panel"
 import { CompanyReviewFeed } from "@/components/company/company-review-feed"
 import { EmptyState } from "@/components/common/state-blocks"
 import { Badge } from "@/components/ui/badge"
@@ -78,6 +79,8 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
           </Badge>
         ))}
       </div>
+
+      <CompanyIntelligencePanel company={company} />
 
       {company.reviews.length === 0 ? (
         <EmptyState />
