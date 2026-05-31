@@ -28,6 +28,7 @@ export type Review = {
   comments: Array<{ id: string; author: string; content: string }>
   createdAt: string
   verifiedHint: string
+  verified?: boolean
   questionnaire?: ReviewQuestionnaire
 }
 
@@ -90,6 +91,21 @@ export type ReviewDiscussionItem = {
   participatesInRanking?: boolean
   reviewedAt?: string
   score?: number
+  /** Threaded replies — loaded on demand */
+  replies?: ReplyItem[]
+}
+
+export type ReplyItem = {
+  id: string
+  discussionId: string
+  authorLabel: string
+  authorRole: string
+  content: string
+  createdAt: string
+  usefulCount: number
+  isUsefulByCurrentUser?: boolean
+  /** Nested replies (max 2 levels deep) */
+  replies?: ReplyItem[]
 }
 
 export type ReviewQuestionnaire = {

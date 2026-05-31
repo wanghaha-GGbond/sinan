@@ -1,13 +1,16 @@
 "use client"
 
 import Link from "next/link"
-import { Compass, Search } from "lucide-react"
+import { Compass, PenLine, Search, User, LogOut } from "lucide-react"
 import { usePathname } from "next/navigation"
 
 import { SolidButton } from "@/components/ui/solid-button"
 import { SolidTopbar } from "@/components/ui/solid-topbar"
+import { useAuth } from "@/lib/auth-context"
 
 function HomeHeader() {
+  const { user, logout } = useAuth()
+
   return (
     <SolidTopbar
       title="司南 推荐"
@@ -21,12 +24,53 @@ function HomeHeader() {
         </div>
       }
       rightSlot={
-        <SolidButton asChild variant="dark" size="sm" data-testid="home-search-link">
-          <Link href="/search">
-            <Search data-icon="inline-start" />
-            搜索
-          </Link>
-        </SolidButton>
+        <div className="flex items-center gap-2">
+          {user ? (
+            <>
+              <Link href="/me" className="flex items-center gap-1.5 rounded-full bg-[#F1F5EF] px-3 py-1.5 text-sm font-medium text-[#374151] transition hover:bg-[#E8EEE5]">
+                <User className="size-3.5" />
+                {user.displayName ?? "我"}
+              </Link>
+              <SolidButton asChild variant="primary" size="sm">
+                <Link href="/submit/review">
+                  <PenLine className="size-3.5" />
+                  写评价
+                </Link>
+              </SolidButton>
+              <button
+                onClick={() => logout()}
+                className="rounded-full p-1.5 text-[#9CA3AF] transition hover:bg-[#F1F5EF] hover:text-[#6B7280]"
+                title="退出"
+              >
+                <LogOut className="size-4" />
+              </button>
+            </>
+          ) : (
+            <>
+              <SolidButton asChild variant="ghost" size="sm">
+                <Link href="/login">登录</Link>
+              </SolidButton>
+              <SolidButton asChild variant="secondary" size="sm">
+                <Link href="/me">
+                  <User className="size-3.5" />
+                  我的
+                </Link>
+              </SolidButton>
+              <SolidButton asChild variant="primary" size="sm">
+                <Link href="/submit/review">
+                  <PenLine className="size-3.5" />
+                  写评价
+                </Link>
+              </SolidButton>
+              <SolidButton asChild variant="dark" size="sm" data-testid="home-search-link">
+                <Link href="/search">
+                  <Search data-icon="inline-start" />
+                  搜索
+                </Link>
+              </SolidButton>
+            </>
+          )}
+        </div>
       }
     />
   )
@@ -43,9 +87,17 @@ function CompanyHeader() {
         </Link>
       }
       rightSlot={
-        <SolidButton asChild variant="secondary" size="sm">
-          <Link href="/">返回推荐</Link>
-        </SolidButton>
+        <div className="flex items-center gap-2">
+          <SolidButton asChild variant="primary" size="sm">
+            <Link href="/submit/review">
+              <PenLine className="size-3.5" />
+              写评价
+            </Link>
+          </SolidButton>
+          <SolidButton asChild variant="secondary" size="sm">
+            <Link href="/">返回推荐</Link>
+          </SolidButton>
+        </div>
       }
     />
   )
@@ -57,9 +109,17 @@ function SearchHeader() {
       title="搜索公司"
       variant="default"
       rightSlot={
-        <SolidButton asChild variant="secondary" size="sm">
-          <Link href="/">返回推荐</Link>
-        </SolidButton>
+        <div className="flex items-center gap-2">
+          <SolidButton asChild variant="primary" size="sm">
+            <Link href="/submit/review">
+              <PenLine className="size-3.5" />
+              写评价
+            </Link>
+          </SolidButton>
+          <SolidButton asChild variant="secondary" size="sm">
+            <Link href="/">返回推荐</Link>
+          </SolidButton>
+        </div>
       }
     />
   )

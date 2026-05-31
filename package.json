@@ -1,13 +1,14 @@
 {
   "name": "sinan",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "workspaces": ["apps/*", "packages/*"],
   "scripts": {
     "dev:web": "npm run dev --workspace=@sinan/web",
     "dev:ios": "npm run dev --workspace=@sinan/ios",
     "build:web": "npm run build --workspace=@sinan/web"
+  },
+  "overrides": {
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
   }
 }

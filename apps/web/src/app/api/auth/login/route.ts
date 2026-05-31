@@ -41,6 +41,30 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  // Dev bypass: when no DATABASE_URL, accept a test account for UI preview
+  if (!process.env.DATABASE_URL) {
+    const testEmail = "test@sinan.app"
+    const testPhone = "13800138000"
+    const isTestAccount =
+      (email === testEmail || phone === testPhone) && password === "test1234"
+
+    if (isTestAccount) {
+      await setAuthCookie({ userId: "dev-user-001", role: "user" })
+      return NextResponse.json({
+        user: {
+          id: "dev-user-001",
+          displayName: "指路人#042",
+          role: "user",
+        },
+      })
+    }
+
+    return NextResponse.json(
+      { error: "Database not configured. Dev test account: test@sinan.app / test1234" },
+      { status: 503 }
+    )
+  }
+
   try {
     const { db } = await import("@/db/client")
 

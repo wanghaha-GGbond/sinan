@@ -7,6 +7,7 @@ import type {
   RecommendedCompanyItem,
   Review,
   ReviewDiscussionItem,
+  ReplyItem,
 } from "@/lib/types"
 
 type ReviewSeed = Omit<
@@ -35,6 +36,7 @@ const reviews: ReviewSeed[] = [
     helpful: 428,
     createdAt: "2026-05-12",
     verifiedHint: "已完成匿名凭证校验",
+    verified: true,
   },
   {
     id: "review-2",
@@ -690,7 +692,7 @@ export const reviewDiscussions: ReviewDiscussionItem[] = [
     companyId: "northstar-tech",
     type: "question",
     authorRole: "job_seeker",
-    authorLabel: "匿名求职者",
+    authorLabel: "想进大厂",
     content: "想问下这个节奏快是整个公司都这样，还是主要集中在产品和研发？",
     createdAt: "2026-05-20",
     usefulCount: 31,
@@ -705,7 +707,7 @@ export const reviewDiscussions: ReviewDiscussionItem[] = [
     companyId: "northstar-tech",
     type: "supplement",
     authorRole: "former_employee",
-    authorLabel: "匿名过来人",
+    authorLabel: "离职不回头",
     content: "我补充一下，节奏快主要看团队。有些业务线比较稳定，但新项目组变化会明显多一些。",
     createdAt: "2026-05-21",
     usefulCount: 58,
@@ -720,7 +722,7 @@ export const reviewDiscussions: ReviewDiscussionItem[] = [
     companyId: "northstar-tech",
     type: "question",
     authorRole: "interviewee",
-    authorLabel: "匿名面试者",
+    authorLabel: "面了五轮",
     content: "面试里说试用期目标会单独确认，实际入职后会不会临时变很多？",
     createdAt: "2026-05-22",
     usefulCount: 24,
@@ -735,7 +737,7 @@ export const reviewDiscussions: ReviewDiscussionItem[] = [
     companyId: "northstar-tech",
     type: "supplement",
     authorRole: "current_employee",
-    authorLabel: "匿名在职员工",
+    authorLabel: "加班加麻了",
     content: "现在研发这边每周会同步一次优先级，临时变化还是有，但比去年少一些。最好问清楚你要去的具体小组。",
     createdAt: "2026-05-23",
     usefulCount: 46,
@@ -1362,6 +1364,86 @@ export function getReviewDiscussions(reviewId: string) {
         (["local_pending", "pending_review", "hidden", "rejected", "deleted_by_author"].includes(item.status) &&
           item.createdByCurrentUser))
   )
+}
+
+// ── Mock threaded replies ──────────────────────────────────────────────────
+
+const mockReplies: Record<string, ReplyItem[]> = {
+  "discussion-1": [
+    {
+      id: "reply-1a",
+      discussionId: "discussion-1",
+      authorLabel: "咖啡不加糖",
+      authorRole: "former_employee",
+      content: "主要是产品和研发，运营和市场节奏正常很多。不过就算研发也看组，服务器端比客户端稳定。",
+      createdAt: "2026-05-20",
+      usefulCount: 45,
+      replies: [
+        {
+          id: "reply-1a1",
+          discussionId: "discussion-1",
+          authorLabel: "跳槽预备役",
+          authorRole: "job_seeker",
+          content: "谢谢！那我面的是服务器端，应该还好。",
+          createdAt: "2026-05-20",
+          usefulCount: 18,
+        },
+        {
+          id: "reply-1a2",
+          discussionId: "discussion-1",
+          authorLabel: "后端老鸟",
+          authorRole: "current_employee",
+          content: "确实，我在后端组两年了，整体节奏可控，不过大促前会忙一阵。",
+          createdAt: "2026-05-21",
+          usefulCount: 23,
+        },
+      ],
+    },
+    {
+      id: "reply-1b",
+      discussionId: "discussion-1",
+      authorLabel: "HR小透明",
+      authorRole: "anonymous",
+      content: "面试时我们会说明具体团队的节奏情况，建议直接问面试官。",
+      createdAt: "2026-05-21",
+      usefulCount: 12,
+    },
+  ],
+  "discussion-2": [
+    {
+      id: "reply-2a",
+      discussionId: "discussion-2",
+      authorLabel: "跳槽预备役",
+      authorRole: "job_seeker",
+      content: "感谢补充！这个信息很有用，我去打听一下具体是哪个业务线。",
+      createdAt: "2026-05-21",
+      usefulCount: 28,
+    },
+    {
+      id: "reply-2b",
+      discussionId: "discussion-2",
+      authorLabel: "实习小能手",
+      authorRole: "intern",
+      content: "我在的新项目组确实变化多，但mentor会提前同步，还能接受。",
+      createdAt: "2026-05-22",
+      usefulCount: 15,
+    },
+  ],
+  "discussion-3": [
+    {
+      id: "reply-3a",
+      discussionId: "discussion-3",
+      authorLabel: "北漂三年",
+      authorRole: "current_employee",
+      content: "试用期目标确实会单独签，一般入职第一周就定下来了。后来如果大方向有调整会再做一次review。",
+      createdAt: "2026-05-22",
+      usefulCount: 34,
+    },
+  ],
+}
+
+export function getDiscussionReplies(discussionId: string): ReplyItem[] {
+  return mockReplies[discussionId] ?? []
 }
 
 export function createLocalDiscussion(

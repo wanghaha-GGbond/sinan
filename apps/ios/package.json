@@ -10,20 +10,21 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@sinan/shared": "*",
     "expo": "~54.0.0",
-    "expo-router": "~4.0.0",
-    "expo-linking": "~7.0.0",
-    "expo-constants": "~17.0.0",
-    "expo-status-bar": "~2.2.0",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "react-native": "0.79.2",
-    "react-native-safe-area-context": "~5.4.0",
-    "react-native-screens": "~4.10.0",
-    "@sinan/shared": "*"
+    "expo-constants": "~18.0.13",
+    "expo-linking": "~8.0.12",
+    "expo-router": "~6.0.24",
+    "expo-status-bar": "~3.0.9",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-safe-area-context": "~5.6.0",
+    "react-native-screens": "~4.16.0",
+    "react-native-web": "^0.21.0"
   },
   "devDependencies": {
-    "@types/react": "^19",
+    "@types/react": "~19.1.10",
     "typescript": "^5"
   }
 }

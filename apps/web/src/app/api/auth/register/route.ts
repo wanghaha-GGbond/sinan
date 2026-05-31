@@ -70,6 +70,21 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  // Dev bypass: when no DATABASE_URL, accept a test registration
+  if (!process.env.DATABASE_URL) {
+    await setAuthCookie({ userId: "dev-user-001", role: "user" })
+    return NextResponse.json(
+      {
+        user: {
+          id: "dev-user-001",
+          displayName: email ? email.split("@")[0] : `用户${phone?.slice(-4) ?? ""}`,
+          role: "user",
+        },
+      },
+      { status: 201 }
+    )
+  }
+
   try {
     const { db } = await import("@/db/client")
 

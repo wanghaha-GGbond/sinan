@@ -10,6 +10,7 @@ import { z } from "zod"
 
 import { FullscreenQuestionnaire } from "@/components/questionnaire/fullscreen-questionnaire"
 import { RatingSlider } from "@/components/rating/rating-slider"
+import { VerifyIdentity } from "@/components/review/verify-identity"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -449,6 +450,10 @@ export default function SubmitReviewPage() {
             ))}
           </CardContent>
         </Card>
+
+        <div className="mt-6">
+          <VerifyIdentity companyName={companySelection.selectedCompany?.name ?? ""} />
+        </div>
       </section>
     )
   }

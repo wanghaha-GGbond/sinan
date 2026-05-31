@@ -46,6 +46,11 @@ export function ReviewCard({
           <div className="min-w-0 space-y-1">
             <p className="text-sm text-[#6B7280]">
               匿名评价者 · L{review.trustLevel} · {review.employmentStatus}
+              {review.verified && (
+                <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-[#DFF8EC] px-2 py-0.5 text-xs font-medium text-[#07563A]">
+                  ✅ 已验证员工
+                </span>
+              )}
             </p>
             {detailHref ? (
               <Link href={detailHref} className="block text-base font-semibold leading-6 text-[#111827] hover:text-[#0E8F5F]">

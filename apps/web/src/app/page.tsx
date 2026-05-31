@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowRight, Route } from "lucide-react"
+import { ArrowRight, PenLine, Route } from "lucide-react"
 
 import { MetricPill } from "@/components/ui/metric-pill"
 import { ScoreChip } from "@/components/ui/score-chip"

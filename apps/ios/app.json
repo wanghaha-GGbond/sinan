@@ -12,7 +12,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.sinan.app"
     },
-    "platforms": ["ios"],
+    "platforms": ["ios", "web"],
     "plugins": ["expo-router"]
   }
 }

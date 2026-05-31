@@ -43,6 +43,7 @@ export async function GET() {
     return NextResponse.json({
       user: {
         id: user.userId,
+        displayName: user.userId === "dev-user-001" ? "指路人#042" : undefined,
         role: user.role,
       },
     })
