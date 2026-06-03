@@ -248,6 +248,24 @@ export type DailyTask = {
   progress: number
   target: number
   completed: boolean
+  /** Where the "去完成" button should take the user. */
+  href?: string
+  /** Optional tooltip when the task is locked / requires a company. */
+  hint?: string
+}
+
+export type MyReviewEntry = Review & {
+  companyId: string
+  companyName: string
+}
+
+export type BadgeProgress = {
+  id: string
+  name: string
+  description: string
+  unlocked: boolean
+  progress?: number
+  target?: number
 }
 
 export type CurrentUser = {

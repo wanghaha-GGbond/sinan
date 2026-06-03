@@ -2,13 +2,14 @@
 
 import Link from "next/link"
 import { useMemo, useState } from "react"
-import { Flag, MessageCircle, ThumbsUp } from "lucide-react"
+import { MessageCircle, ThumbsUp } from "lucide-react"
 import { toast } from "sonner"
 
 import { ScoreChip } from "@/components/ui/score-chip"
 import { SolidButton } from "@/components/ui/solid-button"
 import { SolidCard } from "@/components/ui/solid-card"
 import { TagPill } from "@/components/ui/tag-pill"
+import { ReportReviewButton } from "@/components/review/report-review-button"
 import type { Review } from "@/lib/types"
 import { isReviewUseful, toggleReviewUseful } from "@/lib/useful-storage"
 
@@ -123,7 +124,7 @@ export function ReviewCard({
             onClick={() => {
               const next = toggleReviewUseful(review.id)
               setLiked(next)
-              toast.success(next ? "已记录，你帮后来者筛出了一条有用评价" : "已取消有用标记")
+              toast.success(next ? "已记录,你帮后来者筛出了一条有用评价" : "已取消有用标记")
             }}
           >
             <ThumbsUp className="size-4" />
@@ -142,16 +143,7 @@ export function ReviewCard({
               回复 {review.commentCount}
             </span>
           )}
-          <SolidButton
-            type="button"
-            variant="risk"
-            size="sm"
-            className="rounded-full"
-            onClick={() => toast("已收到反馈，我们会优先保护匿名和事实表达")}
-          >
-            <Flag className="size-4" />
-            举报
-          </SolidButton>
+          <ReportReviewButton reviewId={review.id} />
         </div>
       </div>
     </SolidCard>

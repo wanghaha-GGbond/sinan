@@ -66,8 +66,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  // Check auth on mount
+  // Check auth on mount. This is the canonical "fetch once on mount" pattern
+  // — React 19's set-state-in-effect rule flags it, but the alternative
+  // (useSyncExternalStore) requires a global store and the cascading render
+  // only happens once on first mount.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refresh()
   }, [refresh])
 

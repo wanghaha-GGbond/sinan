@@ -1,9 +1,11 @@
 import type {
+  BadgeProgress,
   CBTIProfile,
   Company,
   CompanyVibeTag,
   CurrentUser,
   DailyTask,
+  MyReviewEntry,
   RecommendedCompanyItem,
   Review,
   ReviewDiscussionItem,
@@ -1495,6 +1497,78 @@ export const currentUser: CurrentUser = {
   badges: ["第一次指路", "连续点灯 7 天", "高赞真实体验", "薪资贡献者", "面试观察员"],
 }
 
+/**
+ * Reviews authored by the current (mock) user — shown in /me.
+ *
+ * The prototype reviews don't carry an "isCurrentUser" marker, so we just
+ * expose the first few reviews from a couple of companies as the seed.
+ * In production this would be `WHERE userId = currentUser.id`.
+ */
+export const myReviews: MyReviewEntry[] = companies.flatMap((company, companyIndex) =>
+  company.reviews
+    .filter((_, reviewIndex) => companyIndex < 2 && reviewIndex < 2)
+    .map<MyReviewEntry>((review) => ({
+      ...review,
+      companyId: company.id,
+      companyName: company.shortName,
+    }))
+)
+
+/**
+ * Companies the mock user has favorited. Persisted client-side via
+ * `favorites-storage.ts` so the heart icon on company pages can also
+ * mutate this set.
+ */
+export const myFavoriteCompanies: { companyId: string; companyName: string; createdAt: string }[] = companies
+  .slice(0, 3)
+  .map((company, index) => ({
+    companyId: company.id,
+    companyName: company.shortName,
+    createdAt: new Date(Date.now() - (index + 1) * 86_400_000 * 3).toISOString(),
+  }))
+
+/** Badge catalog — used by /me to show locked + unlocked progress. */
+export const badgeCatalog: BadgeProgress[] = [
+  { id: "first-light", name: "第一次点灯", description: "完成首次任意动作", unlocked: true },
+  { id: "first-direction", name: "第一次指路", description: "发布第一条匿名评价", unlocked: true },
+  {
+    id: "streak-7",
+    name: "连续点灯 7 天",
+    description: "连续 7 天完成任意动作",
+    unlocked: true,
+    progress: 7,
+    target: 7,
+  },
+  {
+    id: "streak-30",
+    name: "连续点灯 30 天",
+    description: "连续 30 天",
+    unlocked: false,
+    progress: 7,
+    target: 30,
+  },
+  { id: "helpful-author", name: "高赞真实体验", description: "单条评价有用数 ≥ 50", unlocked: true },
+  { id: "salary-contrib", name: "薪资贡献者", description: "贡献 ≥ 3 条薪资区间", unlocked: true },
+  { id: "interview-observer", name: "面试观察员", description: "贡献 ≥ 3 条面试体验", unlocked: true },
+  {
+    id: "risk-spotter",
+    name: "避坑达人",
+    description: "举报违规内容并被采纳 5 次",
+    unlocked: false,
+    progress: 1,
+    target: 5,
+  },
+  {
+    id: "trusted",
+    name: "可信工友",
+    description: "指路等级达到 L5",
+    unlocked: false,
+    progress: 3,
+    target: 5,
+  },
+  { id: "veteran", name: "司南老用户", description: "注册满 1 年", unlocked: false, progress: 0, target: 1 },
+]
+
 export const dailyTasks: DailyTask[] = [
   {
     id: "view-company",
@@ -1503,6 +1577,7 @@ export const dailyTasks: DailyTask[] = [
     progress: 1,
     target: 1,
     completed: true,
+    href: "/rankings",
   },
   {
     id: "helpful-review",
@@ -1511,6 +1586,8 @@ export const dailyTasks: DailyTask[] = [
     progress: 0,
     target: 1,
     completed: false,
+    href: "/",
+    hint: "在任意公司评价下点「有用」",
   },
   {
     id: "write-review",
@@ -1519,6 +1596,27 @@ export const dailyTasks: DailyTask[] = [
     progress: 0,
     target: 1,
     completed: false,
+    href: "/submit/review",
+    hint: "至少 30 字 + 通过匿名安全检查",
+  },
+  {
+    id: "follow-company",
+    title: "收藏 1 家你关注的公司",
+    rewardPoints: 3,
+    progress: 0,
+    target: 1,
+    completed: false,
+    href: "/search",
+    hint: "在公司详情页点 ☆ 收藏",
+  },
+  {
+    id: "report-risk",
+    title: "查看 1 条风险评价",
+    rewardPoints: 3,
+    progress: 0,
+    target: 1,
+    completed: false,
+    href: "/community",
   },
 ]
 

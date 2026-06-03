@@ -270,6 +270,7 @@ export default function SubmitReviewPage() {
   const openFromQuery = searchParams.get("questionnaire") === "1"
   const addCompanyMode = searchParams.get("mode") === "add-company"
   const addCompanyName = searchParams.get("name") ?? ""
+  const preselectCompanyId = searchParams.get("companyId") ?? ""
   const allCompanies = useMemo(() => [...companies, ...companySelection.addedCompanies], [companySelection.addedCompanies])
   const normalizedCompanyQuery = companySelection.query.trim().toLowerCase()
   const matchedCompanies = useMemo(() => {
@@ -330,6 +331,15 @@ export default function SubmitReviewPage() {
       addCompanyModeInitializedRef.current = false
     }
   }, [addCompanyMode, addCompanyName])
+
+  // Pre-select a company when arrived from a "匿名评价" button on a company page.
+  useEffect(() => {
+    if (!preselectCompanyId || addCompanyMode) return
+    const target = companies.find((c) => c.id === preselectCompanyId)
+    if (!target) return
+    if (companySelection.selectedCompany?.id === target.id) return
+    dispatchCompanySelection({ type: "SELECT_EXISTING_COMPANY", company: target })
+  }, [preselectCompanyId, addCompanyMode, companySelection.selectedCompany])
 
   function nextStep() {
     if (step === 0) {
