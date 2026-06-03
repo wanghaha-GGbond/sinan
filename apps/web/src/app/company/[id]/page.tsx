@@ -47,7 +47,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
             {company.vibeTag ? <p className="truncate text-xs text-[#6B7280]">公司体感：{company.vibeTag.name}</p> : null}
           </div>
           <SolidButton asChild size="sm">
-            <Link href="/submit/review">
+            <Link href={`/submit/review?companyId=${company.id}`}>
             <PenLine />
             匿名评价
             </Link>

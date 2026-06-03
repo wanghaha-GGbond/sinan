@@ -15,7 +15,6 @@ async function stabilizePage(page: import("@playwright/test").Page) {
   await page.evaluate(async () => {
     // Keep screenshots deterministic when fonts load asynchronously.
     if ("fonts" in document) {
-      // @ts-expect-error browsers implement this runtime API
       await document.fonts.ready
     }
   })

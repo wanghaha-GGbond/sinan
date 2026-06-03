@@ -3,6 +3,7 @@
 import Link from "next/link"
 import {
   BriefcaseBusiness,
+  Building2,
   Compass,
   Gift,
   LogOut,
@@ -185,8 +186,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <main>{children}</main>
       <footer className="border-t">
         <div className="mx-auto flex w-full max-w-[920px] flex-col gap-2 px-4 py-6 text-sm text-muted-foreground sm:px-6 md:flex-row md:items-center md:justify-between">
-          <p>司南：入职前，先看清方向。</p>
-          <p>匿名保护优先，不向公司开放用户身份。</p>
+          <p>司南:入职前,先看清方向。</p>
+          <div className="flex flex-wrap items-center gap-3 text-xs">
+            <Link
+              href="/company-portal"
+              className="inline-flex items-center gap-1 rounded-full bg-[#F1F5EF] px-3 py-1 font-semibold text-[#374151] transition hover:bg-[#E8EEE5]"
+              data-testid="footer-company-portal"
+            >
+              <Building2 className="size-3.5" />
+              我是公司 · 打开控制台
+            </Link>
+            <span>匿名保护优先,不向公司开放用户身份。</span>
+          </div>
         </div>
       </footer>
     </div>
