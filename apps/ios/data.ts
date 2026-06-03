@@ -190,6 +190,18 @@ export const companies: MobileCompany[] = [
 
 export const popularSearches = ["北辰智造", "金融科技", "上海 AI", "加班波动", "薪资兑现"]
 
+/** Current user — mirrors `apps/web/src/lib/mock-data.ts` `currentUser`. */
+export const currentUser = {
+  displayName: "指路人",
+  username: "匿名评价者",
+  trustLevel: 3,
+  directionPoints: 1280,
+  nextLevelPoints: 1500,
+  streakDays: 7,
+  helpedCount: 128,
+  badges: ["第一次指路", "连续点灯 7 天", "高赞真实体验", "薪资贡献者", "面试观察员"],
+}
+
 export const reviews: MobileReview[] = [
   {
     id: "review-1",
@@ -451,3 +463,141 @@ export function companySnapshot(companyId: string) {
     discussions: companyDiscussions.length,
   }
 }
+
+// ── Me page data (mirror of apps/web mock-data) ─────────────────────────
+
+export type MobileDailyTask = {
+  id: string
+  title: string
+  rewardPoints: number
+  progress: number
+  target: number
+  completed: boolean
+  href?: string
+  hint?: string
+}
+
+export type MobileBadgeProgress = {
+  id: string
+  name: string
+  description: string
+  unlocked: boolean
+  progress?: number
+  target?: number
+}
+
+export const dailyTasks: MobileDailyTask[] = [
+  {
+    id: "view-company",
+    title: "查看 1 家公司",
+    rewardPoints: 5,
+    progress: 1,
+    target: 1,
+    completed: true,
+    href: "/rankings",
+  },
+  {
+    id: "helpful-review",
+    title: "给 1 条评价点有用",
+    rewardPoints: 5,
+    progress: 0,
+    target: 1,
+    completed: false,
+    href: "/",
+    hint: "在任意公司评价下点「有用」",
+  },
+  {
+    id: "write-review",
+    title: "匿名评价一家你熟悉的公司",
+    rewardPoints: 20,
+    progress: 0,
+    target: 1,
+    completed: false,
+    href: "/submit",
+    hint: "至少 30 字 + 通过匿名安全检查",
+  },
+  {
+    id: "follow-company",
+    title: "收藏 1 家你关注的公司",
+    rewardPoints: 3,
+    progress: 0,
+    target: 1,
+    completed: false,
+    href: "/search",
+    hint: "在公司详情页点 ☆ 收藏",
+  },
+  {
+    id: "report-risk",
+    title: "查看 1 条风险评价",
+    rewardPoints: 3,
+    progress: 0,
+    target: 1,
+    completed: false,
+    href: "/community",
+  },
+]
+
+export const badgeCatalog: MobileBadgeProgress[] = [
+  { id: "first-light", name: "第一次点灯", description: "完成首次任意动作", unlocked: true },
+  { id: "first-direction", name: "第一次指路", description: "发布第一条匿名评价", unlocked: true },
+  {
+    id: "streak-7",
+    name: "连续点灯 7 天",
+    description: "连续 7 天完成任意动作",
+    unlocked: true,
+    progress: 7,
+    target: 7,
+  },
+  {
+    id: "streak-30",
+    name: "连续点灯 30 天",
+    description: "连续 30 天",
+    unlocked: false,
+    progress: 7,
+    target: 30,
+  },
+  { id: "helpful-author", name: "高赞真实体验", description: "单条评价有用数 ≥ 50", unlocked: true },
+  { id: "salary-contrib", name: "薪资贡献者", description: "贡献 ≥ 3 条薪资区间", unlocked: true },
+  { id: "interview-observer", name: "面试观察员", description: "贡献 ≥ 3 条面试体验", unlocked: true },
+  {
+    id: "risk-spotter",
+    name: "避坑达人",
+    description: "举报违规内容并被采纳 5 次",
+    unlocked: false,
+    progress: 1,
+    target: 5,
+  },
+  {
+    id: "trusted",
+    name: "可信工友",
+    description: "指路等级达到 L5",
+    unlocked: false,
+    progress: 3,
+    target: 5,
+  },
+  { id: "veteran", name: "司南老用户", description: "注册满 1 年", unlocked: false, progress: 0, target: 1 },
+]
+
+/** Reviews authored by the current (mock) user — shown in /me. */
+export function myReviews(): Array<MobileReview & { companyId: string; companyName: string }> {
+  return companies.flatMap((company, companyIndex) =>
+    companyIndex < 2
+      ? getCompanyReviews(company.id).slice(0, 2).map((review) => ({
+          ...review,
+          companyId: company.id,
+          companyName: company.shortName,
+        }))
+      : []
+  )
+}
+
+/** Companies the mock user has favorited. Merged with AsyncStorage in /me. */
+export const myFavoriteCompanies: Array<{ companyId: string; companyName: string; createdAt: string }> =
+  companies.slice(0, 3).map((company, index) => ({
+    companyId: company.id,
+    companyName: company.shortName,
+    createdAt: new Date(Date.now() - (index + 1) * 86_400_000 * 3).toISOString(),
+  }))
+
+/** Companies currently "claimed" in the prototype portal demo. */
+export const claimedCompanyIds: string[] = ["northstar-tech", "polaris-auto"]
