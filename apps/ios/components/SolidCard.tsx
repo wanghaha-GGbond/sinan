@@ -1,7 +1,7 @@
 import { View, StyleSheet, type ViewStyle } from "react-native"
 import { COLORS, RADIUS, SHADOWS } from "../theme"
 
-type CardVariant = "default" | "elevated" | "emerald" | "hero"
+type CardVariant = "default" | "subtle" | "elevated" | "emerald" | "hero" | "risk"
 
 type Props = {
   children: React.ReactNode
@@ -21,9 +21,14 @@ const variantStyles: Record<CardVariant, ViewStyle> = {
   default: {
     ...SHADOWS.card,
   },
+  subtle: {
+    borderRadius: RADIUS["2xl"],
+    ...SHADOWS.cardSubtle,
+  },
   elevated: {
     ...SHADOWS.card,
-    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.08,
     shadowRadius: 24,
   },
   emerald: {
@@ -40,6 +45,15 @@ const variantStyles: Record<CardVariant, ViewStyle> = {
     backgroundColor: COLORS.surfaceHover,
     ...SHADOWS.hero,
   },
+  risk: {
+    backgroundColor: COLORS.riskSoft,
+    borderColor: "#FCD9A6",
+    shadowColor: COLORS.riskForeground,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    elevation: 5,
+  },
 }
 
 const S = StyleSheet.create({
@@ -47,6 +61,6 @@ const S = StyleSheet.create({
     backgroundColor: COLORS.surface,
     borderRadius: RADIUS["3xl"],
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: COLORS.borderSoft,
   },
 })

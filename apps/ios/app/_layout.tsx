@@ -1,18 +1,18 @@
 import { Tabs } from "expo-router"
 import { StatusBar } from "expo-status-bar"
-import { Text } from "react-native"
+import { View } from "react-native"
 import { COLORS, SHADOWS } from "../theme"
 
-function TabIcon({ label, focused }: { label: string; focused: boolean }) {
-  const icons: Record<string, string> = {
-    "司南": "🧭",
-    "榜单": "🏆",
-    "我的": "👤",
-  }
+function TabIcon({ focused }: { focused: boolean }) {
   return (
-    <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.5 }}>
-      {icons[label] ?? "●"}
-    </Text>
+    <View
+      style={{
+        width: focused ? 22 : 8,
+        height: 8,
+        borderRadius: 999,
+        backgroundColor: focused ? COLORS.primary : COLORS.surfaceHover,
+      }}
+    />
   )
 }
 
@@ -43,28 +43,38 @@ export default function RootLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: "司南",
-            tabBarIcon: ({ focused }) => <TabIcon label="司南" focused={focused} />,
+            title: "推荐",
+            tabBarIcon: ({ focused }) => <TabIcon focused={focused} />,
           }}
         />
         <Tabs.Screen
           name="rankings"
           options={{
-            title: "榜单",
-            tabBarIcon: ({ focused }) => <TabIcon label="榜单" focused={focused} />,
+            title: "发现",
+            tabBarIcon: ({ focused }) => <TabIcon focused={focused} />,
           }}
         />
         <Tabs.Screen
           name="me"
           options={{
             title: "我的",
-            tabBarIcon: ({ focused }) => <TabIcon label="我的" focused={focused} />,
+            tabBarIcon: ({ focused }) => <TabIcon focused={focused} />,
           }}
         />
         <Tabs.Screen name="company/[id]" options={{ href: null }} />
+        <Tabs.Screen name="company/[id]/reviews" options={{ href: null }} />
+        <Tabs.Screen name="company/[id]/reviews/[reviewId]" options={{ href: null }} />
+        <Tabs.Screen name="company/[id]/ratings" options={{ href: null }} />
         <Tabs.Screen name="review/[id]" options={{ href: null }} />
         <Tabs.Screen name="search" options={{ href: null }} />
         <Tabs.Screen name="submit" options={{ href: null }} />
+        <Tabs.Screen name="login" options={{ href: null }} />
+        <Tabs.Screen name="register" options={{ href: null }} />
+        <Tabs.Screen name="salaries" options={{ href: null }} />
+        <Tabs.Screen name="interviews" options={{ href: null }} />
+        <Tabs.Screen name="jobs" options={{ href: null }} />
+        <Tabs.Screen name="benefits" options={{ href: null }} />
+        <Tabs.Screen name="community" options={{ href: null }} />
       </Tabs>
     </>
   )

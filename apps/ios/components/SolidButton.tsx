@@ -29,6 +29,8 @@ export function SolidButton({
     <TouchableOpacity
       onPress={onPress}
       disabled={disabled}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: Boolean(disabled) }}
       activeOpacity={0.7}
       style={[
         S.base,

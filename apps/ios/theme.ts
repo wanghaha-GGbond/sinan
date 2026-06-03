@@ -23,6 +23,7 @@ export const COLORS = {
 
   // 边框
   border: "#E5E7DB",
+  borderSoft: "rgba(229,231,219,0.6)",
 
   // 语义色
   risk: "#C76A15",
@@ -86,10 +87,10 @@ export const SHADOWS = {
   },
   cardSubtle: {
     shadowColor: "#111827",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.035,
-    shadowRadius: 16,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 7 },
+    shadowOpacity: 0.055,
+    shadowRadius: 18,
+    elevation: 5,
   },
   iconContainer: {
     shadowColor: "#0E8F5F",
