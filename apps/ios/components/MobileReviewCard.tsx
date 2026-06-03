@@ -1,11 +1,13 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native"
 import { Link } from "expo-router"
 import { MobileReview } from "../data"
 import { COLORS } from "../theme"
+import { isReviewUsefulAsync, toggleReviewUsefulAsync } from "../lib/storage"
 import { SolidButton } from "./SolidButton"
 import { SolidCard } from "./SolidCard"
 import { ScoreChip, TagPill } from "./SinanPrimitives"
+import { MobileReportButton } from "./MobileReportButton"
 
 function tagTone(tag: string): "risk" | "positive" | "neutral" {
   if (/(风险|慎重|压力|加班|不确定|波动|限制|慢|消耗)/.test(tag)) return "risk"
@@ -28,6 +30,22 @@ export function MobileReviewCard({
   const [isExpanded, setIsExpanded] = useState(expanded)
   const isLong = useMemo(() => review.content.replace(/\s/g, "").length > 180, [review.content])
   const likeCount = review.usefulCount + (liked ? 1 : 0)
+
+  // Hydrate persisted "useful" state after mount.
+  useEffect(() => {
+    let cancelled = false
+    isReviewUsefulAsync(review.id).then((v) => {
+      if (!cancelled) setLiked(v)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [review.id])
+
+  async function handleToggleUseful() {
+    const next = await toggleReviewUsefulAsync(review.id)
+    setLiked(next)
+  }
 
   return (
     <SolidCard variant="subtle" style={S.card}>
@@ -70,7 +88,7 @@ export function MobileReviewCard({
             title={`有用 ${likeCount}`}
             variant={liked ? "primary" : "secondary"}
             size="sm"
-            onPress={() => setLiked((prev) => !prev)}
+            onPress={handleToggleUseful}
           />
           <Link href={`/company/${companyId}/reviews/${review.id}`} asChild>
             <TouchableOpacity>
@@ -79,7 +97,7 @@ export function MobileReviewCard({
               </View>
             </TouchableOpacity>
           </Link>
-          <SolidButton title="举报" variant="risk" size="sm" />
+          <MobileReportButton reviewId={review.id} />
         </View>
       </View>
     </SolidCard>
