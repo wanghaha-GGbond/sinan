@@ -25,10 +25,10 @@ import {
   TrendingUp,
 } from "lucide-react-native"
 
-import { COLORS, RADIUS } from "../theme"
-import { SolidButton } from "../components/SolidButton"
-import { SolidCard } from "../components/SolidCard"
-import { ScoreChip, SolidTopbar, TagPill } from "../components/SinanPrimitives"
+import { COLORS, RADIUS } from "../../theme"
+import { SolidButton } from "../../components/SolidButton"
+import { SolidCard } from "../../components/SolidCard"
+import { ScoreChip, SolidTopbar, TagPill } from "../../components/SinanPrimitives"
 import {
   APPEAL_REASONS,
   CORRECTION_FIELDS,
@@ -40,8 +40,8 @@ import {
   type CompanyAppeal,
   type CompanyCorrection,
   type CorrectionFieldId,
-} from "../lib/storage"
-import { companies, getCompanyReviews } from "../data"
+} from "../../lib/storage"
+import { companies, getCompanyReviews } from "../../data"
 
 const CLAIMED = new Set(["northstar-tech", "polaris-auto"])
 

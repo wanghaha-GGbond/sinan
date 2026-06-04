@@ -10,8 +10,10 @@ type Props = {
   variant?: ButtonVariant
   size?: ButtonSize
   disabled?: boolean
-  style?: ViewStyle
+  style?: ViewStyle | ViewStyle[]
   textStyle?: TextStyle
+  /** RN testID — useful for E2E tests and Detox. Forwarded to TouchableOpacity. */
+  testID?: string
 }
 
 export function SolidButton({
@@ -22,6 +24,7 @@ export function SolidButton({
   disabled,
   style,
   textStyle,
+  testID,
 }: Props) {
   const isPrimary = variant === "primary"
 
@@ -32,6 +35,7 @@ export function SolidButton({
       accessibilityRole="button"
       accessibilityState={{ disabled: Boolean(disabled) }}
       activeOpacity={0.7}
+      testID={testID}
       style={[
         S.base,
         S[size],

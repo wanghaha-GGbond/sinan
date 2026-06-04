@@ -2,11 +2,11 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-nati
 import { Link } from "expo-router"
 import { ArrowRight, Building2, ShieldCheck, Star, Users } from "lucide-react-native"
 
-import { COLORS, RADIUS } from "../theme"
-import { SolidButton } from "../components/SolidButton"
-import { SolidCard } from "../components/SolidCard"
-import { ScoreChip, SolidTopbar, TagPill } from "../components/SinanPrimitives"
-import { claimedCompanyIds, companies } from "../data"
+import { COLORS, RADIUS } from "../../theme"
+import { SolidButton } from "../../components/SolidButton"
+import { SolidCard } from "../../components/SolidCard"
+import { ScoreChip, SolidTopbar, TagPill } from "../../components/SinanPrimitives"
+import { claimedCompanyIds, companies } from "../../data"
 
 export default function CompanyPortalIndexScreen() {
   const claimed = companies.filter((c) => claimedCompanyIds.includes(c.id))

@@ -90,10 +90,20 @@ export function MobileReviewCard({
             size="sm"
             onPress={handleToggleUseful}
           />
-          <Link href={`/company/${companyId}/reviews/${review.id}`} asChild>
-            <TouchableOpacity>
+          <Link
+            href={{
+              pathname: `/company/${companyId}/reviews/${review.id}`,
+              params: { focus: "discussion" },
+            }}
+            asChild
+          >
+            <TouchableOpacity testID={`review-card-reply-${review.id}`}>
               <View>
-                <SolidButton title={`回复 ${review.discussionCount}`} variant="secondary" size="sm" />
+                <SolidButton
+                  title={`回复 ${review.discussionCount}`}
+                  variant="secondary"
+                  size="sm"
+                />
               </View>
             </TouchableOpacity>
           </Link>
