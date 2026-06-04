@@ -244,3 +244,73 @@ export async function submitAppealAsync(
   await writeJson(APPEAL_KEY, [next, ...all])
   return next
 }
+
+// ── Review discussions (追问 / 补充) ───────────────────────────────────
+
+const DISCUSSION_KEY = "sinan_review_discussions"
+
+export type DiscussionType = "追问" | "补充"
+export type DiscussionStatus = "visible" | "limited_visible" | "pending_review" | "rejected" | "hidden"
+
+export type ReviewDiscussion = {
+  id: string
+  reviewId: string
+  companyId: string
+  type: DiscussionType
+  authorLabel: string
+  authorRole: "job_seeker" | "current_employee" | "former_employee" | "interviewee" | "intern" | "contractor" | "anonymous"
+  content: string
+  usefulCount: number
+  status: DiscussionStatus
+  isUsefulByCurrentUser?: boolean
+  createdAt: string
+}
+
+export async function listDiscussionsForReviewAsync(reviewId: string): Promise<ReviewDiscussion[]> {
+  const all = await readJson<ReviewDiscussion[]>(DISCUSSION_KEY, [])
+  return all.filter((d) => d.reviewId === reviewId)
+}
+
+export async function listMyDiscussionsAsync(): Promise<ReviewDiscussion[]> {
+  // For now: any discussion authored by the current user would be persisted
+  // with a marker; in the prototype we just return all of them sorted by date.
+  const all = await readJson<ReviewDiscussion[]>(DISCUSSION_KEY, [])
+  return all
+}
+
+export async function isDiscussionUsefulByMeAsync(discussionId: string): Promise<boolean> {
+  const all = await readJson<ReviewDiscussion[]>(DISCUSSION_KEY, [])
+  return all.find((d) => d.id === discussionId)?.isUsefulByCurrentUser ?? false
+}
+
+export async function submitDiscussionAsync(
+  input: Omit<ReviewDiscussion, "id" | "usefulCount" | "status" | "isUsefulByCurrentUser" | "createdAt">
+): Promise<ReviewDiscussion> {
+  const next: ReviewDiscussion = {
+    ...input,
+    id: newId("disc"),
+    usefulCount: 0,
+    status: "pending_review",
+    isUsefulByCurrentUser: false,
+    createdAt: new Date().toISOString(),
+  }
+  const all = await readJson<ReviewDiscussion[]>(DISCUSSION_KEY, [])
+  await writeJson(DISCUSSION_KEY, [next, ...all])
+  return next
+}
+
+export async function toggleDiscussionUsefulAsync(discussionId: string): Promise<boolean> {
+  const all = await readJson<ReviewDiscussion[]>(DISCUSSION_KEY, [])
+  let nextValue = false
+  const updated = all.map((d) => {
+    if (d.id !== discussionId) return d
+    if (d.isUsefulByCurrentUser) {
+      nextValue = false
+      return { ...d, isUsefulByCurrentUser: false, usefulCount: Math.max(0, d.usefulCount - 1) }
+    }
+    nextValue = true
+    return { ...d, isUsefulByCurrentUser: true, usefulCount: d.usefulCount + 1 }
+  })
+  await writeJson(DISCUSSION_KEY, updated)
+  return nextValue
+}

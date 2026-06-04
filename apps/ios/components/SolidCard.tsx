@@ -6,12 +6,13 @@ type CardVariant = "default" | "subtle" | "elevated" | "emerald" | "hero" | "ris
 type Props = {
   children: React.ReactNode
   variant?: CardVariant
-  style?: ViewStyle
+  style?: ViewStyle | ViewStyle[]
+  testID?: string
 }
 
-export function SolidCard({ children, variant = "default", style }: Props) {
+export function SolidCard({ children, variant = "default", style, testID }: Props) {
   return (
-    <View style={[S.base, variantStyles[variant], style]}>
+    <View testID={testID} style={[S.base, variantStyles[variant], style]}>
       {children}
     </View>
   )
