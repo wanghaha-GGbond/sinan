@@ -8,6 +8,66 @@ export type RatingDimension = {
   description: string
 }
 
+// Matches the shape returned by /api/companies/search (GET)
+export type CompanyListItem = {
+  id: string
+  name: string
+  registeredName: string | null
+  shortName: string | null
+  englishName: string | null
+  aliases: string[] | null
+  city: string
+  industry: string
+  size: string | null
+  financingStage: string | null
+  website: string | null
+  logoUrl: string | null
+  description: string | null
+  reviewStatus: "pending_review" | "reviewable" | "rejected"
+  claimedStatus: "unclaimed" | "claimed"
+  source: "platform_seed" | "user_added" | "platform_verified" | "import"
+  businessStatus: string | null
+  foundedDate: string | null
+  unifiedSocialCreditCode: string | null
+  registeredAddress: string | null
+  legalRepresentative: string | null
+  createdAt: string
+  updatedAt: string
+  // aggregated fields (may not be present for all results)
+  directionScore?: number
+  recommendationRate?: number
+  reviewCount?: number
+  salaryRange?: string | null
+  riskLevel?: string
+  riskTags?: string[]
+  highlights?: string[]
+}
+
+export type ApiResponse<T> = { data: T; loading: false; error: null } |
+                             { data: null; loading: true; error: null } |
+                             { data: null; loading: false; error: string }
+
+// Shape returned by GET /api/reviews
+export type ReviewListItem = {
+  id: string
+  companyId: string
+  title: string
+  content: string | null
+  summary: string | null
+  directionScore: string
+  recommendToJoin: boolean | null
+  employmentStatus: string | null
+  jobTitle: string | null
+  city: string | null
+  authorRole: string
+  authorLabel: string
+  usefulCount: number
+  discussionCount: number
+  status: string
+  createdAt: string
+  tags: string[] | null
+}
+
 export type Review = {
   id: string
   companyId: string
@@ -194,14 +254,14 @@ export type Company = {
   city: string
   size: string
   stage: string
-  financingStage?: string
-  website?: string
-  description?: string
+  financingStage?: string | null
+  website?: string | null
+  description?: string | null
   directionScore: number
   recommendationRate: number
   reviewCount: number
-  salaryRange: string
-  riskLevel: CompanyRiskLevel
+  salaryRange: string | null
+  riskLevel: CompanyRiskLevel | string
   riskTags: string[]
   trustLevel: string
   highlights: string[]
@@ -226,6 +286,9 @@ export type Company = {
   createdByUser?: boolean
   pendingReview?: boolean
   reviewStatus?: CompanyReviewStatus
+  createdAt?: string
+  updatedAt?: string
+  logoUrl?: string | null
 }
 
 export type RatingDraft = {

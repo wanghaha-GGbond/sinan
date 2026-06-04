@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import {
   getBenefitInsights,
@@ -9,7 +9,8 @@ import {
   getInterviewInsights,
   getSalaryInsights,
 } from "@/lib/glassdoor-insights"
-import { companies } from "@/lib/mock-data"
+import { searchCompanies } from "@/lib/api/companies"
+import type { CompanyListItem } from "@/lib/api/types"
 import { SolidButton } from "@/components/ui/solid-button"
 import { SolidCard } from "@/components/ui/solid-card"
 import { ScoreChip } from "@/components/ui/score-chip"
@@ -26,70 +27,76 @@ const tabs = [
 type RankTab = (typeof tabs)[number]["key"]
 
 export default function RankingsPage() {
+  const [companies, setCompanies] = useState<CompanyListItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<RankTab>("score")
 
-  // Pre-compute per-company insight scores once. Each tab then re-orders by
-  // a different signal. We always use the same company list shape so the UI
-  // doesn't re-mount.
-  const snapshots = useMemo(() => {
-    const salaryByCompany = new Map(getSalaryInsights(companies).map((s) => [s.companyId, s]))
-    const interviewByCompany = new Map(getInterviewInsights(companies).map((s) => [s.companyId, s]))
-    const benefitByCompany = new Map(getBenefitInsights(companies).map((s) => [s.companyId, s]))
-    return companies.map((company) => {
-      const snapshot = getCompanySnapshot(company)
-      return {
-        company,
-        // signalScore: 0..10 score used for ranking on the active tab
-        signalScore:
-          activeTab === "score"
-            ? company.directionScore
-            : activeTab === "interview"
-              ? interviewByCompany.get(company.id)?.experienceScore ?? company.directionScore
-              : activeTab === "salary"
-                ? salaryByCompany.get(company.id)?.payScore ?? company.directionScore
-                : activeTab === "office"
-                  ? benefitByCompany.get(company.id)?.officeScore ?? company.directionScore
-                  : 0,
-        // secondarySignal: count-style metric used for "most active" / "most reviewed"
-        secondarySignal:
-          activeTab === "reviews"
-            ? company.reviewCount
-            : activeTab === "active"
-              ? company.trend.at(-1)?.reviews ?? 0
-              : activeTab === "interview"
-                ? snapshot.interviewCount
-                : activeTab === "salary"
-                  ? salaryByCompany.get(company.id)?.sampleCount ?? 0
-                  : company.reviewCount,
-        sampleCount: snapshot.interviewCount,
-        salarySampleCount: snapshot.salarySamples,
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    setError(null)
+    searchCompanies({}).then((res) => {
+      if (cancelled) return
+      if (res.error) {
+        setError(res.error)
+      } else if (res.data) {
+        setCompanies(res.data.companies)
       }
+      setLoading(false)
     })
-  }, [activeTab])
+    return () => { cancelled = true }
+  }, [])
 
+  // glassdoor-insights functions expect Company type (with reviews/dimensions/etc).
+  // CompanyListItem from the API has fewer fields, so these functions will return
+  // limited or empty results for now — but we keep the imports ready for when
+  // the API returns richer data. Fallback to directionScore for tabs that need
+  // it.
   const sorted = useMemo(() => {
-    const list = [...snapshots]
-    // For "score-like" tabs, sort by signalScore desc.
-    // For "count-like" tabs (reviews, active, salary sample), sort by secondarySignal desc.
-    // Tie-break by directionScore, then by reviewCount, then by id for stable ordering.
+    const list = [...companies]
     list.sort((a, b) => {
-      if (activeTab === "score" || activeTab === "interview" || activeTab === "salary" || activeTab === "office") {
-        if (b.signalScore !== a.signalScore) return b.signalScore - a.signalScore
+      const aCount = a.reviewCount ?? 0
+      const bCount = b.reviewCount ?? 0
+      const aScore = a.directionScore ?? 0
+      const bScore = b.directionScore ?? 0
+      if (activeTab === "reviews") {
+        if (bCount !== aCount) return bCount - aCount
       } else {
-        if (b.secondarySignal !== a.secondarySignal) return b.secondarySignal - a.secondarySignal
+        if (bScore !== aScore) return bScore - aScore
       }
-      if (b.company.directionScore !== a.company.directionScore) {
-        return b.company.directionScore - a.company.directionScore
-      }
-      if (b.company.reviewCount !== a.company.reviewCount) {
-        return b.company.reviewCount - a.company.reviewCount
-      }
-      return a.company.id.localeCompare(b.company.id)
+      if (bCount !== aCount) return bCount - aCount
+      return a.id.localeCompare(b.id)
     })
     return list
-  }, [snapshots, activeTab])
+  }, [companies, activeTab])
 
   const activeDescription = tabs.find((tab) => tab.key === activeTab)?.description ?? ""
+
+  if (loading) {
+    return (
+      <section className="mx-auto flex w-full max-w-[920px] flex-col gap-6 px-4 py-6 sm:px-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-[#111827]">公司发现</h1>
+          <p className="mt-2 text-sm text-[#6B7280]">从不同角度看看最近被更多过来人关注的公司</p>
+        </div>
+        <p className="text-sm text-[#6B7280]">加载中...</p>
+      </section>
+    )
+  }
+
+  if (error) {
+    return (
+      <section className="mx-auto flex w-full max-w-[920px] flex-col gap-6 px-4 py-6 sm:px-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-[#111827]">公司发现</h1>
+          <p className="mt-2 text-sm text-[#6B7280]">从不同角度看看最近被更多过来人关注的公司</p>
+        </div>
+        <p className="text-sm text-red-600">加载失败：{error}</p>
+        <SolidButton onClick={() => window.location.reload()}>重试</SolidButton>
+      </section>
+    )
+  }
 
   return (
     <section className="mx-auto flex w-full max-w-[920px] flex-col gap-6 px-4 py-6 sm:px-6">
@@ -119,19 +126,21 @@ export default function RankingsPage() {
       </p>
 
       <div className="grid gap-4">
-        {sorted.map(({ company, secondarySignal, signalScore, sampleCount, salarySampleCount }, index) => {
+        {sorted.map((company, index) => {
+          const count = company.reviewCount ?? 0
+          const score = company.directionScore ?? 0
           const trailing =
             activeTab === "reviews"
-              ? `${company.reviewCount.toLocaleString()} 条评价`
+              ? `${count.toLocaleString()} 条评价`
               : activeTab === "active"
-                ? `近 30 天 +${secondarySignal} 条`
+                ? `${count.toLocaleString()} 条评价`
                 : activeTab === "interview"
-                  ? `${sampleCount} 条面试信号`
+                  ? `${score.toFixed(1)} 方向分`
                   : activeTab === "salary"
-                    ? `${salarySampleCount} 个薪资样本`
+                    ? `${score.toFixed(1)} 方向分`
                     : activeTab === "office"
-                      ? `办公 ${signalScore.toFixed(1)}`
-                      : `${company.reviewCount.toLocaleString()} 条评价`
+                      ? `${score.toFixed(1)} 方向分`
+                      : `${count.toLocaleString()} 条评价`
 
           return (
             <SolidCard
@@ -145,12 +154,14 @@ export default function RankingsPage() {
                   {index + 1}
                 </div>
                 <div className="min-w-0">
-                  <h2 className="truncate text-lg font-semibold text-[#111827]">{company.shortName}</h2>
+                  <h2 className="truncate text-lg font-semibold text-[#111827]">
+                    {company.shortName ?? company.name}
+                  </h2>
                   <p className="mt-1 text-sm text-[#6B7280]">
                     {company.industry} · {company.city} · {trailing}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {company.riskTags.slice(0, 2).map((tag) => (
+                    {(company.riskTags ?? []).slice(0, 2).map((tag) => (
                       <TagPill
                         key={tag}
                         tone={tag.includes("压力") || tag.includes("波动") ? "risk" : "neutral"}
@@ -158,13 +169,10 @@ export default function RankingsPage() {
                         #{tag}
                       </TagPill>
                     ))}
-                    {company.vibeTag ? (
-                      <TagPill tone="positive">公司体感 {company.vibeTag.name}</TagPill>
-                    ) : null}
                   </div>
                 </div>
                 <div className="flex items-center gap-3 sm:justify-end">
-                  <ScoreChip score={company.directionScore} compact />
+                  <ScoreChip score={score} compact />
                   <SolidButton asChild variant="primary" size="sm">
                     <Link href={`/company/${company.id}`}>看这家公司</Link>
                   </SolidButton>

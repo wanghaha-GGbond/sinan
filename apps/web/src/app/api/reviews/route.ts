@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
-import { and, eq, isNull } from "drizzle-orm"
+import { and, eq, inArray, isNull, desc, sql } from "drizzle-orm"
 import { companies } from "@/db/schema/companies"
 import { reviews } from "@/db/schema/reviews"
 import { toPublicReviewView } from "@/lib/server/review-view"
 import { getAuthUser } from "@/lib/server/auth"
 import { getOrCreateAnonymousProfile } from "@/lib/server/anonymous-profile"
 import { hasSensitive, hasAttackWord } from "@/lib/content-guard"
+
+type SortMode = "latest" | "highest_score" | "most_helpful"
 
 const VALID_ROLES = [
   "job_seeker",
@@ -139,6 +141,109 @@ export async function POST(request: NextRequest) {
     )
   } catch (error) {
     console.error("POST /api/reviews failed:", error)
+    return NextResponse.json({ error: "Database not configured" }, { status: 503 })
+  }
+}
+
+const VISIBLE_STATUSES = ["visible", "limited_visible"] as const
+
+export async function GET(request: NextRequest) {
+  const { searchParams } = request.nextUrl
+
+  const companyId = searchParams.get("companyId") ?? undefined
+  const sort = (searchParams.get("sort") ?? "latest") as SortMode
+  const limit = Math.min(Number(searchParams.get("limit") ?? 20), 50)
+  const rawCursor = searchParams.get("cursor") ?? undefined
+
+  const cursor = rawCursor ? decodeURIComponent(rawCursor) : undefined
+
+  if (sort !== "latest" && sort !== "highest_score" && sort !== "most_helpful") {
+    return NextResponse.json(
+      { error: "Invalid sort. Must be one of: latest, highest_score, most_helpful" },
+      { status: 400 }
+    )
+  }
+
+  if (limit < 1) {
+    return NextResponse.json({ error: "limit must be at least 1" }, { status: 400 })
+  }
+
+  try {
+    const { db } = await import("@/db/client")
+
+    // Build base conditions
+    const conditions = [
+      isNull(reviews.deletedAt),
+      inArray(reviews.status, VISIBLE_STATUSES),
+    ]
+
+    if (companyId) {
+      conditions.push(eq(reviews.companyId, companyId))
+    }
+
+    // Sort expression
+    const orderBy =
+      sort === "highest_score"
+        ? desc(reviews.directionScore)
+        : sort === "most_helpful"
+          ? desc(reviews.usefulCount)
+          : desc(reviews.createdAt)
+
+    // Cursor condition: only used when cursor is provided
+    // We order by (createdAt DESC, id DESC) so cursor provides the id of the last seen row
+    const fetchConditions = cursor
+      ? and(...conditions, sql`(${reviews.createdAt}, ${reviews.id}) < (SELECT created_at, id FROM reviews WHERE id = ${cursor})`)
+      : and(...conditions)
+
+    // Fetch limit + 1 to determine hasMore
+    const rows = await db
+      .select()
+      .from(reviews)
+      .where(fetchConditions)
+      .orderBy(orderBy, desc(reviews.id))
+      .limit(limit + 1)
+
+    const hasMore = rows.length > limit
+    const resultRows = hasMore ? rows.slice(0, limit) : rows
+
+    const nextCursor = hasMore && resultRows.length > 0 ? resultRows[resultRows.length - 1]!.id : null
+
+    const reviewsList = resultRows.map((row) => {
+      const view = toPublicReviewView(row)
+      // Extract tags from questionnaire if present
+      const tags: string[] | null =
+        row.questionnaire && typeof row.questionnaire === "object" && !Array.isArray(row.questionnaire)
+          ? ((row.questionnaire as Record<string, unknown>).tags as string[] | undefined) ?? null
+          : null
+
+      return {
+        id: view.id,
+        companyId: view.companyId,
+        title: view.title,
+        content: view.content,
+        summary: view.summary,
+        directionScore: view.directionScore,
+        recommendToJoin: view.recommendToJoin,
+        employmentStatus: view.employmentStatus,
+        jobTitle: view.jobTitle,
+        city: view.city,
+        authorRole: view.authorRole,
+        authorLabel: view.authorLabel,
+        usefulCount: view.usefulCount,
+        discussionCount: view.discussionCount,
+        status: view.status,
+        createdAt: view.createdAt,
+        tags,
+      }
+    })
+
+    return NextResponse.json({
+      reviews: reviewsList,
+      nextCursor,
+      hasMore,
+    })
+  } catch (error) {
+    console.error("GET /api/reviews failed:", error)
     return NextResponse.json({ error: "Database not configured" }, { status: 503 })
   }
 }

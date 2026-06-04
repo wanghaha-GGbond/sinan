@@ -1,4 +1,4 @@
-import type { Company } from "@/lib/types"
+import type { Company, CompanyListItem } from "@/lib/types"
 
 export type CompanyDedupeInput = {
   name?: string
@@ -9,16 +9,16 @@ export type CompanyDedupeInput = {
 }
 
 export type SimilarCompanyResult = {
-  company: Company
+  company: Company | CompanyListItem
   reasons: string[]
   score: number
 }
 
-function normalize(value?: string) {
+function normalize(value?: string | null) {
   return (value ?? "").trim().toLowerCase().replace(/\s+/g, "")
 }
 
-export function findSimilarCompanies(input: CompanyDedupeInput, companies: Company[]): SimilarCompanyResult[] {
+export function findSimilarCompanies(input: CompanyDedupeInput, companies: (Company | CompanyListItem)[]): SimilarCompanyResult[] {
   const name = normalize(input.name)
   const registeredName = normalize(input.registeredName)
   const code = normalize(input.unifiedSocialCreditCode).toUpperCase()
@@ -28,10 +28,11 @@ export function findSimilarCompanies(input: CompanyDedupeInput, companies: Compa
     .map((company) => {
       const reasons: string[] = []
       let score = 0
-      const companyNames = [company.name, company.registeredName, company.shortName, company.englishName, ...(company.alias ?? [])]
+      const aliasList = 'aliases' in company ? (company as CompanyListItem).aliases ?? [] : []
+      const companyNames = [company.name, company.registeredName, company.shortName, company.englishName, ...aliasList]
         .map(normalize)
         .filter(Boolean)
-      const companyCode = normalize(company.unifiedSocialCreditCode).toUpperCase()
+      const companyCode = normalize((company as Company).unifiedSocialCreditCode).toUpperCase()
       const sameCity = city && normalize(company.city) === city
 
       if (code && companyCode && code === companyCode) {

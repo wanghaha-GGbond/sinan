@@ -19,9 +19,9 @@ import { SolidButton } from "@/components/ui/solid-button"
 import { Textarea } from "@/components/ui/textarea"
 import { findSimilarCompanies } from "@/lib/company-dedupe"
 import { validateCompanySubmission } from "@/lib/content-guard"
-import { companies } from "@/lib/mock-data"
 import { buildQuestionnaireSession } from "@/lib/questionnaire/question-bank"
-import type { Company } from "@/lib/types"
+import { searchCompanies, getCompany } from "@/lib/api/companies"
+import type { Company, CompanyListItem } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 const relations = ["在职员工", "离职员工", "面试者", "实习生", "外包 / 派遣"] as const
@@ -93,7 +93,7 @@ type NewCompanyDraft = {
 
 type CompanySelectionState = {
   query: string
-  selectedCompany: Company | null
+  selectedCompany: Company | CompanyListItem | null
   addedCompanies: Company[]
   mode: "searching" | "selected" | "adding"
   newCompanyDraft: NewCompanyDraft
@@ -102,7 +102,7 @@ type CompanySelectionState = {
 
 type CompanySelectionAction =
   | { type: "INPUT_CHANGED"; value: string }
-  | { type: "SELECT_EXISTING_COMPANY"; company: Company }
+  | { type: "SELECT_EXISTING_COMPANY"; company: Company | CompanyListItem }
   | { type: "START_ADD_COMPANY" }
   | { type: "UPDATE_NEW_COMPANY_DRAFT"; patch: Partial<NewCompanyDraft> }
   | { type: "SAVE_NEW_COMPANY"; company: Company }
@@ -111,10 +111,10 @@ type CompanySelectionAction =
 
 function createInitialCompanySelection(): CompanySelectionState {
   return {
-    query: companies[0]?.name ?? "",
-    selectedCompany: companies[0] ?? null,
+    query: "",
+    selectedCompany: null,
     addedCompanies: [],
-    mode: companies[0] ? "selected" : "searching",
+    mode: "searching",
     newCompanyDraft: {
       companyName: "",
       unifiedSocialCreditCode: "",
@@ -243,6 +243,10 @@ export default function SubmitReviewPage() {
       focusGroups: ["office_experience"],
     })
   )
+  // API search state
+  const [searchResults, setSearchResults] = useState<CompanyListItem[]>([])
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [searchError, setSearchError] = useState<string | null>(null)
   const {
     control,
     register,
@@ -252,8 +256,8 @@ export default function SubmitReviewPage() {
   } = useForm<ReviewForm>({
     resolver: zodResolver(reviewSchema),
     defaultValues: {
-      companyId: companies[0].id,
-      companyName: companies[0].name,
+      companyId: "",
+      companyName: "",
       relation: "离职员工",
       role: "",
       title: "",
@@ -271,13 +275,21 @@ export default function SubmitReviewPage() {
   const addCompanyMode = searchParams.get("mode") === "add-company"
   const addCompanyName = searchParams.get("name") ?? ""
   const preselectCompanyId = searchParams.get("companyId") ?? ""
-  const allCompanies = useMemo(() => [...companies, ...companySelection.addedCompanies], [companySelection.addedCompanies])
+  const allCompanies = useMemo(() => [...searchResults, ...companySelection.addedCompanies], [searchResults, companySelection.addedCompanies])
   const normalizedCompanyQuery = companySelection.query.trim().toLowerCase()
   const matchedCompanies = useMemo(() => {
     if (!normalizedCompanyQuery) return []
     return allCompanies.filter((company) => {
-      const aliases = [company.name, company.registeredName, company.shortName, company.englishName, ...(company.alias ?? [])].join(" ").toLowerCase()
-      return aliases.includes(normalizedCompanyQuery)
+      const aliases = [
+        company.name,
+        (company as Company).registeredName ?? (company as CompanyListItem).shortName ?? "",
+        (company as Company).englishName ?? "",
+        (company as CompanyListItem).aliases ?? [],
+      ]
+        .flat()
+        .filter((v): v is string => typeof v === "string")
+        .map((s) => s.toLowerCase())
+      return aliases.some((alias) => alias.includes(normalizedCompanyQuery))
     })
   }, [allCompanies, normalizedCompanyQuery])
   const similarCompanies = useMemo(
@@ -291,10 +303,10 @@ export default function SubmitReviewPage() {
               city: companySelection.newCompanyDraft.city,
               industry: companySelection.newCompanyDraft.industry,
             },
-            allCompanies
+            companySelection.addedCompanies
           )
         : [],
-    [allCompanies, companySelection.mode, companySelection.newCompanyDraft]
+    [companySelection.mode, companySelection.newCompanyDraft, companySelection.addedCompanies]
   )
   const shouldShowNoResult =
     normalizedCompanyQuery.length >= 2 &&
@@ -332,13 +344,51 @@ export default function SubmitReviewPage() {
     }
   }, [addCompanyMode, addCompanyName])
 
+  // Search companies via API when query changes
+  useEffect(() => {
+    if (!normalizedCompanyQuery || normalizedCompanyQuery.length < 1) {
+      setSearchResults([])
+      setSearchError(null)
+      return
+    }
+    let cancelled = false
+    setSearchLoading(true)
+    setSearchError(null)
+    searchCompanies({ q: normalizedCompanyQuery })
+      .then((res) => {
+        if (cancelled) return
+        if (res.error) {
+          setSearchError(res.error)
+          setSearchResults([])
+        } else {
+          setSearchResults(res.data?.companies ?? [])
+        }
+      })
+      .catch((e: unknown) => {
+        if (cancelled) return
+        setSearchError(e instanceof Error ? e.message : "搜索失败")
+        setSearchResults([])
+      })
+      .finally(() => {
+        if (!cancelled) setSearchLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [normalizedCompanyQuery])
+
   // Pre-select a company when arrived from a "匿名评价" button on a company page.
   useEffect(() => {
     if (!preselectCompanyId || addCompanyMode) return
-    const target = companies.find((c) => c.id === preselectCompanyId)
-    if (!target) return
-    if (companySelection.selectedCompany?.id === target.id) return
-    dispatchCompanySelection({ type: "SELECT_EXISTING_COMPANY", company: target })
+    if (companySelection.selectedCompany?.id === preselectCompanyId) return
+    getCompany(preselectCompanyId)
+      .then((res) => {
+        if (res.error || !res.data?.company) return
+        dispatchCompanySelection({ type: "SELECT_EXISTING_COMPANY", company: res.data.company })
+      })
+      .catch(() => {
+        // silently ignore
+      })
   }, [preselectCompanyId, addCompanyMode, companySelection.selectedCompany])
 
   function nextStep() {
@@ -363,7 +413,7 @@ export default function SubmitReviewPage() {
     console.info("mock review submitted", values)
   }
 
-  function selectCompany(company: Company) {
+  function selectCompany(company: Company | CompanyListItem) {
     setValue("companyId", company.id, { shouldDirty: true })
     setValue("companyName", company.name, { shouldDirty: true, shouldValidate: true })
     dispatchCompanySelection({ type: "SELECT_EXISTING_COMPANY", company })
@@ -393,36 +443,65 @@ export default function SubmitReviewPage() {
       toast.error("请先确认疑似重复公司")
       return
     }
-    const template = companies[0]
     const id = `company-custom-${Date.now()}`
     const registeredName = newCompanyDraft.companyName.trim()
     const shortName = newCompanyDraft.shortName?.trim() || registeredName.slice(0, 8)
+    const now = new Date().toISOString()
     const newCompany: Company = {
-      ...template,
       id,
       claimedStatus: "unclaimed",
       name: registeredName,
-      registeredName,
+      registeredName: registeredName,
       shortName,
       unifiedSocialCreditCode: newCompanyDraft.unifiedSocialCreditCode.trim(),
       registeredAddress: newCompanyDraft.registeredAddress.trim(),
       legalRepresentative: newCompanyDraft.legalRepresentative.trim(),
-      businessStatus: newCompanyDraft.businessStatus?.trim() || "待确认",
-      foundedDate: newCompanyDraft.foundedDate?.trim(),
+      businessStatus: newCompanyDraft.businessStatus?.trim() || undefined,
+      foundedDate: newCompanyDraft.foundedDate?.trim() || undefined,
       city: newCompanyDraft.city.trim(),
       industry: newCompanyDraft.industry.trim(),
       size: newCompanyDraft.size?.trim() || "规模待补充",
       stage: newCompanyDraft.financingStage?.trim() || "阶段待补充",
-      financingStage: newCompanyDraft.financingStage?.trim(),
-      website: newCompanyDraft.website?.trim(),
-      description: newCompanyDraft.note?.trim(),
+      financingStage: newCompanyDraft.financingStage?.trim() || undefined,
+      website: newCompanyDraft.website?.trim() || undefined,
+      description: newCompanyDraft.note?.trim() || undefined,
+      directionScore: 0,
+      recommendationRate: 0,
+      salaryRange: "",
+      riskLevel: "待确认" as const,
+      riskTags: [],
+      highlights: [],
       reviewCount: 0,
-      dimensions: template.dimensions.map((item) => ({ ...item, score: 0 })),
+      dimensions: [
+        { key: "growth", label: "成长方向", score: 0, description: "项目复杂度、学习密度与导师投入" },
+        { key: "management", label: "管理清晰度", score: 0, description: "目标、汇报线、绩效反馈是否稳定" },
+        { key: "workload", label: "工作负荷", score: 0, description: "加班波动、排期弹性与恢复时间" },
+        { key: "pay", label: "薪资兑现", score: 0, description: "薪资区间、奖金兑现与调薪透明度" },
+        { key: "respect", label: "尊重与边界", score: 0, description: "沟通方式、个人边界与匿名安全感" },
+      ],
       reviews: [],
       source: "user_added",
       createdByUser: true,
       pendingReview: true,
       reviewStatus: "pending_review",
+      createdAt: now,
+      updatedAt: now,
+      trustLevel: "",
+      compassBriefs: [],
+      lowScoreReasons: [],
+      recommendationReasons: [],
+      scoreDistribution: [],
+      trend: [],
+      cbti: undefined,
+      vibeTag: undefined,
+      scoreCanteen: undefined,
+      scoreOfficeEnvironment: undefined,
+      scoreRestroom: undefined,
+      scoreAfternoonTea: undefined,
+      scoreWorkstationComfort: undefined,
+      scoreCommuteConvenience: undefined,
+      scoreOfficeEquipment: undefined,
+      scoreOfficeExperience: undefined,
     }
     dispatchCompanySelection({ type: "SAVE_NEW_COMPANY", company: newCompany })
     setValue("companyId", newCompany.id, { shouldDirty: true, shouldValidate: true })
@@ -541,7 +620,11 @@ export default function SubmitReviewPage() {
                     />
                     {errors.companyName ? <p className="text-sm text-destructive">{errors.companyName.message}</p> : null}
                     <div className="mt-2 space-y-2">
-                      {matchedCompanies.slice(0, 4).map((company) => (
+                      {searchLoading ? (
+                        <p className="text-sm text-muted-foreground">搜索中...</p>
+                      ) : searchError ? (
+                        <p className="text-sm text-destructive">搜索失败，请稍后重试</p>
+                      ) : matchedCompanies.slice(0, 4).map((company) => (
                         <SolidButton
                           key={company.id}
                           data-testid="company-result-option"
