@@ -3,10 +3,10 @@ import type { ApiResponse } from './types'
 export async function getMeDashboard(): Promise<ApiResponse<{
   user: { id: string; displayName: string; role: string; trustLevel: number } | null;
   stats: { directionPoints: number; nextLevelPoints: number; streakDays: number; helpedCount: number };
-  dailyTasks: unknown[];
-  badges: unknown[];
-  myReviews: unknown[];
-  favoriteCompanies: unknown[];
+  dailyTasks: Array<{ id: string; title: string; rewardPoints: number; progress: number; target: number; completed: boolean; href?: string; hint?: string }>;
+  badges: Array<{ id: string; name: string; description: string; unlocked: boolean; progress?: number; target?: number }>;
+  myReviews: Array<{ id: string; companyId: string; companyName: string; title: string; score: number; shortComment: string; helpful: number; commentCount: number; createdAt: string }>;
+  favoriteCompanies: Array<{ companyId: string; companyName: string; createdAt: string }>;
 }>> {
   try {
     const res = await fetch('/api/me', { credentials: 'include' })
