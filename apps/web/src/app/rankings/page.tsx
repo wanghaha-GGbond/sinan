@@ -34,8 +34,7 @@ export default function RankingsPage() {
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
-    setError(null)
+    // initial state is loading=true, error=null — no need to setState synchronously here
     searchCompanies({}).then((res) => {
       if (cancelled) return
       if (res.error) {

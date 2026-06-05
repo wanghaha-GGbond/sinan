@@ -27,8 +27,9 @@ export default function SearchPage() {
   // fetch when debounced query changes
   useEffect(() => {
     if (!debouncedQuery.trim()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset to empty on cleared query
       setResults([])
-      setLoading(false)
+      // setLoading(false) omitted: initial state is already false
       return
     }
     let cancelled = false

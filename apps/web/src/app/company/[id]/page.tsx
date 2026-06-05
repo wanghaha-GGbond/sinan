@@ -105,7 +105,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
   // riskTags/highlights are in CompanyListItem; vibeTag/scoreOfficeExperience/scoreCanteen are not
   // pass as unknown→Company to CompanyIntelligencePanel — panel uses riskTags and scoreOfficeExperience
   // no-ops on missing fields at runtime
-  // @ts-ignore CompanyListItem is a partial shape of Company; runtime data is sufficient
+  // @ts-expect-error CompanyListItem is a partial shape of Company; runtime data is sufficient
   const companyForPanel: Parameters<typeof CompanyIntelligencePanel>[0]["company"] = company as Parameters<
     typeof CompanyIntelligencePanel
   >[0]["company"]

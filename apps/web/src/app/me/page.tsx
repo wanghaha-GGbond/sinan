@@ -112,6 +112,7 @@ export default function MePage() {
     if (authLoading) return
 
     if (!authUser) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset loading after auth resolves to "no user"
       setDashboardLoading(false)
       return
     }

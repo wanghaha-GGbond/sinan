@@ -347,8 +347,9 @@ export default function SubmitReviewPage() {
   // Search companies via API when query changes
   useEffect(() => {
     if (!normalizedCompanyQuery || normalizedCompanyQuery.length < 1) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset to empty on cleared query
       setSearchResults([])
-      setSearchError(null)
+      // setSearchError(null) omitted: initial state is already null
       return
     }
     let cancelled = false

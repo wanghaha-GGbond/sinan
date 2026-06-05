@@ -79,8 +79,8 @@ export function getSalaryInsights(companies: Company[]): SalaryInsight[] {
         companyId: company.id,
         companyName: company.shortName,
         role,
-        range: company.salaryRange,
-        medianLabel: medianFromRange(company.salaryRange),
+        range: company.salaryRange ?? "面议",
+        medianLabel: medianFromRange(company.salaryRange ?? ""),
         payScore: payScore(company),
         sampleCount: Math.max(12, Math.round(company.reviewCount / 18)),
         signal:
@@ -172,7 +172,7 @@ export function getCompanySnapshot(company: Company) {
   const openRoles = Array.from(new Set(company.reviews.map((review) => review.jobCategory))).slice(0, 4)
 
   return {
-    salaryMedian: medianFromRange(company.salaryRange),
+    salaryMedian: medianFromRange(company.salaryRange ?? ""),
     salarySamples: Math.max(12, Math.round(company.reviewCount / 18)),
     interviewCount: Math.max(4, interviewReviews.length + Math.round(company.reviewCount / 80)),
     salarySignalCount: salaryReviews.length,
