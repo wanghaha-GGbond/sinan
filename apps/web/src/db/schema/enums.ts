@@ -122,3 +122,37 @@ export const reviewReportStatusEnum = pgEnum("review_report_status", [
   "actioned",
   "dismissed",
 ])
+
+export const companyCorrectionFieldEnum = pgEnum("company_correction_field", [
+  "name",
+  "registeredName",
+  "industry",
+  "city",
+  "size",
+  "stage",
+  "description",
+  "website",
+  "other",
+])
+
+export const companyCorrectionStatusEnum = pgEnum(
+  "company_correction_status",
+  ["submitted", "reviewing", "approved", "rejected"]
+)
+
+export const companyAppealReasonEnum = pgEnum("company_appeal_reason", [
+  "personal_attack",
+  "dox_leader",
+  "fake_fact",
+  "rumor",
+  "ai_spam",
+  "competitor",
+  "other",
+])
+
+export const companyAppealStatusEnum = pgEnum("company_appeal_status", [
+  "submitted",
+  "reviewing",
+  "upheld",
+  "rejected",
+])

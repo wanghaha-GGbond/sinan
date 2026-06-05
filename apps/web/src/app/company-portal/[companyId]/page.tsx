@@ -30,7 +30,7 @@ import {
   type AppealReasonId,
   type CompanyAppealRequest,
   type CompanyCorrectionRequest,
-} from "@/lib/company-portal-storage"
+} from "@/lib/api/company-portal"
 import { companies } from "@/lib/mock-data"
 import { notFound } from "next/navigation"
 
@@ -44,11 +44,22 @@ export default function CompanyPortalDetailPage() {
   const [corrections, setCorrections] = useState<CompanyCorrectionRequest[]>([])
   const [appeals, setAppeals] = useState<CompanyAppealRequest[]>([])
 
-  // Hydrate localStorage-backed queues. Same reasoning as /me.
+  // Hydrate server-backed queues. The two list* helpers fall back to
+  // a local cache on network failure, so the page still works offline.
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setCorrections(listCorrections(companyId))
-    setAppeals(listAppeals(companyId))
+    let cancelled = false
+    void (async () => {
+      const [nextCorrections, nextAppeals] = await Promise.all([
+        listCorrections(companyId),
+        listAppeals(companyId),
+      ])
+      if (cancelled) return
+      setCorrections(nextCorrections)
+      setAppeals(nextAppeals)
+    })()
+    return () => {
+      cancelled = true
+    }
   }, [companyId])
 
   if (!company) {
@@ -349,18 +360,26 @@ function CorrectionForm({
 
   function handleSubmit() {
     if (!proposed.trim()) return
-    const correction = submitCorrection({
-      companyId: company.id,
-      field,
-      currentValue,
-      proposedValue: proposed.trim(),
-      reason: reason.trim(),
-    })
-    onSubmitted(correction)
+    const proposedValue = proposed.trim()
+    const reasonText = reason.trim()
     setSubmitted(true)
     setProposed("")
     setReason("")
     setTimeout(() => setSubmitted(false), 2500)
+    void submitCorrection({
+      companyId: company.id,
+      field,
+      currentValue,
+      proposedValue,
+      reason: reasonText,
+    }).then((result) => {
+      if (result.data) {
+        onSubmitted(result.data)
+      } else {
+        // Roll back the optimistic "submitted" flash on real error
+        setSubmitted(false)
+      }
+    })
   }
 
   return (
@@ -434,11 +453,18 @@ function AppealButton({ companyId, reviewId }: { companyId: string; reviewId: st
 
   function handleSubmit() {
     if (!reason) return
-    submitAppeal({ companyId, reviewId, reason, note })
+    const chosenReason = reason as AppealReasonId
     setSubmitted(true)
     setOpen(false)
     setReason("")
     setNote("")
+    void submitAppeal({ companyId, reviewId, reason: chosenReason, note }).then(
+      (result) => {
+        if (result.error) {
+          setSubmitted(false)
+        }
+      }
+    )
   }
 
   if (submitted) {

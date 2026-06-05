@@ -43,6 +43,13 @@
       "when": 1780674637285,
       "tag": "0005_big_maddog",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1780676851915,
+      "tag": "0006_bitter_chat",
+      "breakpoints": true
     }
   ]
 }
