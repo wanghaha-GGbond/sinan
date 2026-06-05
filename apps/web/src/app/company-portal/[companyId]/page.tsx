@@ -327,7 +327,7 @@ function CorrectionForm({
   company,
   onSubmitted,
 }: {
-  company: { id: string; name: string; registeredName?: string; industry: string; city: string; size: string; stage: string; description?: string; website?: string }
+  company: { id: string; name: string; registeredName?: string; industry: string; city: string; size: string; stage: string; description?: string | null; website?: string | null }
   onSubmitted: (c: CompanyCorrectionRequest) => void
 }) {
   const [field, setField] = useState<CompanyCorrectionRequest["field"]>("name")
