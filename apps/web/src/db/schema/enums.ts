@@ -102,3 +102,23 @@ export const discussionModerationActorRoleEnum = pgEnum(
   "discussion_moderation_actor_role",
   ["system", "moderator", "author"]
 )
+
+export const reviewReportReasonEnum = pgEnum("review_report_reason", [
+  "personal_attack",
+  "privacy",
+  "rumor",
+  "mob",
+  "leader_dox",
+  "ai_spam",
+  "competitor",
+  "company_astro",
+  "duplicate",
+  "other",
+])
+
+export const reviewReportStatusEnum = pgEnum("review_report_status", [
+  "open",
+  "reviewing",
+  "actioned",
+  "dismissed",
+])

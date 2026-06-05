@@ -1,4 +1,5 @@
 export * from './companies'
 export * from './reviews'
 export * from './me'
+export * from './reports'
 export type { ApiResponse, CompanyListItem, ReviewListItem } from './types'

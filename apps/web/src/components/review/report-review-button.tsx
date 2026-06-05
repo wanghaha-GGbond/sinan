@@ -5,7 +5,7 @@ import { CheckCircle2, Flag, X } from "lucide-react"
 
 import { SolidButton } from "@/components/ui/solid-button"
 import { Textarea } from "@/components/ui/textarea"
-import { REPORT_REASONS, getReportForReview, submitReport, type ReportReasonId } from "@/lib/reports-storage"
+import { REPORT_REASONS, getReportForReview, submitReport, type ReportReasonId } from "@/lib/api/reports"
 
 export function ReportReviewButton({ reviewId }: { reviewId: string }) {
   const [open, setOpen] = useState(false)
@@ -55,11 +55,19 @@ export function ReportReviewButton({ reviewId }: { reviewId: string }) {
 
   function handleSubmit() {
     if (!reason) return
-    submitReport({ reviewId, reason: reason as ReportReasonId, note })
-    setSubmittedReason(reason as ReportReasonId)
+    const chosenReason = reason as ReportReasonId
+    setSubmittedReason(chosenReason)
     setOpen(false)
     setReason("")
     setNote("")
+    void submitReport({ reviewId, reason: chosenReason, note }).then(
+      (result) => {
+        // Optimistic UI was already set; only roll back on a real error.
+        if (result.error) {
+          setSubmittedReason(null)
+        }
+      }
+    )
   }
 
   return (
