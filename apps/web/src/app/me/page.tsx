@@ -271,6 +271,9 @@ function MeContent({
   hydrated,
   extraFavoriteIds = [],
 }: MeContentProps) {
+  const [favoritesOpen, setFavoritesOpen] = useState(false)
+  const [badgesOpen, setBadgesOpen] = useState(false)
+
   const levelGap = stats.nextLevelPoints - stats.directionPoints
   const levelProgress = stats.nextLevelPoints > 0
     ? Math.round((stats.directionPoints / stats.nextLevelPoints) * 100)
@@ -409,102 +412,130 @@ function MeContent({
         )}
       </SolidCard>
 
-      {/* My favorites — localStorage hybrid (API favoriteCompanies service not yet implemented) */}
+      {/* My favorites — localStorage hybrid (API favoriteCompanies service not yet implemented).
+          Distilled: collapsed by default since most visitors come here for the dashboard,
+          not to re-scan their saved companies. Tap to expand. */}
       <SolidCard variant="default" className="p-5">
-        <div className="mb-4 flex items-center justify-between">
+        <button
+          type="button"
+          className="flex w-full items-center justify-between text-left"
+          onClick={() => setFavoritesOpen((v) => !v)}
+          aria-expanded={favoritesOpen}
+          aria-controls="me-my-favorites"
+          data-testid="me-toggle-favorites"
+        >
           <h2 className="text-base font-semibold text-foreground">我的收藏</h2>
-          <span className="text-xs text-muted-foreground" data-testid="me-favorites-count">
+          <span className="flex items-center gap-2 text-xs text-muted-foreground" data-testid="me-favorites-count">
             共 {favoriteSet.size} 家公司
+            <ChevronRight
+              className={`size-3.5 transition-transform ${favoritesOpen ? "rotate-90" : ""}`}
+            />
           </span>
-        </div>
-        {favoriteSet.size === 0 && hydrated ? (
-          <SolidEmptyState
-            title="还没有收藏公司"
-            description="在任意公司详情页点 ☆,这里会汇总你关注的公司方向变化。"
-            action={
-              <SolidButton asChild variant="secondary" size="sm">
-                <Link href="/search">去发现公司</Link>
-              </SolidButton>
-            }
-          />
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2" data-testid="me-my-favorites">
-            {favoriteCompanies.map((fav) => (
-              <Link
-                key={fav.companyId}
-                href={`/company/${fav.companyId}`}
-                className="flex items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card p-4 transition hover:border-primary/50 hover:bg-white"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-foreground">{fav.companyName}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">已收藏公司</p>
-                </div>
-                <div className="flex shrink-0 items-center gap-1 text-primary">
-                  <Bookmark className="size-4 fill-current" />
-                </div>
-              </Link>
-            ))}
-            {extraFavoriteIds
-              .filter((id) => !favoriteCompanies.some((f) => f.companyId === id))
-              .map((id) => (
-                <div key={id} className="flex items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card p-4">
-                  <p className="truncate text-sm font-semibold text-foreground">{id}</p>
-                  <div className="flex shrink-0 items-center gap-1 text-primary">
-                    <Bookmark className="size-4 fill-current" />
-                  </div>
-                </div>
-              ))}
+        </button>
+        {favoritesOpen ? (
+          <div id="me-my-favorites" className="mt-4">
+            {favoriteSet.size === 0 && hydrated ? (
+              <SolidEmptyState
+                title="还没有收藏公司"
+                description="在任意公司详情页点 ☆,这里会汇总你关注的公司方向变化。"
+                action={
+                  <SolidButton asChild variant="secondary" size="sm">
+                    <Link href="/search">去发现公司</Link>
+                  </SolidButton>
+                }
+              />
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2" data-testid="me-my-favorites">
+                {favoriteCompanies.map((fav) => (
+                  <Link
+                    key={fav.companyId}
+                    href={`/company/${fav.companyId}`}
+                    className="flex items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card p-4 transition hover:border-primary/50 hover:bg-white"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-foreground">{fav.companyName}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">已收藏公司</p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-1 text-primary">
+                      <Bookmark className="size-4 fill-current" />
+                    </div>
+                  </Link>
+                ))}
+                {extraFavoriteIds
+                  .filter((id) => !favoriteCompanies.some((f) => f.companyId === id))
+                  .map((id) => (
+                    <div key={id} className="flex items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card p-4">
+                      <p className="truncate text-sm font-semibold text-foreground">{id}</p>
+                      <div className="flex shrink-0 items-center gap-1 text-primary">
+                        <Bookmark className="size-4 fill-current" />
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
           </div>
-        )}
+        ) : null}
       </SolidCard>
 
-      {/* Badges */}
+      {/* Badges — also distilled (collapsed by default, summary count visible). */}
       <SolidCard variant="default" className="p-5">
-        <div className="mb-4 flex items-center justify-between">
+        <button
+          type="button"
+          className="flex w-full items-center justify-between text-left"
+          onClick={() => setBadgesOpen((v) => !v)}
+          aria-expanded={badgesOpen}
+          aria-controls="me-badges-list"
+          data-testid="me-toggle-badges"
+        >
           <h2 className="text-base font-semibold text-foreground">司南徽章</h2>
-          <span className="text-xs text-muted-foreground" data-testid="me-badges-progress">
+          <span className="flex items-center gap-2 text-xs text-muted-foreground" data-testid="me-badges-progress">
             {badges.filter((b) => b.unlocked).length} / {badges.length} 已解锁
+            <ChevronRight
+              className={`size-3.5 transition-transform ${badgesOpen ? "rotate-90" : ""}`}
+            />
           </span>
-        </div>
-        <div className="grid gap-2" data-testid="me-badges-list">
-          {badges.map((badge) => {
-            const progress = badge.progress ?? badge.target ?? 0
-            const target = badge.target ?? 0
-            const ratio = target > 0 ? Math.min(100, Math.round((progress / target) * 100)) : badge.unlocked ? 100 : 0
-            return (
-              <div
-                key={badge.id}
-                className={`flex items-center justify-between gap-3 rounded-2xl p-3 ${
-                  badge.unlocked ? "bg-secondary" : "bg-card border border-border/60"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`flex size-9 items-center justify-center rounded-xl ${
-                      badge.unlocked ? "bg-primary text-white" : "bg-[#E5E7DB] text-muted-foreground"
-                    }`}
-                  >
-                    {badge.unlocked ? <Award className="size-4" /> : <Lock className="size-4" />}
+        </button>
+        {badgesOpen ? (
+          <div id="me-badges-list" className="mt-4 grid gap-2" data-testid="me-badges-list">
+            {badges.map((badge) => {
+              const progress = badge.progress ?? badge.target ?? 0
+              const target = badge.target ?? 0
+              const ratio = target > 0 ? Math.min(100, Math.round((progress / target) * 100)) : badge.unlocked ? 100 : 0
+              return (
+                <div
+                  key={badge.id}
+                  className={`flex items-center justify-between gap-3 rounded-2xl p-3 ${
+                    badge.unlocked ? "bg-secondary" : "bg-card border border-border/60"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`flex size-9 items-center justify-center rounded-xl ${
+                        badge.unlocked ? "bg-primary text-white" : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {badge.unlocked ? <Award className="size-4" /> : <Lock className="size-4" />}
+                    </div>
+                    <div>
+                      <p className={`text-sm font-medium ${badge.unlocked ? "text-secondary-foreground" : "text-foreground"}`}>
+                        {badge.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{badge.description}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className={`text-sm font-medium ${badge.unlocked ? "text-secondary-foreground" : "text-foreground"}`}>
-                      {badge.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{badge.description}</p>
-                  </div>
+                  {!badge.unlocked && target > 0 ? (
+                    <div className="min-w-[120px] text-right">
+                      <p className="text-xs text-muted-foreground">
+                        {progress} / {target}
+                      </p>
+                      <Progress value={ratio} className="mt-1 h-1.5" />
+                    </div>
+                  ) : null}
                 </div>
-                {!badge.unlocked && target > 0 ? (
-                  <div className="min-w-[120px] text-right">
-                    <p className="text-xs text-muted-foreground">
-                      {progress} / {target}
-                    </p>
-                    <Progress value={ratio} className="mt-1 h-1.5" />
-                  </div>
-                ) : null}
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+        ) : null}
       </SolidCard>
     </section>
   )
