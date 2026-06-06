@@ -4,6 +4,7 @@ import { PenLine } from "lucide-react"
 import { CompanyIntelligencePanel } from "@/components/company/company-intelligence-panel"
 import { CompanyReviewFeed } from "@/components/company/company-review-feed"
 import { EmptyState } from "@/components/common/state-blocks"
+import { ErrorState } from "@/components/common/error-state"
 import { Badge } from "@/components/ui/badge"
 import { SolidButton } from "@/components/ui/solid-button"
 import { SolidCard } from "@/components/ui/solid-card"
@@ -66,17 +67,11 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
 
   if (companyRes.error) {
     return (
-      <section className="mx-auto w-full max-w-[760px] px-4 py-10 sm:px-6">
-        <SolidCard variant="subtle" className="p-6">
-          <h1 className="text-2xl font-semibold text-foreground">加载失败</h1>
-          <p className="mt-3 text-sm text-muted-foreground">{companyRes.error}</p>
-          <div className="mt-5">
-            <SolidButton asChild variant="primary">
-              <Link href="/">返回首页</Link>
-            </SolidButton>
-          </div>
-        </SolidCard>
-      </section>
+      <ErrorState
+        title="加载这家公司没成功"
+        message={`${companyRes.error}。刷新一下试试,或换一家公司看看。`}
+        onRetry={() => window.location.reload()}
+      />
     )
   }
 

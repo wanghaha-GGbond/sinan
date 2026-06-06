@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react"
 
 import { searchCompanies } from "@/lib/api/companies"
 import type { CompanyListItem } from "@/lib/api/types"
+import { ErrorState } from "@/components/common/error-state"
 import { SolidButton } from "@/components/ui/solid-button"
 import { SolidCard } from "@/components/ui/solid-card"
 import { ScoreChip } from "@/components/ui/score-chip"
@@ -80,14 +81,12 @@ export default function RankingsPage() {
 
   if (error) {
     return (
-      <section className="mx-auto flex w-full max-w-[920px] flex-col gap-6 px-4 py-6 sm:px-6">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">公司发现</h1>
-          <p className="mt-2 text-sm text-muted-foreground">从不同角度看看最近被更多过来人关注的公司</p>
-        </div>
-        <p className="text-sm text-red-600">加载失败：{error}</p>
-        <SolidButton onClick={() => window.location.reload()}>重试</SolidButton>
-      </section>
+      <ErrorState
+        title="加载公司发现失败"
+        message={`${error}。刷新一下试试,或切到其他排序方式看看。`}
+        onRetry={() => window.location.reload()}
+        showHome
+      />
     )
   }
 
