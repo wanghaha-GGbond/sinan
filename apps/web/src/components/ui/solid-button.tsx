@@ -5,19 +5,19 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const solidButtonVariants = cva(
-  "inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-[18px] text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#19C37D] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F8F2] disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-[18px] text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
         primary:
-          "bg-[#19C37D] text-white shadow-[0_5px_0_#0E8F5F] hover:bg-[#0E8F5F] active:translate-y-[3px] active:shadow-[0_2px_0_#0E8F5F]",
+          "bg-primary text-primary-foreground shadow-[0_5px_0_var(--chart-2)] hover:bg-[var(--chart-2)] active:translate-y-[3px] active:shadow-[0_2px_0_var(--chart-2)]",
         secondary:
-          "bg-[#F1F5EF] text-[#1F2937] shadow-[0_4px_0_#D1D5C8] hover:bg-[#E8EEE5] active:translate-y-[2px] active:shadow-[0_2px_0_#D1D5C8]",
+          "bg-muted text-foreground shadow-[0_4px_0_var(--border)] hover:bg-[#E8EEE5] active:translate-y-[2px] active:shadow-[0_2px_0_var(--border)]",
         dark:
-          "bg-[#111827] text-white shadow-[0_4px_0_rgba(17,24,39,0.22)] hover:bg-[#1F2937] active:translate-y-[2px] active:shadow-[0_2px_0_rgba(17,24,39,0.22)]",
-        ghost: "bg-transparent text-[#6B7280] hover:bg-[#F1F5EF] shadow-none",
+          "bg-foreground text-background shadow-[0_4px_0_rgba(17,24,39,0.22)] hover:bg-[#1F2937] active:translate-y-[2px] active:shadow-[0_2px_0_rgba(17,24,39,0.22)]",
+        ghost: "bg-transparent text-muted-foreground hover:bg-muted shadow-none",
         risk:
-          "bg-[#FFF1D6] text-[#92400E] shadow-[0_3px_0_rgba(146,64,14,0.16)] hover:bg-[#FFE8C2] active:translate-y-[2px] active:shadow-[0_1px_0_rgba(146,64,14,0.16)]",
+          "bg-[#FFF1D6] text-destructive shadow-[0_3px_0_rgba(146,64,14,0.16)] hover:bg-[#FFE8C2] active:translate-y-[2px] active:shadow-[0_1px_0_rgba(146,64,14,0.16)]",
       },
       size: {
         sm: "h-9 px-3",

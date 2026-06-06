@@ -70,10 +70,10 @@ export default function RankingsPage() {
     return (
       <section className="mx-auto flex w-full max-w-[920px] flex-col gap-6 px-4 py-6 sm:px-6">
         <div>
-          <h1 className="text-2xl font-semibold text-[#111827]">公司发现</h1>
-          <p className="mt-2 text-sm text-[#6B7280]">从不同角度看看最近被更多过来人关注的公司</p>
+          <h1 className="text-2xl font-semibold text-foreground">公司发现</h1>
+          <p className="mt-2 text-sm text-muted-foreground">从不同角度看看最近被更多过来人关注的公司</p>
         </div>
-        <p className="text-sm text-[#6B7280]">加载中...</p>
+        <p className="text-sm text-muted-foreground">加载中...</p>
       </section>
     )
   }
@@ -82,8 +82,8 @@ export default function RankingsPage() {
     return (
       <section className="mx-auto flex w-full max-w-[920px] flex-col gap-6 px-4 py-6 sm:px-6">
         <div>
-          <h1 className="text-2xl font-semibold text-[#111827]">公司发现</h1>
-          <p className="mt-2 text-sm text-[#6B7280]">从不同角度看看最近被更多过来人关注的公司</p>
+          <h1 className="text-2xl font-semibold text-foreground">公司发现</h1>
+          <p className="mt-2 text-sm text-muted-foreground">从不同角度看看最近被更多过来人关注的公司</p>
         </div>
         <p className="text-sm text-red-600">加载失败：{error}</p>
         <SolidButton onClick={() => window.location.reload()}>重试</SolidButton>
@@ -94,8 +94,8 @@ export default function RankingsPage() {
   return (
     <section className="mx-auto flex w-full max-w-[920px] flex-col gap-6 px-4 py-6 sm:px-6">
       <div>
-        <h1 className="text-2xl font-semibold text-[#111827]">公司发现</h1>
-        <p className="mt-2 text-sm text-[#6B7280]">从不同角度看看最近被更多过来人关注的公司</p>
+        <h1 className="text-2xl font-semibold text-foreground">公司发现</h1>
+        <p className="mt-2 text-sm text-muted-foreground">从不同角度看看最近被更多过来人关注的公司</p>
       </div>
 
       <div className="flex flex-wrap gap-2" role="tablist" aria-label="公司发现排序方式">
@@ -114,7 +114,7 @@ export default function RankingsPage() {
         ))}
       </div>
 
-      <p className="text-xs text-[#6B7280]" data-testid="rankings-active-description">
+      <p className="text-xs text-muted-foreground" data-testid="rankings-active-description">
         当前排序：{activeDescription}
       </p>
 
@@ -143,14 +143,14 @@ export default function RankingsPage() {
               data-testid={`rankings-card-${company.id}`}
             >
               <div className="grid gap-3 sm:grid-cols-[auto_1fr_auto] sm:items-center">
-                <div className="flex h-10 min-w-10 items-center justify-center rounded-full bg-[#F1F5EF] px-3 text-sm font-semibold text-[#1F2937]">
+                <div className="flex h-10 min-w-10 items-center justify-center rounded-full bg-muted px-3 text-sm font-semibold text-foreground">
                   {index + 1}
                 </div>
                 <div className="min-w-0">
-                  <h2 className="truncate text-lg font-semibold text-[#111827]">
+                  <h2 className="truncate text-lg font-semibold text-foreground">
                     {company.shortName ?? company.name}
                   </h2>
-                  <p className="mt-1 text-sm text-[#6B7280]">
+                  <p className="mt-1 text-sm text-muted-foreground">
                     {company.industry} · {company.city} · {trailing}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">

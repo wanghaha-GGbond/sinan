@@ -22,15 +22,15 @@ export default function HomePage() {
 
   return (
     <section className="mx-auto w-full max-w-[860px] px-4 py-4 sm:px-6" data-testid="home-recommend-feed">
-      <div data-testid="home-brand-hero" className="mb-4 rounded-3xl bg-[#F1F5EF] px-4 py-3 shadow-[0_5px_0_rgba(17,24,39,0.03)]">
+      <div data-testid="home-brand-hero" className="mb-4 rounded-3xl bg-muted px-4 py-3 shadow-[0_5px_0_rgba(17,24,39,0.03)]">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-base font-semibold text-[#111827]">推荐</h2>
-            <p className="text-sm text-[#6B7280]">最近被关注</p>
+            <h2 className="text-base font-semibold text-foreground">推荐</h2>
+            <p className="text-sm text-muted-foreground">最近被关注</p>
           </div>
-          <Route className="size-4 text-[#19C37D]" />
+          <Route className="size-4 text-primary" />
         </div>
-        <p className="mt-2 inline-flex rounded-full bg-[#DFF8EC] px-2.5 py-1 text-xs text-[#07563A]" data-testid="home-preference-hint">
+        <p className="mt-2 inline-flex rounded-full bg-secondary px-2.5 py-1 text-xs text-secondary-foreground" data-testid="home-preference-hint">
           你的方向：{quickPrefs.join(" / ")} {extraCount > 0 ? `+${extraCount}` : ""}
         </p>
       </div>
@@ -41,20 +41,20 @@ export default function HomePage() {
             <div className="space-y-4">
               <div className="flex flex-wrap items-center gap-2">
                 <TagPill tone="match" className="" selected={false}>{item.recommendReason}</TagPill>
-                <span className="text-xs text-[#6B7280]">匹配：{item.matchedPreferences.slice(0, 2).join(" / ")}</span>
+                <span className="text-xs text-muted-foreground">匹配：{item.matchedPreferences.slice(0, 2).join(" / ")}</span>
               </div>
 
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h3 className="truncate text-lg font-semibold text-[#111827]">{item.companyName}</h3>
-                  <p className="mt-1 text-sm text-[#6B7280]">
+                  <h3 className="truncate text-lg font-semibold text-foreground">{item.companyName}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
                     {item.industry} · {item.city} · {item.size}
                   </p>
                 </div>
                 <ScoreChip score={item.directionScore} className="shrink-0" data-testid="recommend-direction-score" />
               </div>
 
-              <p className="text-xs text-[#6B7280]">{item.reviewCount} 条评价 · {item.recommendationRate}% 推荐</p>
+              <p className="text-xs text-muted-foreground">{item.reviewCount} 条评价 · {item.recommendationRate}% 推荐</p>
 
               <div className="grid gap-2 sm:grid-cols-3" data-testid="recommend-metrics">
                 {item.highlightedMetrics.slice(0, 3).map((metric) => (
@@ -67,15 +67,15 @@ export default function HomePage() {
                   公司体感：{item.vibeTagName}
                 </TagPill>
               ) : null}
-              {item.vibeTagSummary ? <p className="text-xs text-[#6B7280]">{item.vibeTagSummary}</p> : null}
+              {item.vibeTagSummary ? <p className="text-xs text-muted-foreground">{item.vibeTagSummary}</p> : null}
               {typeof item.officeExperienceScore === "number" ? (
-                <p className="text-xs text-[#6B7280]" data-testid="recommend-office-experience">
+                <p className="text-xs text-muted-foreground" data-testid="recommend-office-experience">
                   办公体验 {item.officeExperienceScore.toFixed(1)}
                 </p>
               ) : null}
 
               <div className="flex items-center justify-between gap-3 text-sm">
-                <p className="text-[#6B7280]">近 7 天新增 {item.recentReviewCount} 条评价</p>
+                <p className="text-muted-foreground">近 7 天新增 {item.recentReviewCount} 条评价</p>
                 <SolidButton asChild variant="primary" size="sm">
                   <Link href={`/company/${item.companyId}`} className="shrink-0">
                     看这家公司
@@ -88,7 +88,7 @@ export default function HomePage() {
         ))}
       </div>
 
-      <div className="mt-4 rounded-2xl bg-[#F1F5EF] p-4 text-sm text-[#6B7280]">继续下滑，看更多过来人评价。</div>
+      <div className="mt-4 rounded-2xl bg-muted p-4 text-sm text-muted-foreground">继续下滑，看更多过来人评价。</div>
     </section>
   )
 }
