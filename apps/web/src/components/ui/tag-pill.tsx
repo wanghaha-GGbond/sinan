@@ -6,13 +6,13 @@ import { cn } from "@/lib/utils"
 const tagPillVariants = cva("inline-flex rounded-full border px-2.5 py-1 text-xs font-medium", {
   variants: {
     tone: {
-      positive: "border-[#BDEDDD] bg-[#DFF8EC] text-[#07563A]",
-      match: "border-[#BDEDDD] bg-[#DFF8EC] text-[#07563A]",
-      neutral: "border-[#DDE5E1] bg-[#F1F5EF] text-[#1F2937]",
-      risk: "border-[#FCD9A6] bg-[#FFF1D6] text-[#92400E]",
+      positive: "border-[#BDEDDD] bg-secondary text-secondary-foreground",
+      match: "border-[#BDEDDD] bg-secondary text-secondary-foreground",
+      neutral: "border-[#DDE5E1] bg-muted text-foreground",
+      risk: "border-[#FCD9A6] bg-[#FFF1D6] text-destructive",
     },
     selected: {
-      true: "ring-1 ring-[#19C37D]/40",
+      true: "ring-1 ring-primary/40",
       false: "",
     },
   },

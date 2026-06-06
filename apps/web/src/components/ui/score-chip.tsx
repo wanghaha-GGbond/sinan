@@ -17,7 +17,7 @@ export function ScoreChip({
     <div
       {...props}
       className={cn(
-        "rounded-full bg-[#111827] text-white shadow-[0_4px_0_rgba(17,24,39,0.22)]",
+        "rounded-full bg-foreground text-background shadow-[0_4px_0_rgba(17,24,39,0.22)]",
         compact ? "px-2.5 py-1 text-xs font-semibold" : "px-3 py-2",
         className
       )}
