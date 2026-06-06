@@ -28,7 +28,7 @@ export function SolidTopbar({
   return (
     <header
       className={cn(
-        "z-50 border-b border-border/50 bg-[#F7F8F2]/95 shadow-[0_4px_0_rgba(17,24,39,0.025)]",
+        "z-50 border-b border-border/50 bg-background/95 shadow-[0_4px_0_rgba(17,24,39,0.025)]",
         sticky ? "sticky top-0" : "",
         className
       )}

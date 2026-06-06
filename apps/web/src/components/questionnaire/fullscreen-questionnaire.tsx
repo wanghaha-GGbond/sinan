@@ -74,7 +74,7 @@ export function FullscreenQuestionnaire({
   }
 
   return (
-    <div className="fixed inset-0 z-[80] bg-[#F7F8F2]" data-testid="fullscreen-questionnaire">
+    <div className="fixed inset-0 z-[80] bg-background" data-testid="fullscreen-questionnaire">
       <div className="mx-auto flex h-full w-full max-w-3xl flex-col px-4 py-4 sm:px-6">
         <div className="mb-4 flex items-center justify-between gap-3">
           <SolidButton variant="ghost" size="sm" onClick={onClose}>

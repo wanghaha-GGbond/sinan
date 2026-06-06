@@ -45,6 +45,7 @@
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  --color-primary-tint: var(--primary-tint);
   --color-direction-foreground: var(--direction-foreground);
   --color-direction: var(--direction);
   --color-risk-foreground: var(--risk-foreground);
@@ -65,7 +66,7 @@
 }
 
 :root {
-  --background: #f7f8f2;
+  --background: #ffffff;
   --foreground: #111827;
   --card: #ffffff;
   --card-foreground: #111827;
@@ -75,6 +76,7 @@
   --primary-foreground: #ffffff;
   --primary-hover: #0e8f5f;
   --primary-deep: #047857;
+  --primary-tint: #f0fdf4;
   --primary-surface-border: #bdeddd;
   --direction: #19c37d;
   --direction-foreground: #ffffff;
@@ -85,13 +87,13 @@
   --risk-border: #fcd9a6;
   --signal: #2dd4bf;
   --signal-foreground: #ffffff;
-  --secondary: #dff8ec;
+  --secondary: #ffffff;
   --secondary-foreground: #07563a;
-  --muted: #f1f5ef;
+  --muted: #f7f8f2;
   --muted-hover: #e8eee5;
   --muted-foreground: #6b7280;
-  --accent: #dff8ec;
-  --accent-foreground: #1f2937;
+  --accent: #f0fdf4;
+  --accent-foreground: #07563a;
   --destructive: #92400e;
   --destructive-bright: #dc2626;
   --risk: #c76a15;
