@@ -92,9 +92,9 @@ export default function CompanyPortalDetailPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs text-[#6B7280]">{company.industry} · {company.city} · {company.size}</p>
-          <h1 className="mt-1 text-2xl font-semibold text-[#111827]">{company.shortName}</h1>
-          <p className="mt-2 text-sm text-[#6B7280]">
+          <p className="text-xs text-muted-foreground">{company.industry} · {company.city} · {company.size}</p>
+          <h1 className="mt-1 text-2xl font-semibold text-foreground">{company.shortName}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
             这是你在司南上能看到的镜像。所有评价、评分、趋势由匿名打工人贡献,司南不向公司端开放用户身份。
           </p>
         </div>
@@ -134,11 +134,11 @@ export default function CompanyPortalDetailPage() {
       {/* Trend chart */}
       <SolidCard variant="subtle" className="p-5">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-[#111827]">方向分趋势</h2>
-          <span className="text-xs text-[#6B7280]">最近 {trend.length} 个月</span>
+          <h2 className="text-base font-semibold text-foreground">方向分趋势</h2>
+          <span className="text-xs text-muted-foreground">最近 {trend.length} 个月</span>
         </div>
         {trend.length === 0 ? (
-          <p className="rounded-2xl bg-[#F9FAF7] p-4 text-sm text-[#6B7280]">数据补充中。</p>
+          <p className="rounded-2xl bg-card p-4 text-sm text-muted-foreground">数据补充中。</p>
         ) : (
           <div className="flex h-40 items-end gap-2" data-testid="portal-trend-chart">
             {trend.map((point, index) => {
@@ -146,13 +146,13 @@ export default function CompanyPortalDetailPage() {
               const heightPx = Math.max(8, Math.round(ratio * 140))
               return (
                 <div key={`${point.month}-${index}`} className="flex flex-1 flex-col items-center gap-1">
-                  <span className="text-xs font-semibold text-[#111827]">{point.score.toFixed(1)}</span>
+                  <span className="text-xs font-semibold text-foreground">{point.score.toFixed(1)}</span>
                   <div
-                    className="w-full rounded-t-md bg-[#19C37D]"
+                    className="w-full rounded-t-md bg-primary"
                     style={{ height: `${heightPx}px` }}
                     title={`${point.month} · ${point.reviews} 条评价`}
                   />
-                  <span className="text-xs text-[#6B7280]">{point.month}</span>
+                  <span className="text-xs text-muted-foreground">{point.month}</span>
                 </div>
               )
             })}
@@ -164,11 +164,11 @@ export default function CompanyPortalDetailPage() {
       <div className="grid gap-4 md:grid-cols-2">
         <SolidCard variant="subtle" className="p-5">
           <div className="mb-3 flex items-center gap-2">
-            <Tag className="size-4 text-[#19C37D]" />
-            <h2 className="text-base font-semibold text-[#111827]">风险标签</h2>
+            <Tag className="size-4 text-primary" />
+            <h2 className="text-base font-semibold text-foreground">风险标签</h2>
           </div>
           {company.riskTags.length === 0 ? (
-            <p className="text-sm text-[#6B7280]">暂无风险标签。</p>
+            <p className="text-sm text-muted-foreground">暂无风险标签。</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {company.riskTags.map((tag) => (
@@ -181,21 +181,21 @@ export default function CompanyPortalDetailPage() {
               ))}
             </div>
           )}
-          <p className="mt-4 text-xs text-[#6B7280]">
+          <p className="mt-4 text-xs text-muted-foreground">
             司南自动从公开评价中提取高频风险标签,公司端不能修改或删除。
           </p>
         </SolidCard>
 
         <SolidCard variant="subtle" className="p-5">
-          <h2 className="mb-3 text-base font-semibold text-[#111827]">分维度评分</h2>
+          <h2 className="mb-3 text-base font-semibold text-foreground">分维度评分</h2>
           <div className="grid gap-3">
             {company.dimensions.map((dim) => (
               <div key={dim.key} className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-[#111827]">{dim.label}</p>
-                  <p className="text-xs text-[#6B7280]">{dim.description}</p>
+                  <p className="text-sm font-semibold text-foreground">{dim.label}</p>
+                  <p className="text-xs text-muted-foreground">{dim.description}</p>
                 </div>
-                <span className="text-sm font-semibold text-[#111827]">{dim.score.toFixed(1)}</span>
+                <span className="text-sm font-semibold text-foreground">{dim.score.toFixed(1)}</span>
               </div>
             ))}
           </div>
@@ -205,10 +205,10 @@ export default function CompanyPortalDetailPage() {
       {/* Read-only public reviews */}
       <SolidCard variant="subtle" className="p-5">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-[#111827]">公开评价(只读)</h2>
-          <span className="text-xs text-[#6B7280]">{company.reviews.length} 条</span>
+          <h2 className="text-base font-semibold text-foreground">公开评价(只读)</h2>
+          <span className="text-xs text-muted-foreground">{company.reviews.length} 条</span>
         </div>
-        <p className="mb-3 text-xs text-[#6B7280]">
+        <p className="mb-3 text-xs text-muted-foreground">
           公司端只能浏览,不能点赞、回复、删改。对内容有异议时,请在每条评价上点击「提交申诉」。
         </p>
         <div className="grid gap-3" data-testid="portal-reviews-list">
@@ -217,23 +217,23 @@ export default function CompanyPortalDetailPage() {
             return (
               <div
                 key={review.id}
-                className="rounded-2xl border border-[#E5E7DB]/60 bg-[#F9FAF7] p-4"
+                className="rounded-2xl border border-border/60 bg-card p-4"
                 data-testid={`portal-review-${review.id}`}
               >
                 <div className="flex items-center justify-between gap-3">
-                  <p className="line-clamp-1 text-sm font-semibold text-[#111827]">{review.shortComment}</p>
-                  <span className="rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-[#111827]">
+                  <p className="line-clamp-1 text-sm font-semibold text-foreground">{review.shortComment}</p>
+                  <span className="rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-foreground">
                     {review.score} 分
                   </span>
                 </div>
-                <p className="mt-2 line-clamp-3 text-sm leading-6 text-[#374151]">{review.content}</p>
-                <p className="mt-2 text-xs text-[#6B7280]">
+                <p className="mt-2 line-clamp-3 text-sm leading-6 text-foreground">{review.content}</p>
+                <p className="mt-2 text-xs text-muted-foreground">
                   {review.relation} · {review.jobCategory} · {review.city} · {review.createdAt}
                 </p>
                 <div className="mt-3 flex items-center justify-between gap-2">
                   <div className="flex flex-wrap gap-1">
                     {reviewAppeals.length > 0 ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-[#FFF1D6] px-2 py-0.5 text-xs text-[#92400E]">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#FFF1D6] px-2 py-0.5 text-xs text-destructive">
                         <ShieldAlert className="size-3" />
                         已申诉 {reviewAppeals.length} 次
                       </span>
@@ -250,10 +250,10 @@ export default function CompanyPortalDetailPage() {
       {/* Submission queue: company info corrections */}
       <SolidCard variant="subtle" className="p-5">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-[#111827]">公司信息修正</h2>
-          <span className="text-xs text-[#6B7280]">{corrections.length} 条提交</span>
+          <h2 className="text-base font-semibold text-foreground">公司信息修正</h2>
+          <span className="text-xs text-muted-foreground">{corrections.length} 条提交</span>
         </div>
-        <p className="mb-3 text-xs text-[#6B7280]">
+        <p className="mb-3 text-xs text-muted-foreground">
           这里是你提交过的工商信息修正申请。司南审核通过后会在公开页更新。
         </p>
         <CorrectionForm company={company} onSubmitted={(c) => setCorrections([c, ...corrections])} />
@@ -262,22 +262,22 @@ export default function CompanyPortalDetailPage() {
             {corrections.slice(0, 5).map((correction) => (
               <div
                 key={correction.id}
-                className="flex items-start justify-between gap-3 rounded-2xl bg-[#F9FAF7] p-3"
+                className="flex items-start justify-between gap-3 rounded-2xl bg-card p-3"
               >
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-[#111827]">
+                  <p className="text-sm font-semibold text-foreground">
                     {CORRECTION_FIELDS.find((f) => f.value === correction.field)?.label ?? correction.field}
                   </p>
-                  <p className="mt-1 text-xs text-[#6B7280]">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     <span className="line-through">{correction.currentValue}</span>
                     {" → "}
-                    <span className="font-semibold text-[#111827]">{correction.proposedValue}</span>
+                    <span className="font-semibold text-foreground">{correction.proposedValue}</span>
                   </p>
                   {correction.reason ? (
-                    <p className="mt-1 text-xs text-[#6B7280]">说明:{correction.reason}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">说明:{correction.reason}</p>
                   ) : null}
                 </div>
-                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#DFF8EC] px-2 py-0.5 text-xs text-[#07563A]">
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs text-secondary-foreground">
                   <Clock className="size-3" />
                   审核中
                 </span>
@@ -288,10 +288,10 @@ export default function CompanyPortalDetailPage() {
       </SolidCard>
 
       {/* Read-only public link */}
-      <div className="rounded-2xl border border-[#E5E7DB]/60 bg-white p-4 text-sm text-[#6B7280]">
+      <div className="rounded-2xl border border-border/60 bg-white p-4 text-sm text-muted-foreground">
         <p>
           想看公开镜像(打工人视角)?点
-          <Link href={`/company/${company.id}`} className="mx-1 font-semibold text-[#19C37D] hover:underline">
+          <Link href={`/company/${company.id}`} className="mx-1 font-semibold text-primary hover:underline">
             公开页
           </Link>
           查看。
@@ -315,21 +315,21 @@ function StatCard({
   icon?: React.ReactNode
 }) {
   const accent = {
-    primary: "bg-[#DFF8EC] text-[#07563A]",
-    neutral: "bg-[#F1F5EF] text-[#374151]",
-    positive: "bg-[#DFF8EC] text-[#07563A]",
-    risk: "bg-[#FFF1D6] text-[#92400E]",
+    primary: "bg-secondary text-secondary-foreground",
+    neutral: "bg-muted text-foreground",
+    positive: "bg-secondary text-secondary-foreground",
+    risk: "bg-[#FFF1D6] text-destructive",
   }[tone]
   return (
     <SolidCard variant="subtle" className="p-4">
-      <div className="mb-2 flex items-center gap-2 text-xs text-[#6B7280]">
+      <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
         <span className={`inline-flex size-6 items-center justify-center rounded-md ${accent}`}>
           {icon ?? <Lock className="size-3" />}
         </span>
         {label}
       </div>
-      <p className="text-2xl font-semibold text-[#111827]">{value}</p>
-      <p className="mt-1 text-xs text-[#6B7280]">{sub}</p>
+      <p className="text-2xl font-semibold text-foreground">{value}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{sub}</p>
     </SolidCard>
   )
 }
@@ -385,13 +385,13 @@ function CorrectionForm({
   return (
     <div className="rounded-2xl bg-white p-4 ring-1 ring-[#E5E7DB]">
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="flex flex-col gap-1 text-xs font-semibold text-[#6B7280]">
+        <label className="flex flex-col gap-1 text-xs font-semibold text-muted-foreground">
           修正字段
           <select
             value={field}
             onChange={(event) => setField(event.target.value as CompanyCorrectionRequest["field"])}
             data-testid="correction-field-select"
-            className="rounded-xl border border-[#E5E7DB] bg-white px-3 py-2 text-sm font-normal text-[#111827] outline-none focus:border-[#19C37D] focus:ring-4 focus:ring-[#DFF8EC]"
+            className="rounded-xl border border-border bg-white px-3 py-2 text-sm font-normal text-foreground outline-none focus:border-primary focus:ring-4 focus:ring-secondary"
           >
             {CORRECTION_FIELDS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -403,7 +403,7 @@ function CorrectionForm({
             {CORRECTION_FIELDS.find((f) => f.value === field)?.description}
           </span>
         </label>
-        <label className="flex flex-col gap-1 text-xs font-semibold text-[#6B7280]">
+        <label className="flex flex-col gap-1 text-xs font-semibold text-muted-foreground">
           建议值
           <input
             type="text"
@@ -411,7 +411,7 @@ function CorrectionForm({
             onChange={(event) => setProposed(event.target.value)}
             placeholder="例如:北辰智造科技(上海)有限公司"
             data-testid="correction-proposed-input"
-            className="rounded-xl border border-[#E5E7DB] bg-white px-3 py-2 text-sm font-normal text-[#111827] outline-none focus:border-[#19C37D] focus:ring-4 focus:ring-[#DFF8EC]"
+            className="rounded-xl border border-border bg-white px-3 py-2 text-sm font-normal text-foreground outline-none focus:border-primary focus:ring-4 focus:ring-secondary"
           />
           <span className="text-xs font-normal text-[#9CA3AF]">当前:{currentValue || "(空)"}</span>
         </label>
@@ -425,7 +425,7 @@ function CorrectionForm({
       />
       <div className="mt-3 flex items-center justify-end gap-2">
         {submitted ? (
-          <span className="inline-flex items-center gap-1 text-xs text-[#07563A]">
+          <span className="inline-flex items-center gap-1 text-xs text-secondary-foreground">
             <CheckCircle2 className="size-3.5" />
             已提交,等待审核
           </span>
@@ -469,7 +469,7 @@ function AppealButton({ companyId, reviewId }: { companyId: string; reviewId: st
 
   if (submitted) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-[#DFF8EC] px-2.5 py-1 text-xs text-[#07563A]">
+      <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-xs text-secondary-foreground">
         <CheckCircle2 className="size-3" />
         申诉已提交
       </span>
@@ -492,8 +492,8 @@ function AppealButton({ companyId, reviewId }: { companyId: string; reviewId: st
   }
 
   return (
-    <div className="w-full rounded-2xl border border-[#E5E7DB] bg-white p-3">
-      <p className="mb-2 text-xs font-semibold text-[#111827]">对这条评价提交申诉</p>
+    <div className="w-full rounded-2xl border border-border bg-white p-3">
+      <p className="mb-2 text-xs font-semibold text-foreground">对这条评价提交申诉</p>
       <div className="grid gap-1.5">
         {APPEAL_REASONS.map((option) => {
           const selected = reason === option.id
@@ -505,8 +505,8 @@ function AppealButton({ companyId, reviewId }: { companyId: string; reviewId: st
               data-testid={`appeal-reason-${reviewId}-${option.id}`}
               className={`rounded-lg border px-2 py-1.5 text-left text-xs ${
                 selected
-                  ? "border-[#C76A15] bg-[#FFF1D6] text-[#92400E]"
-                  : "border-[#E5E7DB] bg-white text-[#374151] hover:border-[#C76A15]/40"
+                  ? "border-[#C76A15] bg-[#FFF1D6] text-destructive"
+                  : "border-border bg-white text-foreground hover:border-[#C76A15]/40"
               }`}
             >
               {option.label}

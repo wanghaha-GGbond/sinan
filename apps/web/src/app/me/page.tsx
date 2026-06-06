@@ -146,11 +146,11 @@ export default function MePage() {
     return (
       <section className="mx-auto flex w-full max-w-5xl flex-col items-center px-4 py-20">
         <SolidCard variant="elevated" className="w-full max-w-[420px] p-10 text-center">
-          <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-2xl bg-[#F1F5EF]">
-            <Navigation className="size-8 text-[#9CA3AF]" />
+          <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-2xl bg-muted">
+            <Navigation className="size-8 text-muted-foreground" />
           </div>
-          <h2 className="text-lg font-semibold text-[#111827]">登录司南</h2>
-          <p className="mt-2 text-sm text-[#6B7280]">
+          <h2 className="text-lg font-semibold text-foreground">登录司南</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
             登录后查看方向值、连续点灯和指路等级
             <br />
             匿名保护,不向公司开放身份
@@ -170,10 +170,10 @@ export default function MePage() {
   if (authLoading || dashboardLoading) {
     return (
       <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6">
-        <div className="h-8 w-32 animate-pulse rounded-lg bg-[#F1F5EF]" />
+        <div className="h-8 w-32 animate-pulse rounded-lg bg-muted" />
         <div className="grid gap-4 md:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 animate-pulse rounded-[28px] bg-[#F1F5EF]" />
+            <div key={i} className="h-32 animate-pulse rounded-[28px] bg-muted" />
           ))}
         </div>
       </section>
@@ -281,12 +281,12 @@ function MeContent({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-[#111827]">我的</h1>
-          <p className="mt-1 text-sm text-[#6B7280]">
+          <h1 className="text-2xl font-semibold text-foreground">我的</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             {displayName} · 指路等级 L{trustLevel}
           </p>
         </div>
-        <div className="flex items-center gap-1 rounded-full bg-[#F1F5EF] px-4 py-2 text-sm font-medium text-[#6B7280]">
+        <div className="flex items-center gap-1 rounded-full bg-muted px-4 py-2 text-sm font-medium text-muted-foreground">
           指路人
           <ChevronRight className="size-3.5" />
         </div>
@@ -296,15 +296,15 @@ function MeContent({
       <div className="grid gap-4 md:grid-cols-3">
         <SolidCard variant="default" className="p-5">
           <div className="mb-3 flex items-center gap-2">
-            <div className="flex size-9 items-center justify-center rounded-xl bg-[#DFF8EC]">
-              <Navigation className="size-4 text-[#07563A]" />
+            <div className="flex size-9 items-center justify-center rounded-xl bg-secondary">
+              <Navigation className="size-4 text-secondary-foreground" />
             </div>
-            <span className="text-sm font-medium text-[#6B7280]">方向值</span>
+            <span className="text-sm font-medium text-muted-foreground">方向值</span>
           </div>
-          <p className="text-3xl font-semibold text-[#111827]" data-testid="me-direction-points">
+          <p className="text-3xl font-semibold text-foreground" data-testid="me-direction-points">
             {stats.directionPoints}
           </p>
-          <p className="mt-1 text-xs text-[#9CA3AF]">距离 L{trustLevel + 1} 还差 {levelGap}</p>
+          <p className="mt-1 text-xs text-muted-foreground">距离 L{trustLevel + 1} 还差 {levelGap}</p>
           <Progress value={levelProgress} className="mt-3 h-1.5" />
         </SolidCard>
 
@@ -313,12 +313,12 @@ function MeContent({
             <div className="flex size-9 items-center justify-center rounded-xl bg-[#FFF1D6]">
               <Flame className="size-4 text-[#C76A15]" />
             </div>
-            <span className="text-sm font-medium text-[#6B7280]">连续点灯</span>
+            <span className="text-sm font-medium text-muted-foreground">连续点灯</span>
           </div>
-          <p className="text-3xl font-semibold text-[#111827]" data-testid="me-streak-days">
+          <p className="text-3xl font-semibold text-foreground" data-testid="me-streak-days">
             {stats.streakDays} 天
           </p>
-          <p className="mt-1 text-xs text-[#9CA3AF]">今天再看 1 条评价即可保持</p>
+          <p className="mt-1 text-xs text-muted-foreground">今天再看 1 条评价即可保持</p>
         </SolidCard>
 
         <SolidCard variant="default" className="p-5">
@@ -326,32 +326,32 @@ function MeContent({
             <div className="flex size-9 items-center justify-center rounded-xl bg-[#111827]">
               <Award className="size-4 text-white" />
             </div>
-            <span className="text-sm font-medium text-[#6B7280]">指路等级</span>
+            <span className="text-sm font-medium text-muted-foreground">指路等级</span>
           </div>
-          <p className="text-3xl font-semibold text-[#111827]">L{trustLevel}</p>
-          <p className="mt-1 text-xs text-[#9CA3AF]">已帮助 {stats.helpedCount} 位后来者</p>
+          <p className="text-3xl font-semibold text-foreground">L{trustLevel}</p>
+          <p className="mt-1 text-xs text-muted-foreground">已帮助 {stats.helpedCount} 位后来者</p>
         </SolidCard>
       </div>
 
       {/* Daily tasks */}
       <SolidCard variant="default" className="p-5">
-        <h2 className="mb-4 text-base font-semibold text-[#111827]">今日指路任务</h2>
+        <h2 className="mb-4 text-base font-semibold text-foreground">今日指路任务</h2>
         <div className="grid gap-3" data-testid="me-daily-tasks">
           {dailyTasks.map((task) => (
             <div
               key={task.id}
               className={`flex items-center justify-between gap-3 rounded-2xl p-4 transition ${
                 task.completed
-                  ? "bg-[#DFF8EC]"
-                  : "bg-[#F9FAF7] border border-[#E5E7DB]/60"
+                  ? "bg-secondary"
+                  : "bg-card border border-border/60"
               }`}
             >
               <div className="min-w-0 flex-1">
-                <p className={`text-sm font-medium ${task.completed ? "text-[#07563A]" : "text-[#111827]"}`}>
+                <p className={`text-sm font-medium ${task.completed ? "text-secondary-foreground" : "text-foreground"}`}>
                   {task.completed && "✅ "}
                   {task.title}
                 </p>
-                <p className="mt-0.5 text-xs text-[#9CA3AF]">
+                <p className="mt-0.5 text-xs text-muted-foreground">
                   奖励 +{task.rewardPoints} 方向值 · 进度 {task.progress}/{task.target}
                   {task.hint ? ` · ${task.hint}` : ""}
                 </p>
@@ -369,8 +369,8 @@ function MeContent({
       {/* My reviews */}
       <SolidCard variant="default" className="p-5">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-[#111827]">我的评价</h2>
-          <Link href="/submit/review" className="text-sm font-medium text-[#19C37D] hover:underline">
+          <h2 className="text-base font-semibold text-foreground">我的评价</h2>
+          <Link href="/submit/review" className="text-sm font-medium text-primary hover:underline">
             写新评价 →
           </Link>
         </div>
@@ -390,17 +390,17 @@ function MeContent({
               <Link
                 key={review.id}
                 href={`/company/${review.companyId}`}
-                className="block rounded-2xl border border-[#E5E7DB]/60 bg-[#F9FAF7] p-4 transition hover:border-[#19C37D]/50 hover:bg-white"
+                className="block rounded-2xl border border-border/60 bg-card p-4 transition hover:border-primary/50 hover:bg-white"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <p className="truncate text-sm font-semibold text-[#111827]">{review.companyName}</p>
-                  <div className="flex shrink-0 items-center gap-2 text-xs text-[#6B7280]">
-                    <Star className="size-3.5 fill-[#19C37D] text-[#19C37D]" />
+                  <p className="truncate text-sm font-semibold text-foreground">{review.companyName}</p>
+                  <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
+                    <Star className="size-3.5 fill-[#19C37D] text-primary" />
                     {review.score} 分
                   </div>
                 </div>
                 <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#374151]">{review.shortComment}</p>
-                <p className="mt-2 text-xs text-[#9CA3AF]">
+                <p className="mt-2 text-xs text-muted-foreground">
                   有用 {review.helpful} · 追问 {review.commentCount} · {new Date(review.createdAt).toLocaleDateString("zh-CN")}
                 </p>
               </Link>
@@ -412,8 +412,8 @@ function MeContent({
       {/* My favorites — localStorage hybrid (API favoriteCompanies service not yet implemented) */}
       <SolidCard variant="default" className="p-5">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-[#111827]">我的收藏</h2>
-          <span className="text-xs text-[#6B7280]" data-testid="me-favorites-count">
+          <h2 className="text-base font-semibold text-foreground">我的收藏</h2>
+          <span className="text-xs text-muted-foreground" data-testid="me-favorites-count">
             共 {favoriteSet.size} 家公司
           </span>
         </div>
@@ -433,13 +433,13 @@ function MeContent({
               <Link
                 key={fav.companyId}
                 href={`/company/${fav.companyId}`}
-                className="flex items-center justify-between gap-3 rounded-2xl border border-[#E5E7DB]/60 bg-[#F9FAF7] p-4 transition hover:border-[#19C37D]/50 hover:bg-white"
+                className="flex items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card p-4 transition hover:border-primary/50 hover:bg-white"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-[#111827]">{fav.companyName}</p>
-                  <p className="mt-1 text-xs text-[#6B7280]">已收藏公司</p>
+                  <p className="truncate text-sm font-semibold text-foreground">{fav.companyName}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">已收藏公司</p>
                 </div>
-                <div className="flex shrink-0 items-center gap-1 text-[#19C37D]">
+                <div className="flex shrink-0 items-center gap-1 text-primary">
                   <Bookmark className="size-4 fill-current" />
                 </div>
               </Link>
@@ -447,9 +447,9 @@ function MeContent({
             {extraFavoriteIds
               .filter((id) => !favoriteCompanies.some((f) => f.companyId === id))
               .map((id) => (
-                <div key={id} className="flex items-center justify-between gap-3 rounded-2xl border border-[#E5E7DB]/60 bg-[#F9FAF7] p-4">
-                  <p className="truncate text-sm font-semibold text-[#111827]">{id}</p>
-                  <div className="flex shrink-0 items-center gap-1 text-[#19C37D]">
+                <div key={id} className="flex items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card p-4">
+                  <p className="truncate text-sm font-semibold text-foreground">{id}</p>
+                  <div className="flex shrink-0 items-center gap-1 text-primary">
                     <Bookmark className="size-4 fill-current" />
                   </div>
                 </div>
@@ -461,8 +461,8 @@ function MeContent({
       {/* Badges */}
       <SolidCard variant="default" className="p-5">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-[#111827]">司南徽章</h2>
-          <span className="text-xs text-[#6B7280]" data-testid="me-badges-progress">
+          <h2 className="text-base font-semibold text-foreground">司南徽章</h2>
+          <span className="text-xs text-muted-foreground" data-testid="me-badges-progress">
             {badges.filter((b) => b.unlocked).length} / {badges.length} 已解锁
           </span>
         </div>
@@ -475,27 +475,27 @@ function MeContent({
               <div
                 key={badge.id}
                 className={`flex items-center justify-between gap-3 rounded-2xl p-3 ${
-                  badge.unlocked ? "bg-[#DFF8EC]" : "bg-[#F9FAF7] border border-[#E5E7DB]/60"
+                  badge.unlocked ? "bg-secondary" : "bg-card border border-border/60"
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div
                     className={`flex size-9 items-center justify-center rounded-xl ${
-                      badge.unlocked ? "bg-[#19C37D] text-white" : "bg-[#E5E7DB] text-[#6B7280]"
+                      badge.unlocked ? "bg-[#19C37D] text-white" : "bg-[#E5E7DB] text-muted-foreground"
                     }`}
                   >
                     {badge.unlocked ? <Award className="size-4" /> : <Lock className="size-4" />}
                   </div>
                   <div>
-                    <p className={`text-sm font-medium ${badge.unlocked ? "text-[#07563A]" : "text-[#111827]"}`}>
+                    <p className={`text-sm font-medium ${badge.unlocked ? "text-secondary-foreground" : "text-foreground"}`}>
                       {badge.name}
                     </p>
-                    <p className="text-xs text-[#6B7280]">{badge.description}</p>
+                    <p className="text-xs text-muted-foreground">{badge.description}</p>
                   </div>
                 </div>
                 {!badge.unlocked && target > 0 ? (
                   <div className="min-w-[120px] text-right">
-                    <p className="text-xs text-[#9CA3AF]">
+                    <p className="text-xs text-muted-foreground">
                       {progress} / {target}
                     </p>
                     <Progress value={ratio} className="mt-1 h-1.5" />
