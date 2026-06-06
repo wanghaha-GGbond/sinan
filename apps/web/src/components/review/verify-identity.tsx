@@ -117,7 +117,7 @@ export function VerifyIdentity({ companyName }: { companyName: string }) {
             value={email}
             onChange={(e) => { setEmail(e.target.value); setError("") }}
             placeholder={`name@${companyDomain}`}
-            className="flex-1 rounded-xl border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-secondary"
+            className="flex-1 rounded-xl border border-border bg-card px-3 py-2 text-sm outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           />
           <SolidButton
             variant="primary"
@@ -160,7 +160,7 @@ export function VerifyIdentity({ companyName }: { companyName: string }) {
           onChange={(e) => { setCode(e.target.value); setError("") }}
           placeholder="000000"
           maxLength={6}
-          className="w-32 rounded-xl border border-border bg-card px-3 py-2 text-center text-lg tracking-[0.3em] outline-none focus:border-primary focus:ring-4 focus:ring-secondary"
+          className="w-32 rounded-xl border border-border bg-card px-3 py-2 text-center text-lg tracking-[0.3em] outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         />
         <SolidButton
           variant="primary"

@@ -39,7 +39,8 @@ function IntelNav() {
           <Link
             key={item.href}
             href={item.href}
-            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold transition ${
+            aria-current={active ? "page" : undefined}
+            className={`inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold transition ${
               active
                 ? "bg-foreground text-white shadow-[0_4px_0_rgba(17,24,39,0.22)]"
                 : "bg-muted text-foreground hover:bg-muted-hover"
@@ -85,8 +86,8 @@ function HomeHeader() {
               </SolidButton>
               <button
                 onClick={() => logout()}
-                className="rounded-full p-1.5 text-muted-foreground transition hover:bg-muted hover:text-muted-foreground"
-                title="退出"
+                aria-label="退出登录"
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
               >
                 <LogOut className="size-4" />
               </button>

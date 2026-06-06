@@ -173,6 +173,91 @@
   /* Impeccable §Typography: prevent 1-word orphan lines on short
      Chinese headings. "我的\n评价", "推荐\n公司", "公司\n不能" all
      break awkwardly without this — balance re-flows the words
+     so the line lengths are even. */
+  h1,
+  h2 {
+    text-wrap: balance;
+  }
+  /* For long prose, 'pretty' is gentler than 'balance' — it
+     suppresses orphans without trying to equalize every line. */
+  p {
+    text-wrap: pretty;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+  h1,
+  h2,
+  h3 {
+    letter-spacing: 0;
+  }
+
+  /* ─── SOTA CJK typography ───────────────────────────────────────
+     Latin text breaks on spaces, CJK text breaks anywhere. The
+     default browser rule allows breaking inside CJK runs whenever
+     the next-glyph doesn't fit, which fragments 2–4 character
+     words onto separate lines. These three properties together
+     give us the same discipline a print editor would: keep CJK
+     compound words together, but still allow break opportunities
+     at sensible spots (after 。、「、etc). */
+  body {
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+    line-break: strict;
+  }
+  /* Numbers + ASCII inside CJK paragraphs: keep them as a unit so
+     "评价 +20" doesn't break between '+' and '20'. */
+  p,
+  li,
+  dd {
+    text-spacing: trim-start;
+  }
+  /* CJK punctuation at line end can hang into the margin (like
+     English ',' does). Hanging it visually tidies the right edge. */
+  p,
+  h1,
+  h2,
+  h3,
+  h4,
+  li {
+    hanging-punctuation: allow-end;
+  }
+  /* OpenType features for the latin parts: tabular numbers for
+     data fields (so digits align in metric rows), proportional
+     for body prose, contextual alternates for cleaner joins. */
+  body {
+    font-feature-settings:
+      "ss01" on,    /* Geist contextual alternates */
+      "cv11" on;    /* Geist single-storey 'a' */
+  }
+  /* Tabular nums wherever data lives: metric pills, score chips,
+     count displays, table cells. */
+  [data-numeric="true"],
+  .tabular-nums {
+    font-variant-numeric: tabular-nums slashed-zero;
+    font-feature-settings:
+      "tnum" on,
+      "zero" on,
+      "ss01" on,
+      "cv11" on;
+  }
+  /* Smooth in-page anchor scrolling, but only if the user hasn't
+     asked for reduced motion. */
+  html {
+    scroll-behavior: smooth;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+}
+  /* Impeccable §Typography: prevent 1-word orphan lines on short
+     Chinese headings. "我的\n评价", "推荐\n公司", "公司\n不能" all
+     break awkwardly without this — balance re-flows the words
      to keep the line lengths even. */
   h1,
   h2 {

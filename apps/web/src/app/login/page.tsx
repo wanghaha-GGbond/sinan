@@ -110,7 +110,9 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@company.com"
-                className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-all focus:border-primary focus:bg-white focus:ring-4 focus:ring-secondary"
+                aria-invalid={error ? true : undefined}
+                aria-describedby={error ? "login-error" : undefined}
+                className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-all focus-visible:border-primary focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               />
             </div>
           ) : (
@@ -124,7 +126,9 @@ export default function LoginPage() {
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="13800138000"
                 maxLength={11}
-                className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-all focus:border-primary focus:bg-white focus:ring-4 focus:ring-secondary"
+                aria-invalid={error ? true : undefined}
+                aria-describedby={error ? "login-error" : undefined}
+                className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-all focus-visible:border-primary focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               />
             </div>
           )}
@@ -138,15 +142,17 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="至少 8 位字符"
-              className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-all focus:border-primary focus:bg-white focus:ring-4 focus:ring-secondary"
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? "login-error" : undefined}
+              className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-all focus-visible:border-primary focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             />
           </div>
 
-          {error && (
-            <p className="rounded-xl bg-destructive-bright/10 px-4 py-2.5 text-sm text-destructive-bright">
+          {error ? (
+            <p id="login-error" role="alert" className="rounded-xl bg-destructive-bright/10 px-4 py-2.5 text-sm text-destructive-bright">
               {error}
             </p>
-          )}
+          ) : null}
 
           <SolidButton
             type="submit"

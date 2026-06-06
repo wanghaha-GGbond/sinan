@@ -398,7 +398,7 @@ function CorrectionForm({
             value={field}
             onChange={(event) => setField(event.target.value as CompanyCorrectionRequest["field"])}
             data-testid="correction-field-select"
-            className="rounded-xl border border-border bg-white px-3 py-2 text-sm font-normal text-foreground outline-none focus:border-primary focus:ring-4 focus:ring-secondary"
+            className="rounded-xl border border-border bg-white px-3 py-2 text-sm font-normal text-foreground outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             {CORRECTION_FIELDS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -418,7 +418,7 @@ function CorrectionForm({
             onChange={(event) => setProposed(event.target.value)}
             placeholder="例如:北辰智造科技(上海)有限公司"
             data-testid="correction-proposed-input"
-            className="rounded-xl border border-border bg-white px-3 py-2 text-sm font-normal text-foreground outline-none focus:border-primary focus:ring-4 focus:ring-secondary"
+            className="rounded-xl border border-border bg-white px-3 py-2 text-sm font-normal text-foreground outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           />
           <span className="text-xs font-normal text-muted-foreground">当前:{currentValue || "(空)"}</span>
         </label>
