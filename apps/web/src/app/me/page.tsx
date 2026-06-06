@@ -299,7 +299,7 @@ function MeContent({
       <div className="grid gap-4 md:grid-cols-3">
         <SolidCard variant="default" className="p-5">
           <div className="mb-3 flex items-center gap-2">
-            <div className="flex size-9 items-center justify-center rounded-xl bg-primary-tint">
+            <div className="flex size-9 items-center justify-center rounded-xl bg-muted">
               <Navigation className="size-4 text-secondary-foreground" />
             </div>
             <span className="text-sm font-medium text-muted-foreground">方向值</span>
@@ -345,7 +345,7 @@ function MeContent({
               key={task.id}
               className={`flex items-center justify-between gap-3 rounded-2xl p-4 transition ${
                 task.completed
-                  ? "bg-primary-tint"
+                  ? "bg-muted"
                   : "bg-card border border-border/60"
               }`}
             >
@@ -505,7 +505,7 @@ function MeContent({
                 <div
                   key={badge.id}
                   className={`flex items-center justify-between gap-3 rounded-2xl p-3 ${
-                    badge.unlocked ? "bg-primary-tint" : "bg-card border border-border/60"
+                    badge.unlocked ? "bg-muted" : "bg-card border border-border/60"
                   }`}
                 >
                   <div className="flex items-center gap-3">

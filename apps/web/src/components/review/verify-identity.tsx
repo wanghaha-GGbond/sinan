@@ -56,7 +56,7 @@ export function VerifyIdentity({ companyName }: { companyName: string }) {
   if (step === "verified") {
     return (
       <SolidCard variant="emerald" className="p-6 text-center">
-        <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary-tint">
+        <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-muted">
           <CheckCircle2 className="size-7 text-secondary-foreground" />
         </div>
         <h3 className="text-lg font-semibold text-foreground">身份已验证</h3>

@@ -918,7 +918,7 @@ export default function SubmitReviewPage() {
                         }}
                         className={cn(
                           "flex items-start gap-3 rounded-2xl border p-4 text-left text-sm transition-colors",
-                          field.value ? "border-primary bg-primary-tint" : "bg-background"
+                          field.value ? "border-primary bg-white" : "bg-background"
                         )}
                       >
                         <ShieldCheck className="mt-0.5 shrink-0" />
