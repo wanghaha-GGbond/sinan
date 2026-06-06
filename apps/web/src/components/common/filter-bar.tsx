@@ -45,10 +45,10 @@ export function FilterBar<TIndustry extends string, TCity extends string, TSort 
 
   return (
     <div
-      className="flex flex-col gap-3 rounded-2xl border border-[#E5E7DB]/60 bg-white p-3 sm:flex-row sm:flex-wrap sm:items-center"
+      className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-white p-3 sm:flex-row sm:flex-wrap sm:items-center"
       data-testid="intelligence-filter-bar"
     >
-      <div className="flex items-center gap-1 text-xs font-semibold text-[#6B7280]">
+      <div className="flex items-center gap-1 text-xs font-semibold text-muted-foreground">
         <Filter className="size-3.5" />
         筛选
       </div>
@@ -73,9 +73,9 @@ export function FilterBar<TIndustry extends string, TCity extends string, TSort 
         options={sortOptions as readonly { value: string; label: string }[]}
         testId="filter-sort"
       />
-      <div className="ml-auto flex items-center gap-2 text-xs text-[#6B7280]">
+      <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
         <span data-testid="intelligence-result-count">
-          匹配 <strong className="text-[#111827]">{resultCount}</strong> 条
+          匹配 <strong className="text-foreground">{resultCount}</strong> 条
         </span>
         {hasFilter && onReset ? (
           <SolidButton
@@ -108,13 +108,13 @@ function Select({
   testId?: string
 }) {
   return (
-    <label className="flex items-center gap-1.5 rounded-full bg-[#F1F5EF] px-3 py-1.5 text-xs text-[#374151]">
-      <span className="font-semibold text-[#6B7280]">{label}</span>
+    <label className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-xs text-foreground">
+      <span className="font-semibold text-muted-foreground">{label}</span>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
         data-testid={testId}
-        className="border-0 bg-transparent pr-1 text-xs font-medium text-[#111827] outline-none focus:ring-0"
+        className="border-0 bg-transparent pr-1 text-xs font-medium text-foreground outline-none focus:ring-0"
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>

@@ -59,7 +59,7 @@ export function RatingsClient({ id }: { id: string }) {
   return (
     <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
       <div className="min-w-0">
-        <div className="solid-card mb-5 border border-[#E5E7DB]/60 p-5">
+        <div className="solid-card mb-5 border border-border/60 p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
               <p className="text-sm text-muted-foreground">{company.name}</p>
@@ -82,7 +82,7 @@ export function RatingsClient({ id }: { id: string }) {
                 ))}
               </div>
             </div>
-            <div className="flex shrink-0 items-center gap-3 rounded-2xl bg-[#F1F5EF] px-4 py-3">
+            <div className="flex shrink-0 items-center gap-3 rounded-2xl bg-muted px-4 py-3">
               <div>
                 <p className="text-xs text-muted-foreground">方向分</p>
                 <p className="text-2xl font-semibold">{company.directionScore.toFixed(1)}</p>
@@ -108,7 +108,7 @@ export function RatingsClient({ id }: { id: string }) {
       </div>
 
       <aside className="grid gap-4 self-start lg:sticky lg:top-20">
-        <Card className="solid-card-subtle border border-[#E5E7DB]/60">
+        <Card className="solid-card-subtle border border-border/60">
           <CardHeader>
             <CardTitle>给这家公司打个方向分</CardTitle>
             <CardDescription>可选。提交后只在本地模拟成功状态。</CardDescription>
@@ -124,15 +124,15 @@ export function RatingsClient({ id }: { id: string }) {
                   className={cn(
                     "h-9 rounded-full border text-sm font-medium transition-all active:translate-y-[2px]",
                     score === item
-                      ? "border-[#19C37D] bg-[#19C37D] text-white shadow-[0_3px_0_#0E8F5F]"
-                      : "bg-[#F1F5EF] text-[#1F2937] shadow-[0_3px_0_#D1D5C8] hover:bg-[#EEF4F1]"
+                      ? "border-primary bg-primary text-white shadow-[0_3px_0_#0E8F5F]"
+                      : "bg-muted text-foreground shadow-[0_3px_0_#D1D5C8] hover:bg-[#EEF4F1]"
                   )}
                 >
                   {item}
                 </button>
               ))}
             </div>
-            <div className="rounded-2xl bg-[#F1F5EF] p-3">
+            <div className="rounded-2xl bg-muted p-3">
               <p className="text-sm text-muted-foreground">你的方向分</p>
               <p data-testid="preview-score" className="mt-1 text-2xl font-semibold">
                 {displayedScore.toFixed(1)}
@@ -155,7 +155,7 @@ export function RatingsClient({ id }: { id: string }) {
                 </p>
               </div>
             ) : null}
-            <div className="rounded-2xl bg-[#FFF1D6] p-3 text-sm text-[#92400E]">
+            <div className="rounded-2xl bg-[#FFF1D6] p-3 text-sm text-destructive">
               <div className="flex items-start gap-2">
                 <ShieldCheck className="mt-0.5 shrink-0" />
                 <p className="text-muted-foreground">

@@ -64,12 +64,12 @@ export default function CommunityPage() {
       <SolidCard variant="elevated" className="p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-[#DFF8EC] px-3 py-1 text-xs font-semibold text-[#07563A]">
+            <div className="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-secondary-foreground">
               <UsersRound className="size-3.5" />
               社区问答
             </div>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[#111827]">把评价后面的追问也看见</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6B7280]">
+            <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground">把评价后面的追问也看见</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
               Glassdoor 式社区能力映射到司南:围绕一条评价继续追问、补充、打码展示,并保留匿名身份保护。
             </p>
           </div>
@@ -81,7 +81,7 @@ export default function CommunityPage() {
 
       {/* Type filter as inline pill toggle — orthogonal to the 3 standard filters. */}
       <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="讨论类型">
-        <span className="text-xs font-semibold text-[#6B7280]">类型</span>
+        <span className="text-xs font-semibold text-muted-foreground">类型</span>
         {TYPE_OPTIONS.map((opt) => {
           const selected = type === opt.value
           return (
@@ -94,8 +94,8 @@ export default function CommunityPage() {
               data-testid={`community-type-${opt.value}`}
               className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                 selected
-                  ? "bg-[#111827] text-white shadow-[0_3px_0_rgba(17,24,39,0.18)]"
-                  : "bg-[#F1F5EF] text-[#374151] hover:bg-[#E8EEE5]"
+                  ? "bg-foreground text-white shadow-[0_3px_0_rgba(17,24,39,0.18)]"
+                  : "bg-muted text-foreground hover:bg-[#E8EEE5]"
               }`}
             >
               {opt.label}
@@ -139,17 +139,17 @@ export default function CommunityPage() {
             <SolidCard key={item.discussionId} variant="subtle" className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-sm font-semibold text-[#111827]">{item.companyName}</p>
-                  <p className="mt-1 text-xs text-[#6B7280]">
+                  <p className="text-sm font-semibold text-foreground">{item.companyName}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
                     {item.type === "question" ? "追问" : "补充"} · {item.authorLabel}
                   </p>
                 </div>
-                <div className="rounded-full bg-[#F1F5EF] px-3 py-1 text-xs font-semibold text-[#07563A]">
+                <div className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-secondary-foreground">
                   有用 {item.usefulCount}
                 </div>
               </div>
-              <div className="mt-4 rounded-[24px] bg-white p-4 text-sm leading-6 text-[#374151]">
-                <MessageCircleQuestion className="mb-2 size-4 text-[#19C37D]" />
+              <div className="mt-4 rounded-[24px] bg-white p-4 text-sm leading-6 text-foreground">
+                <MessageCircleQuestion className="mb-2 size-4 text-primary" />
                 {item.content}
               </div>
               <div className="mt-3 flex flex-wrap gap-2">

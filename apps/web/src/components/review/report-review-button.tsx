@@ -27,7 +27,7 @@ export function ReportReviewButton({ reviewId }: { reviewId: string }) {
     const label = REPORT_REASONS.find((r) => r.id === submittedReason)?.label ?? "已举报"
     return (
       <span
-        className="inline-flex items-center gap-1 rounded-full bg-[#F1F5EF] px-3 py-1.5 text-xs font-medium text-[#07563A]"
+        className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1.5 text-xs font-medium text-secondary-foreground"
         data-testid={`report-submitted-${reviewId}`}
         title="你已经举报过这条评价,司南会优先审核"
       >
@@ -72,21 +72,21 @@ export function ReportReviewButton({ reviewId }: { reviewId: string }) {
 
   return (
     <div
-      className="mt-3 w-full rounded-2xl border border-[#E5E7DB] bg-[#F9FAF7] p-4"
+      className="mt-3 w-full rounded-2xl border border-border bg-card p-4"
       data-testid={`report-form-${reviewId}`}
     >
       <div className="mb-3 flex items-center justify-between">
-        <p className="text-sm font-semibold text-[#111827]">举报这条评价</p>
+        <p className="text-sm font-semibold text-foreground">举报这条评价</p>
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="rounded-full p-1 text-[#9CA3AF] hover:bg-white hover:text-[#6B7280]"
+          className="rounded-full p-1 text-muted-foreground hover:bg-white hover:text-muted-foreground"
           aria-label="关闭举报"
         >
           <X className="size-4" />
         </button>
       </div>
-      <p className="mb-3 text-xs text-[#6B7280]">
+      <p className="mb-3 text-xs text-muted-foreground">
         司南优先保护匿名与事实表达。明确违规的内容会被下架,公司方无法干预。
       </p>
       <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="举报原因">
@@ -102,8 +102,8 @@ export function ReportReviewButton({ reviewId }: { reviewId: string }) {
               onClick={() => setReason(option.id)}
               className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-left text-xs transition ${
                 selected
-                  ? "border-[#C76A15] bg-[#FFF1D6] text-[#92400E]"
-                  : "border-[#E5E7DB] bg-white text-[#374151] hover:border-[#C76A15]/40"
+                  ? "border-[#C76A15] bg-[#FFF1D6] text-destructive"
+                  : "border-border bg-white text-foreground hover:border-[#C76A15]/40"
               }`}
             >
               <span

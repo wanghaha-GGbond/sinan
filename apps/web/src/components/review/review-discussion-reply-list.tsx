@@ -72,8 +72,8 @@ function ReplyRow({
               onClick={() => onReply(reply.id)}
               className="group flex items-center gap-1 rounded-full px-1.5 py-1 transition"
             >
-              <span className="flex size-7 items-center justify-center rounded-full transition group-hover:bg-[#DFF8EC]/60">
-                <MessageCircle className="size-[17px] text-[#6B7280] group-hover:text-[#19C37D]" />
+              <span className="flex size-7 items-center justify-center rounded-full transition group-hover:bg-secondary/60">
+                <MessageCircle className="size-[17px] text-muted-foreground group-hover:text-primary" />
               </span>
             </button>
             <button
@@ -87,7 +87,7 @@ function ReplyRow({
                 className={`flex size-7 items-center justify-center rounded-full transition ${
                   useful
                     ? "text-[#F91880]"
-                    : "text-[#6B7280] group-hover:bg-[#FCE7F3]/60 group-hover:text-[#F91880]"
+                    : "text-muted-foreground group-hover:bg-[#FCE7F3]/60 group-hover:text-[#F91880]"
                 }`}
               >
                 <Heart className="size-[17px]" fill={useful ? "currentColor" : "none"} />
@@ -95,7 +95,7 @@ function ReplyRow({
               {count > 0 && (
                 <span
                   className={`text-[13px] tabular-nums ${
-                    useful ? "text-[#F91880]" : "text-[#6B7280]"
+                    useful ? "text-[#F91880]" : "text-muted-foreground"
                   }`}
                 >
                   {count}
@@ -139,7 +139,7 @@ function ReplyComposer({
 
   return (
     <div className="flex gap-2.5 px-4 pb-3 pt-1">
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#DFF8EC] text-xs font-bold text-[#07563A]">
+      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-secondary-foreground">
         我
       </div>
       <div className="min-w-0 flex-1 space-y-2">
@@ -165,7 +165,7 @@ function ReplyComposer({
               setText("")
             }}
             disabled={!text.trim()}
-            className="rounded-full bg-[#19C37D] px-4 py-1.5 text-[15px] font-bold text-white transition hover:bg-[#0E8F5F] disabled:opacity-50"
+            className="rounded-full bg-primary px-4 py-1.5 text-[15px] font-bold text-white transition hover:bg-[#0E8F5F] disabled:opacity-50"
           >
             回复
           </button>

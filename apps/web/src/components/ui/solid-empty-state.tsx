@@ -18,8 +18,8 @@ export function SolidEmptyState({
 }) {
   return (
     <SolidCard variant="subtle" className="p-5 text-center">
-      <h3 className="text-base font-semibold text-[#111827]">{title}</h3>
-      <p className="mt-2 text-sm text-[#6B7280]">{description}</p>
+      <h3 className="text-base font-semibold text-foreground">{title}</h3>
+      <p className="mt-2 text-sm text-muted-foreground">{description}</p>
       {ctaLabel ? (
         <div className="mt-4 flex justify-center">
           <SolidButton type="button" variant="secondary" onClick={onCtaClick}>

@@ -56,11 +56,11 @@ export function VerifyIdentity({ companyName }: { companyName: string }) {
   if (step === "verified") {
     return (
       <SolidCard variant="emerald" className="p-6 text-center">
-        <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-[#DFF8EC]">
-          <CheckCircle2 className="size-7 text-[#07563A]" />
+        <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-secondary">
+          <CheckCircle2 className="size-7 text-secondary-foreground" />
         </div>
-        <h3 className="text-lg font-semibold text-[#111827]">身份已验证</h3>
-        <p className="mt-2 text-sm text-[#6B7280]">
+        <h3 className="text-lg font-semibold text-foreground">身份已验证</h3>
+        <p className="mt-2 text-sm text-muted-foreground">
           你的评价已标记为「✅ 已验证员工」
           <br />
           验证信息不会公开，仅用于提升评价可信度
@@ -78,8 +78,8 @@ export function VerifyIdentity({ companyName }: { companyName: string }) {
             <ShieldCheck className="size-5 text-[#C76A15]" />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="text-sm font-semibold text-[#111827]">提升评价可信度</h3>
-            <p className="mt-1 text-xs text-[#6B7280] leading-relaxed">
+            <h3 className="text-sm font-semibold text-foreground">提升评价可信度</h3>
+            <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
               用公司邮箱验证身份，评价将带上「已验证员工」标记。
               验证记录仅存服务端，绝不公开。不验证也不影响评价发布。
             </p>
@@ -103,11 +103,11 @@ export function VerifyIdentity({ companyName }: { companyName: string }) {
     return (
       <SolidCard variant="subtle" className="p-5">
         <div className="flex items-center gap-2 mb-4">
-          <Mail className="size-5 text-[#19C37D]" />
-          <h3 className="text-sm font-semibold text-[#111827]">验证公司邮箱</h3>
+          <Mail className="size-5 text-primary" />
+          <h3 className="text-sm font-semibold text-foreground">验证公司邮箱</h3>
         </div>
 
-        <p className="text-xs text-[#6B7280] mb-3">
+        <p className="text-xs text-muted-foreground mb-3">
           我们会向你的公司邮箱发送验证码。建议格式：name@{companyDomain}
         </p>
 
@@ -117,7 +117,7 @@ export function VerifyIdentity({ companyName }: { companyName: string }) {
             value={email}
             onChange={(e) => { setEmail(e.target.value); setError("") }}
             placeholder={`name@${companyDomain}`}
-            className="flex-1 rounded-xl border border-[#E5E7DB] bg-[#F9FAF7] px-3 py-2 text-sm outline-none focus:border-[#19C37D] focus:ring-4 focus:ring-[#DFF8EC]"
+            className="flex-1 rounded-xl border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-secondary"
           />
           <SolidButton
             variant="primary"
@@ -133,7 +133,7 @@ export function VerifyIdentity({ companyName }: { companyName: string }) {
 
         <button
           onClick={() => { setStep("idle"); setError("") }}
-          className="mt-3 text-xs text-[#9CA3AF] hover:text-[#6B7280]"
+          className="mt-3 text-xs text-muted-foreground hover:text-muted-foreground"
         >
           取消
         </button>
@@ -145,11 +145,11 @@ export function VerifyIdentity({ companyName }: { companyName: string }) {
   return (
     <SolidCard variant="subtle" className="p-5">
       <div className="flex items-center gap-2 mb-4">
-        <Mail className="size-5 text-[#19C37D]" />
-        <h3 className="text-sm font-semibold text-[#111827]">输入验证码</h3>
+        <Mail className="size-5 text-primary" />
+        <h3 className="text-sm font-semibold text-foreground">输入验证码</h3>
       </div>
 
-      <p className="text-xs text-[#6B7280] mb-3">
+      <p className="text-xs text-muted-foreground mb-3">
         验证码已发送至 {email || "你的邮箱"}（演示码：000000）
       </p>
 
@@ -160,7 +160,7 @@ export function VerifyIdentity({ companyName }: { companyName: string }) {
           onChange={(e) => { setCode(e.target.value); setError("") }}
           placeholder="000000"
           maxLength={6}
-          className="w-32 rounded-xl border border-[#E5E7DB] bg-[#F9FAF7] px-3 py-2 text-center text-lg tracking-[0.3em] outline-none focus:border-[#19C37D] focus:ring-4 focus:ring-[#DFF8EC]"
+          className="w-32 rounded-xl border border-border bg-card px-3 py-2 text-center text-lg tracking-[0.3em] outline-none focus:border-primary focus:ring-4 focus:ring-secondary"
         />
         <SolidButton
           variant="primary"
@@ -176,7 +176,7 @@ export function VerifyIdentity({ companyName }: { companyName: string }) {
 
       <button
         onClick={() => { setStep("email"); setError("") }}
-        className="mt-3 text-xs text-[#9CA3AF] hover:text-[#6B7280]"
+        className="mt-3 text-xs text-muted-foreground hover:text-muted-foreground"
       >
         ← 重新输入邮箱
       </button>

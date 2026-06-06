@@ -41,8 +41,8 @@ function IntelNav() {
             href={item.href}
             className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold transition ${
               active
-                ? "bg-[#111827] text-white shadow-[0_4px_0_rgba(17,24,39,0.22)]"
-                : "bg-[#F1F5EF] text-[#374151] hover:bg-[#E8EEE5]"
+                ? "bg-foreground text-white shadow-[0_4px_0_rgba(17,24,39,0.22)]"
+                : "bg-muted text-foreground hover:bg-[#E8EEE5]"
             }`}
           >
             <item.icon className="size-3.5" />
@@ -63,17 +63,17 @@ function HomeHeader() {
       variant="home"
       leftSlot={
         <div className="flex items-center gap-2">
-          <span className="flex size-8 items-center justify-center rounded-full bg-[#DFF8EC] text-[#07563A]">
+          <span className="flex size-8 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
             <Compass className="size-4" />
           </span>
-          <h1 className="text-base font-semibold text-[#111827]">司南 推荐</h1>
+          <h1 className="text-base font-semibold text-foreground">司南 推荐</h1>
         </div>
       }
       rightSlot={
         <div className="flex items-center gap-2">
           {user ? (
             <>
-              <Link href="/me" className="flex items-center gap-1.5 rounded-full bg-[#F1F5EF] px-3 py-1.5 text-sm font-medium text-[#374151] transition hover:bg-[#E8EEE5]">
+              <Link href="/me" className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-sm font-medium text-foreground transition hover:bg-[#E8EEE5]">
                 <User className="size-3.5" />
                 {user.displayName ?? "我"}
               </Link>
@@ -85,7 +85,7 @@ function HomeHeader() {
               </SolidButton>
               <button
                 onClick={() => logout()}
-                className="rounded-full p-1.5 text-[#9CA3AF] transition hover:bg-[#F1F5EF] hover:text-[#6B7280]"
+                className="rounded-full p-1.5 text-muted-foreground transition hover:bg-muted hover:text-muted-foreground"
                 title="退出"
               >
                 <LogOut className="size-4" />
@@ -128,7 +128,7 @@ function CompanyHeader() {
       title="司南"
       variant="compact"
       leftSlot={
-        <Link href="/" className="text-sm font-semibold text-[#111827]">
+        <Link href="/" className="text-sm font-semibold text-foreground">
           司南
         </Link>
       }
@@ -190,7 +190,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex flex-wrap items-center gap-3 text-xs">
             <Link
               href="/company-portal"
-              className="inline-flex items-center gap-1 rounded-full bg-[#F1F5EF] px-3 py-1 font-semibold text-[#374151] transition hover:bg-[#E8EEE5]"
+              className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 font-semibold text-foreground transition hover:bg-[#E8EEE5]"
               data-testid="footer-company-portal"
             >
               <Building2 className="size-3.5" />

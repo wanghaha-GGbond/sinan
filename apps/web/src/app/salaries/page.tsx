@@ -58,12 +58,12 @@ export default function SalariesPage() {
       <SolidCard variant="emerald" className="p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#07563A]">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-secondary-foreground">
               <ReceiptText className="size-3.5" />
               薪资透明
             </div>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[#111827]">按岗位看匿名薪资与兑现信号</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6B7280]">
+            <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground">按岗位看匿名薪资与兑现信号</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
               从现有评价里提取薪资区间、奖金兑现、调薪透明度和岗位样本,作为入职前的谈薪参考。
             </p>
           </div>
@@ -107,17 +107,17 @@ export default function SalariesPage() {
             <SolidCard key={`${item.companyId}-${item.role}`} variant="subtle" className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-[#111827]">{item.role}</p>
-                  <p className="mt-1 text-sm text-[#6B7280]">{item.companyName}</p>
+                  <p className="text-sm font-semibold text-foreground">{item.role}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{item.companyName}</p>
                 </div>
                 <ScoreChip score={item.payScore} label="兑现分" compact />
               </div>
-              <div className="mt-4 rounded-[24px] bg-[#F1F5EF] p-4">
-                <p className="text-xs text-[#6B7280]">匿名薪资区间</p>
-                <p className="mt-1 text-2xl font-semibold text-[#111827]">{item.range}</p>
-                <p className="mt-1 text-sm text-[#6B7280]">中位参考:{item.medianLabel} · {item.sampleCount} 个样本</p>
+              <div className="mt-4 rounded-[24px] bg-muted p-4">
+                <p className="text-xs text-muted-foreground">匿名薪资区间</p>
+                <p className="mt-1 text-2xl font-semibold text-foreground">{item.range}</p>
+                <p className="mt-1 text-sm text-muted-foreground">中位参考:{item.medianLabel} · {item.sampleCount} 个样本</p>
               </div>
-              <p className="mt-3 text-sm leading-6 text-[#6B7280]">{item.signal}</p>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.signal}</p>
               <div className="mt-4 flex items-center justify-between">
                 <SolidButton asChild variant="ghost" size="sm">
                   <Link href="/search">

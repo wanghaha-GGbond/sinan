@@ -399,7 +399,7 @@ function CorrectionForm({
               </option>
             ))}
           </select>
-          <span className="text-xs font-normal text-[#9CA3AF]">
+          <span className="text-xs font-normal text-muted-foreground">
             {CORRECTION_FIELDS.find((f) => f.value === field)?.description}
           </span>
         </label>
@@ -413,7 +413,7 @@ function CorrectionForm({
             data-testid="correction-proposed-input"
             className="rounded-xl border border-border bg-white px-3 py-2 text-sm font-normal text-foreground outline-none focus:border-primary focus:ring-4 focus:ring-secondary"
           />
-          <span className="text-xs font-normal text-[#9CA3AF]">当前:{currentValue || "(空)"}</span>
+          <span className="text-xs font-normal text-muted-foreground">当前:{currentValue || "(空)"}</span>
         </label>
       </div>
       <Textarea

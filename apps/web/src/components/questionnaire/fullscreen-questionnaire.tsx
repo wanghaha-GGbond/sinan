@@ -81,13 +81,13 @@ export function FullscreenQuestionnaire({
             <X className="size-4" />
             关闭
           </SolidButton>
-          <p className="text-sm text-[#6B7280]" data-testid="questionnaire-status-pill">
+          <p className="text-sm text-muted-foreground" data-testid="questionnaire-status-pill">
             {Math.min(currentIndex + 1, total)} / {total}
           </p>
         </div>
         <div className="mb-5 h-3 rounded-full bg-[#E5E7DB]" data-testid="question-progress">
           <motion.div
-            className="h-3 rounded-full bg-[#19C37D]"
+            className="h-3 rounded-full bg-primary"
             initial={false}
             animate={{ width: `${done ? 100 : progress}%` }}
             transition={{ duration: 0.22 }}
@@ -96,8 +96,8 @@ export function FullscreenQuestionnaire({
 
         {done ? (
           <SolidCard variant="emerald" className="my-auto p-8 text-center" data-testid="questionnaire-complete-card">
-            <h2 className="text-2xl font-semibold text-[#07563A]">办公体验已记录</h2>
-            <p className="mt-2 text-sm text-[#07563A]">你补充的结构化信息，会帮助后来者更快判断这家公司。</p>
+            <h2 className="text-2xl font-semibold text-secondary-foreground">办公体验已记录</h2>
+            <p className="mt-2 text-sm text-secondary-foreground">你补充的结构化信息，会帮助后来者更快判断这家公司。</p>
             <p className="mt-4 text-lg font-semibold text-[#047857]">方向值 +8 · 办公体验贡献 +1</p>
             <div className="mt-6 flex items-center justify-center gap-3">
               <SolidButton variant="secondary" data-testid="questionnaire-complete-return-button" onClick={onClose}>
@@ -114,10 +114,10 @@ export function FullscreenQuestionnaire({
             className="my-auto"
           >
             <SolidCard variant="default" className="p-6 sm:p-8" data-testid="question-card">
-              <p className="text-sm text-[#6B7280]">补充办公体验问卷</p>
-              <h2 className="mt-2 text-xl font-semibold text-[#111827] sm:text-2xl">{currentQuestion.title}</h2>
+              <p className="text-sm text-muted-foreground">补充办公体验问卷</p>
+              <h2 className="mt-2 text-xl font-semibold text-foreground sm:text-2xl">{currentQuestion.title}</h2>
               {currentQuestion.description ? (
-                <p className="mt-2 text-sm text-[#6B7280]">{currentQuestion.description}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{currentQuestion.description}</p>
               ) : null}
               <div className="mt-6 space-y-3">
                 {currentQuestion.type === "score_1_10" ? (
@@ -153,7 +153,7 @@ export function FullscreenQuestionnaire({
               </div>
               {feedback ? <p className="mt-4 text-sm font-medium text-[#047857]">{feedback}</p> : null}
               <div className="mt-6 flex items-center justify-between">
-                <p className="text-xs text-[#6B7280]">回答会自动保存，可随时退出。</p>
+                <p className="text-xs text-muted-foreground">回答会自动保存，可随时退出。</p>
                 <SolidButton variant="ghost" size="sm" data-testid="skip-question-button" onClick={skipQuestion}>
                   跳过本题
                 </SolidButton>

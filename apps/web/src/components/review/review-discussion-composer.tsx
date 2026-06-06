@@ -83,7 +83,7 @@ export function ReviewDiscussionComposer({
   return (
     <div className="space-y-3">
       <Textarea
-        className="min-h-24 rounded-[22px] border border-[#E5E7DB]/70 bg-white px-4 py-3 text-sm leading-7 text-[#1F2937] shadow-[0_3px_0_rgba(17,24,39,0.035)] placeholder:text-[#9CA3AF] focus-visible:ring-[#19C37D]/35"
+        className="min-h-24 rounded-[22px] border border-border/70 bg-white px-4 py-3 text-sm leading-7 text-foreground shadow-[0_3px_0_rgba(17,24,39,0.035)] placeholder:text-muted-foreground focus-visible:ring-primary/35"
         data-testid="discussion-content-input"
         maxLength={300}
         onChange={(event) => {
@@ -96,7 +96,7 @@ export function ReviewDiscussionComposer({
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs text-[#6B7280]">
+        <p className="text-xs text-muted-foreground">
           {content.length > 0 ? `${content.length}/300` : "想说就说，不要包含姓名、手机号等个人信息。"}
         </p>
         <div className="flex items-center gap-2">
@@ -118,12 +118,12 @@ export function ReviewDiscussionComposer({
       </div>
 
       {error ? (
-        <p data-testid="discussion-error" className="rounded-2xl bg-[#FFF1D6] px-3 py-2 text-sm font-medium text-[#92400E]">
+        <p data-testid="discussion-error" className="rounded-2xl bg-[#FFF1D6] px-3 py-2 text-sm font-medium text-destructive">
           {error}
         </p>
       ) : null}
-      {feedback ? <p className="text-sm font-medium text-[#07563A]">{feedback}</p> : null}
-      {draftSaved && !feedback ? <p className="text-xs font-medium text-[#6B7280]">已自动保存草稿</p> : null}
+      {feedback ? <p className="text-sm font-medium text-secondary-foreground">{feedback}</p> : null}
+      {draftSaved && !feedback ? <p className="text-xs font-medium text-muted-foreground">已自动保存草稿</p> : null}
     </div>
   )
 }

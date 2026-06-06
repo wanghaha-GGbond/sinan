@@ -42,7 +42,7 @@ export function CompanyReviewFeed({ companyId, reviews }: { companyId: string; r
 
   return (
     <div className="grid gap-4">
-      <div className="flex gap-2 overflow-x-auto rounded-full bg-[#F1F5EF] p-1.5">
+      <div className="flex gap-2 overflow-x-auto rounded-full bg-muted p-1.5">
         {tabs.map((tab) => (
           <button
             key={tab}
@@ -51,8 +51,8 @@ export function CompanyReviewFeed({ companyId, reviews }: { companyId: string; r
             onClick={() => setActiveTab(tab)}
             className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
               activeTab === tab
-                ? "border-[#19C37D] bg-[#19C37D] text-white shadow-[0_3px_0_#0E8F5F]"
-                : "border-[#E5E7DB]/60 bg-white text-[#475467] hover:bg-[#F1F5EF]"
+                ? "border-primary bg-primary text-white shadow-[0_3px_0_#0E8F5F]"
+                : "border-border/60 bg-white text-[#475467] hover:bg-muted"
             }`}
           >
             {tab}
@@ -69,8 +69,8 @@ export function CompanyReviewFeed({ companyId, reviews }: { companyId: string; r
             onClick={() => setSelectedTag(tag)}
             className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
               selectedTag === tag
-                ? "border-[#BDEDDD] bg-[#DFF8EC] text-[#07563A]"
-                : "border-[#E5E7DB]/60 bg-white text-[#475467] hover:bg-[#F1F5EF]"
+                ? "border-[#BDEDDD] bg-secondary text-secondary-foreground"
+                : "border-border/60 bg-white text-[#475467] hover:bg-muted"
             }`}
           >
             #{tag}
@@ -79,7 +79,7 @@ export function CompanyReviewFeed({ companyId, reviews }: { companyId: string; r
       </div>
 
       {selectedTag ? (
-        <div className="flex items-center gap-2 text-sm text-[#6B7280]">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span>正在看：#{selectedTag}</span>
           <button
             type="button"
@@ -103,10 +103,10 @@ export function CompanyReviewFeed({ companyId, reviews }: { companyId: string; r
         ))
       )}
 
-      <div className="rounded-2xl bg-[#F1F5EF] p-4 text-sm text-[#6B7280]">
+      <div className="rounded-2xl bg-muted p-4 text-sm text-muted-foreground">
         {filteredReviews.length > 3 ? "继续下滑，看更多过来人评价" : "已经看完这家公司的当前评价"}
       </div>
-      <Badge variant="outline" className="w-fit border-[#BDEDDD] bg-[#DFF8EC] text-[#07563A]">
+      <Badge variant="outline" className="w-fit border-[#BDEDDD] bg-secondary text-secondary-foreground">
         匿名评价这家公司
       </Badge>
     </div>

@@ -41,16 +41,16 @@ export default async function ReviewDetailPage({
       </div>
 
       {company.vibeTag ? (
-        <Card className="solid-card-subtle border border-[#E5E7DB]/60">
+        <Card className="solid-card-subtle border border-border/60">
           <CardContent className="p-4 text-sm text-[#334155]">
-            这家公司当前体感标签：<span className="font-semibold text-[#111827]">{company.vibeTag.name}</span>
+            这家公司当前体感标签：<span className="font-semibold text-foreground">{company.vibeTag.name}</span>
           </CardContent>
         </Card>
       ) : null}
 
       <ReviewCard review={review} companyId={id} expanded showDetailLink={false} />
 
-      <Card className="solid-card-subtle border border-[#E5E7DB]/60">
+      <Card className="solid-card-subtle border border-border/60">
         <CardContent className="p-4 text-sm text-[#475569]">
           这条评价已帮助 <span className="font-semibold text-[#0F172A]">{review.helpful}</span>{" "}
           位后来者
@@ -88,9 +88,9 @@ export default async function ReviewDetailPage({
         )}
       </div>
 
-      <Card className="solid-card-subtle border border-[#E5E7DB]/60">
+      <Card className="solid-card-subtle border border-border/60">
         <CardContent className="space-y-3 p-4">
-          <h2 className="text-base font-semibold text-[#111827]">继续看这家公司</h2>
+          <h2 className="text-base font-semibold text-foreground">继续看这家公司</h2>
           {related.map((item) => (
             <Link
               key={item.id}

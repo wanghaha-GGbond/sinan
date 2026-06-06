@@ -60,12 +60,12 @@ export default function BenefitsPage() {
       <SolidCard variant="emerald" className="p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#07563A]">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-secondary-foreground">
               <Gift className="size-3.5" />
               福利与办公体验
             </div>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[#111827]">把福利从口号拆成真实体验</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6B7280]">
+            <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground">把福利从口号拆成真实体验</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
               聚合办公环境、通勤、食堂、下午茶、工位和设备等匿名样本,保留司南的「公司体感」表达。
             </p>
           </div>
@@ -110,29 +110,29 @@ export default function BenefitsPage() {
               <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-xl font-semibold text-[#111827]">{item.companyName}</h2>
+                    <h2 className="text-xl font-semibold text-foreground">{item.companyName}</h2>
                     {item.tags.map((tag) => (
                       <TagPill key={tag} tone="neutral">
                         {tag}
                       </TagPill>
                     ))}
                   </div>
-                  <p className="mt-3 text-sm leading-6 text-[#6B7280]">{item.signal}</p>
+                  <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.signal}</p>
                   <div className="mt-4 grid gap-2 sm:grid-cols-3">
-                    <div className="rounded-[22px] bg-[#F1F5EF] p-3">
-                      <TrainFront className="size-4 text-[#19C37D]" />
-                      <p className="mt-2 text-xs text-[#6B7280]">通勤</p>
-                      <p className="font-semibold text-[#111827]">{item.commuteScore.toFixed(1)}</p>
+                    <div className="rounded-[22px] bg-muted p-3">
+                      <TrainFront className="size-4 text-primary" />
+                      <p className="mt-2 text-xs text-muted-foreground">通勤</p>
+                      <p className="font-semibold text-foreground">{item.commuteScore.toFixed(1)}</p>
                     </div>
-                    <div className="rounded-[22px] bg-[#F1F5EF] p-3">
-                      <Coffee className="size-4 text-[#19C37D]" />
-                      <p className="mt-2 text-xs text-[#6B7280]">食堂</p>
-                      <p className="font-semibold text-[#111827]">{item.canteenScore.toFixed(1)}</p>
+                    <div className="rounded-[22px] bg-muted p-3">
+                      <Coffee className="size-4 text-primary" />
+                      <p className="mt-2 text-xs text-muted-foreground">食堂</p>
+                      <p className="font-semibold text-foreground">{item.canteenScore.toFixed(1)}</p>
                     </div>
-                    <div className="rounded-[22px] bg-[#F1F5EF] p-3">
-                      <MonitorSmartphone className="size-4 text-[#19C37D]" />
-                      <p className="mt-2 text-xs text-[#6B7280]">综合办公</p>
-                      <p className="font-semibold text-[#111827]">{item.officeScore.toFixed(1)}</p>
+                    <div className="rounded-[22px] bg-muted p-3">
+                      <MonitorSmartphone className="size-4 text-primary" />
+                      <p className="mt-2 text-xs text-muted-foreground">综合办公</p>
+                      <p className="font-semibold text-foreground">{item.officeScore.toFixed(1)}</p>
                     </div>
                   </div>
                 </div>

@@ -67,22 +67,22 @@ export default function RegisterPage() {
       <SolidCard variant="elevated" className="w-full max-w-[400px] p-8">
         {/* Brand */}
         <div className="mb-8 flex flex-col items-center gap-3">
-          <div className="flex size-14 items-center justify-center rounded-2xl bg-[#DFF8EC] shadow-[0_4px_0_rgba(14,143,95,0.12)]">
-            <Compass className="size-7 text-[#07563A]" />
+          <div className="flex size-14 items-center justify-center rounded-2xl bg-secondary shadow-[0_4px_0_rgba(14,143,95,0.12)]">
+            <Compass className="size-7 text-secondary-foreground" />
           </div>
-          <h1 className="text-xl font-semibold text-[#111827]">注册司南</h1>
-          <p className="text-sm text-[#6B7280]">成为指路人，分享真实体验</p>
+          <h1 className="text-xl font-semibold text-foreground">注册司南</h1>
+          <p className="text-sm text-muted-foreground">成为指路人，分享真实体验</p>
         </div>
 
         {/* Toggle */}
-        <div className="mb-6 flex rounded-2xl bg-[#F1F5EF] p-1">
+        <div className="mb-6 flex rounded-2xl bg-muted p-1">
           <button
             type="button"
             onClick={() => setMode("email")}
             className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition-all ${
               mode === "email"
-                ? "bg-white text-[#111827] shadow-[0_2px_0_rgba(17,24,39,0.06)]"
-                : "text-[#6B7280]"
+                ? "bg-white text-foreground shadow-[0_2px_0_rgba(17,24,39,0.06)]"
+                : "text-muted-foreground"
             }`}
           >
             <Mail className="size-4" />
@@ -93,8 +93,8 @@ export default function RegisterPage() {
             onClick={() => setMode("phone")}
             className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition-all ${
               mode === "phone"
-                ? "bg-white text-[#111827] shadow-[0_2px_0_rgba(17,24,39,0.06)]"
-                : "text-[#6B7280]"
+                ? "bg-white text-foreground shadow-[0_2px_0_rgba(17,24,39,0.06)]"
+                : "text-muted-foreground"
             }`}
           >
             <Phone className="size-4" />
@@ -106,7 +106,7 @@ export default function RegisterPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === "email" ? (
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-[#374151]">
+              <label className="mb-1.5 block text-sm font-medium text-foreground">
                 邮箱
               </label>
               <input
@@ -114,12 +114,12 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@company.com"
-                className="w-full rounded-2xl border border-[#E5E7DB] bg-[#F9FAF7] px-4 py-3 text-sm text-[#111827] placeholder:text-[#9CA3AF] outline-none transition-all focus:border-[#19C37D] focus:bg-white focus:ring-4 focus:ring-[#DFF8EC]"
+                className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-all focus:border-primary focus:bg-white focus:ring-4 focus:ring-secondary"
               />
             </div>
           ) : (
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-[#374151]">
+              <label className="mb-1.5 block text-sm font-medium text-foreground">
                 手机号
               </label>
               <input
@@ -128,13 +128,13 @@ export default function RegisterPage() {
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="13800138000"
                 maxLength={11}
-                className="w-full rounded-2xl border border-[#E5E7DB] bg-[#F9FAF7] px-4 py-3 text-sm text-[#111827] placeholder:text-[#9CA3AF] outline-none transition-all focus:border-[#19C37D] focus:bg-white focus:ring-4 focus:ring-[#DFF8EC]"
+                className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-all focus:border-primary focus:bg-white focus:ring-4 focus:ring-secondary"
               />
             </div>
           )}
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-[#374151]">
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
               密码
             </label>
             <input
@@ -142,12 +142,12 @@ export default function RegisterPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="至少 8 位字符"
-              className="w-full rounded-2xl border border-[#E5E7DB] bg-[#F9FAF7] px-4 py-3 text-sm text-[#111827] placeholder:text-[#9CA3AF] outline-none transition-all focus:border-[#19C37D] focus:bg-white focus:ring-4 focus:ring-[#DFF8EC]"
+              className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-all focus:border-primary focus:bg-white focus:ring-4 focus:ring-secondary"
             />
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-[#374151]">
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
               确认密码
             </label>
             <input
@@ -155,7 +155,7 @@ export default function RegisterPage() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="再次输入密码"
-              className="w-full rounded-2xl border border-[#E5E7DB] bg-[#F9FAF7] px-4 py-3 text-sm text-[#111827] placeholder:text-[#9CA3AF] outline-none transition-all focus:border-[#19C37D] focus:bg-white focus:ring-4 focus:ring-[#DFF8EC]"
+              className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-all focus:border-primary focus:bg-white focus:ring-4 focus:ring-secondary"
             />
           </div>
 
@@ -166,9 +166,9 @@ export default function RegisterPage() {
           )}
 
           {/* Privacy note */}
-          <div className="flex items-start gap-2 rounded-2xl bg-[#F1F5EF] p-3">
-            <Shield className="mt-0.5 size-4 shrink-0 text-[#19C37D]" />
-            <p className="text-xs text-[#6B7280] leading-relaxed">
+          <div className="flex items-start gap-2 rounded-2xl bg-muted p-3">
+            <Shield className="mt-0.5 size-4 shrink-0 text-primary" />
+            <p className="text-xs text-muted-foreground leading-relaxed">
               注册即表示同意司南的匿名保护规则。你的身份信息不会向公司方公开。
             </p>
           </div>
@@ -184,9 +184,9 @@ export default function RegisterPage() {
           </SolidButton>
         </form>
 
-        <p className="mt-6 text-center text-sm text-[#6B7280]">
+        <p className="mt-6 text-center text-sm text-muted-foreground">
           已有账号？{" "}
-          <Link href="/login" className="font-semibold text-[#19C37D] hover:underline">
+          <Link href="/login" className="font-semibold text-primary hover:underline">
             登录
           </Link>
         </p>

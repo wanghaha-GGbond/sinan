@@ -31,10 +31,10 @@ function ActionBar({
         onClick={onReply}
         className="group flex items-center gap-1 rounded-full px-2 py-1.5 transition"
       >
-        <span className="flex size-8 items-center justify-center rounded-full transition group-hover:bg-[#DFF8EC]/60">
-          <MessageCircle className="size-[18px] text-[#6B7280] group-hover:text-[#19C37D]" />
+        <span className="flex size-8 items-center justify-center rounded-full transition group-hover:bg-secondary/60">
+          <MessageCircle className="size-[18px] text-muted-foreground group-hover:text-primary" />
         </span>
-        <span className="text-[13px] tabular-nums text-[#6B7280] group-hover:text-[#19C37D]">
+        <span className="text-[13px] tabular-nums text-muted-foreground group-hover:text-primary">
           {replyCount > 0 ? replyCount : ""}
         </span>
       </button>
@@ -48,14 +48,14 @@ function ActionBar({
           className={`flex size-8 items-center justify-center rounded-full transition ${
             isUseful
               ? "text-[#F91880]"
-              : "text-[#6B7280] group-hover:bg-[#FCE7F3]/60 group-hover:text-[#F91880]"
+              : "text-muted-foreground group-hover:bg-[#FCE7F3]/60 group-hover:text-[#F91880]"
           }`}
         >
           <Heart className="size-[18px]" fill={isUseful ? "currentColor" : "none"} />
         </span>
         <span
           className={`text-[13px] tabular-nums ${
-            isUseful ? "text-[#F91880]" : "text-[#6B7280] group-hover:text-[#F91880]"
+            isUseful ? "text-[#F91880]" : "text-muted-foreground group-hover:text-[#F91880]"
           }`}
         >
           {usefulCount > 0 ? usefulCount : ""}
@@ -63,13 +63,13 @@ function ActionBar({
       </button>
 
       <button className="group flex items-center rounded-full px-2 py-1.5 transition">
-        <span className="flex size-8 items-center justify-center rounded-full transition group-hover:bg-[#DFF8EC]/60">
-          <Repeat2 className="size-[18px] text-[#6B7280] group-hover:text-[#19C37D]" />
+        <span className="flex size-8 items-center justify-center rounded-full transition group-hover:bg-secondary/60">
+          <Repeat2 className="size-[18px] text-muted-foreground group-hover:text-primary" />
         </span>
       </button>
       <button className="group flex items-center rounded-full px-2 py-1.5 transition">
-        <span className="flex size-8 items-center justify-center rounded-full transition group-hover:bg-[#DFF8EC]/60">
-          <BarChart3 className="size-[18px] text-[#6B7280] group-hover:text-[#19C37D]" />
+        <span className="flex size-8 items-center justify-center rounded-full transition group-hover:bg-secondary/60">
+          <BarChart3 className="size-[18px] text-muted-foreground group-hover:text-primary" />
         </span>
       </button>
     </div>
@@ -89,7 +89,7 @@ function InlineReplyComposer({
 
   return (
     <div className="flex gap-2.5 border-t border-[#EFF1F2] px-4 py-3">
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#DFF8EC] text-xs font-bold text-[#07563A]">
+      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-secondary-foreground">
         我
       </div>
       <div className="min-w-0 flex-1 space-y-2">
@@ -109,7 +109,7 @@ function InlineReplyComposer({
               onSubmit(text.trim())
             }}
             disabled={!text.trim()}
-            className="rounded-full bg-[#19C37D] px-4 py-1.5 text-[15px] font-bold text-white transition hover:bg-[#0E8F5F] disabled:opacity-50"
+            className="rounded-full bg-primary px-4 py-1.5 text-[15px] font-bold text-white transition hover:bg-[#0E8F5F] disabled:opacity-50"
           >
             回复
           </button>
@@ -198,7 +198,7 @@ export function ReviewDiscussionCard({ item }: { item: ReviewDiscussionItem }) {
             {statusText ? (
               <>
                 <span className="text-[15px] leading-5 text-[#536471]">·</span>
-                <span className="text-[13px] font-medium text-[#07563A]">{statusText}</span>
+                <span className="text-[13px] font-medium text-secondary-foreground">{statusText}</span>
               </>
             ) : null}
           </div>

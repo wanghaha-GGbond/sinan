@@ -50,8 +50,8 @@ export default function SearchPage() {
   return (
     <section className="mx-auto flex w-full max-w-[920px] flex-col gap-6 px-4 py-6 sm:px-6">
       <div>
-        <h1 className="text-2xl font-semibold text-[#111827]">搜索公司</h1>
-        <p className="mt-2 text-sm text-[#6B7280]">知道公司名时再搜，推荐流仍是主入口。</p>
+        <h1 className="text-2xl font-semibold text-foreground">搜索公司</h1>
+        <p className="mt-2 text-sm text-muted-foreground">知道公司名时再搜，推荐流仍是主入口。</p>
       </div>
 
       <div className="space-y-3">
@@ -65,7 +65,7 @@ export default function SearchPage() {
         </div>
       </div>
 
-      {loading && <p className="text-sm text-[#6B7280]">搜索中...</p>}
+      {loading && <p className="text-sm text-muted-foreground">搜索中...</p>}
       {error && <p className="text-sm text-red-500">{error}</p>}
       {!loading && !error && results.length === 0 && debouncedQuery.trim() && (
         <SolidEmptyState

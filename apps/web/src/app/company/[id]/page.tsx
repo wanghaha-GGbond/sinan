@@ -56,8 +56,8 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
   if (companyRes.loading || reviewsRes.loading) {
     return (
       <section className="mx-auto flex w-full max-w-[920px] items-center justify-center px-4 py-20 sm:px-6">
-        <div className="flex flex-col items-center gap-3 text-sm text-[#6B7280]">
-          <div className="size-8 animate-spin rounded-full border-2 border-[#19C37D] border-t-transparent" />
+        <div className="flex flex-col items-center gap-3 text-sm text-muted-foreground">
+          <div className="size-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           <span>加载中…</span>
         </div>
       </section>
@@ -68,8 +68,8 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
     return (
       <section className="mx-auto w-full max-w-[760px] px-4 py-10 sm:px-6">
         <SolidCard variant="subtle" className="p-6">
-          <h1 className="text-2xl font-semibold text-[#111827]">加载失败</h1>
-          <p className="mt-3 text-sm text-[#6B7280]">{companyRes.error}</p>
+          <h1 className="text-2xl font-semibold text-foreground">加载失败</h1>
+          <p className="mt-3 text-sm text-muted-foreground">{companyRes.error}</p>
           <div className="mt-5">
             <SolidButton asChild variant="primary">
               <Link href="/">返回首页</Link>
@@ -87,9 +87,9 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
     return (
       <section className="mx-auto w-full max-w-[760px] px-4 py-10 sm:px-6">
         <SolidCard variant="subtle" className="p-6" data-testid="company-pending-review-page">
-          <p className="text-sm font-medium text-[#6B7280]">{company.name}</p>
-          <h1 className="mt-2 text-2xl font-semibold text-[#111827]">该公司信息待审核</h1>
-          <p className="mt-3 text-sm leading-6 text-[#6B7280]">
+          <p className="text-sm font-medium text-muted-foreground">{company.name}</p>
+          <h1 className="mt-2 text-2xl font-semibold text-foreground">该公司信息待审核</h1>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
             已有用户提交公司注册信息，审核通过后即可评价。审核前不展示方向分、公司体感和评论流。
           </p>
           <div className="mt-5">
@@ -114,12 +114,12 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
     <section className="mx-auto w-full max-w-[920px] px-4 py-4 sm:px-6">
       <div
         data-testid="company-sticky-header"
-        className="glass-panel sticky top-14 z-40 mb-4 rounded-3xl border border-[#E5E7DB]/70 px-4 py-3"
+        className="glass-panel sticky top-14 z-40 mb-4 rounded-3xl border border-border/70 px-4 py-3"
       >
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="truncate text-base font-semibold text-[#111827] sm:text-lg">{company.name}</h1>
-            <p className="truncate text-xs text-[#6B7280] sm:text-sm">
+            <h1 className="truncate text-base font-semibold text-foreground sm:text-lg">{company.name}</h1>
+            <p className="truncate text-xs text-muted-foreground sm:text-sm">
               {company.industry} · {company.city} · 方向分 {(company.directionScore ?? 0).toFixed(1)} · {(company.reviewCount ?? 0)} 条评价
             </p>
             {/* vibeTag not returned by API */}
@@ -133,7 +133,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
         </div>
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center gap-2 rounded-2xl bg-[#F1F5EF] px-3 py-2 text-xs text-[#6B7280] sm:text-sm">
+      <div className="mb-4 flex flex-wrap items-center gap-2 rounded-2xl bg-muted px-3 py-2 text-xs text-muted-foreground sm:text-sm">
         <span>方向分 {(company.directionScore ?? 0).toFixed(1)}</span>
         <span>｜</span>
         <span>推荐入职率 {(company.recommendationRate ?? 0)}%</span>

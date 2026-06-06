@@ -41,24 +41,24 @@ export function ReviewCard({
   const detailHref = companyId ? `/company/${companyId}/reviews/${review.id}` : undefined
 
   return (
-    <SolidCard variant="subtle" className="border border-[#E5E7DB]/60 p-5 transition-transform hover:-translate-y-0.5">
+    <SolidCard variant="subtle" className="border border-border/60 p-5 transition-transform hover:-translate-y-0.5">
       <div className="space-y-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 space-y-1">
-            <p className="text-sm text-[#6B7280]">
+            <p className="text-sm text-muted-foreground">
               匿名评价者 · L{review.trustLevel} · {review.employmentStatus}
               {review.verified && (
-                <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-[#DFF8EC] px-2 py-0.5 text-xs font-medium text-[#07563A]">
+                <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
                   ✅ 已验证员工
                 </span>
               )}
             </p>
             {detailHref ? (
-              <Link href={detailHref} className="block text-base font-semibold leading-6 text-[#111827] hover:text-[#0E8F5F]">
+              <Link href={detailHref} className="block text-base font-semibold leading-6 text-foreground hover:text-[#0E8F5F]">
                 {review.shortComment}
               </Link>
             ) : (
-              <h3 className="text-base font-semibold leading-6 text-[#111827]">{review.shortComment}</h3>
+              <h3 className="text-base font-semibold leading-6 text-foreground">{review.shortComment}</h3>
             )}
           </div>
           <ScoreChip score={review.score} compact className="shrink-0" />
@@ -88,14 +88,14 @@ export function ReviewCard({
             <button
               type="button"
               data-testid={`toggle-expand-${review.id}`}
-              className="text-sm font-medium text-[#0E8F5F] hover:text-[#07563A]"
+              className="text-sm font-medium text-[#0E8F5F] hover:text-secondary-foreground"
               onClick={() => setIsExpanded((prev) => !prev)}
             >
               {isExpanded ? "收起" : "展开全文"}
             </button>
           ) : null}
           {showDetailLink && detailHref ? (
-            <Link href={detailHref} className="inline-block text-sm font-medium text-[#0E8F5F] hover:text-[#07563A]">
+            <Link href={detailHref} className="inline-block text-sm font-medium text-[#0E8F5F] hover:text-secondary-foreground">
               阅读全文
             </Link>
           ) : null}
@@ -109,18 +109,18 @@ export function ReviewCard({
           ))}
         </div>
 
-        <p className="text-xs text-[#6B7280]">
+        <p className="text-xs text-muted-foreground">
           {review.jobCategory} · {review.city} · {review.createdAt}
         </p>
 
-        <div className="flex flex-wrap items-center gap-3 text-sm text-[#6B7280]">
+        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
           <SolidButton
             type="button"
             variant="secondary"
             size="sm"
             aria-pressed={liked}
             data-testid={`like-review-${review.id}`}
-            className="rounded-full aria-pressed:bg-[#DFF8EC] aria-pressed:text-[#07563A] aria-pressed:shadow-[0_3px_0_rgba(14,143,95,0.22)]"
+            className="rounded-full aria-pressed:bg-secondary aria-pressed:text-secondary-foreground aria-pressed:shadow-[0_3px_0_rgba(14,143,95,0.22)]"
             onClick={() => {
               const next = toggleReviewUseful(review.id)
               setLiked(next)

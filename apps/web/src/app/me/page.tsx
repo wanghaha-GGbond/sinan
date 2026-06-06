@@ -323,7 +323,7 @@ function MeContent({
 
         <SolidCard variant="default" className="p-5">
           <div className="mb-3 flex items-center gap-2">
-            <div className="flex size-9 items-center justify-center rounded-xl bg-[#111827]">
+            <div className="flex size-9 items-center justify-center rounded-xl bg-foreground">
               <Award className="size-4 text-white" />
             </div>
             <span className="text-sm font-medium text-muted-foreground">指路等级</span>
@@ -399,7 +399,7 @@ function MeContent({
                     {review.score} 分
                   </div>
                 </div>
-                <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#374151]">{review.shortComment}</p>
+                <p className="mt-2 line-clamp-2 text-sm leading-6 text-foreground">{review.shortComment}</p>
                 <p className="mt-2 text-xs text-muted-foreground">
                   有用 {review.helpful} · 追问 {review.commentCount} · {new Date(review.createdAt).toLocaleDateString("zh-CN")}
                 </p>
@@ -481,7 +481,7 @@ function MeContent({
                 <div className="flex items-center gap-3">
                   <div
                     className={`flex size-9 items-center justify-center rounded-xl ${
-                      badge.unlocked ? "bg-[#19C37D] text-white" : "bg-[#E5E7DB] text-muted-foreground"
+                      badge.unlocked ? "bg-primary text-white" : "bg-[#E5E7DB] text-muted-foreground"
                     }`}
                   >
                     {badge.unlocked ? <Award className="size-4" /> : <Lock className="size-4" />}

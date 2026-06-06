@@ -76,7 +76,7 @@ export function ReviewDiscussionSection({
           onClick={() => setShowComposer(true)}
           className="flex w-full items-center gap-3 border-b border-[#EFF1F2] px-4 py-3 text-[15px] text-[#536471] transition hover:bg-[#F7F9F9]/50"
         >
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#DFF8EC] text-xs font-bold text-[#07563A]">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-secondary-foreground">
             我
           </div>
           写下你的评论...
@@ -122,7 +122,7 @@ export function ReviewDiscussionSection({
 
       {myStatusItems.length > 0 ? (
         <div data-testid="my-discussion-status-list" className="border-t border-[#EFF1F2] py-3">
-          <p className="px-4 text-xs font-semibold text-[#6B7280]">我的待处理内容</p>
+          <p className="px-4 text-xs font-semibold text-muted-foreground">我的待处理内容</p>
           <div className="mt-2">
             {myStatusItems.map((item) => (
               <ReviewDiscussionCard key={item.id} item={item} />

@@ -28,7 +28,7 @@ export function SolidTopbar({
   return (
     <header
       className={cn(
-        "z-50 border-b border-[#E5E7DB]/50 bg-[#F7F8F2]/95 shadow-[0_4px_0_rgba(17,24,39,0.025)]",
+        "z-50 border-b border-border/50 bg-[#F7F8F2]/95 shadow-[0_4px_0_rgba(17,24,39,0.025)]",
         sticky ? "sticky top-0" : "",
         className
       )}
@@ -39,8 +39,8 @@ export function SolidTopbar({
             leftSlot
           ) : (
             <div className="min-w-0">
-              <h1 className="truncate text-base font-semibold text-[#111827]">{title}</h1>
-              {subtitle ? <p className="truncate text-xs text-[#6B7280]">{subtitle}</p> : null}
+              <h1 className="truncate text-base font-semibold text-foreground">{title}</h1>
+              {subtitle ? <p className="truncate text-xs text-muted-foreground">{subtitle}</p> : null}
             </div>
           )}
         </div>

@@ -17,12 +17,12 @@ export function SolidSearchInput({
   return (
     <div className="solid-card-subtle p-3">
       <div className="flex items-center gap-2 rounded-2xl bg-white px-3 py-2">
-        <Search className="size-4 text-[#6B7280]" />
+        <Search className="size-4 text-muted-foreground" />
         <Input
           value={value}
           onChange={(event) => onChange(event.target.value)}
           placeholder="搜索公司"
-          className="border-0 bg-transparent px-0 text-[#1F2937] shadow-none placeholder:text-[#9CA3AF] focus-visible:ring-0"
+          className="border-0 bg-transparent px-0 text-foreground shadow-none placeholder:text-muted-foreground focus-visible:ring-0"
         />
         <SolidButton variant="dark" size="sm" type="button" onClick={onQuickSearch}>
           搜索
