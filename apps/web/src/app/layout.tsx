@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { AppShell } from "@/components/layout/app-shell";
+import { KeyboardShortcuts } from "@/components/layout/keyboard-shortcuts";
 import { QueryProvider } from "@/providers/query-provider";
 import { AuthProvider } from "@/lib/auth-context";
 import "./globals.css";
@@ -32,6 +33,7 @@ export default function RootLayout({
         <QueryProvider>
           <AuthProvider>
             <AppShell>{children}</AppShell>
+            <KeyboardShortcuts />
             <Toaster />
           </AuthProvider>
         </QueryProvider>
