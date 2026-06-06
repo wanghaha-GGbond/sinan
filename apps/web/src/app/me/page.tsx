@@ -192,11 +192,6 @@ export default function MePage() {
     const displayName = authUser?.displayName ?? "指路人"
     const trustLevel = authUser?.trustLevel ?? 0
 
-    const levelGap = stats.nextLevelPoints - stats.directionPoints
-    const levelProgress = stats.nextLevelPoints > 0
-      ? Math.round((stats.directionPoints / stats.nextLevelPoints) * 100)
-      : 0
-
     const favoriteSet = new Set<string>(extraFavoriteIds)
 
     return (
@@ -225,11 +220,6 @@ export default function MePage() {
 
   const displayName = dashboard.user?.displayName ?? authUser?.displayName ?? "指路人"
   const trustLevel = dashboard.user?.trustLevel ?? authUser?.trustLevel ?? 0
-
-  const levelGap = stats.nextLevelPoints - stats.directionPoints
-  const levelProgress = stats.nextLevelPoints > 0
-    ? Math.round((stats.directionPoints / stats.nextLevelPoints) * 100)
-    : 0
 
   // Merge API favorites with localStorage favorites
   const allFavoriteIds = new Set([

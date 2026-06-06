@@ -3,12 +3,6 @@
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 
-import {
-  getBenefitInsights,
-  getCompanySnapshot,
-  getInterviewInsights,
-  getSalaryInsights,
-} from "@/lib/glassdoor-insights"
 import { searchCompanies } from "@/lib/api/companies"
 import type { CompanyListItem } from "@/lib/api/types"
 import { SolidButton } from "@/components/ui/solid-button"

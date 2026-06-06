@@ -232,9 +232,9 @@ export function ReviewDiscussionCard({ item }: { item: ReviewDiscussionItem }) {
           {!showReplies && replyCount > 0 && (
             <button
               onClick={loadReplies}
-              className="mt-0.5 flex items-center gap-2 text-[15px] leading-5 text-[#1D9BF0] hover:underline"
+              className="mt-0.5 flex items-center gap-2 pl-3 text-[15px] leading-5 text-[#1D9BF0] hover:underline"
             >
-              <div className="mr-2 h-4 w-8 border-l-2 border-b-2 border-[#CFD9DE] rounded-bl-xl" />
+              <MessageCircle className="size-3.5" />
               查看 {replyCount} 条回复
             </button>
           )}
