@@ -98,7 +98,7 @@ export function FullscreenQuestionnaire({
           <SolidCard variant="emerald" className="my-auto p-8 text-center" data-testid="questionnaire-complete-card">
             <h2 className="text-2xl font-semibold text-secondary-foreground">办公体验已记录</h2>
             <p className="mt-2 text-sm text-secondary-foreground">你补充的结构化信息，会帮助后来者更快判断这家公司。</p>
-            <p className="mt-4 text-lg font-semibold text-[#047857]">方向值 +8 · 办公体验贡献 +1</p>
+            <p className="mt-4 text-lg font-semibold text-primary-deep">方向值 +8 · 办公体验贡献 +1</p>
             <div className="mt-6 flex items-center justify-center gap-3">
               <SolidButton variant="secondary" data-testid="questionnaire-complete-return-button" onClick={onClose}>
                 回到评价
@@ -151,7 +151,7 @@ export function FullscreenQuestionnaire({
                   </div>
                 )}
               </div>
-              {feedback ? <p className="mt-4 text-sm font-medium text-[#047857]">{feedback}</p> : null}
+              {feedback ? <p className="mt-4 text-sm font-medium text-primary-deep">{feedback}</p> : null}
               <div className="mt-6 flex items-center justify-between">
                 <p className="text-xs text-muted-foreground">回答会自动保存，可随时退出。</p>
                 <SolidButton variant="ghost" size="sm" data-testid="skip-question-button" onClick={skipQuestion}>

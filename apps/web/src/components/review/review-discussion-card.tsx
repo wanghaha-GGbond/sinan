@@ -109,7 +109,7 @@ function InlineReplyComposer({
               onSubmit(text.trim())
             }}
             disabled={!text.trim()}
-            className="rounded-full bg-primary px-4 py-1.5 text-[15px] font-bold text-white transition hover:bg-[#0E8F5F] disabled:opacity-50"
+            className="rounded-full bg-primary px-4 py-1.5 text-[15px] font-bold text-white transition hover:bg-primary-hover disabled:opacity-50"
           >
             回复
           </button>

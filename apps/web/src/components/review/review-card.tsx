@@ -54,7 +54,7 @@ export function ReviewCard({
               )}
             </p>
             {detailHref ? (
-              <Link href={detailHref} className="block text-base font-semibold leading-6 text-foreground hover:text-[#0E8F5F]">
+              <Link href={detailHref} className="block text-base font-semibold leading-6 text-foreground hover:text-primary-hover">
                 {review.shortComment}
               </Link>
             ) : (
@@ -88,14 +88,14 @@ export function ReviewCard({
             <button
               type="button"
               data-testid={`toggle-expand-${review.id}`}
-              className="text-sm font-medium text-[#0E8F5F] hover:text-secondary-foreground"
+              className="text-sm font-medium text-primary-hover hover:text-secondary-foreground"
               onClick={() => setIsExpanded((prev) => !prev)}
             >
               {isExpanded ? "收起" : "展开全文"}
             </button>
           ) : null}
           {showDetailLink && detailHref ? (
-            <Link href={detailHref} className="inline-block text-sm font-medium text-[#0E8F5F] hover:text-secondary-foreground">
+            <Link href={detailHref} className="inline-block text-sm font-medium text-primary-hover hover:text-secondary-foreground">
               阅读全文
             </Link>
           ) : null}

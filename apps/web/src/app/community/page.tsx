@@ -95,7 +95,7 @@ export default function CommunityPage() {
               className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                 selected
                   ? "bg-foreground text-white shadow-[0_3px_0_rgba(17,24,39,0.18)]"
-                  : "bg-muted text-foreground hover:bg-[#E8EEE5]"
+                  : "bg-muted text-foreground hover:bg-muted-hover"
               }`}
             >
               {opt.label}

@@ -69,7 +69,7 @@ export function CompanyReviewFeed({ companyId, reviews }: { companyId: string; r
             onClick={() => setSelectedTag(tag)}
             className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
               selectedTag === tag
-                ? "border-[#BDEDDD] bg-secondary text-secondary-foreground"
+                ? "border-primary-surface-border bg-secondary text-secondary-foreground"
                 : "border-border/60 bg-white text-[#475467] hover:bg-muted"
             }`}
           >
@@ -84,7 +84,7 @@ export function CompanyReviewFeed({ companyId, reviews }: { companyId: string; r
           <button
             type="button"
             data-testid="review-filter-clear"
-            className="font-medium text-[#0E8F5F]"
+            className="font-medium text-primary-hover"
             onClick={() => setSelectedTag("")}
           >
             清除
@@ -106,7 +106,7 @@ export function CompanyReviewFeed({ companyId, reviews }: { companyId: string; r
       <div className="rounded-2xl bg-muted p-4 text-sm text-muted-foreground">
         {filteredReviews.length > 3 ? "继续下滑，看更多过来人评价" : "已经看完这家公司的当前评价"}
       </div>
-      <Badge variant="outline" className="w-fit border-[#BDEDDD] bg-secondary text-secondary-foreground">
+      <Badge variant="outline" className="w-fit border-primary-surface-border bg-secondary text-secondary-foreground">
         匿名评价这家公司
       </Badge>
     </div>

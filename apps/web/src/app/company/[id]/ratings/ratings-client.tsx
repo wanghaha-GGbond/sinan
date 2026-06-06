@@ -182,9 +182,9 @@ export function RatingsClient({ id }: { id: string }) {
             </SolidButton>
             {submitted ? (
               <div data-testid="rating-reward" className="glass-emerald rounded-[24px] p-3 text-sm">
-                <p className="font-medium text-[#047857]">你为后来者点亮了一次方向</p>
-                <p className="mt-1 text-[#047857]">方向值 +20 · 连续点灯 +1</p>
-                <p className="mt-1 text-xs text-[#047857]">评价等待审核中</p>
+                <p className="font-medium text-primary-deep">你为后来者点亮了一次方向</p>
+                <p className="mt-1 text-primary-deep">方向值 +20 · 连续点灯 +1</p>
+                <p className="mt-1 text-xs text-primary-deep">评价等待审核中</p>
               </div>
             ) : null}
           </CardContent>

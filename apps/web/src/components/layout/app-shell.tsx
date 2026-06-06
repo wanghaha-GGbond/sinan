@@ -42,7 +42,7 @@ function IntelNav() {
             className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold transition ${
               active
                 ? "bg-foreground text-white shadow-[0_4px_0_rgba(17,24,39,0.22)]"
-                : "bg-muted text-foreground hover:bg-[#E8EEE5]"
+                : "bg-muted text-foreground hover:bg-muted-hover"
             }`}
           >
             <item.icon className="size-3.5" />
@@ -73,7 +73,7 @@ function HomeHeader() {
         <div className="flex items-center gap-2">
           {user ? (
             <>
-              <Link href="/me" className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-sm font-medium text-foreground transition hover:bg-[#E8EEE5]">
+              <Link href="/me" className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-sm font-medium text-foreground transition hover:bg-muted-hover">
                 <User className="size-3.5" />
                 {user.displayName ?? "我"}
               </Link>
@@ -190,7 +190,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex flex-wrap items-center gap-3 text-xs">
             <Link
               href="/company-portal"
-              className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 font-semibold text-foreground transition hover:bg-[#E8EEE5]"
+              className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 font-semibold text-foreground transition hover:bg-muted-hover"
               data-testid="footer-company-portal"
             >
               <Building2 className="size-3.5" />

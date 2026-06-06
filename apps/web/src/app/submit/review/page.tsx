@@ -571,7 +571,7 @@ export default function SubmitReviewPage() {
             <SolidButton type="button" variant="secondary" size="sm">
               跳过
             </SolidButton>
-            {questionnaireDone ? <p className="text-sm font-medium text-[#047857]">已完成办公体验问卷 · 方向值 +{questionnaireReward}</p> : null}
+            {questionnaireDone ? <p className="text-sm font-medium text-primary-deep">已完成办公体验问卷 · 方向值 +{questionnaireReward}</p> : null}
             <span data-testid="questionnaire-open-flag" className="sr-only">
               {openFromQuery ? "open" : "closed"}
             </span>
@@ -803,7 +803,7 @@ export default function SubmitReviewPage() {
                       </CardFooter>
                     </Card>
                   ) : null}
-                  {companySelection.feedback ? <p className="md:col-span-2 text-sm font-medium text-[#047857]">{companySelection.feedback}</p> : null}
+                  {companySelection.feedback ? <p className="md:col-span-2 text-sm font-medium text-primary-deep">{companySelection.feedback}</p> : null}
                   {!addCompanyMode ? <div className="flex flex-col gap-2 md:col-span-2">
                     <Label>身份关系 *</Label>
                     <Controller

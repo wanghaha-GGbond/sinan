@@ -12,7 +12,7 @@ const solidButtonVariants = cva(
         primary:
           "bg-primary text-primary-foreground shadow-[0_5px_0_var(--chart-2)] hover:bg-[var(--chart-2)] active:translate-y-[3px] active:shadow-[0_2px_0_var(--chart-2)]",
         secondary:
-          "bg-muted text-foreground shadow-[0_4px_0_var(--border)] hover:bg-[#E8EEE5] active:translate-y-[2px] active:shadow-[0_2px_0_var(--border)]",
+          "bg-muted text-foreground shadow-[0_4px_0_var(--border)] hover:bg-muted-hover active:translate-y-[2px] active:shadow-[0_2px_0_var(--border)]",
         dark:
           "bg-foreground text-background shadow-[0_4px_0_rgba(17,24,39,0.22)] hover:bg-[#1F2937] active:translate-y-[2px] active:shadow-[0_2px_0_rgba(17,24,39,0.22)]",
         ghost: "bg-transparent text-muted-foreground hover:bg-muted shadow-none",

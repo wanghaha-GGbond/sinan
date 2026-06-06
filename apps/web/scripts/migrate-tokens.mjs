@@ -66,6 +66,21 @@ const MIGRATIONS = {
   "text-[#C76A15]": "text-risk",
   "hover:border-[#C76A15]": "hover:border-risk",
   "border-[#C76A15]": "border-risk",
+
+  // — primary hover / deep / surface tones —
+  "hover:bg-[#0E8F5F]": "hover:bg-primary-hover",
+  "hover:text-[#0E8F5F]": "hover:text-primary-hover",
+  "text-[#0E8F5F]": "text-primary-hover",
+  "text-[#047857]": "text-primary-deep",
+  "border-[#BDEDDD]": "border-primary-surface-border",
+  "border-[#BDEDDD]/70": "border-primary-surface-border/70",
+
+  // — muted hover (used by the MutedButton / nav hover state) —
+  "hover:bg-[#E8EEE5]": "hover:bg-muted-hover",
+
+  // — destructive bright (auth form errors) —
+  "text-[#DC2626]": "text-destructive-bright",
+  "bg-[#FEF2F2]": "bg-destructive-bright/10",
 }
 
 let touchedFiles = 0

@@ -143,7 +143,7 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <p className="rounded-xl bg-[#FEF2F2] px-4 py-2.5 text-sm text-[#DC2626]">
+            <p className="rounded-xl bg-destructive-bright/10 px-4 py-2.5 text-sm text-destructive-bright">
               {error}
             </p>
           )}

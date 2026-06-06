@@ -129,7 +129,7 @@ export function VerifyIdentity({ companyName }: { companyName: string }) {
           </SolidButton>
         </div>
 
-        {error && <p className="mt-2 text-xs text-[#DC2626]">{error}</p>}
+        {error && <p className="mt-2 text-xs text-destructive-bright">{error}</p>}
 
         <button
           onClick={() => { setStep("idle"); setError("") }}
@@ -172,7 +172,7 @@ export function VerifyIdentity({ companyName }: { companyName: string }) {
         </SolidButton>
       </div>
 
-      {error && <p className="mt-2 text-xs text-[#DC2626]">{error}</p>}
+      {error && <p className="mt-2 text-xs text-destructive-bright">{error}</p>}
 
       <button
         onClick={() => { setStep("email"); setError("") }}
