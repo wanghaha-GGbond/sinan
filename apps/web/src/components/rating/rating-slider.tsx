@@ -23,7 +23,7 @@ export function RatingSlider({
           ) : null}
         </div>
         <output
-          className="min-w-12 rounded-lg bg-primary px-2 py-1 text-center text-sm font-semibold text-primary-foreground"
+          className="min-w-12 rounded-lg bg-primary-hover px-2 py-1 text-center text-sm font-semibold text-primary-foreground"
           aria-label={`${label} 当前分数`}
         >
           {value.toFixed(1)}
