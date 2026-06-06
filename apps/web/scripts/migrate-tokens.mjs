@@ -41,7 +41,9 @@ const MIGRATIONS = {
 
   // — background tokens (high confidence) —
   "bg-[#F1F5EF]": "bg-muted",
-  "bg-[#DFF8EC]": "bg-secondary",
+  "bg-[#DFF8EC]": "bg-primary-tint",
+  "bg-[#F0FFF7]": "bg-primary-tint",
+  "bg-[#F7F8F2]": "bg-background",
   "bg-[#F9FAF7]": "bg-card",
   "bg-[#19C37D]": "bg-primary",
   "bg-[#19c37d]": "bg-primary",
