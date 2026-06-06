@@ -42,7 +42,9 @@ function ActionBar({
       {/* Useful — heart */}
       <button
         onClick={onUseful}
-        className="group flex items-center gap-1 rounded-full px-2 py-1.5 transition"
+        aria-pressed={isUseful}
+        aria-label={isUseful ? "取消有用" : "标记有用"}
+        className="group flex min-h-11 items-center gap-1 rounded-full px-2 py-1.5 transition"
       >
         <span
           className={`flex size-8 items-center justify-center rounded-full transition ${
@@ -62,12 +64,12 @@ function ActionBar({
         </span>
       </button>
 
-      <button className="group flex items-center rounded-full px-2 py-1.5 transition">
+      <button aria-label="转发讨论" className="group flex min-h-11 items-center rounded-full px-2 py-1.5 transition">
         <span className="flex size-8 items-center justify-center rounded-full transition group-hover:bg-secondary/60">
           <Repeat2 className="size-[18px] text-muted-foreground group-hover:text-primary" />
         </span>
       </button>
-      <button className="group flex items-center rounded-full px-2 py-1.5 transition">
+      <button aria-label="查看分析" className="group flex min-h-11 items-center rounded-full px-2 py-1.5 transition">
         <span className="flex size-8 items-center justify-center rounded-full transition group-hover:bg-secondary/60">
           <BarChart3 className="size-[18px] text-muted-foreground group-hover:text-primary" />
         </span>
@@ -113,7 +115,7 @@ function InlineReplyComposer({
           >
             回复
           </button>
-          <button onClick={onCancel} className="text-[13px] text-[#536471] hover:text-[#0F1419]">
+          <button onClick={onCancel} className="min-h-11 px-3 text-[13px] text-[#536471] hover:text-[#0F1419]">
             取消
           </button>
         </div>
