@@ -17,7 +17,7 @@ const solidButtonVariants = cva(
           "bg-foreground text-background shadow-[0_4px_0_rgba(17,24,39,0.22)] hover:bg-[#1F2937] active:translate-y-[2px] active:shadow-[0_2px_0_rgba(17,24,39,0.22)]",
         ghost: "bg-transparent text-muted-foreground hover:bg-muted shadow-none",
         risk:
-          "bg-[#FFF1D6] text-destructive shadow-[0_3px_0_rgba(146,64,14,0.16)] hover:bg-[#FFE8C2] active:translate-y-[2px] active:shadow-[0_1px_0_rgba(146,64,14,0.16)]",
+          "bg-risk-surface text-destructive shadow-[0_3px_0_rgba(146,64,14,0.16)] hover:bg-risk-surface-strong active:translate-y-[2px] active:shadow-[0_1px_0_rgba(146,64,14,0.16)]",
       },
       size: {
         sm: "h-9 px-3",

@@ -155,7 +155,7 @@ export function RatingsClient({ id }: { id: string }) {
                 </p>
               </div>
             ) : null}
-            <div className="rounded-2xl bg-[#FFF1D6] p-3 text-sm text-destructive">
+            <div className="rounded-2xl bg-risk-surface p-3 text-sm text-destructive">
               <div className="flex items-start gap-2">
                 <ShieldCheck className="mt-0.5 shrink-0" />
                 <p className="text-muted-foreground">

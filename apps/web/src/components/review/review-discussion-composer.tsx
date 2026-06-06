@@ -118,7 +118,7 @@ export function ReviewDiscussionComposer({
       </div>
 
       {error ? (
-        <p data-testid="discussion-error" className="rounded-2xl bg-[#FFF1D6] px-3 py-2 text-sm font-medium text-destructive">
+        <p data-testid="discussion-error" className="rounded-2xl bg-risk-surface px-3 py-2 text-sm font-medium text-destructive">
           {error}
         </p>
       ) : null}

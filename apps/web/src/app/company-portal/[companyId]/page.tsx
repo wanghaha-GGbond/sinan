@@ -233,7 +233,7 @@ export default function CompanyPortalDetailPage() {
                 <div className="mt-3 flex items-center justify-between gap-2">
                   <div className="flex flex-wrap gap-1">
                     {reviewAppeals.length > 0 ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-[#FFF1D6] px-2 py-0.5 text-xs text-destructive">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-risk-surface px-2 py-0.5 text-xs text-destructive">
                         <ShieldAlert className="size-3" />
                         已申诉 {reviewAppeals.length} 次
                       </span>
@@ -318,7 +318,7 @@ function StatCard({
     primary: "bg-secondary text-secondary-foreground",
     neutral: "bg-muted text-foreground",
     positive: "bg-secondary text-secondary-foreground",
-    risk: "bg-[#FFF1D6] text-destructive",
+    risk: "bg-risk-surface text-destructive",
   }[tone]
   return (
     <SolidCard variant="subtle" className="p-4">
@@ -505,8 +505,8 @@ function AppealButton({ companyId, reviewId }: { companyId: string; reviewId: st
               data-testid={`appeal-reason-${reviewId}-${option.id}`}
               className={`rounded-lg border px-2 py-1.5 text-left text-xs ${
                 selected
-                  ? "border-[#C76A15] bg-[#FFF1D6] text-destructive"
-                  : "border-border bg-white text-foreground hover:border-[#C76A15]/40"
+                  ? "border-risk bg-risk-surface text-destructive"
+                  : "border-border bg-white text-foreground hover:border-risk/40"
               }`}
             >
               {option.label}

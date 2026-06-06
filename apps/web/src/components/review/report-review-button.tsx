@@ -102,13 +102,13 @@ export function ReportReviewButton({ reviewId }: { reviewId: string }) {
               onClick={() => setReason(option.id)}
               className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-left text-xs transition ${
                 selected
-                  ? "border-[#C76A15] bg-[#FFF1D6] text-destructive"
-                  : "border-border bg-white text-foreground hover:border-[#C76A15]/40"
+                  ? "border-risk bg-risk-surface text-destructive"
+                  : "border-border bg-white text-foreground hover:border-risk/40"
               }`}
             >
               <span
                 className={`size-3 rounded-full border-2 ${
-                  selected ? "border-[#C76A15] bg-[#C76A15]" : "border-[#D1D5DB]"
+                  selected ? "border-risk bg-[#C76A15]" : "border-[#D1D5DB]"
                 }`}
               />
               {option.label}

@@ -58,6 +58,14 @@ const MIGRATIONS = {
   "focus:ring-[#19C37D]": "focus:ring-primary",
   "ring-[#19C37D]": "ring-primary",
   "ring-offset-[#F7F8F2]": "ring-offset-background",
+
+  // — risk / warning tones (just added to globals.css) —
+  "bg-[#FFF1D6]": "bg-risk-surface",
+  "hover:bg-[#FFE8C2]": "hover:bg-risk-surface-strong",
+  "border-[#FCD9A6]": "border-risk-border",
+  "text-[#C76A15]": "text-risk",
+  "hover:border-[#C76A15]": "hover:border-risk",
+  "border-[#C76A15]": "border-risk",
 }
 
 let touchedFiles = 0

@@ -74,8 +74,8 @@ export function VerifyIdentity({ companyName }: { companyName: string }) {
     return (
       <SolidCard variant="subtle" className="p-5">
         <div className="flex items-start gap-4">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#FFF1D6]">
-            <ShieldCheck className="size-5 text-[#C76A15]" />
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-risk-surface">
+            <ShieldCheck className="size-5 text-risk" />
           </div>
           <div className="min-w-0 flex-1">
             <h3 className="text-sm font-semibold text-foreground">提升评价可信度</h3>

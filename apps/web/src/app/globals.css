@@ -10,6 +10,11 @@
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
+  --color-risk-surface: var(--risk-surface);
+  --color-risk-surface-strong: var(--risk-surface-strong);
+  --color-risk-border: var(--risk-border);
+  --color-risk-foreground: var(--risk-foreground);
+  --color-risk: var(--risk);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -76,6 +81,11 @@
   --accent: #dff8ec;
   --accent-foreground: #1f2937;
   --destructive: #92400e;
+  --risk: #c76a15;
+  --risk-foreground: #92400e;
+  --risk-surface: #fff1d6;
+  --risk-surface-strong: #ffe8c2;
+  --risk-border: #fcd9a6;
   --border: #e5e7db;
   --input: #e5e7db;
   --ring: #19c37d;

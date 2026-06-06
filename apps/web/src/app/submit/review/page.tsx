@@ -738,7 +738,7 @@ export default function SubmitReviewPage() {
                           <FieldError message={companySubmissionErrors.note} />
                         </label>
                         {similarCompanies.length > 0 ? (
-                          <div className="md:col-span-2 rounded-3xl bg-[#FFF1D6] p-4" data-testid="similar-company-warning">
+                          <div className="md:col-span-2 rounded-3xl bg-risk-surface p-4" data-testid="similar-company-warning">
                             <p className="text-sm font-semibold text-destructive">可能已经收录这些公司</p>
                             <div className="mt-3 grid gap-2">
                               {similarCompanies.slice(0, 3).map(({ company, reasons }) => (

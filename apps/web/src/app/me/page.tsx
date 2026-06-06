@@ -313,8 +313,8 @@ function MeContent({
 
         <SolidCard variant="default" className="p-5">
           <div className="mb-3 flex items-center gap-2">
-            <div className="flex size-9 items-center justify-center rounded-xl bg-[#FFF1D6]">
-              <Flame className="size-4 text-[#C76A15]" />
+            <div className="flex size-9 items-center justify-center rounded-xl bg-risk-surface">
+              <Flame className="size-4 text-risk" />
             </div>
             <span className="text-sm font-medium text-muted-foreground">连续点灯</span>
           </div>
