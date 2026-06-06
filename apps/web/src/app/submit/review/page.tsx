@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm, useWatch } from "react-hook-form"
-import { CheckCircle2, Gift, ShieldCheck } from "lucide-react"
+import { CheckCircle2, Gift, Loader2, ShieldCheck, History, X } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import { z } from "zod"
@@ -315,6 +315,89 @@ export default function SubmitReviewPage() {
     companySelection.mode === "searching"
   const selectedCompanyReviewable = companySelection.selectedCompany?.reviewStatus !== "pending_review" && companySelection.selectedCompany?.reviewStatus !== "rejected"
   const canContinueCompanyStep = companySelection.selectedCompany !== null && selectedCompanyReviewable
+
+  // ─── Draft auto-save (SOTA form craft) ──────────────────────────
+  // Users in 2026 expect: if I close the tab, the next visit
+  // offers to restore what I'd typed. We save to localStorage on
+  // a 1s debounce; on mount, if a draft exists and is younger
+  // than 7 days, we surface a 'restore?' prompt instead of
+  // silently overwriting. The prompt dismisses if the user
+  // starts typing.
+  const DRAFT_KEY = "sinan:review-draft:v1"
+  const DRAFT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
+  const [draftAvailable, setDraftAvailable] = useState<null | { savedAt: number; values: Partial<ReviewForm> }>(null)
+  const [draftSavedAt, setDraftSavedAt] = useState<number | null>(null)
+
+  // On mount: look for a stored draft and offer to restore
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    // Defer setState via macrotask to satisfy react-hooks/set-state-in-effect
+    const handle = window.setTimeout(() => {
+      try {
+        const raw = window.localStorage.getItem(DRAFT_KEY)
+        if (!raw) return
+        const parsed = JSON.parse(raw) as { savedAt: number; values: Partial<ReviewForm> }
+        if (Date.now() - parsed.savedAt > DRAFT_MAX_AGE_MS) {
+          window.localStorage.removeItem(DRAFT_KEY)
+          return
+        }
+        // Don't prompt if the user already typed something (means
+        // a previous session restored successfully and they're back)
+        if (watched.companyName) return
+        setDraftAvailable(parsed)
+      } catch {}
+    }, 0)
+    return () => window.clearTimeout(handle)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // On every form change, debounce a write
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    // Don't persist the fully-empty default state — that would
+    // pollute the slot and re-prompt on every visit. The form
+    // schema is flat (no nested scores object), so we probe a
+    // couple of the user-typed fields.
+    const isEmpty =
+      !watched.companyName &&
+      !watched.relation &&
+      !watched.role &&
+      !watched.content &&
+      !watched.title
+    if (isEmpty) return
+    const handle = window.setTimeout(() => {
+      try {
+        const savedAt = Date.now()
+        window.localStorage.setItem(
+          DRAFT_KEY,
+          JSON.stringify({ savedAt, values: watched as Partial<ReviewForm> })
+        )
+        setDraftSavedAt(savedAt)
+        setDraftAvailable(null) // user has typed, dismiss any pending prompt
+      } catch {}
+    }, 1000)
+    return () => window.clearTimeout(handle)
+  }, [watched])
+
+  function restoreDraft() {
+    if (!draftAvailable) return
+    const draft = draftAvailable.values
+    Object.entries(draft).forEach(([key, value]) => {
+      if (value === undefined || value === null) return
+      try {
+        setValue(key as keyof ReviewForm, value as never, { shouldDirty: true })
+      } catch {}
+    })
+    setDraftAvailable(null)
+    toast.success("草稿已恢复")
+  }
+
+  function discardDraft() {
+    try {
+      window.localStorage.removeItem(DRAFT_KEY)
+    } catch {}
+    setDraftAvailable(null)
+  }
   const completion = useMemo(() => {
     const fields = [
       watched.companyName,
@@ -550,9 +633,55 @@ export default function SubmitReviewPage() {
 
   return (
     <section className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[1fr_22rem]">
+      {draftAvailable ? (
+        <aside
+          role="status"
+          aria-live="polite"
+          data-testid="review-draft-restore"
+          className="col-span-full flex items-center justify-between gap-3 rounded-2xl border border-primary-surface-border bg-primary-tint px-4 py-3 text-sm"
+        >
+          <div className="flex min-w-0 items-center gap-2.5">
+            <History className="size-4 shrink-0 text-primary-deep" />
+            <p className="truncate text-foreground">
+              <span className="font-semibold">上次没提交完</span>
+              <span className="ml-1.5 text-muted-foreground">
+                · {new Date(draftAvailable.savedAt).toLocaleString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+              </span>
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={restoreDraft}
+              className="min-h-11 rounded-full bg-primary-deep px-3.5 py-1.5 text-sm font-semibold text-white transition hover:bg-primary-hover"
+            >
+              恢复草稿
+            </button>
+            <button
+              type="button"
+              onClick={discardDraft}
+              aria-label="放弃草稿"
+              className="flex min-h-11 min-w-11 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+        </aside>
+      ) : null}
       <form onSubmit={handleSubmit(onSubmit)} className="flex min-w-0 flex-col gap-5">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">{addCompanyMode ? "添加未收录公司" : "发布评价"}</h1>
+          <div className="flex items-center justify-between gap-3">
+            <h1 className="text-3xl font-semibold tracking-tight">{addCompanyMode ? "添加未收录公司" : "发布评价"}</h1>
+            {draftSavedAt ? (
+              <span
+                aria-live="polite"
+                data-testid="review-draft-saved"
+                className="hidden text-xs text-muted-foreground sm:inline-flex"
+              >
+                已自动保存草稿 · {new Date(draftSavedAt).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })}
+              </span>
+            ) : null}
+          </div>
           <p className="mt-3 max-w-2xl text-muted-foreground">
             {addCompanyMode ? "提交公司注册信息，审核通过后开放评价。" : "三步完成匿名评价。司南鼓励描述事实、流程和决策信息，不鼓励攻击性表达。"}
           </p>
@@ -968,7 +1097,14 @@ export default function SubmitReviewPage() {
               </SolidButton>
             ) : (
               <SolidButton data-testid="submit-review-button" type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "提交中..." : "发布匿名评价"}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" />
+                    提交中…
+                  </>
+                ) : (
+                  "发布匿名评价"
+                )}
               </SolidButton>
             )}
           </CardFooter> : null}
