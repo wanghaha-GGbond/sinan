@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
-const solidCardVariants = cva("border border-border/60", {
+const solidCardVariants = cva("@container border border-border/60", {
   variants: {
     variant: {
       default: "solid-card",

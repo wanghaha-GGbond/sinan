@@ -254,6 +254,60 @@
       scroll-behavior: auto;
     }
   }
+
+  /* ─── Anchor scroll offset ──────────────────────────────────────
+     When a user follows a #fragment URL, the sticky topbar
+     (h-[58px]) would otherwise cover the target heading. This
+     margin pushes the target down by 80px (= 58 + 22 breathing
+     room). The :target pseudo handles direct fragment links;
+     [id] catches all other elements with an id (headings, etc)
+     that get scrolled-to via JS. */
+  [id],
+  :target {
+    scroll-margin-top: 80px;
+  }
+
+  /* ─── Print stylesheet ──────────────────────────────────────────
+     The company detail page is the most-likely-to-print surface
+     in the app. Strip everything that doesn't survive paper:
+     sticky topbar, nav, footer, action buttons, background tint
+     (use white to save toner), and the focus ring (no use on
+     paper). Keep the article body, headings, tables. */
+  @media print {
+    body {
+      background: #fff !important;
+      color: #000 !important;
+      font-size: 11pt;
+    }
+    header,
+    nav,
+    footer,
+    [data-testid="footer-company-portal"],
+    [data-no-print] {
+      display: none !important;
+    }
+    a {
+      color: #000 !important;
+      text-decoration: underline;
+    }
+    /* Show the underlying href next to each link so the printed
+       page is still navigable. */
+    a[href^="http"]::after,
+    a[href^="/"]::after {
+      content: " (" attr(href) ")";
+      font-size: 9pt;
+      color: #555;
+    }
+    .solid-card,
+    [data-slot="card"] {
+      box-shadow: none !important;
+      border: 1px solid #ddd !important;
+      page-break-inside: avoid;
+    }
+    h1, h2, h3, h4 {
+      page-break-after: avoid;
+    }
+  }
 }
   /* Impeccable §Typography: prevent 1-word orphan lines on short
      Chinese headings. "我的\n评价", "推荐\n公司", "公司\n不能" all
