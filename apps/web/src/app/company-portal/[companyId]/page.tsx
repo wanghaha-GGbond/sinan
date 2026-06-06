@@ -92,7 +92,11 @@ export default function CompanyPortalDetailPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs text-muted-foreground">{company.industry} · {company.city} · {company.size}</p>
+          <p className="flex flex-wrap gap-x-2.5 gap-y-1 text-xs text-muted-foreground">
+            <span>{company.industry}</span>
+            <span>{company.city}</span>
+            <span>{company.size}</span>
+          </p>
           <h1 className="mt-1 text-2xl font-semibold text-foreground">{company.shortName}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             这是你在司南上能看到的镜像。所有评价、评分、趋势由匿名打工人贡献,司南不向公司端开放用户身份。

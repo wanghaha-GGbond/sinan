@@ -51,11 +51,14 @@ export default function CompanyPortalIndexPage() {
                     <Building2 className="size-4 text-secondary-foreground" />
                     <p className="truncate text-sm font-semibold text-foreground">{company.shortName}</p>
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {company.industry} · {company.city} · {company.size}
+                  <p className="mt-1 flex flex-wrap gap-x-2.5 gap-y-1 text-xs text-muted-foreground">
+                    <span>{company.industry}</span>
+                    <span>{company.city}</span>
+                    <span>{company.size}</span>
                   </p>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    {company.reviewCount.toLocaleString()} 条公开评价 · {company.recommendationRate}% 推荐
+                  <p className="mt-2 flex flex-wrap gap-x-2.5 gap-y-1 text-xs text-muted-foreground">
+                    <span>{company.reviewCount.toLocaleString()} 条公开评价</span>
+                    <span>{company.recommendationRate}% 推荐</span>
                   </p>
                 </div>
                 <div className="flex flex-col items-end gap-2">

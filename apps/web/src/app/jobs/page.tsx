@@ -109,7 +109,8 @@ export default function JobsPage() {
                   <p className="text-lg font-semibold text-foreground">{item.role}</p>
                   <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
                     <MapPin className="size-3.5" />
-                    {item.companyName} · {item.city}
+                    <span>{item.companyName}</span>
+                    <span>{item.city}</span>
                   </p>
                 </div>
                 <ScoreChip score={item.fitScore} label="适配" compact />

@@ -73,7 +73,10 @@ export function FirstRunHint() {
       className="fixed inset-x-0 top-0 z-40 flex items-center justify-center gap-2 bg-foreground/95 px-4 py-2 text-sm text-background backdrop-blur"
     >
       <Keyboard className="size-4 text-primary" />
-      <span>按 <kbd className="rounded border border-background/30 bg-background/10 px-1 font-mono text-xs">?</kbd> 看快捷键 · 一键跳到搜索或公司</span>
+      <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+        <span>按 <kbd className="rounded border border-background/30 bg-background/10 px-1 font-mono text-xs">?</kbd> 看快捷键</span>
+        <span>一键跳到搜索或公司</span>
+      </span>
       <SolidButton
         type="button"
         variant="ghost"

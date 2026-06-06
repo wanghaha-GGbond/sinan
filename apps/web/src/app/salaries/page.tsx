@@ -115,7 +115,10 @@ export default function SalariesPage() {
               <div className="mt-4 rounded-[24px] bg-muted p-4">
                 <p className="text-xs text-muted-foreground">匿名薪资区间</p>
                 <p className="mt-1 text-2xl font-semibold text-foreground">{item.range}</p>
-                <p className="mt-1 text-sm text-muted-foreground">中位参考:{item.medianLabel} · {item.sampleCount} 个样本</p>
+                <p className="mt-1 flex flex-wrap gap-x-2.5 gap-y-1 text-sm text-muted-foreground">
+                  <span>中位参考:{item.medianLabel}</span>
+                  <span>{item.sampleCount} 个样本</span>
+                </p>
               </div>
               <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.signal}</p>
               <div className="mt-4 flex items-center justify-between">

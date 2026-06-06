@@ -186,20 +186,14 @@ export function ReviewDiscussionCard({ item }: { item: ReviewDiscussionItem }) {
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-baseline gap-1.5">
-            <span className="cursor-pointer text-[15px] font-bold leading-5 text-[#0F1419] hover:underline">
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-[15px] leading-5 text-[#536471]">
+            <span className="cursor-pointer font-bold text-[#0F1419] hover:underline">
               {item.authorLabel}
             </span>
-            <span className="text-[15px] leading-5 text-[#536471]">
-              @{item.authorLabel.replace(/\s/g, "").toLowerCase()}
-            </span>
-            <span className="text-[15px] leading-5 text-[#536471]">·</span>
-            <span className="text-[15px] leading-5 text-[#536471]">{item.createdAt}</span>
+            <span>@{item.authorLabel.replace(/\s/g, "").toLowerCase()}</span>
+            <span>{item.createdAt}</span>
             {statusText ? (
-              <>
-                <span className="text-[15px] leading-5 text-[#536471]">·</span>
-                <span className="text-[13px] font-medium text-secondary-foreground">{statusText}</span>
-              </>
+              <span className="text-[13px] font-medium text-secondary-foreground">{statusText}</span>
             ) : null}
           </div>
 

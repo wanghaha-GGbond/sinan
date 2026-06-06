@@ -194,7 +194,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               data-testid="footer-company-portal"
             >
               <Building2 className="size-3.5" />
-              我是公司 · 打开控制台
+              <span>我是公司</span>
+              <span>打开控制台</span>
             </Link>
             <span>匿名保护优先,不向公司开放用户身份。</span>
           </div>

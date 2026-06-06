@@ -47,14 +47,19 @@ export default function HomePage() {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <h3 className="truncate text-lg font-semibold text-foreground">{item.companyName}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {item.industry} · {item.city} · {item.size}
+                  <p className="mt-1 flex flex-wrap gap-x-2.5 gap-y-1 text-sm text-muted-foreground">
+                    <span>{item.industry}</span>
+                    <span>{item.city}</span>
+                    <span>{item.size}</span>
                   </p>
                 </div>
                 <ScoreChip score={item.directionScore} className="shrink-0" data-testid="recommend-direction-score" />
               </div>
 
-              <p className="text-xs text-muted-foreground">{item.reviewCount} 条评价 · {item.recommendationRate}% 推荐</p>
+              <p className="flex flex-wrap gap-x-2.5 gap-y-1 text-xs text-muted-foreground">
+                <span>{item.reviewCount} 条评价</span>
+                <span>{item.recommendationRate}% 推荐</span>
+              </p>
 
               <div className="grid gap-2 sm:grid-cols-3" data-testid="recommend-metrics">
                 {item.highlightedMetrics.slice(0, 3).map((metric) => (

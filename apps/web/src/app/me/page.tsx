@@ -285,8 +285,9 @@ function MeContent({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">我的</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {displayName} · 指路等级 L{trustLevel}
+          <p className="mt-1 flex flex-wrap gap-x-2.5 gap-y-1 text-sm text-muted-foreground">
+            <span>{displayName}</span>
+            <span>指路等级 L{trustLevel}</span>
           </p>
         </div>
         <div className="flex items-center gap-1 rounded-full bg-muted px-4 py-2 text-sm font-medium text-muted-foreground">
@@ -354,9 +355,10 @@ function MeContent({
                   {task.completed && "✅ "}
                   {task.title}
                 </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  奖励 +{task.rewardPoints} 方向值 · 进度 {task.progress}/{task.target}
-                  {task.hint ? ` · ${task.hint}` : ""}
+                <p className="mt-0.5 flex flex-wrap gap-x-2.5 gap-y-1 text-xs text-muted-foreground">
+                  <span>奖励 +{task.rewardPoints} 方向值</span>
+                  <span>进度 {task.progress}/{task.target}</span>
+                  {task.hint ? <span>{task.hint}</span> : null}
                 </p>
               </div>
               {!task.completed && task.href ? (
@@ -403,8 +405,10 @@ function MeContent({
                   </div>
                 </div>
                 <p className="mt-2 line-clamp-2 text-sm leading-6 text-foreground">{review.shortComment}</p>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  有用 {review.helpful} · 追问 {review.commentCount} · {new Date(review.createdAt).toLocaleDateString("zh-CN")}
+                <p className="mt-2 flex flex-wrap gap-x-2.5 gap-y-1 text-xs text-muted-foreground">
+                  <span>有用 {review.helpful}</span>
+                  <span>追问 {review.commentCount}</span>
+                  <span>{new Date(review.createdAt).toLocaleDateString("zh-CN")}</span>
                 </p>
               </Link>
             ))}

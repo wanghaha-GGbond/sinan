@@ -149,8 +149,10 @@ export default function RankingsPage() {
                   <h2 className="truncate text-lg font-semibold text-foreground">
                     {company.shortName ?? company.name}
                   </h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {company.industry} · {company.city} · {trailing}
+                  <p className="mt-1 flex flex-wrap gap-x-2.5 gap-y-1 text-sm text-muted-foreground">
+                    <span>{company.industry}</span>
+                    <span>{company.city}</span>
+                    <span>{trailing}</span>
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {(company.riskTags ?? []).slice(0, 2).map((tag) => (

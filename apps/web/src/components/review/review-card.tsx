@@ -45,10 +45,12 @@ export function ReviewCard({
       <div className="space-y-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 space-y-1">
-            <p className="text-sm text-muted-foreground">
-              匿名评价者 · L{review.trustLevel} · {review.employmentStatus}
+            <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm text-muted-foreground">
+              <span>匿名评价者</span>
+              <span>L{review.trustLevel}</span>
+              <span>{review.employmentStatus}</span>
               {review.verified && (
-                <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
+                <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
                   ✅ 已验证员工
                 </span>
               )}
@@ -109,8 +111,10 @@ export function ReviewCard({
           ))}
         </div>
 
-        <p className="text-xs text-muted-foreground">
-          {review.jobCategory} · {review.city} · {review.createdAt}
+        <p className="flex flex-wrap gap-x-2.5 gap-y-1 text-xs text-muted-foreground">
+          <span>{review.jobCategory}</span>
+          <span>{review.city}</span>
+          <span>{review.createdAt}</span>
         </p>
 
         <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">

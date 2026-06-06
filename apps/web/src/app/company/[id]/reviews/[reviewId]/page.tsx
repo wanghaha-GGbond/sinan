@@ -35,8 +35,10 @@ export default async function ReviewDetailPage({
           返回公司评价流
           </Link>
         </SolidButton>
-        <p className="text-sm text-muted-foreground">
-          {company.shortName} · {company.industry} · {company.city}
+        <p className="flex flex-wrap gap-x-2.5 gap-y-1 text-sm text-muted-foreground">
+          <span>{company.shortName}</span>
+          <span>{company.industry}</span>
+          <span>{company.city}</span>
         </p>
       </div>
 
@@ -97,11 +99,13 @@ export default async function ReviewDetailPage({
               href={`/company/${id}/reviews/${item.id}`}
               className="block rounded-xl border border-[#E2E8F0] p-3 hover:bg-[#F8FAFC]"
             >
-              <p className="font-medium text-[#0F172A]">
-                {Math.round(item.score)} 分 · {item.shortComment}
+              <p className="flex flex-wrap gap-x-2.5 gap-y-1 font-medium text-[#0F172A]">
+                <span>{Math.round(item.score)} 分</span>
+                <span>{item.shortComment}</span>
               </p>
-              <p className="mt-1 text-xs text-[#64748B]">
-                {item.jobCategory} · 有用 {item.helpful}
+              <p className="mt-1 flex flex-wrap gap-x-2.5 gap-y-1 text-xs text-[#64748B]">
+                <span>{item.jobCategory}</span>
+                <span>有用 {item.helpful}</span>
               </p>
             </Link>
           ))}

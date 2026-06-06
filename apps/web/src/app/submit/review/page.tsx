@@ -571,7 +571,12 @@ export default function SubmitReviewPage() {
             <SolidButton type="button" variant="secondary" size="sm">
               跳过
             </SolidButton>
-            {questionnaireDone ? <p className="text-sm font-medium text-primary-deep">已完成办公体验问卷 · 方向值 +{questionnaireReward}</p> : null}
+            {questionnaireDone ? (
+              <p className="flex flex-wrap gap-x-2.5 gap-y-1 text-sm font-medium text-primary-deep">
+                <span>已完成办公体验问卷</span>
+                <span>方向值 +{questionnaireReward}</span>
+              </p>
+            ) : null}
             <span data-testid="questionnaire-open-flag" className="sr-only">
               {openFromQuery ? "open" : "closed"}
             </span>
@@ -635,16 +640,20 @@ export default function SubmitReviewPage() {
                           className="w-full justify-start"
                           onClick={() => selectCompany(company)}
                         >
-                          {company.name} · {company.industry} · {company.city}
+                          <span>{company.name}</span>
+                          <span>{company.industry}</span>
+                          <span>{company.city}</span>
                         </SolidButton>
                       ))}
                     </div>
                     {shouldShowNoResult ? <SolidCardNoResult query={companySelection.query} onAdd={openAddCompany} dataTestId="no-company-result-card" /> : null}
                     {companySelection.selectedCompany ? (
-                      <div data-testid="selected-company-pill" className="rounded-xl bg-muted p-3 text-sm text-foreground">
-                        {companySelection.selectedCompany.name} · {companySelection.selectedCompany.city} · {companySelection.selectedCompany.industry}
+                      <div data-testid="selected-company-pill" className="flex flex-wrap items-center gap-x-2.5 gap-y-1 rounded-xl bg-muted p-3 text-sm text-foreground">
+                        <span>{companySelection.selectedCompany.name}</span>
+                        <span>{companySelection.selectedCompany.city}</span>
+                        <span>{companySelection.selectedCompany.industry}</span>
                         {companySelection.selectedCompany.reviewStatus === "pending_review" ? (
-                          <span className="ml-2 text-xs text-muted-foreground">当前状态：待审核</span>
+                          <span className="text-xs text-muted-foreground">当前状态：待审核</span>
                         ) : null}
                       </div>
                     ) : null}

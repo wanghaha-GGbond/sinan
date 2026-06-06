@@ -44,23 +44,17 @@ function ReplyRow({
 
         <div className="min-w-0 flex-1">
           {/* Header */}
-          <div className="flex items-baseline gap-1">
-            <span className="cursor-pointer text-[15px] font-bold leading-5 text-[#0F1419] hover:underline">
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-[15px] leading-5 text-[#536471]">
+            <span className="cursor-pointer font-bold text-[#0F1419] hover:underline">
               {reply.authorLabel}
             </span>
-            <span className="text-[15px] leading-5 text-[#536471]">
-              @{reply.authorLabel.replace(/\s/g, "").toLowerCase()}
-            </span>
+            <span>@{reply.authorLabel.replace(/\s/g, "").toLowerCase()}</span>
             {parentAuthor && (
-              <>
-                <span className="text-[15px] leading-5 text-[#536471]">·</span>
-                <span className="text-[13px] leading-5 text-[#1D9BF0]">
-                  回复 @{parentAuthor}
-                </span>
-              </>
+              <span className="text-[13px] text-[#1D9BF0]">
+                回复 @{parentAuthor}
+              </span>
             )}
-            <span className="text-[15px] leading-5 text-[#536471]">·</span>
-            <span className="text-[15px] leading-5 text-[#536471]">{reply.createdAt}</span>
+            <span>{reply.createdAt}</span>
           </div>
 
           {/* Content */}

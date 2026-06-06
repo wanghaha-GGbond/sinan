@@ -140,8 +140,9 @@ export default function CommunityPage() {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-foreground">{item.companyName}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {item.type === "question" ? "追问" : "补充"} · {item.authorLabel}
+                  <p className="mt-1 flex flex-wrap gap-x-2.5 gap-y-1 text-xs text-muted-foreground">
+                    <span>{item.type === "question" ? "追问" : "补充"}</span>
+                    <span>{item.authorLabel}</span>
                   </p>
                 </div>
                 <div className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-secondary-foreground">

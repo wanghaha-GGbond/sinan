@@ -183,7 +183,10 @@ export function RatingsClient({ id }: { id: string }) {
             {submitted ? (
               <div data-testid="rating-reward" className="glass-emerald rounded-[24px] p-3 text-sm">
                 <p className="font-medium text-primary-deep">你为后来者点亮了一次方向</p>
-                <p className="mt-1 text-primary-deep">方向值 +20 · 连续点灯 +1</p>
+                <p className="mt-1 flex flex-wrap gap-x-2.5 gap-y-1 text-primary-deep">
+                  <span>方向值 +20</span>
+                  <span>连续点灯 +1</span>
+                </p>
                 <p className="mt-1 text-xs text-primary-deep">评价等待审核中</p>
               </div>
             ) : null}

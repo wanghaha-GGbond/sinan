@@ -15,7 +15,7 @@ export function CompanyIntelligencePanel({ company }: { company: Company }) {
       label: "薪资",
       icon: ReceiptText,
       value: snapshot.salaryMedian,
-      detail: `${snapshot.salarySamples} 个匿名样本 · 兑现分 ${snapshot.payScore.toFixed(1)}`,
+      detail: `${snapshot.salarySamples} 个匿名样本 ｜ 兑现分 ${snapshot.payScore.toFixed(1)}`,
       href: "/salaries",
     },
     {
