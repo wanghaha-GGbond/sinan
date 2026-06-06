@@ -47,6 +47,18 @@
   --color-primary: var(--primary);
   --color-primary-tint: var(--primary-tint);
   --color-direction-foreground: var(--direction-foreground);
+  /* Semantic z-index scale (impeccable §General rules).
+     Order: dropdown < sticky < modal-backdrop < modal < toast < tooltip.
+     Anything above the layout (modals, toasts, tooltips) gets a named
+     layer; nothing in the codebase uses raw z-50 / z-[999] etc. */
+  --z-elevated: 20;
+  --z-sticky: 30;
+  --z-dropdown: 40;
+  --z-modal-backdrop: 50;
+  --z-modal: 60;
+  --z-toast: 70;
+  --z-tooltip: 80;
+  --z-fullscreen: 90;
   --color-direction: var(--direction);
   --color-risk-foreground: var(--risk-foreground);
   --color-risk: var(--risk);
@@ -157,6 +169,19 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+  }
+  /* Impeccable §Typography: prevent 1-word orphan lines on short
+     Chinese headings. "我的\n评价", "推荐\n公司", "公司\n不能" all
+     break awkwardly without this — balance re-flows the words
+     to keep the line lengths even. */
+  h1,
+  h2 {
+    text-wrap: balance;
+  }
+  /* For long prose, 'pretty' is gentler than 'balance' — it
+     suppresses orphans but doesn't try to equalize every line. */
+  p {
+    text-wrap: pretty;
   }
   body {
     @apply bg-background text-foreground;

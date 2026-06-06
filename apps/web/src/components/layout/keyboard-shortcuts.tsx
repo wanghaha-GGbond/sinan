@@ -65,7 +65,7 @@ export function KeyboardShortcuts() {
     <>
       {open ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/30 px-4"
+          className="fixed inset-0 z-modal flex items-center justify-center bg-foreground/30 px-4"
           role="dialog"
           aria-modal="true"
           aria-label="键盘快捷键"

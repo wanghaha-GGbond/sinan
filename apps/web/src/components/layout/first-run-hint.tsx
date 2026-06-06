@@ -70,7 +70,7 @@ export function FirstRunHint() {
       role="status"
       aria-live="polite"
       data-testid="first-run-hint"
-      className="fixed inset-x-0 top-0 z-40 flex items-center justify-center gap-2 bg-foreground/95 px-4 py-2 text-sm text-background backdrop-blur"
+      className="fixed inset-x-0 top-0 z-modal flex items-center justify-center gap-2 bg-foreground/95 px-4 py-2 text-sm text-background"
     >
       <Keyboard className="size-4 text-primary" />
       <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1">

@@ -28,7 +28,7 @@ export default async function ReviewDetailPage({
 
   return (
     <section className="mx-auto flex w-full max-w-[760px] flex-col gap-5 px-4 py-8 pb-24 sm:px-6">
-      <div className="glass-panel sticky top-12 z-30 flex items-center gap-3 rounded-2xl p-3">
+      <div className="glass-panel sticky top-12 z-sticky flex items-center gap-3 rounded-2xl p-3">
         <SolidButton asChild variant="ghost">
           <Link href={`/company/${id}`}>
           <ChevronLeft />

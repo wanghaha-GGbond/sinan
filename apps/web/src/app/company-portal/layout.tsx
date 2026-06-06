@@ -5,7 +5,7 @@ export default function CompanyPortalLayout({ children }: { children: React.Reac
   return (
     <div className="bg-card">
       {/* Sticky banner — makes it impossible to forget you're in company mode. */}
-      <div className="sticky top-12 z-30 border-b border-border bg-foreground text-white">
+      <div className="sticky top-12 z-sticky border-b border-border bg-foreground text-white">
         <div className="mx-auto flex max-w-[1080px] flex-wrap items-center justify-between gap-3 px-4 py-2.5 text-xs sm:px-6">
           <div className="flex items-center gap-2">
             <Building2 className="size-3.5" />
