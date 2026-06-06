@@ -35,7 +35,7 @@ export default function CompanyPortalLayout({ children }: { children: React.Reac
           <p className="font-semibold text-foreground">公司端权限边界</p>
           <p className="mt-1">公司账号只能查看公开数据 · 提交基础信息修正 · 对明显违规内容提交申诉。</p>
           <p className="mt-1">
-            <strong className="text-foreground">公司不能</strong>:删除评价 · 修改评分 · 购买排名 · 获取评价用户身份 · 私信评价用户 · 影响榜单排序。
+            <strong className="text-foreground">公司不能</strong>:删除评价、修改评分、购买排名、获取评价用户身份、私信评价用户、影响榜单排序。
           </p>
         </div>
       </footer>

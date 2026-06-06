@@ -239,3 +239,20 @@
     box-shadow: 0 2px 0 #d1d5c8;
   }
 }
+
+/* Respect user OS-level reduced-motion preference.
+   Taste-skill Section 6 (Performance & Accessibility Guardrails):
+   sinan has minimal motion (button translate, skeleton pulse),
+   but every animated element should be disabled by this blanket
+   rule so users with vestibular disorders don't get the push /
+   pulse / parallax effects. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

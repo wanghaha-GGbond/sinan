@@ -745,8 +745,11 @@ export default function SubmitReviewPage() {
                                 <div key={company.id} className="flex flex-col gap-2 rounded-2xl bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
                                   <div>
                                     <p className="text-sm font-semibold text-foreground">{company.name}</p>
-                                    <p className="text-xs text-muted-foreground">
-                                      {company.city} · {company.industry} · {company.reviewStatus === "reviewable" ? "可评价" : "待审核"} · {reasons.join(" / ")}
+                                    <p className="flex flex-wrap gap-x-2.5 gap-y-1 text-xs text-muted-foreground">
+                                      <span>{company.city}</span>
+                                      <span>{company.industry}</span>
+                                      <span>{company.reviewStatus === "reviewable" ? "可评价" : "待审核"}</span>
+                                      <span>{reasons.join(" / ")}</span>
                                     </p>
                                   </div>
                                   <SolidButton

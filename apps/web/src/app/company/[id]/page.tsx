@@ -114,8 +114,11 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <h1 className="truncate text-base font-semibold text-foreground sm:text-lg">{company.name}</h1>
-            <p className="truncate text-xs text-muted-foreground sm:text-sm">
-              {company.industry} · {company.city} · 方向分 {(company.directionScore ?? 0).toFixed(1)} · {(company.reviewCount ?? 0)} 条评价
+            <p className="flex flex-wrap gap-x-2.5 gap-y-1 text-xs text-muted-foreground sm:text-sm">
+              <span>{company.industry}</span>
+              <span>{company.city}</span>
+              <span>方向分 {(company.directionScore ?? 0).toFixed(1)}</span>
+              <span>{(company.reviewCount ?? 0)} 条评价</span>
             </p>
             {/* vibeTag not returned by API */}
           </div>

@@ -227,8 +227,11 @@ export default function CompanyPortalDetailPage() {
                   </span>
                 </div>
                 <p className="mt-2 line-clamp-3 text-sm leading-6 text-foreground">{review.content}</p>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  {review.relation} · {review.jobCategory} · {review.city} · {review.createdAt}
+                <p className="mt-2 flex flex-wrap gap-x-2.5 gap-y-1 text-xs text-muted-foreground">
+                  <span>{review.relation}</span>
+                  <span>{review.jobCategory}</span>
+                  <span>{review.city}</span>
+                  <span>{review.createdAt}</span>
                 </p>
                 <div className="mt-3 flex items-center justify-between gap-2">
                   <div className="flex flex-wrap gap-1">
