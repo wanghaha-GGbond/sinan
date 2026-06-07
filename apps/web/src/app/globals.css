@@ -138,41 +138,48 @@
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #111827;
-  --card: #ffffff;
-  --card-foreground: #111827;
-  --popover: #ffffff;
-  --popover-foreground: #111827;
-  --primary: #19c37d;
-  --primary-foreground: #ffffff;
-  --primary-hover: #0e8f5f;
-  --primary-deep: #047857;
-  --primary-tint: #f0fdf4;
-  --primary-surface-border: #bdeddd;
-  --direction: #19c37d;
-  --direction-foreground: #ffffff;
-  --risk: #c76a15;
-  --risk-foreground: #92400e;
-  --risk-surface: #fff1d6;
-  --risk-surface-strong: #ffe8c2;
-  --risk-border: #fcd9a6;
-  --signal: #2dd4bf;
-  --signal-foreground: #ffffff;
-  --secondary: #ffffff;
-  --secondary-foreground: #07563a;
-  --muted: #f7f8f2;
-  --muted-hover: #e8eee5;
-  --muted-foreground: #6b7280;
-  --accent: #f0fdf4;
-  --accent-foreground: #07563a;
-  --destructive: #92400e;
-  --destructive-bright: #dc2626;
+  /* Impeccable §Color: 'use OKLCH throughout when picking a
+     palette'. The :root tokens are now all OKLCH. Hex values
+     are reserved for the few cases (lock-in product brand
+     identity, code comments) where readability beats
+     perceptual uniformity. Visual values are 1:1. */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.21 0.02 264);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.21 0.02 264);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.21 0.02 264);
+  --primary: oklch(0.74 0.15 156);                  /* brand emerald-500 */
+  --primary-foreground: oklch(1 0 0);
+  --primary-hover: oklch(0.59 0.12 158);            /* emerald-600 */
+  --primary-deep: oklch(0.42 0.10 158);             /* emerald-700 */
+  --primary-tint: oklch(0.98 0.01 154);            /* emerald-50 */
+  --primary-surface-border: oklch(0.90 0.05 158);   /* emerald-200 */
+  --direction: oklch(0.74 0.15 156);
+  --direction-foreground: oklch(1 0 0);
+  --risk: oklch(0.62 0.16 56);                      /* amber-700 */
+  --risk-foreground: oklch(0.42 0.12 56);           /* amber-800 */
+  --risk-surface: oklch(0.97 0.04 84);             /* amber-50 */
+  --risk-surface-strong: oklch(0.94 0.06 80);      /* amber-100 */
+  --risk-border: oklch(0.89 0.08 72);              /* amber-200 */
+  --signal: oklch(0.78 0.13 184);                   /* teal-400 */
+  --signal-foreground: oklch(1 0 0);
+  --secondary: oklch(1 0 0);
+  --secondary-foreground: oklch(0.39 0.08 158);    /* emerald-800 */
+  --muted: oklch(0.97 0.005 95);                    /* warm cream, very low chroma */
+  --muted-hover: oklch(0.94 0.01 130);
+  --muted-foreground: oklch(0.55 0.01 264);        /* gray-500 */
+  --accent: oklch(0.98 0.01 154);
+  --accent-foreground: oklch(0.39 0.08 158);
+  --destructive: oklch(0.42 0.12 56);
+  --destructive-bright: oklch(0.55 0.22 25);      /* red-600 */
+  --border: oklch(0.89 0.01 95);
+  --input: oklch(0.89 0.01 95);
+  --ring: oklch(0.74 0.15 156);
 
   /* Twitter-style palette used by components/review/* for the
      comment / reply surface. Impeccable §Color: 'use OKLCH
-     throughout when picking a palette'. The values here are
-     oklch-form exact equivalents of the hex they replace. */
+     throughout when picking a palette'. */
   --tw-ink: oklch(0.21 0.02 264);          /* was #0F1419 */
   --tw-ink-soft: oklch(0.18 0.02 264);     /* was #0F172A */
   --tw-secondary: oklch(0.55 0.02 264);   /* was #475467, #475569, #64748B */
@@ -182,25 +189,20 @@
   --tw-blue-soft: oklch(0.93 0.04 330);   /* was #CFD9DE */
   --tw-pink: oklch(0.65 0.22 0);          /* was #F91880 */
   --tw-pink-surface: oklch(0.95 0.04 350); /* was #FCE7F3 */
-  --tw-border: oklch(0.92 0.005 95);      /* was #E5E7DB */
-  --tw-surface: oklch(0.97 0.01 264);     /* was #F7F9F9 */
-  --tw-mute: oklch(0.96 0.005 156);       /* was #EEF4F1 */
-  --tw-mute-soft: oklch(0.98 0.005 156);  /* was #F8FAF4 */
-  --tw-gray-50: oklch(0.985 0 0);         /* was #F8FAFC */
-  --tw-slate-700: oklch(0.37 0.04 264);   /* was #1F2937 */
-  --risk: #c76a15;
-  --risk-foreground: #92400e;
-  --risk-surface: #fff1d6;
-  --risk-surface-strong: #ffe8c2;
-  --risk-border: #fcd9a6;
-  --border: #e5e7db;
-  --input: #e5e7db;
-  --ring: #19c37d;
-  --chart-1: #19c37d;
-  --chart-2: #0e8f5f;
-  --chart-3: #2dd4bf;
-  --chart-4: #c76a15;
-  --chart-5: #1f2937;
+  --tw-border: oklch(0.92 0.005 95);
+  --tw-surface: oklch(0.97 0.01 264);
+  --tw-mute: oklch(0.96 0.005 156);
+  --tw-mute-soft: oklch(0.98 0.005 156);
+  --tw-gray-50: oklch(0.985 0 0);
+  --tw-slate-700: oklch(0.37 0.04 264);
+  /* Recharts palette (used by components/company/company-intelligence-panel).
+     OKLCH so the chart colors mix predictably with the rest of the
+     system under dark mode. */
+  --chart-1: oklch(0.74 0.15 156);
+  --chart-2: oklch(0.59 0.12 158);
+  --chart-3: oklch(0.78 0.13 184);
+  --chart-4: oklch(0.62 0.16 56);
+  --chart-5: oklch(0.37 0.04 264);
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0.006 95);
   --sidebar-foreground: oklch(0.18 0.025 220);
