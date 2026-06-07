@@ -390,7 +390,7 @@ function CorrectionForm({
   }
 
   return (
-    <div className="rounded-2xl bg-white p-4 ring-1 ring-[#E5E7DB]">
+    <div className="rounded-2xl bg-white p-4 ring-1 ring-[var(--tw-border)]">
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="flex flex-col gap-1 text-xs font-semibold text-muted-foreground">
           修正字段

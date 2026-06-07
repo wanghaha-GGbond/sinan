@@ -85,7 +85,7 @@ export function FullscreenQuestionnaire({
             {Math.min(currentIndex + 1, total)} / {total}
           </p>
         </div>
-        <div className="mb-5 h-3 rounded-full bg-[#E5E7DB]" data-testid="question-progress">
+        <div className="mb-5 h-3 rounded-full bg-[var(--tw-border)]" data-testid="question-progress">
           <motion.div
             className="h-3 rounded-full bg-primary"
             initial={false}

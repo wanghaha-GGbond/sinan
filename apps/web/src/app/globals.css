@@ -78,6 +78,21 @@
   --color-border: var(--border);
   --color-destructive: var(--destructive);
   --color-destructive-bright: var(--destructive-bright);
+  --color-tw-ink: var(--tw-ink);
+  --color-tw-ink-soft: var(--tw-ink-soft);
+  --color-tw-secondary: var(--tw-secondary);
+  --color-tw-tertiary: var(--tw-tertiary);
+  --color-tw-slate: var(--tw-slate);
+  --color-tw-blue: var(--tw-blue);
+  --color-tw-blue-soft: var(--tw-blue-soft);
+  --color-tw-pink: var(--tw-pink);
+  --color-tw-pink-surface: var(--tw-pink-surface);
+  --color-tw-border: var(--tw-border);
+  --color-tw-surface: var(--tw-surface);
+  --color-tw-mute: var(--tw-mute);
+  --color-tw-mute-soft: var(--tw-mute-soft);
+  --color-tw-gray-50: var(--tw-gray-50);
+  --color-tw-slate-700: var(--tw-slate-700);
   --color-muted-hover: var(--muted-hover);
   --color-primary-hover: var(--primary-hover);
   --color-primary-deep: var(--primary-deep);
@@ -153,6 +168,26 @@
   --accent-foreground: #07563a;
   --destructive: #92400e;
   --destructive-bright: #dc2626;
+
+  /* Twitter-style palette used by components/review/* for the
+     comment / reply surface. Impeccable §Color: 'use OKLCH
+     throughout when picking a palette'. The values here are
+     oklch-form exact equivalents of the hex they replace. */
+  --tw-ink: oklch(0.21 0.02 264);          /* was #0F1419 */
+  --tw-ink-soft: oklch(0.18 0.02 264);     /* was #0F172A */
+  --tw-secondary: oklch(0.55 0.02 264);   /* was #475467, #475569, #64748B */
+  --tw-tertiary: oklch(0.58 0.01 264);    /* was #536471 */
+  --tw-slate: oklch(0.40 0.02 264);       /* was #334155 */
+  --tw-blue: oklch(0.66 0.16 234);        /* was #1D9BF0 */
+  --tw-blue-soft: oklch(0.93 0.04 330);   /* was #CFD9DE */
+  --tw-pink: oklch(0.65 0.22 0);          /* was #F91880 */
+  --tw-pink-surface: oklch(0.95 0.04 350); /* was #FCE7F3 */
+  --tw-border: oklch(0.92 0.005 95);      /* was #E5E7DB */
+  --tw-surface: oklch(0.97 0.01 264);     /* was #F7F9F9 */
+  --tw-mute: oklch(0.96 0.005 156);       /* was #EEF4F1 */
+  --tw-mute-soft: oklch(0.98 0.005 156);  /* was #F8FAF4 */
+  --tw-gray-50: oklch(0.985 0 0);         /* was #F8FAFC */
+  --tw-slate-700: oklch(0.37 0.04 264);   /* was #1F2937 */
   --risk: #c76a15;
   --risk-foreground: #92400e;
   --risk-surface: #fff1d6;

@@ -70,7 +70,7 @@ export function ReviewCard({
           {detailHref ? (
             <Link href={detailHref} className="block">
               <p
-                className={`max-w-prose whitespace-pre-line text-sm leading-7 text-[#334155] ${
+                className={`max-w-prose whitespace-pre-line text-sm leading-7 text-[var(--tw-slate)] ${
                   isLong && !isExpanded ? "line-clamp-5" : ""
                 }`}
               >
@@ -79,7 +79,7 @@ export function ReviewCard({
             </Link>
           ) : (
             <p
-              className={`whitespace-pre-line text-sm leading-7 text-[#334155] ${
+              className={`whitespace-pre-line text-sm leading-7 text-[var(--tw-slate)] ${
                 isLong && !isExpanded ? "line-clamp-5" : ""
               }`}
             >

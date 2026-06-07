@@ -49,15 +49,15 @@ function ActionBar({
         <span
           className={`flex size-8 items-center justify-center rounded-full transition ${
             isUseful
-              ? "text-[#F91880]"
-              : "text-muted-foreground group-hover:bg-[#FCE7F3]/60 group-hover:text-[#F91880]"
+              ? "text-[var(--tw-pink)]"
+              : "text-muted-foreground group-hover:bg-[var(--tw-pink-surface)]/60 group-hover:text-[var(--tw-pink)]"
           }`}
         >
           <Heart className="size-[18px]" fill={isUseful ? "currentColor" : "none"} />
         </span>
         <span
           className={`text-[13px] tabular-nums ${
-            isUseful ? "text-[#F91880]" : "text-muted-foreground group-hover:text-[#F91880]"
+            isUseful ? "text-[var(--tw-pink)]" : "text-muted-foreground group-hover:text-[var(--tw-pink)]"
           }`}
         >
           {usefulCount > 0 ? usefulCount : ""}
@@ -90,7 +90,7 @@ function InlineReplyComposer({
   const [text, setText] = useState("")
 
   return (
-    <div className="flex gap-2.5 border-t border-[#EFF1F2] px-4 py-3">
+    <div className="flex gap-2.5 border-t border-tw-mute px-4 py-3">
       <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-secondary-foreground">
         我
       </div>
@@ -101,7 +101,7 @@ function InlineReplyComposer({
           placeholder="写下你的回复..."
           maxLength={300}
           rows={2}
-          className="min-h-0 resize-none rounded-xl border-none bg-transparent p-0 text-[15px] leading-5 text-[#0F1419] placeholder:text-[#536471] focus-visible:ring-0"
+          className="min-h-0 resize-none rounded-xl border-none bg-transparent p-0 text-[15px] leading-5 text-[var(--tw-ink)] placeholder:text-[var(--tw-tertiary)] focus-visible:ring-0"
           autoFocus
         />
         <div className="flex items-center gap-3">
@@ -115,7 +115,7 @@ function InlineReplyComposer({
           >
             回复
           </button>
-          <button onClick={onCancel} className="min-h-11 px-3 text-[13px] text-[#536471] hover:text-[#0F1419]">
+          <button onClick={onCancel} className="min-h-11 px-3 text-[13px] text-[var(--tw-tertiary)] hover:text-[var(--tw-ink)]">
             取消
           </button>
         </div>
@@ -173,8 +173,8 @@ export function ReviewDiscussionCard({ item }: { item: ReviewDiscussionItem }) {
   }
 
   return (
-    <div className="border-b border-[#EFF1F2]">
-      <div className="flex gap-3 px-4 py-3 transition hover:bg-[#F7F9F9]/50">
+    <div className="border-b border-tw-mute">
+      <div className="flex gap-3 px-4 py-3 transition hover:bg-[var(--tw-surface)]/50">
         <div className="flex shrink-0 flex-col items-center">
           <div
             className="flex size-10 items-center justify-center rounded-full text-sm font-bold transition hover:brightness-95"
@@ -183,13 +183,13 @@ export function ReviewDiscussionCard({ item }: { item: ReviewDiscussionItem }) {
             {avatarInitial(item.authorLabel)}
           </div>
           {showReplies && replies.length > 0 && (
-            <div className="mt-1 w-0.5 grow rounded-full bg-[#CFD9DE]" />
+            <div className="mt-1 w-0.5 grow rounded-full bg-[var(--tw-blue-soft)]" />
           )}
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-[15px] leading-5 text-[#536471]">
-            <span className="cursor-pointer font-bold text-[#0F1419] hover:underline">
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-[15px] leading-5 text-[var(--tw-tertiary)]">
+            <span className="cursor-pointer font-bold text-[var(--tw-ink)] hover:underline">
               {item.authorLabel}
             </span>
             <span>@{item.authorLabel.replace(/\s/g, "").toLowerCase()}</span>
@@ -199,12 +199,12 @@ export function ReviewDiscussionCard({ item }: { item: ReviewDiscussionItem }) {
             ) : null}
           </div>
 
-          <p className="mt-0.5 text-[15px] leading-5 text-[#0F1419]">{displayContent}</p>
+          <p className="mt-0.5 text-[15px] leading-5 text-[var(--tw-ink)]">{displayContent}</p>
 
           {item.tags && item.tags.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1.5">
               {item.tags.map((tag) => (
-                <span key={tag} className="rounded-full bg-[#F7F9F9] px-3 py-0.5 text-[13px] leading-5 text-[#1D9BF0]">
+                <span key={tag} className="rounded-full bg-[var(--tw-surface)] px-3 py-0.5 text-[13px] leading-5 text-[var(--tw-blue)]">
                   #{tag}
                 </span>
               ))}
@@ -228,7 +228,7 @@ export function ReviewDiscussionCard({ item }: { item: ReviewDiscussionItem }) {
           {!showReplies && replyCount > 0 && (
             <button
               onClick={loadReplies}
-              className="mt-0.5 flex items-center gap-2 pl-3 text-[15px] leading-5 text-[#1D9BF0] hover:underline"
+              className="mt-0.5 flex items-center gap-2 pl-3 text-[15px] leading-5 text-[var(--tw-blue)] hover:underline"
             >
               <MessageCircle className="size-3.5" />
               查看 {replyCount} 条回复

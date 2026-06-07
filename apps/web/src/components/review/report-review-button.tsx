@@ -108,7 +108,7 @@ export function ReportReviewButton({ reviewId }: { reviewId: string }) {
             >
               <span
                 className={`size-3 rounded-full border-2 ${
-                  selected ? "border-risk bg-[#C76A15]" : "border-[#D1D5DB]"
+                  selected ? "border-risk bg-risk" : "border-border"
                 }`}
               />
               {option.label}

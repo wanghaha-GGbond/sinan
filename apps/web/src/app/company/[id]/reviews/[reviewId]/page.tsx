@@ -44,7 +44,7 @@ export default async function ReviewDetailPage({
 
       {company.vibeTag ? (
         <Card className="solid-card-subtle border border-border/60">
-          <CardContent className="p-4 text-sm text-[#334155]">
+          <CardContent className="p-4 text-sm text-[var(--tw-slate)]">
             这家公司当前体感标签：<span className="font-semibold text-foreground">{company.vibeTag.name}</span>
           </CardContent>
         </Card>
@@ -53,8 +53,8 @@ export default async function ReviewDetailPage({
       <ReviewCard review={review} companyId={id} expanded showDetailLink={false} />
 
       <Card className="solid-card-subtle border border-border/60">
-        <CardContent className="p-4 text-sm text-[#475569]">
-          这条评价已帮助 <span className="font-semibold text-[#0F172A]">{review.helpful}</span>{" "}
+        <CardContent className="p-4 text-sm text-[var(--tw-secondary)]">
+          这条评价已帮助 <span className="font-semibold text-[var(--tw-ink-soft)]">{review.helpful}</span>{" "}
           位后来者
         </CardContent>
       </Card>
@@ -97,13 +97,13 @@ export default async function ReviewDetailPage({
             <Link
               key={item.id}
               href={`/company/${id}/reviews/${item.id}`}
-              className="block rounded-xl border border-[#E2E8F0] p-3 hover:bg-[#F8FAFC]"
+              className="block rounded-xl border border-tw-blue-soft p-3 hover:bg-[var(--tw-gray-50)]"
             >
-              <p className="flex flex-wrap gap-x-2.5 gap-y-1 font-medium text-[#0F172A]">
+              <p className="flex flex-wrap gap-x-2.5 gap-y-1 font-medium text-[var(--tw-ink-soft)]">
                 <span>{Math.round(item.score)} 分</span>
                 <span>{item.shortComment}</span>
               </p>
-              <p className="mt-1 flex flex-wrap gap-x-2.5 gap-y-1 text-xs text-[#64748B]">
+              <p className="mt-1 flex flex-wrap gap-x-2.5 gap-y-1 text-xs text-[var(--tw-secondary)]">
                 <span>{item.jobCategory}</span>
                 <span>有用 {item.helpful}</span>
               </p>
@@ -113,11 +113,11 @@ export default async function ReviewDetailPage({
         </CardContent>
       </Card>
 
-      <p className="text-xs text-[#64748B]">
+      <p className="text-xs text-[var(--tw-secondary)]">
         匿名安全提示：请勿在评价中发布姓名、联系方式、精确组织信息。司南优先保护匿名与事实表达。
       </p>
 
-      <div className="glass-strong fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/70 p-3 sm:hidden">
+      <div className="glass-strong fixed inset-x-0 bottom-0 z-sticky border-t border-slate-200/70 p-3 sm:hidden">
         <SolidButton asChild className="w-full"><Link href={`/company/${id}`}>继续看这家公司</Link></SolidButton>
       </div>
     </section>

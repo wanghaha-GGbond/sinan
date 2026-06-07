@@ -52,7 +52,7 @@ export function CompanyReviewFeed({ companyId, reviews }: { companyId: string; r
             className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
               activeTab === tab
                 ? "border-primary bg-primary text-white shadow-[0_3px_0_#0E8F5F]"
-                : "border-border/60 bg-white text-[#475467] hover:bg-muted"
+                : "border-border/60 bg-white text-[var(--tw-secondary)] hover:bg-muted"
             }`}
           >
             {tab}
@@ -70,7 +70,7 @@ export function CompanyReviewFeed({ companyId, reviews }: { companyId: string; r
             className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
               selectedTag === tag
                 ? "border-primary-surface-border bg-secondary text-secondary-foreground"
-                : "border-border/60 bg-white text-[#475467] hover:bg-muted"
+                : "border-border/60 bg-white text-[var(--tw-secondary)] hover:bg-muted"
             }`}
           >
             #{tag}

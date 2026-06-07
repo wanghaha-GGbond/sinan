@@ -8,7 +8,7 @@ const tagPillVariants = cva("inline-flex rounded-full border px-2.5 py-1 text-xs
     tone: {
       positive: "border-primary-surface-border bg-secondary text-secondary-foreground",
       match: "border-primary-surface-border bg-secondary text-secondary-foreground",
-      neutral: "border-[#DDE5E1] bg-muted text-foreground",
+      neutral: "border-tw-mute bg-muted text-foreground",
       risk: "border-risk-border bg-risk-surface text-destructive",
     },
     selected: {

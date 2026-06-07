@@ -27,7 +27,7 @@ function ReplyRow({
 
   return (
     <div>
-      <div className="flex gap-2.5 px-4 py-2 transition hover:bg-[#F7F9F9]/50">
+      <div className="flex gap-2.5 px-4 py-2 transition hover:bg-[var(--tw-surface)]/50">
         {/* Avatar + thread line */}
         <div className="flex shrink-0 flex-col items-center">
           <div
@@ -38,19 +38,19 @@ function ReplyRow({
           </div>
           {/* Thread line continues down if not the last reply */}
           {!isLast && (
-            <div className="mt-1 w-0.5 grow rounded-full bg-[#CFD9DE]" />
+            <div className="mt-1 w-0.5 grow rounded-full bg-[var(--tw-blue-soft)]" />
           )}
         </div>
 
         <div className="min-w-0 flex-1">
           {/* Header */}
-          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-[15px] leading-5 text-[#536471]">
-            <span className="cursor-pointer font-bold text-[#0F1419] hover:underline">
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-[15px] leading-5 text-[var(--tw-tertiary)]">
+            <span className="cursor-pointer font-bold text-[var(--tw-ink)] hover:underline">
               {reply.authorLabel}
             </span>
             <span>@{reply.authorLabel.replace(/\s/g, "").toLowerCase()}</span>
             {parentAuthor && (
-              <span className="text-[13px] text-[#1D9BF0]">
+              <span className="text-[13px] text-[var(--tw-blue)]">
                 回复 @{parentAuthor}
               </span>
             )}
@@ -58,7 +58,7 @@ function ReplyRow({
           </div>
 
           {/* Content */}
-          <p className="mt-0.5 text-[15px] leading-5 text-[#0F1419]">{reply.content}</p>
+          <p className="mt-0.5 text-[15px] leading-5 text-[var(--tw-ink)]">{reply.content}</p>
 
           {/* Actions */}
           <div className="-ml-1.5 mt-0.5 flex items-center gap-0">
@@ -80,8 +80,8 @@ function ReplyRow({
               <span
                 className={`flex size-7 items-center justify-center rounded-full transition ${
                   useful
-                    ? "text-[#F91880]"
-                    : "text-muted-foreground group-hover:bg-[#FCE7F3]/60 group-hover:text-[#F91880]"
+                    ? "text-[var(--tw-pink)]"
+                    : "text-muted-foreground group-hover:bg-[var(--tw-pink-surface)]/60 group-hover:text-[var(--tw-pink)]"
                 }`}
               >
                 <Heart className="size-[17px]" fill={useful ? "currentColor" : "none"} />
@@ -89,7 +89,7 @@ function ReplyRow({
               {count > 0 && (
                 <span
                   className={`text-[13px] tabular-nums ${
-                    useful ? "text-[#F91880]" : "text-muted-foreground"
+                    useful ? "text-[var(--tw-pink)]" : "text-muted-foreground"
                   }`}
                 >
                   {count}
@@ -138,7 +138,7 @@ function ReplyComposer({
       </div>
       <div className="min-w-0 flex-1 space-y-2">
         {replyingTo && (
-          <p className="text-[13px] leading-5 text-[#536471]">
+          <p className="text-[13px] leading-5 text-[var(--tw-tertiary)]">
             回复 @{replyingTo}
           </p>
         )}
@@ -148,7 +148,7 @@ function ReplyComposer({
           placeholder="写下你的回复..."
           maxLength={300}
           rows={2}
-          className="min-h-0 resize-none rounded-xl border-none bg-transparent p-0 text-[15px] leading-5 text-[#0F1419] placeholder:text-[#536471] focus-visible:ring-0"
+          className="min-h-0 resize-none rounded-xl border-none bg-transparent p-0 text-[15px] leading-5 text-[var(--tw-ink)] placeholder:text-[var(--tw-tertiary)] focus-visible:ring-0"
           autoFocus
         />
         <div className="flex items-center gap-3">
@@ -165,7 +165,7 @@ function ReplyComposer({
           </button>
           <button
             onClick={onCancel}
-            className="text-[13px] text-[#536471] hover:text-[#0F1419]"
+            className="text-[13px] text-[var(--tw-tertiary)] hover:text-[var(--tw-ink)]"
           >
             取消
           </button>
@@ -262,7 +262,7 @@ export function ReviewDiscussionReplyList({
             setReplyingToName(undefined)
             setShowComposer(true)
           }}
-          className="flex w-full items-center gap-2 px-4 py-2 text-[13px] text-[#536471] transition hover:bg-[#F7F9F9]/50"
+          className="flex w-full items-center gap-2 px-4 py-2 text-[13px] text-[var(--tw-tertiary)] transition hover:bg-[var(--tw-surface)]/50"
         >
           <MessageCircle className="size-4" />
           写下你的回复...

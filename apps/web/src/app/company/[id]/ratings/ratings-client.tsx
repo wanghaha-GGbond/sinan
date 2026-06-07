@@ -125,7 +125,7 @@ export function RatingsClient({ id }: { id: string }) {
                     "h-9 rounded-full border text-sm font-medium transition-all active:translate-y-[2px]",
                     score === item
                       ? "border-primary bg-primary text-white shadow-[0_3px_0_#0E8F5F]"
-                      : "bg-muted text-foreground shadow-[0_3px_0_#D1D5C8] hover:bg-[#EEF4F1]"
+                      : "bg-muted text-foreground shadow-[0_3px_0_#D1D5C8] hover:bg-[var(--tw-mute)]"
                   )}
                 >
                   {item}

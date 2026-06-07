@@ -37,15 +37,15 @@ export function ReviewDiscussionSection({
   return (
     <section data-testid="review-discussion-section" id="followups">
       {/* Header + sort */}
-      <div className="flex items-center justify-between border-b border-[#EFF1F2] px-4 py-3">
+      <div className="flex items-center justify-between border-b border-tw-mute px-4 py-3">
         <button
           onClick={() => setShowComposer(!showComposer)}
-          className="flex items-center gap-2 text-[15px] font-bold text-[#0F1419]"
+          className="flex items-center gap-2 text-[15px] font-bold text-[var(--tw-ink)]"
         >
           <MessageCircle className="size-5" />
           评论
           {publicItems.length > 0 && (
-            <span className="text-[#536471]">{publicItems.length}</span>
+            <span className="text-[var(--tw-tertiary)]">{publicItems.length}</span>
           )}
         </button>
         <div className="flex gap-1">
@@ -74,7 +74,7 @@ export function ReviewDiscussionSection({
       {!showComposer && (
         <button
           onClick={() => setShowComposer(true)}
-          className="flex w-full items-center gap-3 border-b border-[#EFF1F2] px-4 py-3 text-[15px] text-[#536471] transition hover:bg-[#F7F9F9]/50"
+          className="flex w-full items-center gap-3 border-b border-tw-mute px-4 py-3 text-[15px] text-tw-tertiary transition hover:bg-[var(--tw-surface)]/50"
         >
           <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-secondary-foreground">
             我
@@ -85,7 +85,7 @@ export function ReviewDiscussionSection({
 
       {/* Expanded composer */}
       {showComposer && (
-        <div className="border-b border-[#EFF1F2] px-4 py-3">
+        <div className="border-b border-tw-mute px-4 py-3">
           <ReviewDiscussionComposer
             reviewId={reviewId}
             companyId={companyId}
@@ -111,7 +111,7 @@ export function ReviewDiscussionSection({
       {/* Comment list */}
       <div data-testid="public-discussion-list">
         {publicItems.length === 0 && (
-          <p className="px-4 py-8 text-center text-[15px] text-[#536471]">
+          <p className="px-4 py-8 text-center text-[15px] text-[var(--tw-tertiary)]">
             还没有评论，来写第一条吧
           </p>
         )}
@@ -121,7 +121,7 @@ export function ReviewDiscussionSection({
       </div>
 
       {myStatusItems.length > 0 ? (
-        <div data-testid="my-discussion-status-list" className="border-t border-[#EFF1F2] py-3">
+        <div data-testid="my-discussion-status-list" className="border-t border-tw-mute py-3">
           <p className="px-4 text-xs font-semibold text-muted-foreground">我的待处理内容</p>
           <div className="mt-2">
             {myStatusItems.map((item) => (

@@ -128,7 +128,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
     <section className="mx-auto w-full max-w-page px-4 py-4 sm:px-6">
       <div
         data-testid="company-sticky-header"
-        className="glass-panel sticky top-14 z-40 mb-4 rounded-3xl border border-border/70 px-4 py-3"
+        className="glass-panel sticky top-14 z-sticky mb-4 rounded-3xl border border-border/70 px-4 py-3"
       >
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">

@@ -71,7 +71,7 @@ export function CompanyIntelligencePanel({ company }: { company: Company }) {
           <Link
             key={card.label}
             href={card.href}
-            className="rounded-[24px] border border-border/70 bg-[#F8FAF4] p-4 transition hover:-translate-y-0.5 hover:bg-white"
+            className="rounded-[24px] border border-border/70 bg-[var(--tw-mute-soft)] p-4 transition hover:-translate-y-0.5 hover:bg-white"
           >
             <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <card.icon className="size-4 text-primary" />
