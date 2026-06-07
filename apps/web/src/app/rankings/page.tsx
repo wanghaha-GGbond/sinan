@@ -72,9 +72,18 @@ export default function RankingsPage() {
       <section className="mx-auto flex w-full max-w-page flex-col gap-6 px-4 py-6 sm:px-6">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">公司发现</h1>
-          <p className="mt-2 text-sm text-muted-foreground">从不同角度看看最近被更多过来人关注的公司</p>
+          <p className="mt-2 h-4 w-72 animate-pulse rounded-md bg-muted" />
         </div>
-        <p className="text-sm text-muted-foreground">加载中...</p>
+        <div className="flex flex-wrap gap-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-9 w-20 animate-pulse rounded-full bg-muted" />
+          ))}
+        </div>
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="h-28 animate-pulse rounded-3xl bg-muted" />
+          ))}
+        </div>
       </section>
     )
   }

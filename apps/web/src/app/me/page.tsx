@@ -168,12 +168,30 @@ export default function MePage() {
 
   // ── Loading ────────────────────────────────────────────────────────────
   if (authLoading || dashboardLoading) {
+    // Skeleton mirrors the final layout's shape: hero, 3 metric
+    // cards, 2 wide sections (tasks + badges, side by side),
+    // 3 review rows. CLS = 0 when the data lands.
     return (
       <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6">
-        <div className="h-8 w-32 animate-pulse rounded-lg bg-muted" />
+        <div className="flex items-center gap-3">
+          <div className="size-12 animate-pulse rounded-full bg-muted" />
+          <div className="flex-1 space-y-2">
+            <div className="h-6 w-32 animate-pulse rounded-md bg-muted" />
+            <div className="h-3.5 w-48 animate-pulse rounded-md bg-muted" />
+          </div>
+        </div>
         <div className="grid gap-4 md:grid-cols-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-32 animate-pulse rounded-[28px] bg-muted" />
+          ))}
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="h-48 animate-pulse rounded-3xl bg-muted" />
+          <div className="h-48 animate-pulse rounded-3xl bg-muted" />
+        </div>
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-24 animate-pulse rounded-2xl bg-muted" />
           ))}
         </div>
       </section>
