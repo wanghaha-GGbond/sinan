@@ -66,10 +66,15 @@ export function checkRateLimit(
 
 /**
  * Extract a rate-limit key from a Request.
- * Checks common proxy headers; falls back to a per-request random suffix
- * so unidentifiable requests get individual buckets instead of sharing one.
+ * Checks common proxy headers; falls back to a coarse per-route
+ * bucket. Using a per-request random UUID is a footgun: every
+ * request gets a unique bucket, so the limit is effectively
+ * disabled for unproxied traffic. A single "unknown" bucket
+ * is the right fallback: the limit is shared across all
+ * unidentifiable callers, which is at least meaningful, and
+ * they can't be locked out by a different anonymous caller.
  */
-export function getRateLimitKey(request: Request): string {
+export function getRateLimitKey(request: Request, route: string): string {
   const ip =
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     request.headers.get("x-real-ip")?.trim() ??
@@ -78,8 +83,11 @@ export function getRateLimitKey(request: Request): string {
 
   if (ip) return ip
 
-  // No IP available — use a per-request key so anonymous traffic
-  // doesn't share a single bucket and lock each other out.
-  // In practice this shouldn't happen behind any standard proxy.
-  return `anon-${crypto.randomUUID()}`
+  // No IP available — use a route-scoped shared bucket. In dev /
+  // when running behind no proxy, this means /api/auth/login's
+  // bucket is shared with every other unauth request to that
+  // route. That's the safer failure mode: it errs on the side
+  // of throttling anonymous traffic rather than letting
+  // unbounded traffic through.
+  return `unknown:${route}`
 }

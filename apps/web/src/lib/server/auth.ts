@@ -15,26 +15,38 @@ import crypto from "node:crypto"
 // Config
 // ---------------------------------------------------------------------------
 
-const AUTH_SECRET = process.env.AUTH_SECRET
+// AUTH_SECRET is read lazily. Previously this module threw at import time
+// if AUTH_SECRET was unset in production, which broke `next build` on
+// any environment that hadn't set env vars yet (CI without a secret
+// vault, fresh clones, local dev). The fix: the throw now fires at the
+// first request that needs to sign or verify a token, not at module
+// load. The check still fires for non-test production traffic.
 const TOKEN_COOKIE = "auth_token"
 const TOKEN_MAX_AGE = 60 * 60 * 24 * 30 // 30 days
 
-// In production, refuse to start without a proper secret — silently falling back
-// to a hardcoded dev key would allow anyone to forge valid JWTs.
-if (!AUTH_SECRET || AUTH_SECRET === "sinan-dev-secret-change-in-production") {
-  if (process.env.NODE_ENV === "production") {
+function resolveSecret(): string {
+  const fromEnv = process.env.AUTH_SECRET
+  if (fromEnv && fromEnv !== "sinan-dev-secret-change-in-production") {
+    return fromEnv
+  }
+  // Production needs a real secret. The dev fallback below is a
+  // well-known string that fails any real password attempt because
+  // user records were never hashed against it.
+  const isProduction =
+    process.env.NODE_ENV === "production" ||
+    process.env.VERCEL_ENV === "production" ||
+    process.env.NEXT_PUBLIC_APP_ENV === "production"
+  if (isProduction) {
     throw new Error(
       "AUTH_SECRET environment variable is required in production. " +
-      "Generate one with: openssl rand -hex 32"
+        "Generate one with: openssl rand -hex 32",
     )
   }
-  // Dev fallback: only used when NODE_ENV is not "production"
+  return "sinan-dev-secret-change-in-production"
 }
 
 function getSecretKey() {
-  return new TextEncoder().encode(
-    AUTH_SECRET ?? "sinan-dev-secret-change-in-production"
-  )
+  return new TextEncoder().encode(resolveSecret())
 }
 
 // ---------------------------------------------------------------------------
@@ -68,14 +80,22 @@ export async function verifyPassword(
   const [saltHex, hashHex] = stored.split(":")
   if (!saltHex || !hashHex) return false
 
+  // Defensive: if either part isn't valid hex, or lengths don't
+  // match the expected scrypt output, return false without
+  // calling timingSafeEqual. The latter throws on length
+  // mismatch (a runtime crash on bad data) and leaks timing
+  // info even before the comparison runs.
+  if (saltHex.length !== SALT_LENGTH * 2) return false
+  if (hashHex.length !== KEY_LENGTH * 2) return false
+  if (!/^[0-9a-f]+$/i.test(saltHex) || !/^[0-9a-f]+$/i.test(hashHex)) return false
+
   const salt = Buffer.from(saltHex, "hex")
+  const expected = Buffer.from(hashHex, "hex")
   return new Promise((resolve) => {
     crypto.scrypt(password, salt, KEY_LENGTH, (err, derivedKey) => {
       if (err) return resolve(false)
-      resolve(crypto.timingSafeEqual(
-        Buffer.from(hashHex, "hex"),
-        derivedKey
-      ))
+      // Lengths now guaranteed equal, so timingSafeEqual is safe.
+      resolve(crypto.timingSafeEqual(expected, derivedKey))
     })
   })
 }

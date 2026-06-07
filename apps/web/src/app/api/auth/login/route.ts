@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
   // Rate limit only actual login attempts (after validation passes),
   // so typos and format errors don't consume the quota.
-  const rlKey = `login:${getRateLimitKey(request)}`
+  const rlKey = `login:${getRateLimitKey(request, "/api/auth/login")}`
   const rl = checkRateLimit(rlKey, { maxRequests: 5, windowSeconds: 60 })
   if (!rl.allowed) {
     return NextResponse.json(

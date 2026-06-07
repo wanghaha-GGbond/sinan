@@ -6,6 +6,7 @@ import { Controller, useForm, useWatch } from "react-hook-form"
 import { CheckCircle2, Gift, Loader2, ShieldCheck, History, X } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
+import { submitReviewData } from "@/lib/data/reviews"
 import { z } from "zod"
 
 import { FullscreenQuestionnaire } from "@/components/questionnaire/fullscreen-questionnaire"
@@ -229,6 +230,11 @@ export default function SubmitReviewPage() {
   const searchParams = useSearchParams()
   const [step, setStep] = useState(0)
   const [success, setSuccess] = useState(false)
+  // submitReviewData's submitting state lives in a separate
+  // state pair (not the RHF isSubmitting) so the loading UI
+  // doesn't flicker between form-level and api-level phases.
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [companySelection, dispatchCompanySelection] = useReducer(companySelectionReducer, undefined, createInitialCompanySelection)
   const [questionnaireDone, setQuestionnaireDone] = useState(false)
   const [questionnaireReward, setQuestionnaireReward] = useState(0)
@@ -491,10 +497,64 @@ export default function SubmitReviewPage() {
       toast.error("公司信息审核通过后才可以发布评价")
       return
     }
-    await new Promise((resolve) => setTimeout(resolve, 400))
-    setSuccess(true)
-    toast.success("方向已点亮，方向值 +20")
-    console.info("mock review submitted", values)
+    setSubmitError(null)
+    setSubmitting(true)
+    try {
+      // Map the form's Chinese-labelled values into the API's
+      // English authorRole enum. relation is the form's
+      // "在职员工 / 离职员工 / ..." choice; the API expects
+      // current_employee / former_employee / etc.
+      const roleMap: Record<string, string> = {
+        在职员工: "current_employee",
+        离职员工: "former_employee",
+        面试者: "interviewee",
+        实习生: "intern",
+        "外包 / 派遣": "contractor",
+      }
+      const result = await submitReviewData({
+        companyId: companySelection.selectedCompany.id,
+        authorRole: roleMap[values.relation] ?? "anonymous",
+        title: values.title,
+        content: values.content,
+        directionScore: values.directionScore,
+        recommendToJoin: values.directionScore >= 7,
+        jobTitle: values.role,
+        city: companySelection.selectedCompany.city,
+        officeExperienceScore: values.overallOfficeExperienceScore,
+        questionnaire: {
+          interviewDifficulty: values.interviewDifficulty,
+          salaryScore: values.salaryScore,
+          growthScore: values.growthScore,
+          workLifeBalanceScore: values.workLifeBalanceScore,
+          managementClarityScore: values.managementClarityScore,
+          collaborationScore: values.collaborationScore,
+          stabilityScore: values.stabilityScore,
+          integrityScore: values.integrityScore,
+          canteenScore: values.canteenScore,
+          officeEnvironmentScore: values.officeEnvironmentScore,
+          restroomScore: values.restroomScore,
+          afternoonTeaScore: values.afternoonTeaScore,
+          workstationComfortScore: values.workstationComfortScore,
+          commuteConvenienceScore: values.commuteConvenienceScore,
+          officeEquipmentScore: values.officeEquipmentScore,
+          companyPace: values.companyPace,
+          managementStyle: values.managementStyle,
+          growthExperience: values.growthExperience,
+          collaborationStyle: values.collaborationStyle,
+          overtimeLevel: values.overtimeLevel,
+          promiseKeeping: values.promiseKeeping,
+        },
+      })
+      if (!result.ok) {
+        setSubmitError(result.error)
+        toast.error(result.error)
+        return
+      }
+      setSuccess(true)
+      toast.success(result.message)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   function selectCompany(company: Company | CompanyListItem) {
@@ -1096,16 +1156,30 @@ export default function SubmitReviewPage() {
                 下一步
               </SolidButton>
             ) : (
-              <SolidButton data-testid="submit-review-button" type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" />
-                    提交中…
-                  </>
-                ) : (
-                  "发布匿名评价"
-                )}
-              </SolidButton>
+              <div className="flex w-full flex-col items-end gap-2">
+                {submitError ? (
+                  <p
+                    role="alert"
+                    className="rounded-xl bg-destructive-bright/10 px-4 py-2 text-sm text-destructive-bright"
+                  >
+                    {submitError}
+                  </p>
+                ) : null}
+                <SolidButton
+                  data-testid="submit-review-button"
+                  type="submit"
+                  disabled={isSubmitting || submitting}
+                >
+                  {isSubmitting || submitting ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" />
+                      提交中…
+                    </>
+                  ) : (
+                    "发布匿名评价"
+                  )}
+                </SolidButton>
+              </div>
             )}
           </CardFooter> : null}
         </Card>

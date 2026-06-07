@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
 
   // Rate limit only actual registration attempts (after validation passes),
   // so typos and format errors don't consume the quota.
-  const rlKey = `register:${getRateLimitKey(request)}`
+  const rlKey = `register:${getRateLimitKey(request, "/api/auth/register")}`
   const rl = checkRateLimit(rlKey, { maxRequests: 3, windowSeconds: 3600 })
   if (!rl.allowed) {
     return NextResponse.json(
