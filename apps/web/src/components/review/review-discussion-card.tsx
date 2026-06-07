@@ -25,7 +25,7 @@ function ActionBar({
   onReply: () => void
 }) {
   return (
-    <div className="mt-0.5 flex items-center gap-0 -ml-2 max-w-[425px] justify-between">
+    <div className="mt-0.5 flex items-center gap-0 -ml-2 max-w-form justify-between">
       {/* Reply — opens composer to write a new reply */}
       <button
         onClick={onReply}

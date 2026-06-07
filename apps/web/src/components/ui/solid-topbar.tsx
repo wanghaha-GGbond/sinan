@@ -33,7 +33,7 @@ export function SolidTopbar({
         className
       )}
     >
-      <div className={cn("mx-auto flex w-full max-w-[920px] items-center justify-between px-4 sm:px-6", heightClass)}>
+      <div className={cn("mx-auto flex w-full max-w-page items-center justify-between px-4 sm:px-6", heightClass)}>
         <div className="min-w-0">
           {leftSlot ? (
             leftSlot

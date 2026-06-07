@@ -16,7 +16,7 @@ export function ErrorState({
   showHome?: boolean
 }) {
   return (
-    <section className="mx-auto flex w-full max-w-[640px] flex-col items-center px-4 py-20 sm:py-24">
+    <section className="mx-auto flex w-full max-w-section flex-col items-center px-4 py-20 sm:py-24">
       <SolidCard variant="subtle" className="w-full p-8 text-center" data-testid="error-state">
         <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-2xl bg-destructive/10">
           <AlertCircle className="size-6 text-destructive" />

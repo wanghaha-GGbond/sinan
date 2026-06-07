@@ -53,7 +53,7 @@ export default function JobsPage() {
   }, [opportunities, industry, city, sort])
 
   return (
-    <section className="mx-auto flex w-full max-w-[960px] flex-col gap-5 px-4 py-6 sm:px-6">
+    <section className="mx-auto flex w-full max-w-page flex-col gap-5 px-4 py-6 sm:px-6">
       <SolidCard variant="risk" className="p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>

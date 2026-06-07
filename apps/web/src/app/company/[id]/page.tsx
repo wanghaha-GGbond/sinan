@@ -59,7 +59,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
     // generic spinner. CLS = 0, the user sees the shape of the
     // page before the data arrives.
     return (
-      <section className="mx-auto flex w-full max-w-[920px] flex-col gap-4 px-4 py-6 sm:px-6">
+      <section className="mx-auto flex w-full max-w-page flex-col gap-4 px-4 py-6 sm:px-6">
         <div className="flex items-center gap-3">
           <div className="size-12 animate-pulse rounded-2xl bg-muted" />
           <div className="flex-1 space-y-2">
@@ -99,7 +99,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
 
   if (company.reviewStatus === "pending_review") {
     return (
-      <section className="mx-auto w-full max-w-[760px] px-4 py-10 sm:px-6">
+      <section className="mx-auto w-full max-w-section px-4 py-10 sm:px-6">
         <SolidCard variant="subtle" className="p-6" data-testid="company-pending-review-page">
           <p className="text-sm font-medium text-muted-foreground">{company.name}</p>
           <h1 className="mt-2 text-2xl font-semibold text-foreground">该公司信息待审核</h1>
@@ -125,7 +125,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
   >[0]["company"]
 
   return (
-    <section className="mx-auto w-full max-w-[920px] px-4 py-4 sm:px-6">
+    <section className="mx-auto w-full max-w-page px-4 py-4 sm:px-6">
       <div
         data-testid="company-sticky-header"
         className="glass-panel sticky top-14 z-40 mb-4 rounded-3xl border border-border/70 px-4 py-3"

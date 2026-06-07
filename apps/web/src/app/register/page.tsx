@@ -104,7 +104,7 @@ export default function RegisterPage() {
 
   return (
     <div className="flex min-h-[80vh] items-center justify-center px-4">
-      <SolidCard variant="elevated" className="w-full max-w-[400px] p-8">
+      <SolidCard variant="elevated" className="w-full max-w-form p-8">
         {/* Brand */}
         <div className="mb-8 flex flex-col items-center gap-3">
           <div className="flex size-14 items-center justify-center rounded-2xl bg-secondary shadow-[0_4px_0_rgba(14,143,95,0.12)]">

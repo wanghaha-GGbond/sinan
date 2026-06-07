@@ -21,7 +21,7 @@ export default function HomePage() {
     quickPrefs.length
 
   return (
-    <section className="mx-auto w-full max-w-[860px] px-4 py-4 sm:px-6" data-testid="home-recommend-feed">
+    <section className="mx-auto w-full max-w-page px-4 py-4 sm:px-6" data-testid="home-recommend-feed">
       <div data-testid="home-brand-hero" className="mb-4 rounded-3xl bg-muted px-4 py-3 shadow-[0_5px_0_rgba(17,24,39,0.03)]">
         <div className="flex items-center justify-between gap-3">
           <div>

@@ -73,7 +73,7 @@ export function KeyboardShortcuts() {
           onClick={() => setOpen(false)}
         >
           <div
-            className="w-full max-w-[420px] rounded-2xl bg-card p-6 shadow-[0_24px_60px_rgba(17,24,39,0.18)]"
+            className="w-full max-w-card rounded-2xl bg-card p-6 shadow-[0_24px_60px_rgba(17,24,39,0.18)]"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center justify-between">

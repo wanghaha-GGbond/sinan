@@ -32,7 +32,7 @@ function IntelNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="mx-auto flex w-full max-w-[920px] gap-2 overflow-x-auto px-4 py-2 sm:px-6" aria-label="职场情报导航">
+    <nav className="mx-auto flex w-full max-w-page gap-2 overflow-x-auto px-4 py-2 sm:px-6" aria-label="职场情报导航">
       {intelLinks.map((item) => {
         const active = pathname.startsWith(item.href)
         return (
@@ -186,7 +186,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {showIntelNav ? <IntelNav /> : null}
       <main>{children}</main>
       <footer className="border-t">
-        <div className="mx-auto flex w-full max-w-[920px] flex-col gap-2 px-4 py-6 text-sm text-muted-foreground sm:px-6 md:flex-row md:items-center md:justify-between">
+        <div className="mx-auto flex w-full max-w-page flex-col gap-2 px-4 py-6 text-sm text-muted-foreground sm:px-6 md:flex-row md:items-center md:justify-between">
           <p>司南:入职前,先看清方向。</p>
           <div className="flex flex-wrap items-center gap-3 text-xs">
             <Link

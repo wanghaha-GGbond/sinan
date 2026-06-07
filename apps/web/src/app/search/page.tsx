@@ -51,7 +51,7 @@ export default function SearchPage() {
   }, [debouncedQuery])
 
   return (
-    <section className="mx-auto flex w-full max-w-[920px] flex-col gap-6 px-4 py-6 sm:px-6">
+    <section className="mx-auto flex w-full max-w-page flex-col gap-6 px-4 py-6 sm:px-6">
       <div>
         <h1 className="text-2xl font-semibold text-foreground">搜索公司</h1>
         <p className="mt-2 text-sm text-muted-foreground">知道公司名时再搜，推荐流仍是主入口。</p>
@@ -77,7 +77,7 @@ export default function SearchPage() {
         />
       ) : null}
       {!loading && results.length > 0 && (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4" style={{ gridTemplateColumns: "var(--container-card-grid)" }}>
           {results.map((company) => (
             <CompanyCard key={company.id} company={company} />
           ))}

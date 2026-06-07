@@ -54,7 +54,7 @@ export default function SalariesPage() {
   }, [allInsights, industry, city, sort])
 
   return (
-    <section className="mx-auto flex w-full max-w-[960px] flex-col gap-5 px-4 py-6 sm:px-6">
+    <section className="mx-auto flex w-full max-w-page flex-col gap-5 px-4 py-6 sm:px-6">
       <SolidCard variant="emerald" className="p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -102,7 +102,7 @@ export default function SalariesPage() {
           }
         />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4" style={{ gridTemplateColumns: "var(--container-card-grid)" }}>
           {filtered.map((item) => (
             <SolidCard key={`${item.companyId}-${item.role}`} variant="subtle" className="p-4">
               <div className="flex items-start justify-between gap-3">

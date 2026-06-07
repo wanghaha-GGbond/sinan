@@ -145,7 +145,7 @@ export default function MePage() {
   if (!authLoading && !authUser) {
     return (
       <section className="mx-auto flex w-full max-w-5xl flex-col items-center px-4 py-20">
-        <SolidCard variant="elevated" className="w-full max-w-[420px] p-10 text-center">
+        <SolidCard variant="elevated" className="w-full max-w-card p-10 text-center">
           <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-2xl bg-muted">
             <Navigation className="size-8 text-muted-foreground" />
           </div>

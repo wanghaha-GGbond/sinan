@@ -6,7 +6,7 @@ import { SolidCard } from "@/components/ui/solid-card"
 
 export default function NotFound() {
   return (
-    <section className="mx-auto flex w-full max-w-[640px] flex-col items-center px-4 py-12 sm:py-20">
+    <section className="mx-auto flex w-full max-w-section flex-col items-center px-4 py-12 sm:py-20">
       <div
         className="mb-6 flex items-baseline gap-2 font-sans text-[7rem] font-bold leading-none text-foreground/15 tabular-nums sm:text-[9rem]"
         aria-hidden="true"

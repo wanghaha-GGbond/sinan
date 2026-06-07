@@ -69,7 +69,7 @@ export default function RankingsPage() {
 
   if (loading) {
     return (
-      <section className="mx-auto flex w-full max-w-[920px] flex-col gap-6 px-4 py-6 sm:px-6">
+      <section className="mx-auto flex w-full max-w-page flex-col gap-6 px-4 py-6 sm:px-6">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">公司发现</h1>
           <p className="mt-2 text-sm text-muted-foreground">从不同角度看看最近被更多过来人关注的公司</p>
@@ -91,7 +91,7 @@ export default function RankingsPage() {
   }
 
   return (
-    <section className="mx-auto flex w-full max-w-[920px] flex-col gap-6 px-4 py-6 sm:px-6">
+    <section className="mx-auto flex w-full max-w-page flex-col gap-6 px-4 py-6 sm:px-6">
       <div>
         <h1 className="text-2xl font-semibold text-foreground">公司发现</h1>
         <p className="mt-2 text-sm text-muted-foreground">从不同角度看看最近被更多过来人关注的公司</p>
