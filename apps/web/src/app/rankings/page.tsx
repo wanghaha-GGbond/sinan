@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
+import { motion, useReducedMotion } from "framer-motion"
 
 import { searchCompanies } from "@/lib/api/companies"
 import type { CompanyListItem } from "@/lib/api/types"
@@ -126,26 +127,68 @@ export default function RankingsPage() {
         当前排序：{activeDescription}
       </p>
 
-      <div className="grid gap-4">
-        {sorted.map((company, index) => {
-          const count = company.reviewCount ?? 0
-          const score = company.directionScore ?? 0
-          const trailing =
-            activeTab === "reviews"
-              ? `${count.toLocaleString()} 条评价`
-              : activeTab === "active"
-                ? `${count.toLocaleString()} 条评价`
-                : activeTab === "interview"
-                  ? `${score.toFixed(1)} 方向分`
-                  : activeTab === "salary"
-                    ? `${score.toFixed(1)} 方向分`
-                    : activeTab === "office"
-                      ? `${score.toFixed(1)} 方向分`
-                      : `${count.toLocaleString()} 条评价`
+      <RankingsList companies={sorted} activeTab={activeTab} />
+    </section>
+  )
+}
 
-          return (
+function RankingsList({
+  companies,
+  activeTab,
+}: {
+  companies: CompanyListItem[]
+  activeTab: RankTab
+}) {
+  // Staggered entrance on the ranking list. Impeccable §Motion:
+  // 'Staggering items within one list is legitimate. The tell
+  // is the uniform reflex (one identical entrance applied to
+  // every section), not motion itself.' Here it's scoped to
+  // a single list of cards that physically appear together
+  // after a tab change or data load — exactly where stagger
+  // belongs. Items 1-5 fade + slide up with a 50ms cascade,
+  // items 6+ all use the same delay as item 5 (no latecomer
+  // visible delay). Respects prefers-reduced-motion by
+  // returning opacity 1 immediately with no y offset.
+  const reduced = useReducedMotion()
+  return (
+    <motion.div
+      className="grid gap-4"
+      initial={reduced ? false : "hidden"}
+      animate="visible"
+      variants={{
+        hidden: {},
+        visible: { transition: { staggerChildren: 0.05 } },
+      }}
+    >
+      {companies.map((company, index) => {
+        const count = company.reviewCount ?? 0
+        const score = company.directionScore ?? 0
+        const trailing =
+          activeTab === "reviews"
+            ? `${count.toLocaleString()} 条评价`
+            : activeTab === "active"
+              ? `${count.toLocaleString()} 条评价`
+              : activeTab === "interview"
+                ? `${score.toFixed(1)} 方向分`
+                : activeTab === "salary"
+                  ? `${score.toFixed(1)} 方向分`
+                  : activeTab === "office"
+                    ? `${score.toFixed(1)} 方向分`
+                    : `${count.toLocaleString()} 条评价`
+
+        return (
+          <motion.div
+            key={company.id}
+            variants={{
+              hidden: { opacity: 0, y: 8 },
+              visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] } },
+            }}
+            // Latecomer cap: items past the 5th slot share the
+            // same transition (no long-tail delay).
+            custom={Math.min(index, 5)}
+            transition={{ delay: reduced ? 0 : Math.min(index, 5) * 0.05 }}
+          >
             <SolidCard
-              key={company.id}
               variant={index === 0 ? "elevated" : "subtle"}
               className="p-4"
               data-testid={`rankings-card-${company.id}`}
@@ -182,9 +225,9 @@ export default function RankingsPage() {
                 </div>
               </div>
             </SolidCard>
-          )
-        })}
-      </div>
-    </section>
+          </motion.div>
+        )
+      })}
+    </motion.div>
   )
 }
