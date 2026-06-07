@@ -55,11 +55,30 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
   ])
 
   if (companyRes.loading || reviewsRes.loading) {
+    // Skeleton that mirrors the final layout's structure, not a
+    // generic spinner. CLS = 0, the user sees the shape of the
+    // page before the data arrives.
     return (
-      <section className="mx-auto flex w-full max-w-[920px] items-center justify-center px-4 py-20 sm:px-6">
-        <div className="flex flex-col items-center gap-3 text-sm text-muted-foreground">
-          <div className="size-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <span>加载中…</span>
+      <section className="mx-auto flex w-full max-w-[920px] flex-col gap-4 px-4 py-6 sm:px-6">
+        <div className="flex items-center gap-3">
+          <div className="size-12 animate-pulse rounded-2xl bg-muted" />
+          <div className="flex-1 space-y-2">
+            <div className="h-5 w-44 animate-pulse rounded-md bg-muted" />
+            <div className="h-3.5 w-72 animate-pulse rounded-md bg-muted" />
+          </div>
+          <div className="size-12 animate-pulse rounded-full bg-muted" />
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-24 animate-pulse rounded-2xl bg-muted" />
+          ))}
+        </div>
+        <div className="h-40 animate-pulse rounded-3xl bg-muted" />
+        <div className="h-64 animate-pulse rounded-3xl bg-muted" />
+        <div className="space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-28 animate-pulse rounded-2xl bg-muted" />
+          ))}
         </div>
       </section>
     )
