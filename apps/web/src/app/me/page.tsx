@@ -533,7 +533,7 @@ function MeContent({
                   <div className="flex items-center gap-3">
                     <div
                       className={`flex size-9 items-center justify-center rounded-xl ${
-                        badge.unlocked ? "bg-primary text-white" : "bg-muted text-muted-foreground"
+                        badge.unlocked ? "bg-primary-hover text-primary-foreground" : "bg-muted text-muted-foreground"
                       }`}
                     >
                       {badge.unlocked ? <Award className="size-4" /> : <Lock className="size-4" />}

@@ -51,7 +51,7 @@ export function CompanyReviewFeed({ companyId, reviews }: { companyId: string; r
             onClick={() => setActiveTab(tab)}
             className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
               activeTab === tab
-                ? "border-primary bg-primary text-white shadow-[0_3px_0_#0E8F5F]"
+                ? "border-primary bg-primary-hover text-primary-foreground shadow-[0_3px_0_var(--primary-deep)]"
                 : "border-border/60 bg-white text-[var(--tw-secondary)] hover:bg-muted"
             }`}
           >

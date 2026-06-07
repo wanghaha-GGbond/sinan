@@ -124,7 +124,7 @@ export function RatingsClient({ id }: { id: string }) {
                   className={cn(
                     "h-9 rounded-full border text-sm font-medium transition-all active:translate-y-[2px]",
                     score === item
-                      ? "border-primary bg-primary text-white shadow-[0_3px_0_#0E8F5F]"
+                      ? "border-primary bg-primary-hover text-primary-foreground shadow-[0_3px_0_var(--primary-deep)]"
                       : "bg-muted text-foreground shadow-[0_3px_0_#D1D5C8] hover:bg-[var(--tw-mute)]"
                   )}
                 >
