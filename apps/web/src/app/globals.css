@@ -166,15 +166,15 @@
   --signal-foreground: oklch(1 0 0);
   --secondary: oklch(1 0 0);
   --secondary-foreground: oklch(0.39 0.08 158);    /* emerald-800 */
-  --muted: oklch(0.97 0.005 95);                    /* warm cream, very low chroma */
-  --muted-hover: oklch(0.94 0.01 130);
-  --muted-foreground: oklch(0.55 0.01 264);        /* gray-500 */
+  --muted: oklch(0.97 0.012 156);                   /* green-tinted cream (brand hue) */
+  --muted-hover: oklch(0.94 0.025 156);
+  --muted-foreground: oklch(0.55 0.012 264);     /* gray-500 with the faintest green undertone */
   --accent: oklch(0.98 0.01 154);
   --accent-foreground: oklch(0.39 0.08 158);
   --destructive: oklch(0.42 0.12 56);
   --destructive-bright: oklch(0.55 0.22 25);      /* red-600 */
-  --border: oklch(0.89 0.01 95);
-  --input: oklch(0.89 0.01 95);
+  --border: oklch(0.89 0.018 156);                /* hairline border, green-tinted */
+  --input: oklch(0.89 0.018 156);
   --ring: oklch(0.74 0.15 156);
 
   /* Twitter-style palette used by components/review/* for the
