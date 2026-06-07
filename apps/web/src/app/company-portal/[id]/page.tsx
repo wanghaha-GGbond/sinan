@@ -37,8 +37,8 @@ import { notFound } from "next/navigation"
 const CLAIMED_COMPANY_IDS = new Set(["northstar-tech", "polaris-auto"])
 
 export default function CompanyPortalDetailPage() {
-  const params = useParams<{ companyId: string }>()
-  const companyId = params?.companyId ?? ""
+  const params = useParams<{ id: string }>()
+  const companyId = params?.id ?? ""
   const company = useMemo(() => companies.find((c) => c.id === companyId), [companyId])
 
   const [corrections, setCorrections] = useState<CompanyCorrectionRequest[]>([])

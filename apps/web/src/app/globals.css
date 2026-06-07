@@ -390,7 +390,6 @@
       page-break-after: avoid;
     }
   }
-}
   /* Impeccable §Typography: prevent 1-word orphan lines on short
      Chinese headings. "我的\n评价", "推荐\n公司", "公司\n不能" all
      break awkwardly without this — balance re-flows the words
