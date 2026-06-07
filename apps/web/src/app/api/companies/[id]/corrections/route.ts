@@ -36,9 +36,9 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ companyId: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const { companyId } = await params
+  const { id: companyId } = await params
 
   let body: Record<string, unknown>
   try {

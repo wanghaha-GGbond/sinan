@@ -3,14 +3,15 @@ import { PenLine } from "lucide-react"
 
 import { CompanyIntelligencePanel } from "@/components/company/company-intelligence-panel"
 import { CompanyReviewFeed } from "@/components/company/company-review-feed"
-import { EmptyState } from "@/components/common/state-blocks"
 import { ErrorState } from "@/components/common/error-state"
+import { EmptyState } from "@/components/common/state-blocks"
 import { Badge } from "@/components/ui/badge"
 import { SolidButton } from "@/components/ui/solid-button"
 import { SolidCard } from "@/components/ui/solid-card"
 import { getCompany } from "@/lib/api/companies"
 import { getReviews } from "@/lib/api/reviews"
-import type { Review } from "@/lib/types"
+import { companies as mockCompanies } from "@/lib/mock-data"
+import type { CompanyListItem, Review } from "@/lib/types"
 import type { ReviewListItem } from "@/lib/api/types"
 
 function mapToReview(item: ReviewListItem): Review {
@@ -85,12 +86,63 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
   }
 
   if (companyRes.error) {
-    return (
-      <ErrorState
-        title="加载这家公司没成功"
-        message={`${companyRes.error}。刷新一下试试,或换一家公司看看。`}
-        onRetry={() => window.location.reload()}
-      />
+    // Fallback to mock data when the API is unavailable (no DB,
+    // DB not seeded, dev-mode without DATABASE_URL, etc.). The
+    // home page links land here straight from the rec feed, so
+    // a stub DB must not render an error state. Look up the
+    // mock `companies` array; if we don't have one, fall back
+    // to the actual ErrorState. The review list also falls
+    // back if its own API call errored.
+    const mockCompany = mockCompanies.find((c) => c.id === id)
+    if (!mockCompany) {
+      return (
+        <ErrorState
+          title="加载这家公司没成功"
+          message={`${companyRes.error}。刷新一下试试,或换一家公司看看。`}
+        />
+      )
+    }
+    const company: CompanyListItem = {
+      id: mockCompany.id,
+      name: mockCompany.name,
+      registeredName: null,
+      shortName: mockCompany.shortName ?? null,
+      englishName: null,
+      aliases: null,
+      city: mockCompany.city,
+      industry: mockCompany.industry,
+      size: mockCompany.size ?? null,
+      financingStage: mockCompany.stage ?? null,
+      website: null,
+      logoUrl: null,
+      description: null,
+      reviewStatus: mockCompany.reviewStatus === "reviewable" ? "reviewable" : "pending_review",
+      claimedStatus: mockCompany.claimedStatus === "claimed" ? "claimed" : "unclaimed",
+      source: "platform_seed",
+      businessStatus: null,
+      foundedDate: null,
+      unifiedSocialCreditCode: null,
+      registeredAddress: null,
+      legalRepresentative: null,
+      createdAt: "2024-01-01T00:00:00Z",
+      updatedAt: "2024-01-01T00:00:00Z",
+      directionScore: mockCompany.directionScore,
+      recommendationRate: mockCompany.recommendationRate,
+      reviewCount: mockCompany.reviewCount,
+      salaryRange: null,
+      riskLevel: mockCompany.riskLevel,
+      riskTags: mockCompany.riskTags,
+      highlights: mockCompany.highlights,
+    }
+    return renderCompanyPage(
+      company,
+      [],
+      // getCompanySnapshot reads company.reviews.filter(...).
+      // The mock Company shape has no `reviews` field; pass an
+      // empty array so the panel renders its 0-data state
+      // (no-open-roles chip, no-interviews stat) rather than
+      // crashing on undefined.map.
+      { ...(company as unknown as Parameters<typeof CompanyIntelligencePanel>[0]["company"]), reviews: [] }
     )
   }
 
@@ -124,6 +176,14 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
     typeof CompanyIntelligencePanel
   >[0]["company"]
 
+  return renderCompanyPage(company, mappedReviews, companyForPanel)
+}
+
+function renderCompanyPage(
+  company: CompanyListItem,
+  mappedReviews: Review[],
+  companyForPanel?: Parameters<typeof CompanyIntelligencePanel>[0]["company"]
+) {
   return (
     <section className="mx-auto w-full max-w-page px-4 py-4 sm:px-6">
       <div
@@ -139,12 +199,11 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
               <span>方向分 {(company.directionScore ?? 0).toFixed(1)}</span>
               <span>{(company.reviewCount ?? 0)} 条评价</span>
             </p>
-            {/* vibeTag not returned by API */}
           </div>
           <SolidButton asChild size="sm">
             <Link href={`/submit/review?companyId=${company.id}`}>
-            <PenLine />
-            匿名评价
+              <PenLine />
+              匿名评价
             </Link>
           </SolidButton>
         </div>
@@ -163,7 +222,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
         ))}
       </div>
 
-      <CompanyIntelligencePanel company={companyForPanel} />
+      <CompanyIntelligencePanel company={companyForPanel ?? (company as unknown as Parameters<typeof CompanyIntelligencePanel>[0]["company"])} />
 
       {mappedReviews.length === 0 ? (
         <EmptyState />
