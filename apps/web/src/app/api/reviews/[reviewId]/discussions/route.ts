@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { and, eq, isNull, inArray, desc, sql } from "drizzle-orm"
+import { and, eq, isNull, inArray, desc, lt, or } from "drizzle-orm"
 import { reviews } from "@/db/schema/reviews"
 import { reviewDiscussions } from "@/db/schema/review-discussions"
 import { toPublicReviewDiscussionView } from "@/lib/server/review-discussion-view"
@@ -7,15 +7,54 @@ import { getAuthUser } from "@/lib/server/auth"
 import { getOrCreateAnonymousProfile } from "@/lib/server/anonymous-profile"
 import { hasSensitive, hasAttackWord } from "@/lib/content-guard"
 
+type DiscussionSortKey = "useful" | "latest"
+
+function encodeDiscussionCursor(
+  sort: DiscussionSortKey,
+  usefulCount: number,
+  createdAt: Date,
+  id: string
+): string {
+  // Same pattern as the reviews cursor: encode the full sort
+  // tuple + tiebreaker so the row-comparison has the data it
+  // needs to land on the next page without skipping or
+  // duplicating rows.
+  const payload = sort === "latest"
+    ? `${createdAt.getTime()}|${id}`
+    : `${usefulCount}|${createdAt.getTime()}|${id}`
+  return Buffer.from(payload, "utf8").toString("base64url")
+}
+
+function decodeDiscussionCursor(
+  sort: DiscussionSortKey,
+  raw: string
+): { usefulCount: number; createdAt: Date; id: string } | null {
+  try {
+    const payload = Buffer.from(raw, "base64url").toString("utf8")
+    if (sort === "latest") {
+      const [ts, id] = payload.split("|")
+      if (!ts || !id || Number.isNaN(Number(ts))) return null
+      return { usefulCount: 0, createdAt: new Date(Number(ts)), id }
+    }
+    const [uc, ts, id] = payload.split("|")
+    if (!uc || !ts || !id || Number.isNaN(Number(uc)) || Number.isNaN(Number(ts))) {
+      return null
+    }
+    return { usefulCount: Number(uc), createdAt: new Date(Number(ts)), id }
+  } catch {
+    return null
+  }
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ reviewId: string }> }
 ) {
   const { reviewId } = await params
   const { searchParams } = new URL(request.url)
-  const sort = searchParams.get("sort") ?? "useful"
+  const sort = (searchParams.get("sort") ?? "useful") as DiscussionSortKey
   const limit = Math.min(Number(searchParams.get("limit") ?? "20"), 50)
-  const cursor = searchParams.get("cursor") ?? undefined
+  const rawCursor = searchParams.get("cursor") ?? null
 
   try {
     const { db } = await import("@/db/client")
@@ -41,14 +80,52 @@ export async function GET(
       isNull(reviewDiscussions.deletedAt),
     ]
 
-    if (cursor) {
-      conditions.push(sql`${reviewDiscussions.id} < ${cursor}`)
+    // Cursor-based pagination: same row-comparison pattern
+    // as the reviews endpoint — encode the full sort tuple
+    // so 'useful' sort with tied counts doesn't skip or
+    // duplicate rows.
+    const decoded = rawCursor ? decodeDiscussionCursor(sort, rawCursor) : null
+    if (decoded) {
+      if (sort === "latest") {
+        conditions.push(
+          or(
+            lt(reviewDiscussions.createdAt, decoded.createdAt),
+            and(
+              eq(reviewDiscussions.createdAt, decoded.createdAt),
+              lt(reviewDiscussions.id, decoded.id)
+            )
+          )!
+        )
+      } else {
+        conditions.push(
+          or(
+            lt(reviewDiscussions.usefulCount, decoded.usefulCount),
+            and(
+              eq(reviewDiscussions.usefulCount, decoded.usefulCount),
+              lt(reviewDiscussions.createdAt, decoded.createdAt)
+            ),
+            and(
+              eq(reviewDiscussions.usefulCount, decoded.usefulCount),
+              eq(reviewDiscussions.createdAt, decoded.createdAt),
+              lt(reviewDiscussions.id, decoded.id)
+            )
+          )!
+        )
+      }
     }
 
+    // Add `id desc` as a final tiebreaker in both sort modes
+    // — the old `useful` order had no tiebreaker, so two
+    // rows with the same usefulCount and createdAt would
+    // page non-deterministically.
     const orderBy =
       sort === "latest"
         ? [desc(reviewDiscussions.createdAt), desc(reviewDiscussions.id)]
-        : [desc(reviewDiscussions.usefulCount), desc(reviewDiscussions.createdAt)]
+        : [
+            desc(reviewDiscussions.usefulCount),
+            desc(reviewDiscussions.createdAt),
+            desc(reviewDiscussions.id),
+          ]
 
     const rows = await db
       .select()
@@ -59,6 +136,7 @@ export async function GET(
 
     const hasMore = rows.length > limit
     const resultRows = hasMore ? rows.slice(0, limit) : rows
+    const last = resultRows[resultRows.length - 1]
 
     // My discussions (if authenticated)
     const authUser = await getAuthUser()
@@ -87,7 +165,7 @@ export async function GET(
             inArray(reviewDiscussions.status, nonPublicStatuses)
           )
         )
-        .orderBy(desc(reviewDiscussions.createdAt))
+        .orderBy(desc(reviewDiscussions.createdAt), desc(reviewDiscussions.id))
         .limit(20)
 
       myDiscussions = myRows
@@ -96,7 +174,10 @@ export async function GET(
     return NextResponse.json({
       publicDiscussions: resultRows.map(toPublicReviewDiscussionView),
       myDiscussions: myDiscussions.map(toPublicReviewDiscussionView),
-      nextCursor: hasMore ? resultRows[resultRows.length - 1].id : null,
+      nextCursor:
+        hasMore && last
+          ? encodeDiscussionCursor(sort, last.usefulCount, last.createdAt, last.id)
+          : null,
     })
   } catch (error) {
     console.error("GET /api/reviews/:reviewId/discussions failed:", error)
