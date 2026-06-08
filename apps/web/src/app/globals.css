@@ -364,7 +364,7 @@
     header,
     nav,
     footer,
-    [data-testid="footer-company-portal"],
+    [data-testid="footer-toc-promise"],
     [data-no-print] {
       display: none !important;
     }

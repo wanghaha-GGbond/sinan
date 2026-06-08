@@ -53,7 +53,13 @@ export type CommunityInsight = {
 }
 
 function payScore(company: Company) {
-  return company.dimensions.find((item) => item.key === "pay")?.score ?? company.directionScore
+  // Defensive: company.dimensions is a Server-only or mock-fallback field.
+  // The public CompanyListItem shape returned by /api/companies/:id
+  // doesn't include `dimensions`, so the panel must degrade gracefully
+  // instead of throwing a TypeError that the app-level error boundary
+  // turns into a generic "读取失败" state.
+  const dim = company.dimensions?.find?.((item) => item.key === "pay")
+  return dim?.score ?? company.directionScore ?? 0
 }
 
 function medianFromRange(range: string) {
@@ -64,7 +70,8 @@ function medianFromRange(range: string) {
   return multiplier ? `${median}k x ${multiplier}` : `${median}k`
 }
 
-function mostCommonRole(reviews: Review[], fallback = "综合岗位") {
+function mostCommonRole(reviews: Review[] | undefined, fallback = "综合岗位") {
+  if (!reviews?.length) return fallback
   const counter = new Map<string, number>()
   reviews.forEach((review) => counter.set(review.jobCategory, (counter.get(review.jobCategory) ?? 0) + 1))
   return Array.from(counter.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || fallback
@@ -167,18 +174,24 @@ export function getCommunityInsights(companies: Company[], discussions: ReviewDi
 }
 
 export function getCompanySnapshot(company: Company) {
-  const interviewReviews = company.reviews.filter((review) => review.relation === "面试者")
-  const salaryReviews = company.reviews.filter((review) => /薪资|调薪|奖金|兑现/.test(review.content + review.shortComment))
-  const openRoles = Array.from(new Set(company.reviews.map((review) => review.jobCategory))).slice(0, 4)
+  // Defensive: company.reviews is only present on the full mock Company.
+  // The public CompanyListItem (from /api/companies/:id) omits it; the
+  // company detail page sometimes passes a partial Company after the
+  // API→mock fallback. Treat missing reviews as an empty list rather
+  // than throwing — the panel will render with 0-data placeholders.
+  const reviews = company.reviews ?? []
+  const interviewReviews = reviews.filter((review) => review.relation === "面试者")
+  const salaryReviews = reviews.filter((review) => /薪资|调薪|奖金|兑现/.test(review.content + review.shortComment))
+  const openRoles = Array.from(new Set(reviews.map((review) => review.jobCategory))).slice(0, 4)
 
   return {
     salaryMedian: medianFromRange(company.salaryRange ?? ""),
     salarySamples: Math.max(12, Math.round(company.reviewCount / 18)),
     interviewCount: Math.max(4, interviewReviews.length + Math.round(company.reviewCount / 80)),
     salarySignalCount: salaryReviews.length,
-    communityCount: company.reviews.reduce((sum, review) => sum + review.commentCount, 0),
+    communityCount: reviews.reduce((sum, review) => sum + review.commentCount, 0),
     openRoles,
-    topRole: mostCommonRole(company.reviews),
+    topRole: mostCommonRole(reviews),
     payScore: payScore(company),
     interviewScore:
       interviewReviews[0]?.questionnaire?.interviewExperienceScore ?? interviewReviews[0]?.score ?? company.directionScore,

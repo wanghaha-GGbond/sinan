@@ -54,15 +54,15 @@ export function CompanyIntelligencePanel({ company }: { company: Company }) {
         <div>
           <div className="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-secondary-foreground">
             <Sparkles className="size-3.5" />
-            职场情报概览
+            过来人告诉你什么
           </div>
-          <h2 className="mt-3 text-xl font-semibold text-foreground">像看公司说明书一样看清这家公司</h2>
+          <h2 className="mt-3 text-xl font-semibold text-foreground">这家公司,真实经历过的人怎么说</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            保留司南的方向分与匿名保护，同时把薪资、面试、机会和风险提示集中到一个可决策面板。
+            方向分保留匿名保护,把薪资、面试、岗位体感、办公体验和同行讨论集中到一个决策面板。
           </p>
         </div>
         <SolidButton asChild variant="primary" size="sm">
-          <Link href="/submit/review">补充情报</Link>
+          <Link href="/submit/review">补一条你的</Link>
         </SolidButton>
       </div>
 

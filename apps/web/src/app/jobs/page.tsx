@@ -59,11 +59,11 @@ export default function JobsPage() {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-destructive">
               <BriefcaseBusiness className="size-3.5" />
-              机会雷达
+              岗位避雷
             </div>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground">先看岗位背后的公司体验</h1>
+            <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground">先看岗位背后的公司,再决定投不投</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              不是职位列表的搬运,而是把岗位、城市、方向分、风险标签和过来人提醒放在一起做决策。
+              不是职位列表的搬运,而是把这家公司有什么岗位、城市分布、过来人的方向分和风险提醒放在一起,让你在投递前先看清。
             </p>
           </div>
           <SolidButton asChild variant="dark">
@@ -92,7 +92,7 @@ export default function JobsPage() {
 
       {filtered.length === 0 ? (
         <SolidEmptyState
-          title="没有匹配的岗位"
+          title="还没有匹配的方向"
           description="换一个城市或行业,或者在搜索里直接看公司。"
           action={
             <SolidButton asChild variant="primary" size="sm">
@@ -129,7 +129,7 @@ export default function JobsPage() {
               <div className="mt-4">
                 <SolidButton asChild variant="primary" size="sm">
                   <Link href={`/company/${item.companyId}`}>
-                    查看公司情报
+                    看这家公司的真实评价
                     <ArrowRight className="size-4" />
                   </Link>
                 </SolidButton>

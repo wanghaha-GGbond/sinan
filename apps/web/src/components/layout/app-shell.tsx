@@ -3,7 +3,6 @@
 import Link from "next/link"
 import {
   BriefcaseBusiness,
-  Building2,
   Compass,
   Gift,
   LogOut,
@@ -23,7 +22,7 @@ import { useAuth } from "@/lib/auth-context"
 const intelLinks = [
   { href: "/salaries", label: "薪资", icon: ReceiptText },
   { href: "/interviews", label: "面试", icon: MessageSquareText },
-  { href: "/jobs", label: "机会", icon: BriefcaseBusiness },
+  { href: "/jobs", label: "岗位", icon: BriefcaseBusiness },
   { href: "/benefits", label: "福利", icon: Gift },
   { href: "/community", label: "社区", icon: UsersRound },
 ]
@@ -189,15 +188,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="mx-auto flex w-full max-w-page flex-col gap-2 px-4 py-6 text-sm text-muted-foreground sm:px-6 md:flex-row md:items-center md:justify-between">
           <p>司南:入职前,先看清方向。</p>
           <div className="flex flex-wrap items-center gap-3 text-xs">
-            <Link
-              href="/company-portal"
-              className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 font-semibold text-foreground transition hover:bg-muted-hover"
-              data-testid="footer-company-portal"
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 font-semibold text-foreground"
+              data-testid="footer-toc-promise"
             >
-              <Building2 className="size-3.5" />
-              <span>我是公司</span>
-              <span>打开控制台</span>
-            </Link>
+              <UsersRound className="size-3.5" />
+              <span>纯打工人社区</span>
+              <span>· 没有公司账号</span>
+            </span>
             <span>匿名保护优先,不向公司开放用户身份。</span>
           </div>
         </div>
