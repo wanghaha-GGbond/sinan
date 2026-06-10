@@ -50,6 +50,20 @@
       "when": 1780676851915,
       "tag": "0006_bitter_chat",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1781103058713,
+      "tag": "0007_tan_fantastic_four",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1781103891846,
+      "tag": "0008_purple_photon",
+      "breakpoints": true
     }
   ]
 }

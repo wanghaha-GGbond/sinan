@@ -30,7 +30,7 @@ export default function RegisterPage() {
   const confirmRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
-    if (user) router.replace("/")
+    if (user) router.replace("/submit/review?mode=add-company&onboarding=1")
   }, [user, router])
 
   if (user) return null
@@ -93,7 +93,7 @@ export default function RegisterPage() {
     if (result.error) {
       setError(result.error)
     } else {
-      router.push("/")
+      router.push("/submit/review?mode=add-company&onboarding=1")
     }
   }
 

@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { PenLine } from "lucide-react"
+import { BadgeCheck, PenLine, ShieldCheck } from "lucide-react"
 
 import { CompanyIntelligencePanel } from "@/components/company/company-intelligence-panel"
 import { CompanyReviewFeed } from "@/components/company/company-review-feed"
@@ -118,6 +118,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
       description: null,
       reviewStatus: mockCompany.reviewStatus === "reviewable" ? "reviewable" : "pending_review",
       claimedStatus: mockCompany.claimedStatus === "claimed" ? "claimed" : "unclaimed",
+      verifiedIdentityCount: mockCompany.verifiedIdentityCount ?? 0,
       source: "platform_seed",
       businessStatus: null,
       foundedDate: null,
@@ -188,7 +189,7 @@ function renderCompanyPage(
     <section className="mx-auto w-full max-w-page px-4 py-4 sm:px-6">
       <div
         data-testid="company-sticky-header"
-        className="glass-panel sticky top-14 z-sticky mb-4 rounded-3xl border border-border/70 px-4 py-3"
+        className="sticky top-14 z-sticky mb-4 border-b border-border bg-background/95 px-1 py-3 backdrop-blur"
       >
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
@@ -209,12 +210,30 @@ function renderCompanyPage(
         </div>
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center gap-2 rounded-2xl bg-muted px-3 py-2 text-xs text-muted-foreground sm:text-sm">
-        <span>方向分 {(company.directionScore ?? 0).toFixed(1)}</span>
-        <span>｜</span>
+      <div className="mb-4 flex flex-wrap items-center gap-2 border-b border-border pb-4 text-xs text-muted-foreground sm:text-sm">
         <span>推荐入职率 {(company.recommendationRate ?? 0)}%</span>
-        <span>｜</span>
-        <span>{(company.reviewCount ?? 0)} 条评价</span>
+        <span
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-muted px-3 font-medium text-foreground"
+          title="完成企业邮箱或任职证明核验的匿名用户人数"
+          data-testid="company-verified-identity-count"
+        >
+          <ShieldCheck className="size-3.5 text-primary" />
+          {(company.verifiedIdentityCount ?? 0).toLocaleString()} 人已认证身份
+        </span>
+        {company.claimedStatus === "claimed" ? (
+          <Badge variant="secondary" className="gap-1">
+            <BadgeCheck className="size-3.5" />
+            企业已认证
+          </Badge>
+        ) : (
+          <Link
+            href={`/company-verification?companyId=${encodeURIComponent(company.id)}&companyName=${encodeURIComponent(company.name)}`}
+            className="inline-flex min-h-11 items-center gap-1.5 font-medium text-primary hover:underline"
+          >
+            <ShieldCheck className="size-3.5" />
+            申请公司认证
+          </Link>
+        )}
         {(company.riskTags ?? []).slice(0, 2).map((tag) => (
           <Badge key={tag} variant="secondary">
             #{tag}

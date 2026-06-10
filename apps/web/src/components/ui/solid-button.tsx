@@ -20,10 +20,10 @@ const solidButtonVariants = cva(
           "bg-risk-surface text-destructive shadow-[0_3px_0_rgba(146,64,14,0.16)] hover:bg-risk-surface-strong active:translate-y-[2px] active:shadow-[0_1px_0_rgba(146,64,14,0.16)]",
       },
       size: {
-        sm: "h-9 px-3",
-        md: "h-10 px-4",
+        sm: "h-11 px-3",
+        md: "h-11 px-4",
         lg: "h-11 px-5",
-        icon: "size-10 rounded-full",
+        icon: "size-11 rounded-full",
       },
     },
     defaultVariants: {
@@ -43,4 +43,3 @@ export function SolidButton({ className, variant, size, asChild = false, ...prop
   const Comp = asChild ? Slot : "button"
   return <Comp className={cn(solidButtonVariants({ variant, size, className }))} {...props} />
 }
-

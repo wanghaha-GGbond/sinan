@@ -3,6 +3,7 @@ import {
   uuid,
   text,
   date,
+  integer,
   timestamp,
   uniqueIndex,
   index,
@@ -40,6 +41,7 @@ export const companies = pgTable(
     source: companySourceEnum("source").default("user_added").notNull(),
     reviewStatus: companyReviewStatusEnum("review_status").default("pending_review").notNull(),
     claimedStatus: companyClaimedStatusEnum("claimed_status").default("unclaimed").notNull(),
+    verifiedIdentityCount: integer("verified_identity_count").default(0).notNull(),
 
     submittedByUserId: uuid("submitted_by_user_id").references(() => users.id),
     submittedByAnonymousProfileId: uuid("submitted_by_anonymous_profile_id").references(

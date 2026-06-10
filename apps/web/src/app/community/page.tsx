@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import Link from "next/link"
 import { ArrowRight, MessageCircleQuestion, UsersRound } from "lucide-react"
+import { useSearchParams } from "next/navigation"
 
 import { FilterBar } from "@/components/common/filter-bar"
 import { SolidButton } from "@/components/ui/solid-button"
@@ -24,6 +25,8 @@ const TYPE_OPTIONS = [
 ] as const
 
 export default function CommunityPage() {
+  const searchParams = useSearchParams()
+  const selectedCompanyId = searchParams.get("companyId") ?? ""
   const [industry, setIndustry] = useState<string>("all")
   const [city, setCity] = useState<string>("all")
   const [type, setType] = useState<"all" | "question" | "supplement">("all")
@@ -42,11 +45,16 @@ export default function CommunityPage() {
     () => Array.from(new Set(companies.map((c) => c.city))).sort(),
     []
   )
+  const selectedCompany = useMemo(
+    () => companies.find((company) => company.id === selectedCompanyId),
+    [selectedCompanyId]
+  )
 
   const filtered = useMemo(() => {
     const companyById = new Map(companies.map((c) => [c.id, c]))
     const matched = allDiscussions.filter((item) => {
       const c = companyById.get(item.companyId)
+      if (selectedCompanyId && item.companyId !== selectedCompanyId) return false
       if (industry !== "all" && c?.industry !== industry) return false
       if (city !== "all" && c?.city !== city) return false
       if (type !== "all" && item.type !== type) return false
@@ -57,7 +65,7 @@ export default function CommunityPage() {
       return a.companyName.localeCompare(b.companyName, "zh")
     })
     return matched
-  }, [allDiscussions, industry, city, type, sort])
+  }, [allDiscussions, selectedCompanyId, industry, city, type, sort])
 
   return (
     <section className="mx-auto flex w-full max-w-page flex-col gap-5 px-4 py-6 sm:px-6">
@@ -79,6 +87,25 @@ export default function CommunityPage() {
         </div>
       </SolidCard>
 
+      {selectedCompany ? (
+        <div className="flex flex-col gap-3 border-y border-border py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-foreground">正在看 {selectedCompany.name} 的讨论</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              共 {filtered.length} 条公开追问与补充
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <SolidButton asChild variant="primary" size="sm">
+              <Link href={`/company/${selectedCompany.id}`}>查看公司</Link>
+            </SolidButton>
+            <SolidButton asChild variant="secondary" size="sm">
+              <Link href="/community">查看全部讨论</Link>
+            </SolidButton>
+          </div>
+        </div>
+      ) : null}
+
       {/* Type filter as inline pill toggle — orthogonal to the 3 standard filters. */}
       <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="讨论类型">
         <span className="text-xs font-semibold text-muted-foreground">类型</span>
@@ -92,7 +119,7 @@ export default function CommunityPage() {
               aria-selected={selected}
               onClick={() => setType(opt.value)}
               data-testid={`community-type-${opt.value}`}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+              className={`min-h-11 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                 selected
                   ? "bg-foreground text-white shadow-[0_3px_0_rgba(17,24,39,0.18)]"
                   : "bg-muted text-foreground hover:bg-muted-hover"
@@ -125,18 +152,29 @@ export default function CommunityPage() {
 
       {filtered.length === 0 ? (
         <SolidEmptyState
-          title="没有匹配的社区讨论"
-          description="换一个行业或城市,或者发起新评价。司南的追问空间依赖你。"
+          title={selectedCompany ? "这家公司还没有公开讨论" : "没有匹配的社区讨论"}
+          description={
+            selectedCompany
+              ? "可以先查看公司评价，再围绕具体经历发起追问。"
+              : "换一个行业或城市,或者发起新评价。司南的追问空间依赖你。"
+          }
           action={
             <SolidButton asChild variant="primary" size="sm">
-              <Link href="/submit/review">发起新评价</Link>
+              <Link href={selectedCompany ? `/company/${selectedCompany.id}` : "/submit/review"}>
+                {selectedCompany ? "查看公司评价" : "发起新评价"}
+              </Link>
             </SolidButton>
           }
         />
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {filtered.map((item) => (
-            <SolidCard key={item.discussionId} variant="subtle" className="p-4">
+            <SolidCard
+              key={item.discussionId}
+              id={`discussion-${item.discussionId}`}
+              variant="subtle"
+              className="scroll-mt-24 p-4"
+            >
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-foreground">{item.companyName}</p>

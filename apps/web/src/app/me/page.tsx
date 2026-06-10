@@ -296,6 +296,8 @@ function MeContent({
   const levelProgress = stats.nextLevelPoints > 0
     ? Math.round((stats.directionPoints / stats.nextLevelPoints) * 100)
     : 0
+  const isNewUser = stats.directionPoints === 0 && stats.helpedCount === 0 && myReviews.length === 0
+  const visibleTasks = isNewUser ? dailyTasks.slice(0, 2) : dailyTasks
 
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6">
@@ -314,7 +316,24 @@ function MeContent({
         </div>
       </div>
 
-      {/* Stats cards */}
+      {isNewUser ? (
+        <section className="flex flex-col gap-4 border-y border-border py-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="max-w-prose-sm">
+            <h2 className="text-xl font-semibold text-foreground">从一条真实经验开始</h2>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              写下你熟悉的公司，或先阅读一篇评价。完成第一次行动后，这里会展示方向值和社区贡献。
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <SolidButton asChild>
+              <Link href="/submit/review">写第一条评价</Link>
+            </SolidButton>
+            <SolidButton asChild variant="secondary">
+              <Link href="/search">先看看公司</Link>
+            </SolidButton>
+          </div>
+        </section>
+      ) : (
       <div className="grid gap-4 md:grid-cols-3">
         <SolidCard variant="default" className="p-5">
           <div className="mb-3 flex items-center gap-2">
@@ -354,12 +373,13 @@ function MeContent({
           <p className="mt-1 text-xs text-muted-foreground">已帮助 {stats.helpedCount} 位后来者</p>
         </SolidCard>
       </div>
+      )}
 
       {/* Daily tasks */}
-      <SolidCard variant="default" className="p-5">
+      <section>
         <h2 className="mb-4 text-base font-semibold text-foreground">今日指路任务</h2>
         <div className="grid gap-3" data-testid="me-daily-tasks">
-          {dailyTasks.map((task) => (
+          {visibleTasks.map((task) => (
             <div
               key={task.id}
               className={`flex items-center justify-between gap-3 rounded-2xl p-4 transition ${
@@ -387,13 +407,16 @@ function MeContent({
             </div>
           ))}
         </div>
-      </SolidCard>
+        {isNewUser && dailyTasks.length > visibleTasks.length ? (
+          <p className="mt-3 text-sm text-muted-foreground">完成第一次行动后，将解锁更多日常任务。</p>
+        ) : null}
+      </section>
 
       {/* My reviews */}
-      <SolidCard variant="default" className="p-5">
+      <section className="border-t border-border pt-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold text-foreground">我的评价</h2>
-          <Link href="/submit/review" className="text-sm font-medium text-primary hover:underline">
+          <Link href="/submit/review" className="inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline">
             写新评价 →
           </Link>
         </div>
@@ -432,15 +455,15 @@ function MeContent({
             ))}
           </div>
         )}
-      </SolidCard>
+      </section>
 
       {/* My favorites — localStorage hybrid (API favoriteCompanies service not yet implemented).
           Distilled: collapsed by default since most visitors come here for the dashboard,
           not to re-scan their saved companies. Tap to expand. */}
-      <SolidCard variant="default" className="p-5">
+      <section className="border-t border-border py-2">
         <button
           type="button"
-          className="flex w-full items-center justify-between text-left"
+          className="flex min-h-11 w-full items-center justify-between text-left"
           onClick={() => setFavoritesOpen((v) => !v)}
           aria-expanded={favoritesOpen}
           aria-controls="me-my-favorites"
@@ -497,13 +520,13 @@ function MeContent({
             )}
           </div>
         ) : null}
-      </SolidCard>
+      </section>
 
       {/* Badges — also distilled (collapsed by default, summary count visible). */}
-      <SolidCard variant="default" className="p-5">
+      <section className="border-t border-border py-2">
         <button
           type="button"
-          className="flex w-full items-center justify-between text-left"
+          className="flex min-h-11 w-full items-center justify-between text-left"
           onClick={() => setBadgesOpen((v) => !v)}
           aria-expanded={badgesOpen}
           aria-controls="me-badges-list"
@@ -558,7 +581,7 @@ function MeContent({
             })}
           </div>
         ) : null}
-      </SolidCard>
+      </section>
     </section>
   )
 }

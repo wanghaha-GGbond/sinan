@@ -2,11 +2,11 @@
 
 import Link from "next/link"
 import {
+  BadgeCheck,
   BriefcaseBusiness,
   Compass,
   Gift,
   LogOut,
-  MessageSquareText,
   PenLine,
   ReceiptText,
   Search,
@@ -21,7 +21,7 @@ import { useAuth } from "@/lib/auth-context"
 
 const intelLinks = [
   { href: "/salaries", label: "薪资", icon: ReceiptText },
-  { href: "/interviews", label: "面试", icon: MessageSquareText },
+  { href: "/company-verification", label: "认证", icon: BadgeCheck },
   { href: "/jobs", label: "岗位", icon: BriefcaseBusiness },
   { href: "/benefits", label: "福利", icon: Gift },
   { href: "/community", label: "社区", icon: UsersRound },
@@ -39,7 +39,7 @@ function IntelNav() {
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
-            className={`inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold transition ${
+            className={`inline-flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-semibold transition ${
               active
                 ? "bg-foreground text-white shadow-[0_4px_0_rgba(17,24,39,0.22)]"
                 : "bg-muted text-foreground hover:bg-muted-hover"
@@ -62,20 +62,21 @@ function HomeHeader() {
       title="司南 推荐"
       variant="home"
       leftSlot={
-        <div className="flex items-center gap-2">
-          <span className="flex size-8 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="hidden size-8 items-center justify-center rounded-full bg-secondary text-secondary-foreground sm:flex">
             <Compass className="size-4" />
           </span>
-          <h1 className="text-base font-semibold text-foreground">司南 推荐</h1>
+          <h1 className="whitespace-nowrap text-base font-semibold text-foreground">司南推荐</h1>
         </div>
       }
       rightSlot={
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {user ? (
             <>
-              <Link href="/me" className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-sm font-medium text-foreground transition hover:bg-muted-hover">
+              <Link href="/me" className="flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-full bg-muted px-3 py-1.5 text-sm font-medium text-foreground transition hover:bg-muted-hover">
                 <User className="size-3.5" />
-                {user.displayName ?? "我"}
+                <span className="hidden sm:inline">{user.displayName ?? "我"}</span>
+                <span className="sm:hidden">我的</span>
               </Link>
               <SolidButton asChild variant="primary" size="sm">
                 <Link href="/submit/review">
@@ -94,7 +95,7 @@ function HomeHeader() {
           ) : (
             <>
               <SolidButton asChild variant="ghost" size="sm">
-                <Link href="/login">登录</Link>
+                <Link href="/login" className="hidden sm:inline-flex">登录</Link>
               </SolidButton>
               <SolidButton asChild variant="secondary" size="sm">
                 <Link href="/me">
@@ -109,9 +110,9 @@ function HomeHeader() {
                 </Link>
               </SolidButton>
               <SolidButton asChild variant="dark" size="sm" data-testid="home-search-link">
-                <Link href="/search">
+                <Link href="/search" aria-label="搜索">
                   <Search data-icon="inline-start" />
-                  搜索
+                  <span className="hidden sm:inline">搜索</span>
                 </Link>
               </SolidButton>
             </>
@@ -128,7 +129,7 @@ function CompanyHeader() {
       title="司南"
       variant="compact"
       leftSlot={
-        <Link href="/" className="text-sm font-semibold text-foreground">
+        <Link href="/" className="inline-flex min-h-11 min-w-11 items-center justify-center text-sm font-semibold text-foreground">
           司南
         </Link>
       }
@@ -194,9 +195,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             >
               <UsersRound className="size-3.5" />
               <span>纯打工人社区</span>
-              <span>· 没有公司账号</span>
+              <span>· 企业认证不触碰匿名身份</span>
             </span>
-            <span>匿名保护优先,不向公司开放用户身份。</span>
+            <span>匿名保护优先，公司只能回应公开内容。</span>
           </div>
         </div>
       </footer>

@@ -7,14 +7,13 @@ import { ReviewCard } from "@/components/review/review-card"
 import { Badge } from "@/components/ui/badge"
 import type { Review } from "@/lib/types"
 
-const tabs = ["全部", "高赞", "最新", "低分", "面试", "薪资"] as const
+const tabs = ["全部", "高赞", "最新", "低分", "薪资"] as const
 type FeedTab = (typeof tabs)[number]
 
 function byTab(reviews: Review[], tab: FeedTab) {
   if (tab === "高赞") return [...reviews].sort((a, b) => b.helpful - a.helpful)
   if (tab === "最新") return [...reviews].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
   if (tab === "低分") return [...reviews].filter((review) => review.score <= 6.5)
-  if (tab === "面试") return [...reviews].filter((review) => review.employmentStatus === "面试者")
   if (tab === "薪资") {
     return [...reviews].filter((review) => /薪资|调薪|奖金|兑现/.test(review.content + review.shortComment))
   }

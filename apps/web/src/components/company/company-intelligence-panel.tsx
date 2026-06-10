@@ -1,8 +1,7 @@
 import Link from "next/link"
-import { BriefcaseBusiness, Gift, MessageSquareText, ReceiptText, Sparkles, UsersRound } from "lucide-react"
+import { BadgeCheck, BriefcaseBusiness, Gift, ReceiptText, Sparkles, UsersRound } from "lucide-react"
 
 import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
 import { TagPill } from "@/components/ui/tag-pill"
 import { getCompanySnapshot } from "@/lib/glassdoor-insights"
 import type { Company } from "@/lib/types"
@@ -19,17 +18,17 @@ export function CompanyIntelligencePanel({ company }: { company: Company }) {
       href: "/salaries",
     },
     {
-      label: "面试",
-      icon: MessageSquareText,
-      value: snapshot.interviewScore.toFixed(1),
-      detail: `${snapshot.interviewCount} 条流程/体验信号`,
-      href: "/interviews",
+      label: "认证",
+      icon: BadgeCheck,
+      value: company.claimedStatus === "claimed" ? "已认证" : "未认证",
+      detail: company.claimedStatus === "claimed" ? "企业主体与负责人已核验" : "可申请维护官方资料",
+      href: `/company-verification?companyId=${encodeURIComponent(company.id)}&companyName=${encodeURIComponent(company.name)}`,
     },
     {
       label: "机会",
       icon: BriefcaseBusiness,
-      value: `${snapshot.openRoles.length} 类岗位`,
-      detail: snapshot.topRole,
+      value: snapshot.openRoles.length > 0 ? `${snapshot.openRoles.length} 类岗位` : "暂无岗位数据",
+      detail: snapshot.openRoles.length > 0 ? snapshot.topRole : "等待更多岗位样本",
       href: "/jobs",
     },
     {
@@ -42,14 +41,14 @@ export function CompanyIntelligencePanel({ company }: { company: Company }) {
     {
       label: "社区",
       icon: UsersRound,
-      value: `${snapshot.communityCount}`,
-      detail: "追问、补充和过来人讨论",
+      value: snapshot.communityCount > 0 ? `${snapshot.communityCount}` : "暂无讨论",
+      detail: snapshot.communityCount > 0 ? "追问、补充和过来人讨论" : "成为第一个发起讨论的人",
       href: "/community",
     },
   ]
 
   return (
-    <SolidCard variant="elevated" className="mb-4 p-5" data-testid="company-intelligence-panel">
+    <section className="mb-6 border-y border-border py-6" data-testid="company-intelligence-panel">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-secondary-foreground">
@@ -58,7 +57,7 @@ export function CompanyIntelligencePanel({ company }: { company: Company }) {
           </div>
           <h2 className="mt-3 text-xl font-semibold text-foreground">这家公司,真实经历过的人怎么说</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            方向分保留匿名保护,把薪资、面试、岗位体感、办公体验和同行讨论集中到一个决策面板。
+            方向分保留匿名保护，把薪资、岗位体感、办公体验、认证状态和同行讨论集中到一个决策面板。
           </p>
         </div>
         <SolidButton asChild variant="primary" size="sm">
@@ -66,18 +65,18 @@ export function CompanyIntelligencePanel({ company }: { company: Company }) {
         </SolidButton>
       </div>
 
-      <div className="mt-5 grid gap-3 md:grid-cols-5">
+      <div className="mt-5 grid gap-px overflow-hidden rounded-2xl border border-border bg-border md:grid-cols-5">
         {cards.map((card) => (
           <Link
             key={card.label}
             href={card.href}
-            className="rounded-[24px] border border-border/70 bg-[var(--tw-mute-soft)] p-4 transition hover:-translate-y-0.5 hover:bg-white"
+            className="min-w-0 bg-card p-4 transition hover:bg-muted"
           >
             <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <card.icon className="size-4 text-primary" />
               {card.label}
             </div>
-            <p className="mt-3 text-2xl font-semibold text-foreground">{card.value}</p>
+            <p className="mt-3 text-xl font-semibold text-foreground">{card.value}</p>
             <p className="mt-1 text-xs text-muted-foreground">{card.detail}</p>
           </Link>
         ))}
@@ -95,6 +94,6 @@ export function CompanyIntelligencePanel({ company }: { company: Company }) {
           </TagPill>
         ))}
       </div>
-    </SolidCard>
+    </section>
   )
 }

@@ -30,6 +30,16 @@ export const companyClaimedStatusEnum = pgEnum("company_claimed_status", [
   "claimed",
 ])
 
+export const companyVerificationStatusEnum = pgEnum(
+  "company_verification_status",
+  ["submitted", "reviewing", "approved", "rejected"]
+)
+
+export const companyVerificationProofTypeEnum = pgEnum(
+  "company_verification_proof_type",
+  ["work_email", "business_document"]
+)
+
 export const companySourceEnum = pgEnum("company_source", [
   "platform_seed",
   "user_added",

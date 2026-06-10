@@ -25,6 +25,7 @@ export type CompanyListItem = {
   description: string | null
   reviewStatus: "pending_review" | "reviewable" | "rejected"
   claimedStatus: "unclaimed" | "claimed"
+  verifiedIdentityCount?: number
   source: "platform_seed" | "user_added" | "platform_verified" | "import"
   businessStatus: string | null
   foundedDate: string | null
@@ -240,6 +241,7 @@ export type CompassBrief = {
 export type Company = {
   id: string
   claimedStatus: "unclaimed" | "claimed"
+  verifiedIdentityCount?: number
   name: string
   registeredName?: string
   shortName: string

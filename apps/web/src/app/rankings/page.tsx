@@ -16,7 +16,6 @@ const tabs = [
   { key: "score", label: "方向分高", description: "按综合方向分排序" },
   { key: "reviews", label: "高赞评价多", description: "按总评价数排序" },
   { key: "active", label: "最近活跃", description: "近 30 天新增评价多" },
-  { key: "interview", label: "面试友好", description: "面试体验分 + 流程透明" },
   { key: "salary", label: "薪资透明", description: "薪资兑现分 + 样本量" },
   { key: "office", label: "办公体验好", description: "办公环境分高" },
 ] as const
@@ -168,9 +167,7 @@ function RankingsList({
             ? `${count.toLocaleString()} 条评价`
             : activeTab === "active"
               ? `${count.toLocaleString()} 条评价`
-              : activeTab === "interview"
-                ? `${score.toFixed(1)} 方向分`
-                : activeTab === "salary"
+              : activeTab === "salary"
                   ? `${score.toFixed(1)} 方向分`
                   : activeTab === "office"
                     ? `${score.toFixed(1)} 方向分`

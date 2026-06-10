@@ -24,6 +24,7 @@ export type PublicCompanyView = {
   description: string | null
   reviewStatus: "pending_review" | "reviewable" | "rejected"
   claimedStatus: "unclaimed" | "claimed"
+  verifiedIdentityCount: number
   source: "platform_seed" | "user_added" | "platform_verified" | "import"
   businessStatus: string | null
   foundedDate: string | null
@@ -58,6 +59,7 @@ export function toPublicCompanyView(
     description: row.description,
     reviewStatus: row.reviewStatus,
     claimedStatus: row.claimedStatus,
+    verifiedIdentityCount: row.verifiedIdentityCount,
     source: row.source,
     businessStatus: row.businessStatus,
     foundedDate: row.foundedDate,

@@ -41,8 +41,23 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // Dev bypass: when no DATABASE_URL, accept a test account for UI preview
+  // Dev bypass: when no DATABASE_URL, accept local-only preview accounts.
   if (!process.env.DATABASE_URL) {
+    const developerEmail = "developer@sinan.app"
+    const isDeveloperAccount =
+      email === developerEmail && password === "sinan-dev-2026"
+
+    if (isDeveloperAccount) {
+      await setAuthCookie({ userId: "dev-admin-001", role: "admin" })
+      return NextResponse.json({
+        user: {
+          id: "dev-admin-001",
+          displayName: "司南开发者",
+          role: "admin",
+        },
+      })
+    }
+
     const testEmail = "test@sinan.app"
     const testPhone = "13800138000"
     const isTestAccount =
@@ -60,7 +75,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: "Database not configured. Dev test account: test@sinan.app / test1234" },
+      { error: "Invalid local development credentials" },
       { status: 503 }
     )
   }

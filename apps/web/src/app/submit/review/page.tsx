@@ -279,6 +279,7 @@ export default function SubmitReviewPage() {
   const progress = Math.round(((step + 1) / steps.length) * 100)
   const openFromQuery = searchParams.get("questionnaire") === "1"
   const addCompanyMode = searchParams.get("mode") === "add-company"
+  const onboardingMode = searchParams.get("onboarding") === "1"
   const addCompanyName = searchParams.get("name") ?? ""
   const preselectCompanyId = searchParams.get("companyId") ?? ""
   const allCompanies = useMemo(() => [...searchResults, ...companySelection.addedCompanies], [searchResults, companySelection.addedCompanies])
@@ -319,7 +320,9 @@ export default function SubmitReviewPage() {
     matchedCompanies.length === 0 &&
     companySelection.selectedCompany === null &&
     companySelection.mode === "searching"
-  const selectedCompanyReviewable = companySelection.selectedCompany?.reviewStatus !== "pending_review" && companySelection.selectedCompany?.reviewStatus !== "rejected"
+  const selectedCompanyReviewable =
+    companySelection.selectedCompany?.reviewStatus === "reviewable" ||
+    Boolean((companySelection.selectedCompany as Company | null)?.createdByUser)
   const canContinueCompanyStep = companySelection.selectedCompany !== null && selectedCompanyReviewable
 
   // ─── Draft auto-save (SOTA form craft) ──────────────────────────
@@ -337,6 +340,7 @@ export default function SubmitReviewPage() {
   // On mount: look for a stored draft and offer to restore
   useEffect(() => {
     if (typeof window === "undefined") return
+    if (onboardingMode) return
     // Defer setState via macrotask to satisfy react-hooks/set-state-in-effect
     const handle = window.setTimeout(() => {
       try {
@@ -355,7 +359,7 @@ export default function SubmitReviewPage() {
     }, 0)
     return () => window.clearTimeout(handle)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [onboardingMode])
 
   // On every form change, debounce a write
   useEffect(() => {
@@ -404,18 +408,7 @@ export default function SubmitReviewPage() {
     } catch {}
     setDraftAvailable(null)
   }
-  const completion = useMemo(() => {
-    const fields = [
-      watched.companyName,
-      watched.relation,
-      watched.role,
-      watched.title,
-      watched.content,
-      watched.directionScore,
-      watched.safetyChecked,
-    ]
-    return Math.round((fields.filter(Boolean).length / fields.length) * 100)
-  }, [watched])
+  const completion = Math.round((step / steps.length) * 100)
 
   useEffect(() => {
     if (addCompanyMode && !addCompanyModeInitializedRef.current) {
@@ -493,7 +486,13 @@ export default function SubmitReviewPage() {
   }
 
   async function onSubmit(values: ReviewForm) {
-    if (!companySelection.selectedCompany || companySelection.selectedCompany.reviewStatus !== "reviewable") {
+    if (
+      !companySelection.selectedCompany ||
+      (
+        companySelection.selectedCompany.reviewStatus !== "reviewable" &&
+        !(companySelection.selectedCompany as Company).createdByUser
+      )
+    ) {
       toast.error("公司信息审核通过后才可以发布评价")
       return
     }
@@ -567,7 +566,7 @@ export default function SubmitReviewPage() {
     dispatchCompanySelection({ type: "START_ADD_COMPANY" })
   }
 
-  function saveCompanyAndContinue() {
+  function saveCompanyAndContinue(continueToReview = false) {
     const newCompanyDraft = companySelection.newCompanyDraft
     const validation = validateCompanySubmission({
       companyName: newCompanyDraft.companyName,
@@ -650,7 +649,13 @@ export default function SubmitReviewPage() {
     dispatchCompanySelection({ type: "SAVE_NEW_COMPANY", company: newCompany })
     setValue("companyId", newCompany.id, { shouldDirty: true, shouldValidate: true })
     setValue("companyName", newCompany.name, { shouldDirty: true, shouldValidate: true })
-    toast.success("已提交公司信息，等待审核")
+    if (continueToReview) {
+      setStep(0)
+      router.replace("/submit/review?onboarding=1", { scroll: false })
+      toast.success("公司信息已保存，继续写下你的真实体验")
+    } else {
+      toast.success("已提交公司信息，等待审核")
+    }
   }
 
   function updateNewCompanyDraft(patch: Partial<NewCompanyDraft>) {
@@ -731,7 +736,9 @@ export default function SubmitReviewPage() {
       <form onSubmit={handleSubmit(onSubmit)} className="flex min-w-0 flex-col gap-5">
         <div>
           <div className="flex items-center justify-between gap-3">
-            <h1 className="text-3xl font-semibold tracking-tight">{addCompanyMode ? "添加未收录公司" : "发布评价"}</h1>
+            <h1 className="text-3xl font-semibold tracking-tight">
+              {addCompanyMode ? (onboardingMode ? "先添加你熟悉的公司" : "添加未收录公司") : "发布评价"}
+            </h1>
             {draftSavedAt ? (
               <span
                 aria-live="polite"
@@ -743,34 +750,25 @@ export default function SubmitReviewPage() {
             ) : null}
           </div>
           <p className="mt-3 max-w-2xl text-muted-foreground">
-            {addCompanyMode ? "提交公司注册信息，审核通过后开放评价。" : "三步完成匿名评价。司南鼓励描述事实、流程和决策信息，不鼓励攻击性表达。"}
+            {addCompanyMode
+              ? onboardingMode
+                ? "这是注册后的第一步。公司已收录时可直接选择；未收录时补充基础信息，然后继续写评价。"
+                : "提交公司注册信息，也可以紧接着写评价，两项内容会分别审核。"
+              : onboardingMode
+                ? "公司信息已经保存。接下来写下真实经历，评价会与公司资料分别审核。"
+                : "三步完成匿名评价。司南鼓励描述事实、流程和决策信息，不鼓励攻击性表达。"}
           </p>
         </div>
 
-        {!addCompanyMode ? <Card className="solid-card-subtle border border-border/60" data-testid="optional-questionnaire">
-          <CardHeader>
-            <CardTitle>补充办公体验问卷</CardTitle>
-            <CardDescription>约 30 秒，可跳过。每次只问一个问题。</CardDescription>
-            <p className="text-xs text-muted-foreground">办公体验，可选</p>
-          </CardHeader>
-          <CardContent className="flex flex-wrap items-center gap-3">
-            <SolidButton asChild size="sm" data-testid="start-questionnaire-button">
-              <a href="/submit/review?questionnaire=1">开始答题</a>
-            </SolidButton>
-            <SolidButton type="button" variant="secondary" size="sm">
-              跳过
-            </SolidButton>
-            {questionnaireDone ? (
-              <p className="flex flex-wrap gap-x-2.5 gap-y-1 text-sm font-medium text-primary-deep">
-                <span>已完成办公体验问卷</span>
-                <span>方向值 +{questionnaireReward}</span>
-              </p>
-            ) : null}
-            <span data-testid="questionnaire-open-flag" className="sr-only">
-              {openFromQuery ? "open" : "closed"}
-            </span>
-          </CardContent>
-        </Card> : null}
+        {!addCompanyMode ? (
+          <div className="flex items-center justify-between gap-3 rounded-xl bg-muted px-4 py-3 text-sm lg:hidden">
+            <div>
+              <p className="font-medium text-foreground">第 {step + 1} 步，共 {steps.length} 步</p>
+              <p className="text-muted-foreground">{steps[step].title}</p>
+            </div>
+            <span className="tabular-nums text-muted-foreground">{completion}%</span>
+          </div>
+        ) : null}
 
         <Card className="solid-card border border-border/60">
           <CardHeader>
@@ -872,7 +870,7 @@ export default function SubmitReviewPage() {
                       <CardHeader>
                         <CardTitle>添加未收录公司</CardTitle>
                         <CardDescription>
-                          请补充公司的基础注册信息，审核通过后即可评价。公司信息用于确认主体，不会创建企业账号。
+                          请补充公司的基础注册信息。提交后可以直接写评价，公司资料与评价会分别审核。
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="grid gap-3 md:grid-cols-2">
@@ -971,12 +969,24 @@ export default function SubmitReviewPage() {
                           </div>
                         ) : null}
                         <p className="md:col-span-2 rounded-2xl bg-muted p-3 text-xs text-muted-foreground">
-                          企业不能通过该流程获得控评能力。审核通过前，该公司不会开放正式评价。
+                          企业不能通过该流程获得控评能力。公司审核通过前，评价会保存为待审核内容，不会公开展示。
                         </p>
                       </CardContent>
                       <CardFooter className="gap-2">
-                        <SolidButton type="button" variant="primary" onClick={saveCompanyAndContinue} data-testid="save-company-and-continue-button">
-                          提交公司信息
+                        <SolidButton
+                          type="button"
+                          variant="primary"
+                          onClick={() => saveCompanyAndContinue(true)}
+                          data-testid="save-company-and-continue-button"
+                        >
+                          保存公司并写评价
+                        </SolidButton>
+                        <SolidButton
+                          type="button"
+                          variant="secondary"
+                          onClick={() => saveCompanyAndContinue(false)}
+                        >
+                          只提交公司
                         </SolidButton>
                         <SolidButton type="button" variant="ghost" onClick={() => dispatchCompanySelection({ type: "CANCEL_ADD_COMPANY" })}>
                           取消
@@ -988,15 +998,19 @@ export default function SubmitReviewPage() {
                     <Card className="md:col-span-2 solid-card-subtle border border-border/60" data-testid="company-pending-review-card">
                       <CardHeader>
                         <CardTitle>公司信息已提交审核</CardTitle>
-                        <CardDescription>审核通过后即可评价</CardDescription>
+                        <CardDescription>公司资料正在等待审核</CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-2 text-sm text-muted-foreground">
                         <p>当前状态：待审核</p>
-                        <p>司南采用社区共建公司库。公司信息通过审核后，求职者和真实经历者可以发布匿名评价。</p>
+                        <p>你可以现在补充匿名评价。评价会单独进入审核，公司资料通过前不会公开展示。</p>
                       </CardContent>
                       <CardFooter className="gap-2">
-                        <SolidButton type="button" variant="primary" onClick={() => router.push("/")}>
-                          返回推荐
+                        <SolidButton
+                          type="button"
+                          variant="primary"
+                          onClick={() => router.replace("/submit/review?onboarding=1", { scroll: false })}
+                        >
+                          继续写评价
                         </SolidButton>
                         <SolidButton type="button" variant="secondary" onClick={() => dispatchCompanySelection({ type: "CLEAR_SELECTION" })}>
                           继续了解其他公司
@@ -1183,18 +1197,41 @@ export default function SubmitReviewPage() {
             )}
           </CardFooter> : null}
         </Card>
+
+        {!addCompanyMode ? <Card className="border border-border/60" data-testid="optional-questionnaire">
+          <CardHeader>
+            <CardTitle>补充办公体验</CardTitle>
+            <CardDescription>完成主要评价后，可再用约 30 秒补充办公体验。</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap items-center gap-3">
+            <SolidButton asChild size="sm" data-testid="start-questionnaire-button">
+              <a href="/submit/review?questionnaire=1">补充问卷</a>
+            </SolidButton>
+            {questionnaireDone ? (
+              <p className="flex flex-wrap gap-x-2.5 gap-y-1 text-sm font-medium text-primary-deep">
+                <span>已完成办公体验问卷</span>
+                <span>方向值 +{questionnaireReward}</span>
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">可选，不影响评价提交</p>
+            )}
+            <span data-testid="questionnaire-open-flag" className="sr-only">
+              {openFromQuery ? "open" : "closed"}
+            </span>
+          </CardContent>
+        </Card> : null}
       </form>
 
       {!openFromQuery && !addCompanyMode ? (
-      <aside className="lg:sticky lg:top-20 lg:self-start">
-        <Card className="glass-panel rounded-[28px]">
+      <aside className="hidden lg:sticky lg:top-20 lg:block lg:self-start">
+        <Card>
           <CardHeader>
             <CardTitle>发布状态</CardTitle>
             <CardDescription>每一步只收集必要信息，避免超长问卷。</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
-            <div className="rounded-xl bg-muted p-4">
-              <p className="text-sm text-muted-foreground">完成度</p>
+            <div className="bg-muted p-4">
+              <p className="text-sm text-muted-foreground">流程进度</p>
               <p className="mt-1 text-3xl font-semibold">{completion}%</p>
             </div>
             <div className="rounded-xl border p-4 text-sm">
@@ -1203,7 +1240,7 @@ export default function SubmitReviewPage() {
                 当前步骤：{steps[step].title}
               </div>
               <p className="mt-2 text-muted-foreground">
-                通过匿名安全检查后，评价会进入本地 mock 成功状态，不写入真实 API。
+                提交后会进入匿名审核，审核期间仅你自己可见。
               </p>
             </div>
           </CardContent>

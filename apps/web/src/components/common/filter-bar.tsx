@@ -23,8 +23,8 @@ export type FilterBarProps<TIndustry extends string, TCity extends string, TSort
 }
 
 /**
- * Shared filter bar for the four intelligence hubs (salaries / interviews
- * / jobs / benefits). Renders three pill selects and a result count.
+ * Shared filter bar for the intelligence hubs (salaries / jobs / benefits).
+ * Renders three pill selects and a result count.
  * Stays uncontrolled on the outside — parent owns the state.
  */
 export function FilterBar<TIndustry extends string, TCity extends string, TSort extends string>({
@@ -108,13 +108,13 @@ function Select({
   testId?: string
 }) {
   return (
-    <label className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-xs text-foreground">
+    <label className="flex min-h-11 items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-xs text-foreground">
       <span className="font-semibold text-muted-foreground">{label}</span>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
         data-testid={testId}
-        className="border-0 bg-transparent pr-1 text-xs font-medium text-foreground outline-none focus:ring-0"
+        className="h-11 border-0 bg-transparent pr-1 text-xs font-medium text-foreground outline-none focus:ring-0"
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>

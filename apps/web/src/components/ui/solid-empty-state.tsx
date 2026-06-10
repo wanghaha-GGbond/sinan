@@ -1,6 +1,5 @@
 import type { ReactNode } from "react"
 
-import { SolidCard } from "@/components/ui/solid-card"
 import { SolidButton } from "@/components/ui/solid-button"
 
 export function SolidEmptyState({
@@ -9,15 +8,17 @@ export function SolidEmptyState({
   ctaLabel,
   onCtaClick,
   action,
+  framed = false,
 }: {
   title?: string
   description?: string
   ctaLabel?: string
   onCtaClick?: () => void
   action?: ReactNode
+  framed?: boolean
 }) {
   return (
-    <SolidCard variant="subtle" className="p-5 text-center">
+    <div className={framed ? "rounded-2xl border border-border/60 bg-card p-5 text-center" : "py-8 text-center"}>
       <h3 className="text-base font-semibold text-foreground">{title}</h3>
       <p className="mt-2 text-sm text-muted-foreground">{description}</p>
       {ctaLabel ? (
@@ -28,6 +29,6 @@ export function SolidEmptyState({
         </div>
       ) : null}
       {action ? <div className="mt-4 flex justify-center">{action}</div> : null}
-    </SolidCard>
+    </div>
   )
 }

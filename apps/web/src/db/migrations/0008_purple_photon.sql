@@ -1,0 +1,1 @@
+ALTER TABLE "companies" ADD COLUMN "verified_identity_count" integer DEFAULT 0 NOT NULL;

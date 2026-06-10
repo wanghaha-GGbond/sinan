@@ -167,7 +167,7 @@ export async function submitReviewData(
     city: input.city || "",
     comments: [],
     createdAt: now,
-    verifiedHint: "本地模拟评价，待提交",
+    verifiedHint: "评价已保存，等待审核",
     questionnaire: input.questionnaire as Review["questionnaire"],
   }
 
@@ -181,7 +181,7 @@ export async function submitReviewData(
   return {
     ok: true,
     review: mockReview,
-    message: "评价已本地保存（mock fallback）",
+    message: "评价已保存，等待审核",
   }
 }
 

@@ -44,7 +44,7 @@ export function EmptyState({
 
 export function ErrorState({
   title = "读取失败",
-  description = "当前 mock query 返回异常，请稍后重试。",
+  description = "暂时无法读取内容，请稍后重试。",
 }: {
   title?: string
   description?: string

@@ -20,7 +20,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "司南 | 入职前，先看清方向",
-  description: "匿名公司方向评分、真实评价、面试体验与薪资区间平台。",
+  description: "匿名公司方向评分、真实评价、薪资区间与企业认证平台。",
 };
 
 export default function RootLayout({
@@ -29,7 +29,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html
+      lang="zh-CN"
+      data-scroll-behavior="smooth"
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+    >
       <body className="min-h-full">
         <QueryProvider>
           <AuthProvider>
