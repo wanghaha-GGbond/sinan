@@ -4,6 +4,7 @@ import {
   text,
   date,
   integer,
+  jsonb,
   timestamp,
   uniqueIndex,
   index,
@@ -37,6 +38,8 @@ export const companies = pgTable(
     website: text("website"),
     logoUrl: text("logo_url"),
     description: text("description"),
+
+    emailDomains: jsonb("email_domains").$type<string[]>(),
 
     source: companySourceEnum("source").default("user_added").notNull(),
     reviewStatus: companyReviewStatusEnum("review_status").default("pending_review").notNull(),

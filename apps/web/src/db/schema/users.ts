@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, integer, timestamp, uniqueIndex, index } from "drizzle-orm/pg-core"
+import { pgTable, uuid, text, integer, jsonb, timestamp, uniqueIndex, index } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 import { userRoleEnum, userStatusEnum } from "./enums"
 
@@ -19,6 +19,12 @@ export const users = pgTable(
 
     trustLevel: integer("trust_level").default(0).notNull(),
     reputationScore: integer("reputation_score").default(0).notNull(),
+
+    jobBand: text("job_band"),
+    yearsOfExperience: integer("years_of_experience"),
+    highlightMoment: text("highlight_moment"),
+    declinedOffer: text("declined_offer"),
+    profileFieldsStatus: jsonb("profile_fields_status").$type<Record<string, "pending" | "approved" | "rejected">>(),
 
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),

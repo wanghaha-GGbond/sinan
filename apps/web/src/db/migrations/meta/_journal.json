@@ -71,6 +71,13 @@
       "when": 1781281132735,
       "tag": "0009_minor_silver_centurion",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1781281804522,
+      "tag": "0010_brainy_whizzer",
+      "breakpoints": true
     }
   ]
 }

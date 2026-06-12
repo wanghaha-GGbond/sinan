@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useMemo, useState } from "react"
+import React, { useMemo, useState } from "react"
 import {
   Building2,
   CheckCircle2,
@@ -43,6 +43,13 @@ export function VerificationForm({
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
   const [submitted, setSubmitted] = useState(false)
+  // L1 verification code step
+  const [pendingVerificationId, setPendingVerificationId] = useState<string | null>(null)
+  const [verificationCode, setVerificationCode] = useState("")
+  const [_codeSent, setCodeSent] = useState(false)
+  const [codeSending, setCodeSending] = useState(false)
+  const [codeConfirming, setCodeConfirming] = useState(false)
+  const [verified, setVerified] = useState(false)
 
   function chooseCompany(value: string) {
     const company = companies.find((item) => item.id === value)
@@ -68,26 +75,68 @@ export function VerificationForm({
       const response = await fetch("/api/company-verifications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          companyId,
-          companyName,
-          applicantName,
-          workEmail,
-          jobTitle,
-          proofType,
-          note,
-        }),
+        body: JSON.stringify({ companyId, companyName, applicantName, workEmail, jobTitle, proofType, note }),
       })
       const result = await response.json()
       if (!response.ok) {
         setError(result.error ?? "认证申请提交失败")
         return
       }
-      setSubmitted(true)
+      if (proofType === "work_email") {
+        // Step 2: send code then enter code
+        setPendingVerificationId(result.verification.id)
+        await sendCode(result.verification.id)
+      } else {
+        setSubmitted(true)
+      }
     } catch {
       setError("网络连接失败，请稍后重试")
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  async function sendCode(verificationId: string) {
+    setCodeSending(true)
+    setError("")
+    try {
+      const res = await fetch(`/api/company-verifications/${verificationId}/send-code`, {
+        method: "POST",
+      })
+      const result = await res.json()
+      if (!res.ok) {
+        setError(result.error ?? "发送验证码失败")
+        return
+      }
+      setCodeSent(true)
+    } catch {
+      setError("网络连接失败，请稍后重试")
+    } finally {
+      setCodeSending(false)
+    }
+  }
+
+  async function confirmCode(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!pendingVerificationId || verificationCode.length !== 6) return
+    setCodeConfirming(true)
+    setError("")
+    try {
+      const res = await fetch(`/api/company-verifications/${pendingVerificationId}/confirm-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: verificationCode }),
+      })
+      const result = await res.json()
+      if (!res.ok) {
+        setError(result.error ?? "验证码不正确")
+        return
+      }
+      setVerified(true)
+    } catch {
+      setError("网络连接失败，请稍后重试")
+    } finally {
+      setCodeConfirming(false)
     }
   }
 
@@ -106,22 +155,94 @@ export function VerificationForm({
     )
   }
 
+  if (verified) {
+    return (
+      <section className="mx-auto w-full max-w-section px-4 py-12 sm:px-6">
+        <div className="border-y border-border py-10 text-center">
+          <CheckCircle2 className="mx-auto size-10 text-primary" />
+          <p className="mt-4 text-sm font-semibold text-primary">认证成功</p>
+          <h1 className="mt-2 text-2xl font-semibold text-foreground">企业邮箱验证通过</h1>
+          <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-muted-foreground">
+            你的身份已通过 L1 验证，身份卡材质即将解锁。如需更高等级认证，可继续提交任职证明。
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <SolidButton asChild variant="primary">
+              <Link href="/me">查看身份</Link>
+            </SolidButton>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  if (pendingVerificationId && !verified) {
+    return (
+      <section className="mx-auto w-full max-w-section px-4 py-12 sm:px-6">
+        <SolidCard variant="elevated" className="p-7">
+          <div className="mb-6 text-center">
+            <MailCheck className="mx-auto size-9 text-primary" />
+            <h1 className="mt-4 text-xl font-semibold text-foreground">请查收验证码</h1>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              验证码已发送至{" "}
+              <span className="font-medium text-foreground">{workEmail}</span>
+              <br />
+              为保护隐私，邮件标题和发件方不含平台信息。
+            </p>
+          </div>
+          <form onSubmit={confirmCode} className="space-y-4">
+            <div>
+              <label htmlFor="verification-code" className="mb-1.5 block text-sm font-medium text-foreground">
+                6 位验证码
+              </label>
+              <Input
+                id="verification-code"
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="000000"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                className="text-center text-xl tracking-[0.5em]"
+                maxLength={6}
+                required
+              />
+            </div>
+            {error ? <p role="alert" className="text-sm font-medium text-destructive">{error}</p> : null}
+            <SolidButton
+              type="submit"
+              variant="primary"
+              size="lg"
+              className="w-full"
+              disabled={codeConfirming || verificationCode.length !== 6}
+            >
+              {codeConfirming ? "验证中..." : "确认验证码"}
+            </SolidButton>
+            <button
+              type="button"
+              onClick={() => sendCode(pendingVerificationId)}
+              disabled={codeSending}
+              className="w-full text-center text-sm text-muted-foreground hover:text-foreground disabled:opacity-50"
+            >
+              {codeSending ? "发送中..." : "没收到？重新发送"}
+            </button>
+          </form>
+        </SolidCard>
+      </section>
+    )
+  }
+
   if (submitted) {
     return (
       <section className="mx-auto w-full max-w-section px-4 py-12 sm:px-6">
         <div className="border-y border-border py-10 text-center">
           <CheckCircle2 className="mx-auto size-10 text-primary" />
           <p className="mt-4 text-sm font-semibold text-primary">申请已提交</p>
-          <h1 className="mt-2 text-2xl font-semibold text-foreground">我们会核验公司身份</h1>
+          <h1 className="mt-2 text-2xl font-semibold text-foreground">任职证明审核中</h1>
           <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-muted-foreground">
-            审核通常需要 1-3 个工作日。认证只确认企业主体与申请人身份，不影响匿名评价的展示与排序。
+            审核通常需要 48 小时。通过后身份等级自动提升，凭证原件审完即删。
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <SolidButton asChild variant="primary">
-              <Link href={companyId ? `/company/${companyId}` : "/"}>返回公司页</Link>
-            </SolidButton>
-            <SolidButton asChild variant="secondary">
-              <Link href="/me">查看我的账号</Link>
+              <Link href="/me">查看认证状态</Link>
             </SolidButton>
           </div>
         </div>

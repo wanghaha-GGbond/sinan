@@ -57,6 +57,14 @@ type FavoriteCompany = {
   createdAt: string
 }
 
+type VerificationSummary = {
+  id: string
+  companyName: string
+  proofType: string
+  status: string
+  createdAt: string
+}
+
 type DashboardResponse = {
   user: DashboardUser | null
   stats: Stats
@@ -64,6 +72,7 @@ type DashboardResponse = {
   badges: Badge[]
   myReviews: MyReview[]
   favoriteCompanies: FavoriteCompany[]
+  verifications: VerificationSummary[]
 }
 
 // ---------------------------------------------------------------------------
@@ -228,6 +237,7 @@ export async function GET() {
     badges: getDefaultBadges(),
     myReviews: [],
     favoriteCompanies: [],
+    verifications: [],
   })
 
   if (!authUser) {
@@ -236,13 +246,15 @@ export async function GET() {
 
   let dbUser: DashboardUser | null = null
   let myReviews: MyReview[] = []
+  let verifications: VerificationSummary[] = []
 
   try {
     const { db } = await import("@/db/client")
     const { users } = await import("@/db/schema/users")
     const { reviews } = await import("@/db/schema/reviews")
     const { companies } = await import("@/db/schema/companies")
-    const { eq } = await import("drizzle-orm")
+    const { companyVerifications } = await import("@/db/schema/company-verifications")
+    const { eq, desc } = await import("drizzle-orm")
 
     // Fetch user profile from DB
     const [row] = await db
@@ -295,10 +307,32 @@ export async function GET() {
       commentCount: r.discussionCount ?? 0,
       createdAt: r.createdAt?.toISOString() ?? "",
     }))
+
+    const verifRows = await db
+      .select({
+        id: companyVerifications.id,
+        companyName: companyVerifications.companyName,
+        proofType: companyVerifications.proofType,
+        status: companyVerifications.status,
+        createdAt: companyVerifications.createdAt,
+      })
+      .from(companyVerifications)
+      .where(eq(companyVerifications.applicantUserId, authUser.userId))
+      .orderBy(desc(companyVerifications.createdAt))
+      .limit(10)
+
+    verifications = verifRows.map((v) => ({
+      id: v.id,
+      companyName: v.companyName,
+      proofType: v.proofType,
+      status: v.status,
+      createdAt: v.createdAt.toISOString(),
+    }))
   } catch {
     // DB unavailable — return safe defaults
     dbUser = null
     myReviews = []
+    verifications = []
   }
 
   return NextResponse.json({
@@ -308,5 +342,6 @@ export async function GET() {
     badges: getDefaultBadges(),
     myReviews,
     favoriteCompanies: [],
+    verifications,
   } satisfies DashboardResponse)
 }

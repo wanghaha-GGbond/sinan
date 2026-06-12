@@ -7,6 +7,7 @@ export async function getMeDashboard(): Promise<ApiResponse<{
   badges: Array<{ id: string; name: string; description: string; unlocked: boolean; progress?: number; target?: number }>;
   myReviews: Array<{ id: string; companyId: string; companyName: string; title: string; score: number; shortComment: string; helpful: number; commentCount: number; createdAt: string }>;
   favoriteCompanies: Array<{ companyId: string; companyName: string; createdAt: string }>;
+  verifications: Array<{ id: string; companyName: string; proofType: string; status: string; createdAt: string }>;
 }>> {
   try {
     const res = await fetch('/api/me', { credentials: 'include' })

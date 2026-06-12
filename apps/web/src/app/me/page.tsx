@@ -1,15 +1,18 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import {
   Award,
+  BadgeCheck,
   Bookmark,
   ChevronRight,
   Flame,
   Lock,
   LogIn,
   Navigation,
+  ShieldAlert,
+  ShieldCheck,
   Star,
 } from "lucide-react"
 
@@ -61,6 +64,14 @@ type FavoriteCompany = {
   createdAt: string
 }
 
+type VerificationSummary = {
+  id: string
+  companyName: string
+  proofType: string
+  status: string
+  createdAt: string
+}
+
 type DashboardData = {
   user: { id: string; displayName: string; role: string; trustLevel: number } | null
   stats: { directionPoints: number; nextLevelPoints: number; streakDays: number; helpedCount: number }
@@ -68,6 +79,7 @@ type DashboardData = {
   badges: Badge[]
   myReviews: MyReview[]
   favoriteCompanies: FavoriteCompany[]
+  verifications: VerificationSummary[]
 }
 
 // Fallback values when API not available yet
@@ -235,6 +247,7 @@ export default function MePage() {
   const badges = dashboard.badges?.length ? dashboard.badges : DEFAULT_BADGES
   const myReviews = dashboard.myReviews ?? []
   const favoriteCompanies = dashboard.favoriteCompanies ?? []
+  const verifications = dashboard.verifications ?? []
 
   const displayName = dashboard.user?.displayName ?? authUser?.displayName ?? "指路人"
   const trustLevel = dashboard.user?.trustLevel ?? authUser?.trustLevel ?? 0
@@ -258,6 +271,7 @@ export default function MePage() {
       favoriteSet={favoriteSet}
       hydrated={hydrated}
       extraFavoriteIds={extraFavoriteIds}
+      verifications={verifications}
     />
   )
 }
@@ -275,6 +289,21 @@ type MeContentProps = {
   favoriteSet: Set<string>
   hydrated: boolean
   extraFavoriteIds?: string[]
+  verifications?: VerificationSummary[]
+}
+
+const VERIFICATION_LABELS: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
+  approved: { label: "已认证", icon: <ShieldCheck className="size-3.5" />, color: "text-primary" },
+  submitted: { label: "待审核", icon: <ShieldAlert className="size-3.5" />, color: "text-muted-foreground" },
+  reviewing: { label: "审核中", icon: <ShieldAlert className="size-3.5" />, color: "text-muted-foreground" },
+  rejected: { label: "已拒绝", icon: <ShieldAlert className="size-3.5" />, color: "text-destructive" },
+  revoked: { label: "已失效", icon: <ShieldAlert className="size-3.5" />, color: "text-destructive" },
+}
+
+const PROOF_LABELS: Record<string, string> = {
+  work_email: "企业邮箱",
+  business_document: "在职证明",
+  salary_proof: "薪资流水",
 }
 
 function MeContent({
@@ -288,6 +317,7 @@ function MeContent({
   favoriteSet,
   hydrated,
   extraFavoriteIds = [],
+  verifications = [],
 }: MeContentProps) {
   const [favoritesOpen, setFavoritesOpen] = useState(false)
   const [badgesOpen, setBadgesOpen] = useState(false)
@@ -374,6 +404,57 @@ function MeContent({
         </SolidCard>
       </div>
       )}
+
+      {/* Verification status */}
+      <section className="border-t border-border pt-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-base font-semibold text-foreground">身份认证</h2>
+          <Link
+            href="/company-verification"
+            className="inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline"
+          >
+            {verifications.length === 0 ? "去认证 →" : "新增认证 →"}
+          </Link>
+        </div>
+        {verifications.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border bg-card p-5 text-center">
+            <BadgeCheck className="mx-auto mb-2 size-8 text-muted-foreground" />
+            <p className="text-sm font-medium text-foreground">尚未认证</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              完成企业邮箱认证，解锁身份卡与邀请名额
+            </p>
+            <SolidButton asChild variant="secondary" size="sm" className="mt-4">
+              <Link href="/company-verification">立即认证</Link>
+            </SolidButton>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {verifications.map((v) => {
+              const meta = VERIFICATION_LABELS[v.status] ?? VERIFICATION_LABELS.submitted
+              return (
+                <div
+                  key={v.id}
+                  className="flex items-center justify-between rounded-2xl border border-border/60 bg-card px-4 py-3"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-foreground">{v.companyName}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {PROOF_LABELS[v.proofType] ?? v.proofType}
+                    </p>
+                  </div>
+                  <span className={`flex shrink-0 items-center gap-1 text-xs font-medium ${meta.color}`}>
+                    {meta.icon}
+                    {meta.label}
+                  </span>
+                </div>
+              )
+            })}
+            {trustLevel === 0 && verifications.every((v) => v.status !== "approved") ? (
+              <p className="text-xs text-muted-foreground">认证审核通过后，身份卡将自动解锁。</p>
+            ) : null}
+          </div>
+        )}
+      </section>
 
       {/* Daily tasks */}
       <section>
