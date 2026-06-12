@@ -64,6 +64,13 @@
       "when": 1781103891846,
       "tag": "0008_purple_photon",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1781281132735,
+      "tag": "0009_minor_silver_centurion",
+      "breakpoints": true
     }
   ]
 }

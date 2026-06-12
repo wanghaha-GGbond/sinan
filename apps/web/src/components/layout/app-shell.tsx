@@ -3,12 +3,9 @@
 import Link from "next/link"
 import {
   BadgeCheck,
-  BriefcaseBusiness,
   Compass,
-  Gift,
   LogOut,
   PenLine,
-  ReceiptText,
   Search,
   User,
   UsersRound,
@@ -20,10 +17,7 @@ import { SolidTopbar } from "@/components/ui/solid-topbar"
 import { useAuth } from "@/lib/auth-context"
 
 const intelLinks = [
-  { href: "/salaries", label: "薪资", icon: ReceiptText },
   { href: "/company-verification", label: "认证", icon: BadgeCheck },
-  { href: "/jobs", label: "岗位", icon: BriefcaseBusiness },
-  { href: "/benefits", label: "福利", icon: Gift },
   { href: "/community", label: "社区", icon: UsersRound },
 ]
 

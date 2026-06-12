@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
+import { sql } from "drizzle-orm"
 
 import { requireAuthUser } from "@/lib/server/auth"
 
@@ -14,7 +15,7 @@ const PUBLIC_EMAIL_DOMAINS = new Set([
 ])
 
 const requestSchema = z.object({
-  companyId: z.string().trim().min(1, "请选择公司").max(120),
+  companyId: z.string().trim().min(1, "请选择公司"),
   companyName: z.string().trim().min(2, "请填写公司名称").max(120),
   applicantName: z.string().trim().min(2, "请填写申请人姓名").max(60),
   workEmail: z.email("请填写有效的企业邮箱").max(160),
@@ -60,16 +61,45 @@ export async function POST(request: Request) {
   }
 
   try {
-    const [{ db }, { companyVerifications }] = await Promise.all([
+    const [{ db }, { companyVerifications }, { companies }] = await Promise.all([
       import("@/db/client"),
       import("@/db/schema/company-verifications"),
+      import("@/db/schema/companies"),
     ])
+
+    // Find or create company by name; fall back to slug lookup
+    let [company] = await db
+      .select({ id: companies.id })
+      .from(companies)
+      .where(sql`LOWER(${companies.name}) = LOWER(${data.companyName})`)
+      .limit(1)
+
+    if (!company) {
+      [company] = await db
+        .select({ id: companies.id })
+        .from(companies)
+        .where(sql`${companies.shortName} = ${data.companyId}`)
+        .limit(1)
+    }
+
+    if (!company) {
+      return NextResponse.json(
+        { error: "公司不存在或需要重新选择" },
+        { status: 400 }
+      )
+    }
+
     const [verification] = await db
       .insert(companyVerifications)
       .values({
-        ...data,
-        note: data.note || null,
+        companyId: company.id,
+        companyName: data.companyName,
         applicantUserId: user.userId,
+        applicantName: data.applicantName,
+        workEmail: data.workEmail,
+        jobTitle: data.jobTitle,
+        proofType: data.proofType,
+        note: data.note || null,
       })
       .returning({
         id: companyVerifications.id,
