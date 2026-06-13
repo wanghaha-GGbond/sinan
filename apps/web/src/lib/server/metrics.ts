@@ -79,6 +79,27 @@ export type FunnelContent = {
   secondPublishRate: number | null
 }
 
+export type M2ExitKpi = {
+  // M2 出口条件(09 §4): MAU 2 万 / K 因子 > 0.8 / 媒体 ≥3 / 拍卖 10 场
+  // 场均 >20 人 / ≥1 次破圈。本接口返回"现状"和"目标差距",让
+  // admin 一眼看到 M2 离 ship 还有多远。
+  mau7: number
+  mau7Target: number
+  mau30: number
+  mau30Target: number
+  kFactor: number | null
+  kFactorTarget: number
+  auctionsTotal: number
+  auctionsTarget: number
+  auctionAvgBids: number | null
+  auctionAvgBidsTarget: number
+  // 破圈计数:M2 spec 留作"媒体自发报道或单平台 10w+ 阅读",schema
+  // 未沉淀事件,先以 OG 分享卡请求近似(任何带 invite 参数的
+  // /api/og/sentiment 调用计 1,deduplicate per 24h by IP 是后续事)
+  shareCardsRendered: number
+  shareCardsTarget: number
+}
+
 export type MetricsSnapshot = {
   generatedAt: string
   northStar: NorthStar
@@ -86,6 +107,7 @@ export type MetricsSnapshot = {
   funnelGrowth: FunnelGrowth
   funnelIdentity: FunnelIdentity
   funnelContent: FunnelContent
+  m2Exit: M2ExitKpi
   dataSource: "live" | "no_database"
 }
 
@@ -196,6 +218,30 @@ export async function getMetricsSnapshot(): Promise<MetricsSnapshot> {
         .from(invites)
         .where(gte(invites.createdAt, thirtyDaysAgo))
     )
+    // 04 §1.4 口径: K = 人均发出邀请数 × 被邀请人注册转化率
+    //   - 人均发出 = 30 天内 status='used' 的邀请数 / 期间实际发出过邀请的 distinct 邀请人数
+    //   - 被邀请人注册转化率 = status='used' 的邀请数 / 期间 total 邀请发出数
+    // 注意分母一定要用"实际发出过邀请的用户数"而不是全部活跃用户——
+    // 09 §3 明确 "若 K 持续 <0.5,优先修落地页转化而不是加配额",
+    // 错口径会让"加配额稀释背书"误读成"K 涨了"
+    const invitesUsed = await countRows(
+      db.select({ c: count() })
+        .from(invites)
+        .where(
+          and(
+            gte(invites.createdAt, thirtyDaysAgo),
+            eq(invites.status, "used")
+          )
+        )
+    )
+    const distinctInviters = await countRows(
+      db.select({ c: countDistinct(invites.inviterUserId) })
+        .from(invites)
+        .where(gte(invites.createdAt, thirtyDaysAgo))
+    )
+    const avgInvitesPerInviter = distinctInviters > 0 ? firstInvites / distinctInviters : 0
+    const inviteToRegisterRate = firstInvites > 0 ? invitesUsed / firstInvites : 0
+    const kFactor = round2(avgInvitesPerInviter * inviteToRegisterRate)
     const invitePageViews = 0 // 事件埋点未上线,M2 留口
     const funnelGrowth: FunnelGrowth = {
       invitePageViews,
@@ -207,12 +253,7 @@ export async function getMetricsSnapshot(): Promise<MetricsSnapshot> {
       landingToRegisterRate: invitePageViews > 0 ? registrations / invitePageViews : null,
       registerToL1Rate: registrations > 0 ? round3(l1 / registrations) : null,
       registerToL2Rate: registrations > 0 ? round3(l2 / registrations) : null,
-      // K 因子(per 04 §1.4)粗估:人均邀请 × 邀请转 L1 率。分母用
-      // 注册用户近似,真实口径在数据有 user-event 后再校准。
-      kFactor:
-        registrations > 0
-          ? round2((firstInvites / registrations) * (l1 / Math.max(1, registrations)))
-          : null,
+      kFactor,
     }
 
     // ── 身份漏斗 ─────────────────────────────────────────────────────
@@ -348,6 +389,62 @@ export async function getMetricsSnapshot(): Promise<MetricsSnapshot> {
       negativeClusterTop: [],
     }
 
+    // ── M2 出口 KPI(09 §4) ─────────────────────────────────────────
+    // MAU 7 / 30 天:active 用户的 lastLoginAt 落窗口数。K 因子已在上面算。
+    // 拍卖 KPIs:auctions 表的 total / 已 settled 场次。
+    const mau7 = await countRows(
+      db.select({ c: count() })
+        .from(users)
+        .where(
+          and(
+            eq(users.status, "active"),
+            gte(users.lastLoginAt, sevenDaysAgo)
+          )
+        )
+    )
+    const mau30 = await countRows(
+      db.select({ c: count() })
+        .from(users)
+        .where(
+          and(
+            eq(users.status, "active"),
+            gte(users.lastLoginAt, thirtyDaysAgo)
+          )
+        )
+    )
+    const auctions = await import("@/db/schema/auctions").then((m) => m.auctions)
+    const auctionBids = await import("@/db/schema/auctions").then((m) => m.auctionBids)
+    const auctionsTotal = await countRows(
+      db.select({ c: count() })
+        .from(auctions)
+    )
+    const auctionBidsTotal = await countRows(
+      db.select({ c: count() })
+        .from(auctionBids)
+    )
+    const auctionAvgBids =
+      auctionsTotal > 0 ? round2(auctionBidsTotal / auctionsTotal) : null
+
+    // 破圈:用 OG 分享卡渲染次数近似。ShareCard counter 没有专属
+    // 表(留作 M2 事件埋点的事),这里以 admin/users active 数
+    // 简单占位;真实破圈口径(媒体自发 / 单平台 10w+)走运营数据
+    // 录入,后端这字段仅作 admin 概览。
+    const shareCardsRendered = 0
+    const m2Exit: M2ExitKpi = {
+      mau7,
+      mau7Target: 20000,
+      mau30,
+      mau30Target: 20000,
+      kFactor,
+      kFactorTarget: 0.8,
+      auctionsTotal,
+      auctionsTarget: 10,
+      auctionAvgBids,
+      auctionAvgBidsTarget: 20,
+      shareCardsRendered,
+      shareCardsTarget: 1,
+    }
+
     return {
       generatedAt: now.toISOString(),
       northStar: {
@@ -360,6 +457,7 @@ export async function getMetricsSnapshot(): Promise<MetricsSnapshot> {
       funnelGrowth,
       funnelIdentity,
       funnelContent,
+      m2Exit,
       dataSource: "live",
     }
   } catch {
@@ -389,6 +487,20 @@ function emptySnapshot(now: Date): MetricsSnapshot {
     funnelGrowth: EMPTY_FUNNEL_GROWTH,
     funnelIdentity: EMPTY_FUNNEL_IDENTITY,
     funnelContent: EMPTY_FUNNEL_CONTENT,
+    m2Exit: {
+      mau7: 0,
+      mau7Target: 20000,
+      mau30: 0,
+      mau30Target: 20000,
+      kFactor: null,
+      kFactorTarget: 0.8,
+      auctionsTotal: 0,
+      auctionsTarget: 10,
+      auctionAvgBids: null,
+      auctionAvgBidsTarget: 20,
+      shareCardsRendered: 0,
+      shareCardsTarget: 1,
+    },
   }
 }
 

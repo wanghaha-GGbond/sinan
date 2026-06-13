@@ -18,6 +18,7 @@ import {
   type FunnelGrowth,
   type FunnelIdentity,
   type Gatekeeper,
+  type M2ExitKpi,
   type MetricsSnapshot,
   type NorthStar,
 } from "@/lib/server/metrics"
@@ -56,6 +57,7 @@ export default async function MetricsDashboardPage() {
       </header>
 
       <NorthStarSection value={snapshot.northStar} dataSource={snapshot.dataSource} />
+      <M2ExitSection value={snapshot.m2Exit} />
       <GatekeeperSection value={snapshot.gatekeeper} />
       <div className="grid gap-5 md:grid-cols-3">
         <FunnelGrowthSection value={snapshot.funnelGrowth} />
@@ -278,5 +280,98 @@ function FunnelCard({
         </ul>
       </div>
     </SolidCard>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// M2 出口(09 §4)
+// ---------------------------------------------------------------------------
+
+function M2ExitSection({ value }: { value: M2ExitKpi }) {
+  return (
+    <SolidCard variant="elevated" className="p-5">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        M2 出口(09 §4)
+      </p>
+      <h2 className="mt-1 text-base font-semibold text-foreground">
+        离 ship M2 还有多远
+      </h2>
+      <p className="mt-1 text-xs text-muted-foreground">
+        4 个硬指标中,代码可量化的是 MAU / K 因子 / 拍卖场次与场均人数 / 分享卡渲染数。媒体报道与破圈走运营数据。
+      </p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <ExitRow
+          label="MAU 7 天"
+          current={value.mau7}
+          target={value.mau7Target}
+          format={(v) => v.toLocaleString()}
+        />
+        <ExitRow
+          label="MAU 30 天"
+          current={value.mau30}
+          target={value.mau30Target}
+          format={(v) => v.toLocaleString()}
+        />
+        <ExitRow
+          label="K 因子"
+          current={value.kFactor ?? 0}
+          target={value.kFactorTarget}
+          format={(v) => v.toFixed(2)}
+          unmet={value.kFactor === null}
+        />
+        <ExitRow
+          label="拍卖总场次"
+          current={value.auctionsTotal}
+          target={value.auctionsTarget}
+          format={(v) => `${v} / ${value.auctionsTarget}`}
+        />
+        <ExitRow
+          label="拍卖场均出价"
+          current={value.auctionAvgBids ?? 0}
+          target={value.auctionAvgBidsTarget}
+          format={(v) => v.toFixed(1)}
+          unmet={value.auctionAvgBids === null}
+        />
+        <ExitRow
+          label="分享卡渲染(破圈代理)"
+          current={value.shareCardsRendered}
+          target={value.shareCardsTarget}
+          format={(v) => `${v} 次(真实破圈走运营录入)`}
+        />
+      </div>
+    </SolidCard>
+  )
+}
+
+function ExitRow({
+  label,
+  current,
+  target,
+  format,
+  unmet,
+}: {
+  label: string
+  current: number
+  target: number
+  format: (v: number) => string
+  unmet?: boolean
+}) {
+  const ratio = target > 0 ? current / target : 0
+  const meets = current >= target
+  const pct = Math.min(100, Math.round(ratio * 100))
+  return (
+    <div
+      className={`rounded-2xl border p-3 ${
+        meets ? "border-primary bg-primary-tint" : "border-border bg-muted"
+      }`}
+    >
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="mt-1 text-2xl font-semibold text-foreground">
+        {unmet ? "—" : format(current)}
+      </p>
+      <p className="mt-1 text-[11px] text-muted-foreground">
+        目标 {format(target)} · {meets ? "✓" : `${pct}%`}
+      </p>
+    </div>
   )
 }
