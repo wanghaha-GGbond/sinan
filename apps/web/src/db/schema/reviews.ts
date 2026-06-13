@@ -14,6 +14,15 @@ import { reviewStatusEnum, reviewAuthorRoleEnum, reviewModerationReasonEnum } fr
 import { companies } from "./companies"
 import { users } from "./users"
 import { anonymousProfiles } from "./anonymous-profiles"
+import { departments } from "./departments"
+
+export type ReviewRatingDimensions = {
+  pay_worth: number
+  growth: number
+  leader: number
+  overtime_truth: number
+  promise_delivery: number
+}
 
 export const reviews = pgTable(
   "reviews",
@@ -23,6 +32,7 @@ export const reviews = pgTable(
     companyId: uuid("company_id")
       .notNull()
       .references(() => companies.id),
+    departmentId: uuid("department_id").references(() => departments.id),
 
     authorUserId: uuid("author_user_id").references(() => users.id),
     anonymousProfileId: uuid("anonymous_profile_id").references(
@@ -46,6 +56,7 @@ export const reviews = pgTable(
     departmentHint: text("department_hint"),
 
     questionnaire: jsonb("questionnaire"),
+    ratingDimensions: jsonb("rating_dimensions").$type<ReviewRatingDimensions>(),
     officeExperienceScore: numeric("office_experience_score", {
       precision: 3,
       scale: 1,
@@ -77,6 +88,11 @@ export const reviews = pgTable(
       .on(table.companyId, table.usefulCount)
       .where(
         sql`${table.status} IN ('visible', 'limited_visible') AND ${table.deletedAt} IS NULL`
+      ),
+    index("reviews_department_visible_idx")
+      .on(table.departmentId, table.status, table.createdAt)
+      .where(
+        sql`${table.departmentId} IS NOT NULL AND ${table.status} IN ('visible', 'limited_visible') AND ${table.deletedAt} IS NULL`
       ),
     index("reviews_author_user_idx")
       .on(table.authorUserId, table.createdAt)

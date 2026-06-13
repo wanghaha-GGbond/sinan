@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, integer, jsonb, timestamp, uniqueIndex, index } from "drizzle-orm/pg-core"
+import { pgTable, uuid, text, integer, jsonb, timestamp, uniqueIndex, index, foreignKey } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 import { userRoleEnum, userStatusEnum } from "./enums"
 
@@ -20,6 +20,8 @@ export const users = pgTable(
     trustLevel: integer("trust_level").default(0).notNull(),
     reputationScore: integer("reputation_score").default(0).notNull(),
 
+    inviterUserId: uuid("inviter_user_id"),
+
     jobBand: text("job_band"),
     yearsOfExperience: integer("years_of_experience"),
     highlightMoment: text("highlight_moment"),
@@ -32,6 +34,11 @@ export const users = pgTable(
     lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
   },
   (table) => [
+    foreignKey({
+      columns: [table.inviterUserId],
+      foreignColumns: [table.id],
+      name: "users_inviter_user_id_users_id_fk",
+    }).onDelete("set null"),
     uniqueIndex("users_email_unique")
       .on(table.email)
       .where(sql`${table.email} IS NOT NULL AND ${table.deletedAt} IS NULL`),

@@ -3,6 +3,9 @@ import { BadgeCheck, PenLine, ShieldCheck } from "lucide-react"
 
 import { CompanyIntelligencePanel } from "@/components/company/company-intelligence-panel"
 import { CompanyReviewFeed } from "@/components/company/company-review-feed"
+import { DepartmentInsights } from "@/components/company/department-insights"
+import { PromiseRecords } from "@/components/company/promise-records"
+import { SentimentTrend } from "@/components/company/sentiment-trend"
 import { ErrorState } from "@/components/common/error-state"
 import { EmptyState } from "@/components/common/state-blocks"
 import { Badge } from "@/components/ui/badge"
@@ -13,6 +16,7 @@ import { getReviews } from "@/lib/api/reviews"
 import { companies as mockCompanies } from "@/lib/mock-data"
 import type { CompanyListItem, Review } from "@/lib/types"
 import type { ReviewListItem } from "@/lib/api/types"
+import { getDepartmentInsights, type DepartmentInsight } from "@/lib/server/department-insights"
 
 function mapToReview(item: ReviewListItem): Review {
   const rawEmployment = item.employmentStatus ?? ""
@@ -50,9 +54,10 @@ function mapToReview(item: ReviewListItem): Review {
 
 export default async function CompanyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const [companyRes, reviewsRes] = await Promise.all([
+  const [companyRes, reviewsRes, departmentInsights] = await Promise.all([
     getCompany(id),
     getReviews({ companyId: id }),
+    getDepartmentInsights(id),
   ])
 
   if (companyRes.loading || reviewsRes.loading) {
@@ -143,7 +148,8 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
       // empty array so the panel renders its 0-data state
       // (no-open-roles chip, no-interviews stat) rather than
       // crashing on undefined.map.
-      { ...(company as unknown as Parameters<typeof CompanyIntelligencePanel>[0]["company"]), reviews: [] }
+      { ...(company as unknown as Parameters<typeof CompanyIntelligencePanel>[0]["company"]), reviews: [] },
+      []
     )
   }
 
@@ -177,13 +183,14 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
     typeof CompanyIntelligencePanel
   >[0]["company"]
 
-  return renderCompanyPage(company, mappedReviews, companyForPanel)
+  return renderCompanyPage(company, mappedReviews, companyForPanel, departmentInsights)
 }
 
 function renderCompanyPage(
   company: CompanyListItem,
   mappedReviews: Review[],
-  companyForPanel?: Parameters<typeof CompanyIntelligencePanel>[0]["company"]
+  companyForPanel?: Parameters<typeof CompanyIntelligencePanel>[0]["company"],
+  departmentInsights: DepartmentInsight[] = []
 ) {
   return (
     <section className="mx-auto w-full max-w-page px-4 py-4 sm:px-6">
@@ -242,6 +249,9 @@ function renderCompanyPage(
       </div>
 
       <CompanyIntelligencePanel company={companyForPanel ?? (company as unknown as Parameters<typeof CompanyIntelligencePanel>[0]["company"])} />
+      <DepartmentInsights insights={departmentInsights} />
+      <PromiseRecords companyId={company.id} />
+      <SentimentTrend companyId={company.id} companyName={company.name} />
 
       {mappedReviews.length === 0 ? (
         <EmptyState />

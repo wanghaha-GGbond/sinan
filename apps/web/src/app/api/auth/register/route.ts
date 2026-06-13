@@ -3,6 +3,7 @@ import { and, eq, isNull, or } from "drizzle-orm"
 import { users } from "@/db/schema/users"
 import { hashPassword, setAuthCookie } from "@/lib/server/auth"
 import { checkRateLimit, getRateLimitKey } from "@/lib/server/rate-limit"
+import { findInvite, consumeInvite } from "@/lib/server/invites"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PHONE_RE = /^1[3-9]\d{9}$/
@@ -18,6 +19,7 @@ export async function POST(request: NextRequest) {
   const email = body.email ? String(body.email).trim().toLowerCase() : undefined
   const phone = body.phone ? String(body.phone).trim() : undefined
   const password = String(body.password ?? "")
+  const inviteCode = body.inviteCode ? String(body.inviteCode).trim().toUpperCase() : undefined
 
   // Must provide email or phone
   if (!email && !phone) {
@@ -59,6 +61,12 @@ export async function POST(request: NextRequest) {
     ? email.split("@")[0]
     : `用户${phone?.slice(-4) ?? ""}`
 
+  const inviteFlag = process.env.INVITE_REQUIRED?.trim().toLowerCase()
+  const inviteRequired = inviteFlag === "1" || inviteFlag === "true"
+  if (inviteRequired && !inviteCode) {
+    return NextResponse.json({ error: "Invite code required" }, { status: 403 })
+  }
+
   // Rate limit only actual registration attempts (after validation passes),
   // so typos and format errors don't consume the quota.
   const rlKey = `register:${getRateLimitKey(request, "/api/auth/register")}`
@@ -83,6 +91,19 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     )
+
+  }
+
+  // Validate invite code if provided (check before DB to avoid partial work)
+  let pendingInvite: Awaited<ReturnType<typeof findInvite>> | null = null
+  if (inviteCode) {
+    pendingInvite = await findInvite(inviteCode)
+    if (!pendingInvite) {
+      return NextResponse.json(
+        { error: "Invalid or already used invite code" },
+        { status: 422 }
+      )
+    }
   }
 
   try {
@@ -110,17 +131,30 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const [user] = await db
-      .insert(users)
-      .values({
-        email,
-        phone,
-        passwordHash,
-        displayName,
-        role: "user",
-        status: "active",
-      })
-      .returning()
+    // Create user + consume invite atomically
+    const user = await db.transaction(async (tx) => {
+      const [newUser] = await tx
+        .insert(users)
+        .values({
+          email,
+          phone,
+          passwordHash,
+          displayName,
+          role: "user",
+          status: "active",
+          inviterUserId: pendingInvite?.inviterUserId ?? null,
+        })
+        .returning()
+
+      if (pendingInvite) {
+        const consumed = await consumeInvite(tx, pendingInvite.id, newUser.id)
+        if (!consumed) {
+          throw new Error("INVITE_ALREADY_CONSUMED")
+        }
+      }
+
+      return newUser
+    })
 
     await setAuthCookie({ userId: user.id, role: user.role })
 
@@ -135,6 +169,12 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     )
   } catch (error) {
+    if (error instanceof Error && error.message === "INVITE_ALREADY_CONSUMED") {
+      return NextResponse.json(
+        { error: "Invalid or already used invite code" },
+        { status: 422 }
+      )
+    }
     // 23505 = unique_violation — concurrent registration raced with our SELECT
     if (
       typeof error === "object" &&

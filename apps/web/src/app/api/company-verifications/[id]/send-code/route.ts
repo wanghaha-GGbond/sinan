@@ -55,11 +55,14 @@ export async function POST(
         { status: 400 }
       )
     }
-    if (verification.status === "approved") {
-      return NextResponse.json({ error: "此申请已通过验证" }, { status: 400 })
-    }
-    if (verification.status === "rejected" || verification.status === "revoked") {
-      return NextResponse.json({ error: "此申请已关闭" }, { status: 400 })
+    if (verification.status !== "submitted") {
+      const error =
+        verification.status === "reviewing"
+          ? "企业邮箱域名与公司记录不匹配，申请正在人工审核"
+          : verification.status === "approved"
+            ? "此申请已通过验证"
+            : "此申请已关闭"
+      return NextResponse.json({ error }, { status: 400 })
     }
 
     // Rate limiting: 1/min per verification, 5/hour per email

@@ -39,6 +39,7 @@ export type RegisterParams = {
   email?: string
   phone?: string
   password: string
+  inviteCode?: string
 }
 
 // ── Context ────────────────────────────────────────────────────────────────

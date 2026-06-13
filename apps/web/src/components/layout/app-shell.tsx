@@ -2,9 +2,9 @@
 
 import Link from "next/link"
 import {
-  BadgeCheck,
   Compass,
   LogOut,
+  MessageSquareText,
   PenLine,
   Search,
   User,
@@ -17,7 +17,12 @@ import { SolidTopbar } from "@/components/ui/solid-topbar"
 import { useAuth } from "@/lib/auth-context"
 
 const intelLinks = [
-  { href: "/company-verification", label: "认证", icon: BadgeCheck },
+  // Plan S0 T0.3 (2026-06-10): salaries / jobs / benefits moved out of
+  // the main nav. The routes are still live (deep-link friendly), but
+  // the surfaces are now reachable through the company page and search
+  // results only. Interviews and community stay because they're the
+  // two dimensions every 打工人 evaluation actually answers to.
+  { href: "/interviews", label: "面试", icon: MessageSquareText },
   { href: "/community", label: "社区", icon: UsersRound },
 ]
 

@@ -10,6 +10,14 @@ type DashboardUser = {
   displayName: string | null
   role: string
   trustLevel: number
+  reputationScore: number
+  jobBand: string | null
+  yearsOfExperience: number | null
+  highlightMoment: string | null
+  declinedOffer: string | null
+  companyName: string | null
+  inviterName: string | null
+  usefulCount?: number
 }
 
 type Stats = {
@@ -65,6 +73,12 @@ type VerificationSummary = {
   createdAt: string
 }
 
+type InviteStats = {
+  total: number
+  used: number
+  unused: Array<{ id: string; code: string; status: string; createdAt: string }>
+}
+
 type DashboardResponse = {
   user: DashboardUser | null
   stats: Stats
@@ -73,6 +87,7 @@ type DashboardResponse = {
   myReviews: MyReview[]
   favoriteCompanies: FavoriteCompany[]
   verifications: VerificationSummary[]
+  invites: InviteStats
 }
 
 // ---------------------------------------------------------------------------
@@ -238,6 +253,7 @@ export async function GET() {
     myReviews: [],
     favoriteCompanies: [],
     verifications: [],
+    invites: { total: 0, used: 0, unused: [] },
   })
 
   if (!authUser) {
@@ -247,6 +263,7 @@ export async function GET() {
   let dbUser: DashboardUser | null = null
   let myReviews: MyReview[] = []
   let verifications: VerificationSummary[] = []
+  let invites: InviteStats = { total: 0, used: 0, unused: [] }
 
   try {
     const { db } = await import("@/db/client")
@@ -254,7 +271,7 @@ export async function GET() {
     const { reviews } = await import("@/db/schema/reviews")
     const { companies } = await import("@/db/schema/companies")
     const { companyVerifications } = await import("@/db/schema/company-verifications")
-    const { eq, desc } = await import("drizzle-orm")
+    const { eq, desc, and } = await import("drizzle-orm")
 
     // Fetch user profile from DB
     const [row] = await db
@@ -263,17 +280,54 @@ export async function GET() {
         displayName: users.displayName,
         role: users.role,
         trustLevel: users.trustLevel,
+        reputationScore: users.reputationScore,
+        jobBand: users.jobBand,
+        yearsOfExperience: users.yearsOfExperience,
+        highlightMoment: users.highlightMoment,
+        declinedOffer: users.declinedOffer,
+        profileFieldsStatus: users.profileFieldsStatus,
+        inviterUserId: users.inviterUserId,
       })
       .from(users)
       .where(eq(users.id, authUser.userId))
       .limit(1)
 
     if (row) {
+      const [approvedCompany] = await db
+        .select({ companyName: companyVerifications.companyName })
+        .from(companyVerifications)
+        .where(
+          and(
+            eq(companyVerifications.applicantUserId, authUser.userId),
+            eq(companyVerifications.status, "approved")
+          )
+        )
+        .orderBy(desc(companyVerifications.reviewedAt))
+        .limit(1)
+      let inviterName: string | null = null
+      if (row.inviterUserId) {
+        const [inviter] = await db
+          .select({ displayName: users.displayName })
+          .from(users)
+          .where(eq(users.id, row.inviterUserId))
+          .limit(1)
+        inviterName = inviter?.displayName ?? null
+      }
+      const fieldStatus = row.profileFieldsStatus ?? {}
       dbUser = {
         id: row.id,
         displayName: row.displayName,
         role: row.role,
         trustLevel: row.trustLevel ?? 0,
+        reputationScore: row.reputationScore ?? 0,
+        jobBand: row.jobBand,
+        yearsOfExperience: row.yearsOfExperience,
+        highlightMoment:
+          fieldStatus.highlightMoment === "approved" ? row.highlightMoment : null,
+        declinedOffer:
+          fieldStatus.declinedOffer === "approved" ? row.declinedOffer : null,
+        companyName: approvedCompany?.companyName ?? null,
+        inviterName,
       }
     }
 
@@ -308,6 +362,10 @@ export async function GET() {
       createdAt: r.createdAt?.toISOString() ?? "",
     }))
 
+    if (dbUser) {
+      dbUser.usefulCount = myReviews.reduce((total, review) => total + review.helpful, 0)
+    }
+
     const verifRows = await db
       .select({
         id: companyVerifications.id,
@@ -328,11 +386,26 @@ export async function GET() {
       status: v.status,
       createdAt: v.createdAt.toISOString(),
     }))
+
+    // Invite stats
+    const { getInviteStats } = await import("@/lib/server/invites")
+    const inviteData = await getInviteStats(authUser.userId)
+    invites = {
+      total: inviteData.total,
+      used: inviteData.used,
+      unused: inviteData.unused.map((row) => ({
+        id: row.id,
+        code: row.code,
+        status: row.status,
+        createdAt: row.createdAt.toISOString(),
+      })),
+    }
   } catch {
     // DB unavailable — return safe defaults
     dbUser = null
     myReviews = []
     verifications = []
+    invites = { total: 0, used: 0, unused: [] }
   }
 
   return NextResponse.json({
@@ -343,5 +416,6 @@ export async function GET() {
     myReviews,
     favoriteCompanies: [],
     verifications,
+    invites,
   } satisfies DashboardResponse)
 }

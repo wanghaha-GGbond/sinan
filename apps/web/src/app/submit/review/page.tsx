@@ -38,10 +38,17 @@ const reviewSchema = z.object({
   companyName: z.string().min(2, "请填写公司名称"),
   relation: z.enum(relations),
   role: z.string().min(2, "请填写岗位"),
+  departmentId: z.string().optional(),
+  departmentHint: z.string().max(60, "部门名称不能超过 60 字").optional(),
   title: z.string().min(6, "标题至少 6 个字"),
   content: z.string().min(30, "评价至少 30 个字，避免过短结论"),
   salaryRange: z.string().optional(),
   directionScore: z.number().min(0).max(10),
+  payWorth: z.number().int().min(1).max(5),
+  growthRating: z.number().int().min(1).max(5),
+  leaderRating: z.number().int().min(1).max(5),
+  overtimeTruth: z.number().int().min(1).max(5),
+  promiseDelivery: z.number().int().min(1).max(5),
   interviewDifficulty: z.number().min(0).max(10),
   salaryScore: z.number().min(1).max(10).optional(),
   growthScore: z.number().min(1).max(10).optional(),
@@ -253,6 +260,7 @@ export default function SubmitReviewPage() {
   const [searchResults, setSearchResults] = useState<CompanyListItem[]>([])
   const [searchLoading, setSearchLoading] = useState(false)
   const [searchError, setSearchError] = useState<string | null>(null)
+  const [departments, setDepartments] = useState<Array<{ id: string; name: string }>>([])
   const {
     control,
     register,
@@ -266,10 +274,17 @@ export default function SubmitReviewPage() {
       companyName: "",
       relation: "离职员工",
       role: "",
+      departmentId: "",
+      departmentHint: "",
       title: "",
       content: "",
       salaryRange: "",
       directionScore: 7,
+      payWorth: 3,
+      growthRating: 3,
+      leaderRating: 3,
+      overtimeTruth: 3,
+      promiseDelivery: 3,
       interviewDifficulty: 5,
       safetyChecked: false,
     },
@@ -282,6 +297,23 @@ export default function SubmitReviewPage() {
   const onboardingMode = searchParams.get("onboarding") === "1"
   const addCompanyName = searchParams.get("name") ?? ""
   const preselectCompanyId = searchParams.get("companyId") ?? ""
+  const selectedCompanyId = companySelection.selectedCompany?.id
+
+  useEffect(() => {
+    if (!selectedCompanyId) return
+    let active = true
+    fetch(`/api/companies/${selectedCompanyId}/departments`)
+      .then((response) => response.json())
+      .then((result: { departments?: Array<{ id: string; name: string }> }) => {
+        if (active) setDepartments(result.departments ?? [])
+      })
+      .catch(() => {
+        if (active) setDepartments([])
+      })
+    return () => {
+      active = false
+    }
+  }, [selectedCompanyId])
   const allCompanies = useMemo(() => [...searchResults, ...companySelection.addedCompanies], [searchResults, companySelection.addedCompanies])
   const normalizedCompanyQuery = companySelection.query.trim().toLowerCase()
   const matchedCompanies = useMemo(() => {
@@ -518,7 +550,16 @@ export default function SubmitReviewPage() {
         directionScore: values.directionScore,
         recommendToJoin: values.directionScore >= 7,
         jobTitle: values.role,
+        departmentId: values.departmentId || undefined,
+        departmentHint: values.departmentId ? undefined : values.departmentHint,
         city: companySelection.selectedCompany.city,
+        ratingDimensions: {
+          pay_worth: values.payWorth,
+          growth: values.growthRating,
+          leader: values.leaderRating,
+          overtime_truth: values.overtimeTruth,
+          promise_delivery: values.promiseDelivery,
+        },
         officeExperienceScore: values.overallOfficeExperienceScore,
         questionnaire: {
           interviewDifficulty: values.interviewDifficulty,
@@ -1058,6 +1099,62 @@ export default function SubmitReviewPage() {
                       />
                     )}
                   />
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="departmentId">部门</Label>
+                      <select
+                        id="departmentId"
+                        {...register("departmentId")}
+                        className="h-11 w-full border border-input bg-card px-3 text-sm outline-none focus-visible:border-ring"
+                      >
+                        <option value="">找不到 / 暂不公开</option>
+                        {departments.map((department) => (
+                          <option key={department.id} value={department.id}>
+                            {department.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="departmentHint">部门申报</Label>
+                      <Input
+                        id="departmentHint"
+                        placeholder="例如：商业化平台"
+                        {...register("departmentHint")}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {([
+                      ["payWorth", "薪酬值得"],
+                      ["growthRating", "成长空间"],
+                      ["leaderRating", "直属领导"],
+                      ["overtimeTruth", "加班真实度"],
+                      ["promiseDelivery", "承诺兑现"],
+                    ] as const).map(([name, label]) => (
+                      <Controller
+                        key={name}
+                        control={control}
+                        name={name}
+                        render={({ field }) => (
+                          <label className="flex flex-col gap-2 text-sm font-medium text-foreground">
+                            {label}
+                            <select
+                              value={field.value}
+                              onChange={(event) => field.onChange(Number(event.target.value))}
+                              className="h-11 border border-input bg-card px-3 text-sm outline-none focus-visible:border-ring"
+                            >
+                              {[1, 2, 3, 4, 5].map((score) => (
+                                <option key={score} value={score}>
+                                  {score} / 5
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                        )}
+                      />
+                    ))}
+                  </div>
                   <Controller
                     control={control}
                     name="interviewDifficulty"

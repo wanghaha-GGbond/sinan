@@ -68,9 +68,12 @@ export async function approveVerification(
   const { companyVerifications } = await import("@/db/schema/company-verifications")
   const { users } = await import("@/db/schema/users")
   const { companies } = await import("@/db/schema/companies")
-  const { eq, sql } = await import("drizzle-orm")
+  const { moderationEvents } = await import("@/db/schema/moderation-events")
+  const { and, eq, inArray, sql } = await import("drizzle-orm")
 
-  return db.transaction(async (tx) => {
+  let applicantUserId: string | undefined
+
+  const txResult = await db.transaction(async (tx) => {
     const [verification] = await tx
       .select({
         id: companyVerifications.id,
@@ -92,8 +95,9 @@ export async function approveVerification(
     }
 
     const granted = grantedTrustLevel(verification.proofType)
+    applicantUserId = verification.applicantUserId
 
-    await tx
+    const [approved] = await tx
       .update(companyVerifications)
       .set({
         status: "approved",
@@ -102,7 +106,26 @@ export async function approveVerification(
         grantedTrustLevel: granted,
         updatedAt: new Date(),
       })
-      .where(eq(companyVerifications.id, verificationId))
+      .where(
+        and(
+          eq(companyVerifications.id, verificationId),
+          inArray(companyVerifications.status, ["submitted", "reviewing"])
+        )
+      )
+      .returning({ id: companyVerifications.id })
+
+    if (!approved) {
+      throw new Error("Verification state changed")
+    }
+
+    await tx.insert(moderationEvents).values({
+      entityType: "company_verification",
+      entityId: verificationId,
+      actorUserId: moderatorUserId,
+      actorRole: "moderator",
+      fromStatus: verification.status,
+      toStatus: "approved",
+    })
 
     await tx
       .update(users)
@@ -122,6 +145,21 @@ export async function approveVerification(
 
     return { grantedTrustLevel: granted }
   })
+
+  // Post-transaction side effects (non-critical — failure must not roll back the approval)
+  if (applicantUserId) {
+    try {
+      const { issueInitialInvites, returnInviteIfEligible, TRUST_LEVEL_TO_EARN_INVITES, RETURN_QUOTA_AT_TRUST } = await import("@/lib/server/invites")
+      const [updated] = await db.select({ trustLevel: users.trustLevel }).from(users).where(eq(users.id, applicantUserId)).limit(1)
+      const tl = updated?.trustLevel ?? 0
+      if (tl >= TRUST_LEVEL_TO_EARN_INVITES) await issueInitialInvites(applicantUserId)
+      if (tl >= RETURN_QUOTA_AT_TRUST) await returnInviteIfEligible(applicantUserId)
+    } catch {
+      // intentionally swallowed
+    }
+  }
+
+  return txResult
 }
 
 /**
@@ -134,18 +172,31 @@ export async function rejectVerification(
 ): Promise<void> {
   const { db } = await import("@/db/client")
   const { companyVerifications } = await import("@/db/schema/company-verifications")
+  const { moderationEvents } = await import("@/db/schema/moderation-events")
   const { eq } = await import("drizzle-orm")
 
-  await db
-    .update(companyVerifications)
-    .set({
-      status: "rejected",
-      reviewedByUserId: moderatorUserId,
-      reviewedAt: new Date(),
-      rejectReason: rejectReason.trim().slice(0, 500) || null,
-      updatedAt: new Date(),
+  await db.transaction(async (tx) => {
+    const [updated] = await tx
+      .update(companyVerifications)
+      .set({
+        status: "rejected",
+        reviewedByUserId: moderatorUserId,
+        reviewedAt: new Date(),
+        rejectReason: rejectReason.trim().slice(0, 500) || null,
+        updatedAt: new Date(),
+      })
+      .where(eq(companyVerifications.id, verificationId))
+      .returning({ id: companyVerifications.id })
+    if (!updated) throw new Error("Verification not found")
+    await tx.insert(moderationEvents).values({
+      entityType: "company_verification",
+      entityId: verificationId,
+      actorUserId: moderatorUserId,
+      actorRole: "moderator",
+      toStatus: "rejected",
+      reason: rejectReason,
     })
-    .where(eq(companyVerifications.id, verificationId))
+  })
 }
 
 /**
@@ -164,6 +215,7 @@ export async function revokeVerification(
   const { companyVerifications } = await import("@/db/schema/company-verifications")
   const { users } = await import("@/db/schema/users")
   const { companies } = await import("@/db/schema/companies")
+  const { moderationEvents } = await import("@/db/schema/moderation-events")
   const { eq, and, max, sql } = await import("drizzle-orm")
 
   await db.transaction(async (tx) => {
@@ -192,6 +244,16 @@ export async function revokeVerification(
         updatedAt: new Date(),
       })
       .where(eq(companyVerifications.id, verificationId))
+
+    await tx.insert(moderationEvents).values({
+      entityType: "company_verification",
+      entityId: verificationId,
+      actorUserId: moderatorUserId,
+      actorRole: "moderator",
+      fromStatus: "approved",
+      toStatus: "revoked",
+      reason: rejectReason,
+    })
 
     await tx
       .update(companies)
@@ -305,27 +367,41 @@ export async function confirmVerificationCode(
   }
 
   // Code matches — consume it + approve verification in one transaction
-  await db.transaction(async (tx) => {
-    await tx
+  const confirmedApplicantId = await db.transaction(async (tx) => {
+    const [consumed] = await tx
       .update(emailVerificationCodes)
       .set({ consumedAt: now })
-      .where(eq(emailVerificationCodes.id, codeRow.id))
+      .where(
+        and(
+          eq(emailVerificationCodes.id, codeRow.id),
+          isNull(emailVerificationCodes.consumedAt)
+        )
+      )
+      .returning({ id: emailVerificationCodes.id })
+    if (!consumed) return null
 
     const [verification] = await tx
       .select({
         applicantUserId: companyVerifications.applicantUserId,
         companyId: companyVerifications.companyId,
         proofType: companyVerifications.proofType,
+        status: companyVerifications.status,
       })
       .from(companyVerifications)
       .where(eq(companyVerifications.id, verificationId))
       .limit(1)
 
-    if (!verification) return
+    if (
+      !verification ||
+      verification.proofType !== "work_email" ||
+      verification.status !== "submitted"
+    ) {
+      throw new Error("Verification is not eligible for code confirmation")
+    }
 
     const granted = grantedTrustLevel(verification.proofType)
 
-    await tx
+    const [approved] = await tx
       .update(companyVerifications)
       .set({
         status: "approved",
@@ -333,7 +409,17 @@ export async function confirmVerificationCode(
         grantedTrustLevel: granted,
         updatedAt: now,
       })
-      .where(eq(companyVerifications.id, verificationId))
+      .where(
+        and(
+          eq(companyVerifications.id, verificationId),
+          eq(companyVerifications.status, "submitted"),
+          eq(companyVerifications.proofType, "work_email")
+        )
+      )
+      .returning({ id: companyVerifications.id })
+    if (!approved) {
+      throw new Error("Verification state changed")
+    }
 
     await tx
       .update(users)
@@ -350,7 +436,24 @@ export async function confirmVerificationCode(
         updatedAt: now,
       })
       .where(eq(companies.id, verification.companyId))
+
+    return verification.applicantUserId
   })
+
+  if (!confirmedApplicantId) return "not_found"
+
+  // Post-transaction invite side effects
+  if (confirmedApplicantId) {
+    try {
+      const { issueInitialInvites, returnInviteIfEligible, TRUST_LEVEL_TO_EARN_INVITES, RETURN_QUOTA_AT_TRUST } = await import("@/lib/server/invites")
+      const [updated] = await db.select({ trustLevel: users.trustLevel }).from(users).where(eq(users.id, confirmedApplicantId)).limit(1)
+      const tl = updated?.trustLevel ?? 0
+      if (tl >= TRUST_LEVEL_TO_EARN_INVITES) await issueInitialInvites(confirmedApplicantId)
+      if (tl >= RETURN_QUOTA_AT_TRUST) await returnInviteIfEligible(confirmedApplicantId)
+    } catch {
+      // intentionally swallowed
+    }
+  }
 
   return "ok"
 }

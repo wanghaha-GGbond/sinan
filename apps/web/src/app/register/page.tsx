@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Compass, Mail, Phone, Shield, Loader2 } from "lucide-react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { Compass, Mail, Phone, Shield, Loader2, Ticket } from "lucide-react"
 
 import { SolidButton } from "@/components/ui/solid-button"
 import { SolidCard } from "@/components/ui/solid-card"
@@ -15,11 +15,16 @@ const PHONE_RE = /^1[3-9]\d{9}$/
 export default function RegisterPage() {
   const { register, user } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [mode, setMode] = useState<"email" | "phone">("email")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [inviteCode, setInviteCode] = useState(
+    () => searchParams.get("invite")?.toUpperCase() ?? ""
+  )
+  const [inviteRequired, setInviteRequired] = useState(false)
   const [touched, setTouched] = useState<{ email?: boolean; phone?: boolean; password?: boolean; confirm?: boolean }>({})
   const [error, setError] = useState("")
   const [submitting, setSubmitting] = useState(false)
@@ -32,6 +37,19 @@ export default function RegisterPage() {
   useEffect(() => {
     if (user) router.replace("/submit/review?mode=add-company&onboarding=1")
   }, [user, router])
+
+  useEffect(() => {
+    let active = true
+    fetch("/api/config/register")
+      .then((response) => response.json())
+      .then((config: { inviteRequired?: boolean }) => {
+        if (active) setInviteRequired(Boolean(config.inviteRequired))
+      })
+      .catch(() => undefined)
+    return () => {
+      active = false
+    }
+  }, [])
 
   if (user) return null
 
@@ -87,6 +105,7 @@ export default function RegisterPage() {
       email: mode === "email" ? email.trim() : undefined,
       phone: mode === "phone" ? phone.trim() : undefined,
       password,
+      inviteCode: inviteCode.trim() || undefined,
     })
     setSubmitting(false)
 
@@ -258,6 +277,29 @@ export default function RegisterPage() {
                 {confirmError}
               </p>
             ) : null}
+          </div>
+
+          {/* Invite code */}
+          <div>
+            <label htmlFor="register-invite" className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-foreground">
+              <Ticket className="size-3.5 text-muted-foreground" />
+              邀请码
+              <span className="text-xs font-normal text-muted-foreground">
+                {inviteRequired ? "（必填）" : "（选填）"}
+              </span>
+            </label>
+            <input
+              id="register-invite"
+              type="text"
+              value={inviteCode}
+              onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+              placeholder="XXXXXXXX"
+              maxLength={8}
+              autoCapitalize="characters"
+              spellCheck={false}
+              required={inviteRequired}
+              className={`${inputBase} ${inputNormal} font-mono tracking-widest`}
+            />
           </div>
 
           {error ? (

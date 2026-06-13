@@ -14,6 +14,9 @@ import {
   ShieldAlert,
   ShieldCheck,
   Star,
+  Ticket,
+  Copy,
+  Check,
 } from "lucide-react"
 
 import { SolidButton } from "@/components/ui/solid-button"
@@ -24,6 +27,7 @@ import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/lib/auth-context"
 import { getFavoritedCompanyIds } from "@/lib/favorites-storage"
 import { getMeDashboard } from "@/lib/api/me"
+import { IdentityCard, type IdentityCardData } from "@/components/identity/identity-card"
 
 // Types matching /api/me response contract
 type DailyTask = {
@@ -72,14 +76,43 @@ type VerificationSummary = {
   createdAt: string
 }
 
+type InviteItem = {
+  id: string
+  code: string
+  status: string
+  createdAt: string
+}
+
+type InviteStats = {
+  total: number
+  used: number
+  unused: InviteItem[]
+}
+
+type DashboardUser = {
+  id: string
+  displayName: string
+  role: string
+  trustLevel: number
+  reputationScore: number
+  jobBand?: string | null
+  yearsOfExperience?: number | null
+  companyName?: string | null
+  highlightMoment?: string | null
+  declinedOffer?: string | null
+  inviterName?: string | null
+  usefulCount?: number
+}
+
 type DashboardData = {
-  user: { id: string; displayName: string; role: string; trustLevel: number } | null
+  user: DashboardUser | null
   stats: { directionPoints: number; nextLevelPoints: number; streakDays: number; helpedCount: number }
   dailyTasks: DailyTask[]
   badges: Badge[]
   myReviews: MyReview[]
   favoriteCompanies: FavoriteCompany[]
   verifications: VerificationSummary[]
+  invites: InviteStats
 }
 
 // Fallback values when API not available yet
@@ -235,6 +268,8 @@ export default function MePage() {
         favoriteCompanies={favoriteCompanies}
         favoriteSet={favoriteSet}
         hydrated={hydrated}
+      invites={{ total: 0, used: 0, unused: [] }}
+      identity={{ displayName, trustLevel }}
       />
     )
   }
@@ -248,6 +283,7 @@ export default function MePage() {
   const myReviews = dashboard.myReviews ?? []
   const favoriteCompanies = dashboard.favoriteCompanies ?? []
   const verifications = dashboard.verifications ?? []
+  const invites = dashboard.invites ?? { total: 0, used: 0, unused: [] }
 
   const displayName = dashboard.user?.displayName ?? authUser?.displayName ?? "指路人"
   const trustLevel = dashboard.user?.trustLevel ?? authUser?.trustLevel ?? 0
@@ -272,6 +308,19 @@ export default function MePage() {
       hydrated={hydrated}
       extraFavoriteIds={extraFavoriteIds}
       verifications={verifications}
+      invites={invites}
+      identity={{
+        displayName,
+        trustLevel,
+        companyName: dashboard.user?.companyName ?? undefined,
+        jobBand: dashboard.user?.jobBand ?? undefined,
+        yearsOfExperience: dashboard.user?.yearsOfExperience ?? undefined,
+        reputationScore: dashboard.user?.reputationScore ?? 0,
+        usefulCount: dashboard.user?.usefulCount ?? 0,
+        highlightMoment: dashboard.user?.highlightMoment ?? undefined,
+        declinedOffer: dashboard.user?.declinedOffer ?? undefined,
+        inviterName: dashboard.user?.inviterName ?? undefined,
+      }}
     />
   )
 }
@@ -290,6 +339,8 @@ type MeContentProps = {
   hydrated: boolean
   extraFavoriteIds?: string[]
   verifications?: VerificationSummary[]
+  invites?: InviteStats
+  identity: IdentityCardData
 }
 
 const VERIFICATION_LABELS: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
@@ -318,9 +369,21 @@ function MeContent({
   hydrated,
   extraFavoriteIds = [],
   verifications = [],
+  invites = { total: 0, used: 0, unused: [] },
+  identity,
 }: MeContentProps) {
   const [favoritesOpen, setFavoritesOpen] = useState(false)
   const [badgesOpen, setBadgesOpen] = useState(false)
+  const [copiedCode, setCopiedCode] = useState<string | null>(null)
+  const [cardData, setCardData] = useState(identity)
+
+  function copyCode(code: string) {
+    const link = `${typeof window !== "undefined" ? window.location.origin : ""}/invite/${code}`
+    navigator.clipboard.writeText(link).then(() => {
+      setCopiedCode(code)
+      setTimeout(() => setCopiedCode(null), 2000)
+    })
+  }
 
   const levelGap = stats.nextLevelPoints - stats.directionPoints
   const levelProgress = stats.nextLevelPoints > 0
@@ -337,7 +400,7 @@ function MeContent({
           <h1 className="text-2xl font-semibold text-foreground">我的</h1>
           <p className="mt-1 flex flex-wrap gap-x-2.5 gap-y-1 text-sm text-muted-foreground">
             <span>{displayName}</span>
-            <span>指路等级 L{trustLevel}</span>
+            <span>{trustLevel > 0 ? "身份已核验" : "身份待核验"}</span>
           </p>
         </div>
         <div className="flex items-center gap-1 rounded-full bg-muted px-4 py-2 text-sm font-medium text-muted-foreground">
@@ -345,6 +408,15 @@ function MeContent({
           <ChevronRight className="size-3.5" />
         </div>
       </div>
+
+      <div className="flex justify-center border-y border-border py-6 sm:justify-start">
+        <IdentityCard data={cardData} />
+      </div>
+
+      <ProfileEditor
+        initial={cardData}
+        onSaved={(next) => setCardData((current) => ({ ...current, ...next }))}
+      />
 
       {isNewUser ? (
         <section className="flex flex-col gap-4 border-y border-border py-6 sm:flex-row sm:items-center sm:justify-between">
@@ -375,7 +447,7 @@ function MeContent({
           <p className="text-3xl font-semibold text-foreground" data-testid="me-direction-points">
             {stats.directionPoints}
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">距离 L{trustLevel + 1} 还差 {levelGap}</p>
+          <p className="mt-1 text-xs text-muted-foreground">距离下一阶段还差 {levelGap}</p>
           <Progress value={levelProgress} className="mt-3 h-1.5" />
         </SolidCard>
 
@@ -455,6 +527,72 @@ function MeContent({
           </div>
         )}
       </section>
+
+      {/* Invites */}
+      {trustLevel >= 1 && (
+        <section className="border-t border-border pt-6">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-base font-semibold text-foreground">邀请名额</h2>
+            <span className="text-xs text-muted-foreground">
+              已用 {invites.used} / 共 {invites.total}
+            </span>
+          </div>
+          {invites.unused.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border bg-card p-5 text-center">
+              <Ticket className="mx-auto mb-2 size-7 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">暂无可用邀请码</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                邀请的朋友完成深度认证后，名额将自动返还（最多 6 个）
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {invites.unused.map((inv) => (
+                <div
+                  key={inv.id}
+                  className="flex items-center justify-between rounded-2xl border border-border/60 bg-card px-4 py-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <Ticket className="size-4 shrink-0 text-primary" />
+                    <span className="font-mono text-sm font-semibold tracking-widest text-foreground">
+                      {inv.code}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => copyCode(inv.code)}
+                    className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium text-primary hover:bg-muted transition-colors"
+                    aria-label={`复制邀请链接 ${inv.code}`}
+                  >
+                    {copiedCode === inv.code ? (
+                      <><Check className="size-3.5" />已复制</>
+                    ) : (
+                      <><Copy className="size-3.5" />复制链接</>
+                    )}
+                  </button>
+                </div>
+              ))}
+              <p className="mt-1 text-xs text-muted-foreground">
+                分享邀请链接给认识的职场人，对方注册后你将共同完成认证
+              </p>
+            </div>
+          )}
+        </section>
+      )}
+
+      {trustLevel === 0 && verifications.some((v) => v.status !== "approved") && (
+        <section className="border-t border-border pt-6">
+          <div className="flex items-start gap-3 rounded-2xl bg-muted p-4">
+            <Ticket className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
+            <div>
+              <p className="text-sm font-medium text-foreground">完成认证后解锁邀请名额</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                企业邮箱认证通过后，你将获得 3 个初始邀请名额。
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Daily tasks */}
       <section>
@@ -663,6 +801,127 @@ function MeContent({
           </div>
         ) : null}
       </section>
+    </section>
+  )
+}
+
+function ProfileEditor({
+  initial,
+  onSaved,
+}: {
+  initial: IdentityCardData
+  onSaved: (data: Partial<IdentityCardData>) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [jobBand, setJobBand] = useState(initial.jobBand ?? "")
+  const [years, setYears] = useState(
+    initial.yearsOfExperience == null ? "" : String(initial.yearsOfExperience)
+  )
+  const [highlight, setHighlight] = useState(initial.highlightMoment ?? "")
+  const [declinedOffer, setDeclinedOffer] = useState(initial.declinedOffer ?? "")
+  const [saving, setSaving] = useState(false)
+  const [message, setMessage] = useState("")
+
+  async function save(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setSaving(true)
+    setMessage("")
+    try {
+      const response = await fetch("/api/me/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jobBand: jobBand.trim() || null,
+          yearsOfExperience: years === "" ? null : Number(years),
+          highlightMoment: highlight.trim() || null,
+          declinedOffer: declinedOffer.trim() || null,
+        }),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error ?? "保存失败")
+      onSaved({
+        jobBand: jobBand.trim() || undefined,
+        yearsOfExperience: years === "" ? undefined : Number(years),
+      })
+      setMessage(
+        result.pendingReview?.length
+          ? "基础资料已保存，高光与拒绝陈列将在审核后展示"
+          : "资料已保存"
+      )
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "保存失败")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <section className="border-b border-border pb-6">
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        className="flex min-h-11 w-full items-center justify-between text-left"
+        aria-expanded={open}
+      >
+        <span>
+          <span className="block text-sm font-semibold text-foreground">身份资料</span>
+          <span className="mt-1 block text-xs text-muted-foreground">
+            高光与拒绝陈列审核通过后公开
+          </span>
+        </span>
+        <ChevronRight className={`size-4 transition-transform ${open ? "rotate-90" : ""}`} />
+      </button>
+      {open ? (
+        <form onSubmit={save} className="mt-4 grid gap-4 sm:grid-cols-2">
+          <label className="text-sm font-medium text-foreground">
+            职级带
+            <input
+              value={jobBand}
+              onChange={(event) => setJobBand(event.target.value)}
+              maxLength={40}
+              placeholder="例如 P7 / VP"
+              className="mt-1.5 h-11 w-full border border-input bg-card px-3 font-normal outline-none focus-visible:border-ring"
+            />
+          </label>
+          <label className="text-sm font-medium text-foreground">
+            工作年限
+            <input
+              type="number"
+              min={0}
+              max={60}
+              value={years}
+              onChange={(event) => setYears(event.target.value)}
+              className="mt-1.5 h-11 w-full border border-input bg-card px-3 font-normal outline-none focus-visible:border-ring"
+            />
+          </label>
+          <label className="text-sm font-medium text-foreground sm:col-span-2">
+            高光时刻
+            <input
+              value={highlight}
+              onChange={(event) => setHighlight(event.target.value)}
+              maxLength={120}
+              placeholder="一件能代表你判断力或执行力的事"
+              className="mt-1.5 h-11 w-full border border-input bg-card px-3 font-normal outline-none focus-visible:border-ring"
+            />
+          </label>
+          <label className="text-sm font-medium text-foreground sm:col-span-2">
+            拒绝陈列
+            <input
+              value={declinedOffer}
+              onChange={(event) => setDeclinedOffer(event.target.value)}
+              maxLength={120}
+              placeholder="例如：拒绝某大厂高薪，选择创业"
+              className="mt-1.5 h-11 w-full border border-input bg-card px-3 font-normal outline-none focus-visible:border-ring"
+            />
+          </label>
+          <div className="flex items-center gap-3 sm:col-span-2">
+            <SolidButton type="submit" disabled={saving}>
+              {saving ? "保存中..." : "保存资料"}
+            </SolidButton>
+            {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
+          </div>
+        </form>
+      ) : null}
     </section>
   )
 }

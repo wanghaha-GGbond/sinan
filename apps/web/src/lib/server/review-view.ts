@@ -11,6 +11,7 @@ import type { reviews } from "@/db/schema/reviews"
 export type PublicReviewView = {
   id: string
   companyId: string
+  departmentId: string | null
   authorRole: string
   authorLabel: string
   title: string
@@ -23,6 +24,7 @@ export type PublicReviewView = {
   city: string | null
   departmentHint: string | null
   questionnaire: unknown
+  ratingDimensions: unknown
   officeExperienceScore: string | null
   usefulCount: number
   discussionCount: number
@@ -48,6 +50,7 @@ export function toPublicReviewView(
   return {
     id: row.id,
     companyId: row.companyId,
+    departmentId: row.departmentId,
     authorRole: row.authorRole,
     authorLabel: row.authorLabel,
     title: row.title,
@@ -60,6 +63,7 @@ export function toPublicReviewView(
     city: row.city,
     departmentHint: row.departmentHint,
     questionnaire: row.questionnaire,
+    ratingDimensions: row.ratingDimensions,
     officeExperienceScore: row.officeExperienceScore
       ? String(row.officeExperienceScore)
       : null,

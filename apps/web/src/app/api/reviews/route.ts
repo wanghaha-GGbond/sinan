@@ -6,6 +6,8 @@ import { toPublicReviewView } from "@/lib/server/review-view"
 import { getAuthUser } from "@/lib/server/auth"
 import { getOrCreateAnonymousProfile } from "@/lib/server/anonymous-profile"
 import { hasSensitive, hasAttackWord } from "@/lib/content-guard"
+import { departments } from "@/db/schema/departments"
+import { reviewRatingDimensionsSchema } from "@/lib/review-ratings"
 
 type SortMode = "latest" | "highest_score" | "most_helpful"
 
@@ -42,6 +44,8 @@ export async function POST(request: NextRequest) {
   const title = String(body.title ?? "").trim()
   const content = String(body.content ?? "").trim()
   const directionScore = Number(body.directionScore)
+  const departmentId = body.departmentId ? String(body.departmentId) : null
+  const ratings = reviewRatingDimensionsSchema.safeParse(body.ratingDimensions)
 
   if (!companyId) {
     return NextResponse.json({ error: "companyId is required" }, { status: 400 })
@@ -64,6 +68,12 @@ export async function POST(request: NextRequest) {
 
   if (isNaN(directionScore) || directionScore < 0 || directionScore > 10) {
     return NextResponse.json({ error: "directionScore must be 0–10" }, { status: 400 })
+  }
+  if (!ratings.success) {
+    return NextResponse.json(
+      { error: "请完成薪酬、成长、领导、加班和承诺兑现五项评分" },
+      { status: 400 }
+    )
   }
 
   if (hasSensitive(title) || hasAttackWord(title)) {
@@ -94,6 +104,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    if (departmentId) {
+      const [department] = await db
+        .select({ id: departments.id })
+        .from(departments)
+        .where(
+          and(
+            eq(departments.id, departmentId),
+            eq(departments.companyId, companyId),
+            eq(departments.status, "active")
+          )
+        )
+        .limit(1)
+      if (!department) {
+        return NextResponse.json({ error: "所选部门不存在" }, { status: 400 })
+      }
+    }
+
     // Extract auth user (optional — works without login too)
     const authUser = await getAuthUser()
     let anonProfile = null
@@ -115,6 +142,7 @@ export async function POST(request: NextRequest) {
       .insert(reviews)
       .values({
         companyId,
+        departmentId,
         authorUserId: authUser?.userId ?? null,
         anonymousProfileId: anonProfile?.id ?? null,
         authorRole: authorRole as (typeof VALID_ROLES)[number],
@@ -128,6 +156,7 @@ export async function POST(request: NextRequest) {
         city: body.city ? String(body.city) : undefined,
         departmentHint: body.departmentHint ? String(body.departmentHint) : undefined,
         questionnaire: body.questionnaire ?? undefined,
+        ratingDimensions: ratings.data,
         officeExperienceScore: body.officeExperienceScore != null
           ? String(body.officeExperienceScore)
           : undefined,

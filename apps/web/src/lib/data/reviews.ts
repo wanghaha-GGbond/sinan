@@ -99,6 +99,14 @@ export type SubmitReviewInput = {
   jobTitle?: string
   city?: string
   departmentHint?: string
+  departmentId?: string
+  ratingDimensions: {
+    pay_worth: number
+    growth: number
+    leader: number
+    overtime_truth: number
+    promise_delivery: number
+  }
   questionnaire?: Record<string, unknown>
   officeExperienceScore?: number
 }

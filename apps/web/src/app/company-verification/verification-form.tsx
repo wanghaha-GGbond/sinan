@@ -46,7 +46,6 @@ export function VerificationForm({
   // L1 verification code step
   const [pendingVerificationId, setPendingVerificationId] = useState<string | null>(null)
   const [verificationCode, setVerificationCode] = useState("")
-  const [_codeSent, setCodeSent] = useState(false)
   const [codeSending, setCodeSending] = useState(false)
   const [codeConfirming, setCodeConfirming] = useState(false)
   const [verified, setVerified] = useState(false)
@@ -82,7 +81,9 @@ export function VerificationForm({
         setError(result.error ?? "认证申请提交失败")
         return
       }
-      if (proofType === "work_email") {
+      if (result.requiresManualReview) {
+        setSubmitted(true)
+      } else if (proofType === "work_email") {
         // Step 2: send code then enter code
         setPendingVerificationId(result.verification.id)
         await sendCode(result.verification.id)
@@ -108,7 +109,6 @@ export function VerificationForm({
         setError(result.error ?? "发送验证码失败")
         return
       }
-      setCodeSent(true)
     } catch {
       setError("网络连接失败，请稍后重试")
     } finally {
@@ -163,7 +163,7 @@ export function VerificationForm({
           <p className="mt-4 text-sm font-semibold text-primary">认证成功</p>
           <h1 className="mt-2 text-2xl font-semibold text-foreground">企业邮箱验证通过</h1>
           <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-muted-foreground">
-            你的身份已通过 L1 验证，身份卡材质即将解锁。如需更高等级认证，可继续提交任职证明。
+            你的企业邮箱身份已经确认，身份卡材质即将解锁。如需进一步增强可信度，可继续提交任职证明。
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <SolidButton asChild variant="primary">
@@ -236,7 +236,7 @@ export function VerificationForm({
         <div className="border-y border-border py-10 text-center">
           <CheckCircle2 className="mx-auto size-10 text-primary" />
           <p className="mt-4 text-sm font-semibold text-primary">申请已提交</p>
-          <h1 className="mt-2 text-2xl font-semibold text-foreground">任职证明审核中</h1>
+          <h1 className="mt-2 text-2xl font-semibold text-foreground">认证申请审核中</h1>
           <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-muted-foreground">
             审核通常需要 48 小时。通过后身份等级自动提升，凭证原件审完即删。
           </p>

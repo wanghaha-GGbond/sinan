@@ -69,14 +69,14 @@ export async function POST(request: Request) {
 
     // Find or create company by name; fall back to slug lookup
     let [company] = await db
-      .select({ id: companies.id })
+      .select({ id: companies.id, emailDomains: companies.emailDomains })
       .from(companies)
       .where(sql`LOWER(${companies.name}) = LOWER(${data.companyName})`)
       .limit(1)
 
     if (!company) {
       [company] = await db
-        .select({ id: companies.id })
+        .select({ id: companies.id, emailDomains: companies.emailDomains })
         .from(companies)
         .where(sql`${companies.shortName} = ${data.companyId}`)
         .limit(1)
@@ -89,6 +89,15 @@ export async function POST(request: Request) {
       )
     }
 
+    const configuredDomains = (company.emailDomains ?? [])
+      .map((domain) => domain.trim().toLowerCase().replace(/^@/, ""))
+      .filter(Boolean)
+    const domainMatchesCompany =
+      data.proofType !== "work_email" ||
+      configuredDomains.some(
+        (domain) => emailDomain === domain || emailDomain?.endsWith(`.${domain}`)
+      )
+
     const [verification] = await db
       .insert(companyVerifications)
       .values({
@@ -100,6 +109,7 @@ export async function POST(request: Request) {
         jobTitle: data.jobTitle,
         proofType: data.proofType,
         note: data.note || null,
+        status: domainMatchesCompany ? "submitted" : "reviewing",
       })
       .returning({
         id: companyVerifications.id,
@@ -107,7 +117,13 @@ export async function POST(request: Request) {
         createdAt: companyVerifications.createdAt,
       })
 
-    return NextResponse.json({ verification }, { status: 201 })
+    return NextResponse.json(
+      {
+        verification,
+        requiresManualReview: !domainMatchesCompany,
+      },
+      { status: 201 }
+    )
   } catch (error) {
     if (process.env.DATABASE_URL) {
       console.error("POST /api/company-verifications failed:", error)
