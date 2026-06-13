@@ -47,7 +47,7 @@ export type PublicBidSummary = {
   createdAt: string
 }
 
-function formatPrice(cents: number): string {
+export function formatPrice(cents: number): string {
   if (cents <= 0) return "面议"
   const yuan = Math.round(cents / 100)
   if (yuan >= 10000) return `${(yuan / 10000).toFixed(1)}万`
