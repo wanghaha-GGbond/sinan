@@ -13,7 +13,6 @@ import Link from "next/link"
 import { SolidButton } from "@/components/ui/solid-button"
 import { SolidCard } from "@/components/ui/solid-card"
 import { TagPill } from "@/components/ui/tag-pill"
-import { db } from "@/db/client"
 import { auctions } from "@/db/schema/auctions"
 import { eq, sql } from "drizzle-orm"
 
@@ -41,26 +40,39 @@ type AuctionDetail = {
   settledAt: Date | null
 }
 
-async function loadAuction(id: string): Promise<
-  { auction: AuctionDetail; bidCount: number } | null
-> {
+type LoadResult =
+  | { kind: "ok"; auction: AuctionDetail; bidCount: number }
+  | { kind: "not_found" }
+  | { kind: "db_unavailable" }
+
+async function loadAuction(id: string): Promise<LoadResult> {
   try {
+    const { db } = await import("@/db/client")
     const [row] = await db
       .select()
       .from(auctions)
       .where(eq(auctions.id, id))
       .limit(1)
-    if (!row) return null
+    if (!row) return { kind: "not_found" }
     const [countRow] = await db
       .select({ c: sql<number>`count(*)::int` })
       .from(sql`auction_bids`)
       .where(sql`auction_id = ${id}`)
     return {
+      kind: "ok",
       auction: row as AuctionDetail,
       bidCount: Number(countRow?.c ?? 0),
     }
-  } catch {
-    return null
+  } catch (e) {
+    // DATABASE_URL missing or transient: show graceful fallback (not "not found")
+    if (
+      e instanceof Error &&
+      (e.message.includes("DATABASE_URL") ||
+        e.message.includes("db_unavailable"))
+    ) {
+      return { kind: "db_unavailable" }
+    }
+    return { kind: "not_found" }
   }
 }
 
@@ -87,7 +99,29 @@ export default async function AuctionDetailPage({
   const { id } = await params
   const data = await loadAuction(id)
 
-  if (!data) {
+  if (data.kind === "db_unavailable") {
+    return (
+      <section className="mx-auto flex w-full max-w-page flex-col gap-6 px-4 py-8 sm:px-6">
+        <SolidCard variant="elevated" className="p-6">
+          <h1 className="text-2xl font-semibold">数据库暂时不可用</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            稍后再试。如果你是嘉宾且急着处理本专场,前往{" "}
+            <Link href="/me" className="underline">
+              个人中心
+            </Link>
+            。
+          </p>
+          <div className="mt-4">
+            <SolidButton asChild variant="secondary" size="sm">
+              <Link href="/auction">回专场列表</Link>
+            </SolidButton>
+          </div>
+        </SolidCard>
+      </section>
+    )
+  }
+
+  if (data.kind === "not_found") {
     return (
       <section className="mx-auto flex w-full max-w-page flex-col gap-6 px-4 py-8 sm:px-6">
         <SolidCard variant="elevated" className="p-6">

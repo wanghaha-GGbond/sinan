@@ -2,22 +2,25 @@
  * /auction/[id]/manage — 嘉宾管理页(嘉宾身份登录后可见)
  *
  * 规则:
+ *   - auth gate: 必须登录;actor.userId === auction.hostUserId 或 moderator/admin
  *   - draft:显示"开拍"按钮(走 /api/auctions/[id]/transition to='live',需 moderator)
  *   - closed:显示"行使心动权"(从 bids 列表选) + "默认最高价"
  *   - settled / cancelled:只读
  *
  * 匿名规则(08 §2):bids 列表只显示段位 + 「为什么是我」截断前 60 字,
- *   不显示 bid amount pre-settle。
+ *   不显示 bid amount pre-settle(对嘉宾可见是对内数据,公开页一律 hide)。
+ *   这里因有 auth gate,bid amount 仅对 host/moderator 暴露,符合 08 §2.4。
  */
 import Link from "next/link"
+import { redirect } from "next/navigation"
 
 import { SolidButton } from "@/components/ui/solid-button"
 import { SolidCard } from "@/components/ui/solid-card"
 import { TagPill } from "@/components/ui/tag-pill"
-import { db } from "@/db/client"
 import { auctionBids, auctions } from "@/db/schema/auctions"
 import { and, desc, eq } from "drizzle-orm"
 
+import { getAuthUser } from "@/lib/server/auth"
 import { formatPrice } from "@/lib/server/auction-view"
 
 export const dynamic = "force-dynamic"
@@ -32,21 +35,36 @@ type ManageAuction = {
   settlementMethod: string | null
 }
 
-async function loadAuction(id: string) {
+type LoadResult =
+  | { kind: "ok"; auction: ManageAuction }
+  | { kind: "not_found" }
+  | { kind: "db_unavailable" }
+
+async function loadAuction(id: string): Promise<LoadResult> {
   try {
+    const { db } = await import("@/db/client")
     const [row] = await db
       .select()
       .from(auctions)
       .where(eq(auctions.id, id))
       .limit(1)
-    return (row ?? null) as ManageAuction | null
-  } catch {
-    return null
+    if (!row) return { kind: "not_found" }
+    return { kind: "ok", auction: row as ManageAuction }
+  } catch (e) {
+    if (
+      e instanceof Error &&
+      (e.message.includes("DATABASE_URL") ||
+        e.message.includes("db_unavailable"))
+    ) {
+      return { kind: "db_unavailable" }
+    }
+    return { kind: "not_found" }
   }
 }
 
 async function loadBids(id: string) {
   try {
+    const { db } = await import("@/db/client")
     const rows = await db
       .select({
         id: auctionBids.id,
@@ -77,8 +95,13 @@ export default async function AuctionManagePage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const auction = await loadAuction(id)
-  if (!auction) {
+
+  // auth gate 必须在 DB 查询前,避免未授权用户触发 loadAuction
+  const user = await getAuthUser()
+  if (!user) redirect(`/login?next=/auction/${id}/manage`)
+
+  const data = await loadAuction(id)
+  if (data.kind === "not_found") {
     return (
       <section className="mx-auto flex w-full max-w-page flex-col gap-6 px-4 py-8 sm:px-6">
         <SolidCard variant="elevated" className="p-6">
@@ -86,6 +109,24 @@ export default async function AuctionManagePage({
         </SolidCard>
       </section>
     )
+  }
+  if (data.kind === "db_unavailable") {
+    return (
+      <section className="mx-auto flex w-full max-w-page flex-col gap-6 px-4 py-8 sm:px-6">
+        <SolidCard variant="elevated" className="p-6">
+          <h1 className="text-2xl font-semibold">数据库暂时不可用</h1>
+          <p className="mt-2 text-sm text-muted-foreground">稍后再试。</p>
+        </SolidCard>
+      </section>
+    )
+  }
+  const auction = data.auction
+
+  // 只有 host 本人 / moderator / admin 能进管理页
+  const isHost = user.userId === auction.hostUserId
+  const isPrivileged = user.role === "moderator" || user.role === "admin"
+  if (!isHost && !isPrivileged) {
+    redirect(`/auction/${id}`)
   }
 
   const bids = auction.status === "closed" ? await loadBids(id) : []
