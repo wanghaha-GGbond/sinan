@@ -67,6 +67,14 @@ export const auctions = pgTable(
     finalAmountCents: integer("final_amount_cents"),
     winnerBidId: uuid("winner_bid_id"),
     closedAt: timestamp("closed_at", { withTimezone: true }),
+    settledAt: timestamp("settled_at", { withTimezone: true }),
+    // "heart_pick" | "highest_bid" | null (un-settled or cancelled)
+    settlementMethod: text("settlement_method"),
+    // settlement actor: moderator userId or hostUserId — useful for
+    // audit + leaderboard aggregation by host performance later.
+    settledByUserId: uuid("settled_by_user_id"),
+    cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+    cancelReason: text("cancel_reason"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
