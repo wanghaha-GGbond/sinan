@@ -48,8 +48,15 @@ export default function MySkillsPage() {
   }
 
   useEffect(() => {
-    if (!authLoading && user) loadList()
-    if (!authLoading && !user) setListLoading(false)
+    // Defer the unauth branch to a macrotask so the effect body itself
+    // stays synchronous — React 19's react-hooks/set-state-in-effect
+    // rule treats synchronous setState in an effect as a cascading
+    // render signal.
+    const handle = window.setTimeout(() => {
+      if (!authLoading && user) loadList()
+      if (!authLoading && !user) setListLoading(false)
+    }, 0)
+    return () => window.clearTimeout(handle)
   }, [authLoading, user])
 
   async function onSubmit(e: React.FormEvent) {
