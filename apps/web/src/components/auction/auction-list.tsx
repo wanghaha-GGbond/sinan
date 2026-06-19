@@ -15,12 +15,14 @@
  */
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Loader2, ShieldCheck } from "lucide-react"
 
 import { SolidButton } from "@/components/ui/solid-button"
 import { SolidCard } from "@/components/ui/solid-card"
 import { TagPill } from "@/components/ui/tag-pill"
 import { useAuth } from "@/lib/auth-context"
+import { Countdown } from "@/components/auction/countdown"
 
 type AuctionItem = {
   id: string
@@ -228,8 +230,11 @@ function AuctionRow({
             <span>· 段位 L{item.hostTrustLevel} 验证</span>
             <span>· 指导价 {item.guidePriceMinLabel} - {item.guidePriceMaxLabel}</span>
           </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {formatRange(item.startsAt, item.endsAt)}
+          <p className="mt-2 flex flex-wrap items-center gap-x-3 text-xs text-muted-foreground">
+            <span>{formatRange(item.startsAt, item.endsAt)}</span>
+            {item.isLive && (
+              <Countdown endsAt={item.endsAt} className="font-medium text-primary" />
+            )}
           </p>
         </div>
         <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
@@ -247,6 +252,12 @@ function AuctionRow({
           >
             {selected ? "已选中,下方出价" : "我要报名"}
           </SolidButton>
+          <Link
+            href={`/auction/${item.id}`}
+            className="text-center text-xs text-muted-foreground underline-offset-4 hover:underline"
+          >
+            查看详情
+          </Link>
         </div>
       </div>
 
@@ -257,15 +268,17 @@ function AuctionRow({
 
 function SettledRow({ item }: { item: AuctionItem }) {
   return (
-    <SolidCard variant="subtle" className="p-4">
-      <p className="text-sm font-semibold text-foreground">{item.scenarioDesc}</p>
-      <p className="mt-1 text-xs text-muted-foreground">
-        嘉宾 {item.hostDisplayName}
-        {item.hostCompanyName ? ` · ${item.hostCompanyName}` : ""}
-        <span className="ml-2">指导价 {item.guidePriceMinLabel} - {item.guidePriceMaxLabel}</span>
-        <span className="ml-2">{item.bidCount} 人参与</span>
-      </p>
-    </SolidCard>
+    <Link href={`/auction/${item.id}`} className="block">
+      <SolidCard variant="subtle" className="p-4 hover:bg-card transition-colors">
+        <p className="text-sm font-semibold text-foreground">{item.scenarioTitle}</p>
+        <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">{item.scenarioDesc}</p>
+        <p className="mt-1 flex flex-wrap gap-x-2 text-xs text-muted-foreground">
+          <span>嘉宾 {item.hostDisplayName}</span>
+          {item.hostCompanyName ? <span>· {item.hostCompanyName}</span> : null}
+          <span>· {item.bidCount} 人参与</span>
+        </p>
+      </SolidCard>
+    </Link>
   )
 }
 

@@ -1,183 +1,193 @@
-# 司南 (Sinan) 开发计划 v1.0 · Sprint 级任务拆解
+# 司南 (Sinan) 开发计划 v2.0 · Sprint 级任务拆解
 
-> 本文档是 [07-roadmap.md](07-roadmap.md) 的执行级细化（S0-S10，覆盖 M0-M2）；产品文档系列索引见 [README.md](README.md)。
-> 生成日期：2026-06-10。对应 PRD v0.2（见 [01-vision.md](01-vision.md)），已采纳两项决议：
-> ① 产品名走中文雅致系（沿用"司南"）；② 拍卖功能化推迟到 M3，M2 用纯运营公益专场代替。
+> 本文档是 [07-roadmap.md](07-roadmap.md) 的执行级细化。v1.0（S0-S10，覆盖 M0-M2）已于 2026-06-13 全部交付。
+> v2.0 覆盖 M3（功能化拍卖 + 圈层 + 私聊 + P1）+ Web 端完善 + 测试补全。
+> iOS 端暂搁置，待 Web 端稳定后再追齐。
 >
-> 节奏假设：2 周一个 Sprint，1-2 名全栈。若只有 1 人，每个 Sprint 的"可砍项"先砍。
+> 节奏假设：1 名全栈，2 周一个 Sprint。
 
 ---
 
-## 总览
+## 已完成（v1.0 交付，2026-06-13）
+
+| Sprint | 阶段 | 主题 | 状态 |
+|---|---|---|---|
+| S0 | 收尾 | 提交在途工作、修验证表外键、收导航 | ✅ |
+| S1-S2 | M0a | 真·三级验证：L1 邮箱验证码闭环、L2 审核后台、trustLevel 联动 | ✅ |
+| S3-S4 | M0b | 身份卡 + 邀请制：卡面组件(4级材质)、邀请码注册、/u/[id] 用户主页 | ✅ |
+| S5-S6 | M1a | 部门级评价：departments 表、五维评分、k-匿名规则引擎 | ✅ |
+| S7-S8 | M1b | 违约库 + 情绪指数：promise_records(先审后发)、周 K 聚合、/press hub | ✅ |
+| S9-S10 | M2 | 引爆支撑：拍卖运营页、行情榜、邀请落地页、指标看板 | ✅ |
+
+已交付：41 页面、52 API 路由、54 组件、14 DB 迁移、23 schema 文件。TS 检查 + Metro 打包全过。
+
+---
+
+## 总览（v2.0 — Sprint 11-16）
 
 | Sprint | 阶段 | 主题 | 核心交付 |
 |---|---|---|---|
-| S0 | 当前 | 收尾 + 还债 | 提交在途工作、修验证表外键、收导航 |
-| S1-S2 | M0a | 真·三级验证 | L1 邮箱验证码闭环、L2 审核后台、验证→trustLevel 联动 |
-| S3-S4 | M0b | 身份卡 + 邀请制 | 卡面组件、双面卡、邀请码注册、引荐链 |
-| S5-S6 | M1a | 部门级评价 | departments 表、部门 tab、五维评分、k-匿名 |
-| S7-S8 | M1b | 违约库 + 情绪指数 | 承诺对照库、周 K 聚合、分享截图卡 |
-| S9-S10 | M2 | 引爆支撑 | 拍卖运营页（表单级）、传播素材打磨、指标看板 |
+| S11 | M3a | 拍卖功能化收尾 | 前端交互闭环、嘉宾管理页、结算通知 |
+| S12 | M3b | 圈层 + 私聊前端 | 圈层浏览/加入/背书、私聊 inbox/thread/请求队列前端 |
+| S13 | M3c | P1 前端完善 | 高光馆/一技封神/感谢信漂流前端完整化 |
+| S14 | M3d | 测试补全 | 单元测试覆盖 server libs、E2E 覆盖核心用户路径 |
+| S15 | M3e | 性能 + 质量 | 去 mock data、SQL 查询优化、错误边界、a11y |
+| S16 | M3f | 收尾 + iOS 规划 | bug bash、文档同步、iOS 追齐计划 |
 
 ---
 
-## Sprint 0：收尾 + 技术债（本周，3-5 天）
+## Sprint 11：拍卖功能化收尾（M3a）
 
-趁 `company_verifications` 表还没有生产数据，把便宜的债先还掉。
+**现状**：拍卖 schema + 状态机引擎(386行) + 行情榜已就绪，API routes (
+POST /api/auctions, bids, heart-pick, transition, settle) 骨架已有。
+前端有 `/auction` 列表页 + `/[id]` 详情页 + `/[id]/manage` 管理页。
 
-### T0.1 提交在途的 verification 工作
-- 工作区有大量未提交改动（migration 0007/0008、`company-verification/` 页面、API route）。
-- 自测通过后 commit，作为后续所有工作的基线。
+### T11.1 拍卖前端交互闭环
+- `/auction/[id]/page.tsx`：实时出价 UI（盲拍模式，金额隐藏）、倒计时、心动权公示
+- `/auction/[id]/manage/page.tsx`：嘉宾操作面板（行使心动权/默认成交）、bidder 列表
+- 结算结果展示：中标通知、未中标公示、收据链接
+- 所有操作需 auth gate（trustLevel ≥ 1 可出价）
 
-### T0.2 修复 company_verifications 外键 【必做，越晚越贵】
-- `src/db/schema/company-verifications.ts`：
-  - `companyId: text` → `uuid` + `references(() => companies.id)`
-  - `applicantUserId: text` → `uuid` + `references(() => users.id)`
-  - 新增 `reviewedByUserId`（uuid, FK users）、`reviewedAt`、`rejectReason`（为 S1 审核后台预留）
-  - 新增 `grantedTrustLevel: integer`（审批时实际授予的等级，留审计痕迹）
-- 重新生成 migration（替换或追加 0008）。
-- 同步修改 `api/company-verifications/route.ts` 的插入逻辑。
+### T11.2 拍卖列表完善
+- `/auction/page.tsx`：live/upcoming/settled 三 tab 筛选
+- 每张 auction 卡片显示：场景标题、嘉宾段位、倒计时/已结束、出价人数
 
-### T0.3 聚焦主线：收起非主线导航
-- `components/layout/app-shell.tsx`：从导航移除 salaries / benefits / jobs 入口（路由保留，不删代码）。
+### T11.3 通知
+- 拍卖结算后给中标者 + 嘉宾发站内通知（复用现有 toast 即可）
 
-### T0.4 种子数据
-- 准备 Top 20 目标公司种子（`companies.source = 'platform_seed'`），含部门草稿数据（S5 用）。
+**S11 验收**：从浏览列表 → 出价 → 嘉宾选标 → 结算 全流程可走通。
 
 ---
 
-## Sprint 1-2：真·三级验证（M0a）
+## Sprint 12：圈层 + 私聊前端（M3b）
 
-目标：L1 从"填邮箱"变成"验邮箱"，L2 有人工审核闭环，验证结果驱动 `users.trustLevel`。
+**现状**：circles/dm schema + API routes 骨架已有。前端 `/circles` 列表页 + `/circles/[id]` 详情页、
+`/me/inbox` 私聊列表 + `/[threadId]` 对话页已有骨架。
 
-### T1.1 L1 企业邮箱验证码闭环 【L】
-- 新表 `email_verification_codes`：`id, verificationId(FK), codeHash, expiresAt, attemptCount, consumedAt`。
-- 发信要求（风控决议：防留痕）：
-  - 中性发件人（如 `no-reply@<中性域名>`），邮件标题与正文不出现产品名/"职场评价"等字样，只有验证码。
-  - 验证码 6 位，15 分钟过期，单 verification 最多 5 次尝试，复用 `lib/server/rate-limit.ts` 限发信频率（同邮箱 1 分钟 1 封、1 小时 5 封）。
-- 邮件服务：接入一家 ESP（建议先用 Resend/SES 任一，封装在 `lib/server/mail.ts`，可替换）。
-- API：
-  - `POST /api/company-verifications/[id]/send-code`
-  - `POST /api/company-verifications/[id]/confirm-code` → 命中后 verification 直接 `approved`（L1 无需人工）
-- 公司域名校验升级：除现有公共邮箱黑名单外，增加"邮箱域名 ↔ 公司"映射表（`companies` 加 `emailDomains: jsonb`），域名不匹配时进入人工队列而非直接拒绝。
+### T12.1 圈层前端
+- `/circles`：3 个首批圈层（总监圈/出海圈/大模型圈）卡片展示 + trustLevel 门槛标识
+- `/circles/[id]`：成员列表 + 加入按钮（需背书人，已有 API）
+- 成员 card 显示段位 + 身份卡缩略图
 
-### T1.2 验证 → trustLevel 联动 【M，核心开关】
-- `lib/server/verification.ts` 新建 `approveVerification()`：同一事务内更新 verification 状态 + `users.trustLevel = GREATEST(trustLevel, granted)`。
-  - work_email → 1；business_document → 2；salary_proof → 3（枚举本期预留值，功能 M3 再做）。
-- `enums.ts`：`companyVerificationProofTypeEnum` 追加 `salary_proof`（migration 只加枚举值，无 UI）。
-- 用户被吊销验证（造假发现）时的 `revoked` 状态与 trustLevel 回落逻辑一并实现。
+### T12.2 私聊前端
+- `/me/inbox`：thread 列表（最后消息预览、未读标记）
+- `/me/inbox/[threadId]`：消息流 + 发送框
+- 段位差 ≥ 2 时自动走请求队列：`/me/requests-outgoing` 查看已发出请求
+- 收到请求的处理：inbox 中显示 pending requests，accept/reject
 
-### T1.3 L2 人工审核后台 【M】
-- 仿照现有 `api/moderation/review-reports` 的模式：
-  - `GET /api/moderation/company-verifications`（队列，moderator/admin）
-  - `PATCH /api/moderation/company-verifications/[id]`（approve/reject + reason）
-- 审核 SOP 写进 `docs/verification-sop.md`：工牌/在职证明查验要点、敏感信息脱敏要求（审核后删除原件，只留审核结论——PIPL 最小化原则）。
-- 简单的 moderator 队列页面（管理界面可以丑，能用即可）。
+### T12.3 DM 请求队列 UI
+- 被请求方收到通知
+- `/me/inbox` 顶部显示 pending DM requests
+- accept → 自动创建 thread、reject → 可选附原因
 
-### T1.4 /me 验证状态展示 【S】
-- `app/me/page.tsx`：当前验证等级、进行中的申请状态、下一级引导。
-
-**S1-S2 验收**：新用户可走通 注册 → 提交 L1 → 收码 → 确认 → trustLevel=1 全流程；moderator 可审完一笔 L2。
+**S12 验收**：圈层可浏览/加入/查看成员；私聊走通 直接开 thread 和请求队列两条路径。
 
 ---
 
-## Sprint 3-4：身份卡 + 邀请制（M0b）
+## Sprint 13：P1 前端完善（M3c）
 
-### T2.1 身份卡组件 【L，本产品的脸面】
-- 新组件 `components/identity/identity-card.tsx`：
-  - 正面：公司 + 职级带 + 年限 + 1 个高光时刻；材质随 trustLevel（0/1=哑光、2=金属、3=黑金），CSS 渐变+纹理实现，**不出现 L1/L2/L3 字样**。
-  - 背面（翻转交互）：`reputationScore`、评价被采纳数、被感谢数（采纳数=其 review 的 `usefulCount` 聚合，已有数据）。
-- `users` 表扩展：`jobBand`（职级带文本）、`yearsOfExperience`、`highlightMoment`、`declinedOffer`（拒绝陈列位，text，nullable）。
-  - `highlightMoment` 与 `declinedOffer` 走人工审核后可见（复用 moderation 思路，加 `profileFieldsStatus` 简化版即可）。
-- 挂载点：`/me` + 公开主页（新路由 `app/u/[id]/page.tsx`）。
+**现状**：高光馆(`/highlights`)、一技封神(`/skills`、`/me/skills`)、感谢信漂流(`/gratitude`)
+页面骨架已有，API routes 就绪。
 
-### T2.2 邀请制 【L，注册流改造】
-- 新表 `invites`：`id, code(唯一短码), inviterUserId(FK), invitedUserId(FK,nullable), status(unused/used/revoked), createdAt, usedAt`。
-- 规则引擎（`lib/server/invites.ts`）：
-  - 初始配额：用户达到 trustLevel ≥ 1 时发放 3 个邀请码（不是注册即发——防小号自激活）。
-  - 返还机制：被邀请人达到 trustLevel ≥ 2 时，邀请人配额 +1（上限 6）。
-- 注册流改造：`api/auth/register/route.ts` 增加 `inviteCode` 必填校验（环境变量 `INVITE_REQUIRED=true` 开关，方便内测期切换）；注册成功事务内核销邀请码。
-- 展示：`app/u/[id]` 与 `/me` 显示"由 XX 引荐"（链到邀请人主页）。
-- `/me` 增加邀请管理区：剩余名额、已发出邀请的状态。
+### T13.1 高光馆
+- `/highlights`：已审核通过的 highlights 流
+- `/me/highlights`：我的高光时刻管理（提交/查看审核状态）
+- 提交表单：140 字高光内容 + 提交审核
 
-### T2.3 注册页与登录页适配 【S】
-- `app/register/page.tsx` 增加邀请码输入（支持 URL 预填 `?invite=`）。
+### T13.2 一技封神
+- `/skills`：技能广场（按 endorser 数排序）
+- `/me/skills`：我的技能管理（提交新技能/查看背书数）
+- 背书交互：在技能详情页点「背书」→ endorserCount +1
 
-**S3-S4 验收**：关闭公开注册后，仅持邀请码可注册；身份卡在两种 trustLevel 下肉眼可辨材质差异；邀请返还链路有集成测试。
+### T13.3 感谢信漂流
+- `/gratitude`：公开感谢信墙（匿名/实名 toggle）
+- 提交表单：收信人选择 + 内容
+- 12 小时同人限 1 封的提示
+
+**S13 验收**：三个 P1 功能均可走通提交 → 展示全流程。
 
 ---
 
-## Sprint 5-6：部门级评价 + k-匿名（M1a）
+## Sprint 14：测试补全（M3d）
 
-### T3.1 departments 表 【M】
-- 新表 `departments`：`id, companyId(FK), name, aliasNames(jsonb), status, createdAt`。
-- `reviews` 加 `departmentId`（nullable FK；存量 `departmentHint` 自由文本保留，后台逐步归一到部门）。
-- 提交评价流（`app/submit/review/page.tsx`）：部门改为下拉 + "找不到我的部门"申报（进 moderation 队列建新部门）。
+**现状**：24 个单元测试全过（拍卖状态机 6 + 匿名规则 2 + DM 引擎 8 + 圈层 8）。
+E2E 测试(`sinan.spec.ts`)存在但未跑通。
 
-### T3.2 五维评分结构化 【M】
-- 定义固定 schema（zod，放 `lib/types.ts`）：`pay_worth / growth / leader / overtime_truth / promise_delivery`，1-5 分。
-- `questionnaire` jsonb 按此 schema 校验写入；`api/reviews/route.ts` 与提交页同步改。
-- 聚合：`lib/server/company-view.ts` 增加按公司/按部门的五维均分与样本数（先实时 SQL 聚合，量大再物化）。
+### T14.1 server lib 单元测试
+- `auction-engine.ts`：补充 settleByHighestBid / heartPick 事务模拟测试
+- `dm-engine.ts`：补充 thread 创建/消息发送的纯函数测试
+- `invites.ts`：邀请码核销/返还逻辑测试
+- `verification.ts`：approveVerification + trustLevel 联动测试
+- `anonymity.ts`：补充边缘 case（跨状态评价、部门归并降级）
 
-### T3.3 k-匿名展示规则 【M，法务红线，和 T3.1 同期上线】
-- 规则集中在 `lib/server/anonymity.ts` 单一函数，公司页/评价流/API 全部过它：
-  - 部门内 trustLevel ≥ 1 的发布者 < 5 人 → 该部门评价在展示层归并到公司级，部门 tab 显示"样本不足"。
-  - 段位标签模糊化：样本不足时"某 L7 验证用户"降级为"某高 P 验证用户"。
-- 单元测试覆盖边界（恰好 5 人、跨状态评价等）。
+### T14.2 E2E 核心路径
+- 注册 → L1 验证 → trustLevel=1 全流程
+- 写评价 → 提交五维分 → 公司页展示
+- 评论流：展开/收起/回复/点赞
+- 拍卖：浏览 → 出价 → 嘉宾选标 → 结算
+- DM：直接消息 + 请求队列两条路径
 
-### T3.4 公司页部门 tab 【M】
-- `app/company/[id]/page.tsx` + `company-review-feed.tsx`：部门 tab、五维雷达/条形图、k-匿名降级态。
+### T14.3 测试基础设施
+- `package.json` 加 `"test": "playwright test"` + `"test:unit": "tsx --test tests/*.spec.ts"`
+- CI 文件（`.github/workflows/test.yml`）最小可跑版本
 
-**S5-S6 验收**：Top 20 种子公司每家 ≥3 个部门可选；k-匿名规则有测试；提交评价必带五维分。
-
----
-
-## Sprint 7-8：违约库 + 情绪指数（M1b）
-
-### T4.1 职业违约库 【L，法务最高危功能，按最严标准做】
-- 新表 `promise_records`：`id, companyId(FK), departmentId(FK,nullable), authorUserId, anonymousProfileId, promiseText, promiseDate, outcomeText, outcomeStatus(kept/partial/broken), evidenceNote, status(复用 review 状态机), moderationReason, createdAt...`
-- 发布门槛：`trustLevel >= 2`（API 层硬校验）。
-- 审核：**全部人工先审后发**（不同于 review 的部分自动可见），复用 moderation 队列模式新增 `api/moderation/promise-records`。
-- 证据留存：`evidenceNote` 只存描述与哈希指纹，原件不上传到本系统（PIPL + 诉讼风险最小化）；留存策略写进 SOP。
-- 展示：公司页新区块"承诺 vs 兑现"，结构化对照条目，无自由长文本。
-
-### T4.2 情绪指数（周 K 起步）【L】
-- 新表 `company_sentiment_daily`：`companyId, date, score, sampleCount, components(jsonb)`。
-- 每日聚合 job（先用 Vercel Cron / 路由 `api/cron/sentiment` + secret 校验）：输入 = 当日 review 五维分均值变化 + 发帖热度 + usefulCount 增量；情感分析第一版用打分代理，不接 NLP（够用、可解释、不烧钱）。
-- 展示为**周 K**：公司页图表组件 + 事件标注（手工运营录入大事件：裁员/年终奖，新表 `company_events`）。
-- **分享截图卡**：`api/og` 路由生成情绪指数分享图（深色系、带公司名与周K曲线）——这是 M2 传播的核心物料，质量要求等同身份卡。
-
-### T4.3 审计日志补全 【S】
-- 仿 `discussion_moderation_events`，为 verification 与 promise_records 的每次状态变更落 events 表。
-
-**S7-S8 验收**：违约库零自由文本直出；任一公司可生成一张拿得出手的情绪指数分享图。
+**S14 验收**：server lib 覆盖 ≥ 80%；E2E 覆盖 5 条核心路径且全绿。
 
 ---
 
-## Sprint 9-10：M2 引爆支撑
+## Sprint 15：性能 + 质量（M3e）
 
-### T5.1 拍卖公益专场（运营级，非系统）【S-M】
-- 一个静态专场页 `app/auction/page.tsx`：嘉宾介绍 + 报名表单（出价 + "为什么是我"）→ 表单数据进库（`auction_bids` 简表）或直接外部表单。
-- 竞价撮合、选人、收款全部人肉 + 捐赠收据公示页。**不写竞价引擎**——用 10 场真实数据反哺 M3 的系统设计。
+### T15.1 去 mock data
+- `review-discussion-section.tsx`：`createLocalDiscussion` → 真实 API 调用
+- `company-review-feed.tsx`：mock reviews → 数据库查询
+- 搜索页：mock results → `/api/companies/search`
 
-### T5.2 传播与转化打磨 【M】
-- 邀请落地页（`app/invite/[code]`）：被邀请人看到邀请人身份卡 + 产品价值主张——K 因子 0.8 成败在这一页。
-- 情绪指数截图卡加水印引导 + 邀请码绑定（截图带邀请入口）。
+### T15.2 SQL 查询优化
+- 公司页 review 聚合：加物化视图或缓存层（当前实时 SQL 聚合，量大扛不住）
+- 行情榜：加 Redis 缓存（当前每次查全表）
+- 讨论列表 N+1：批量加载 author profiles
 
-### T5.3 指标看板 【M】
-- 北极星：L2+ 用户周活；反向约束：申诉成功率/删帖率；漏斗：注册→L1→L2。
-- 先用 SQL + 简单 admin 页，不接 BI。
+### T15.3 错误边界 + a11y
+- 每个 page 加 `error.tsx`（当前部分页面缺失）
+- 每个 page 加 `loading.tsx`（骨架屏，不用 spinner）
+- 表单 focus 顺序、键盘导航
+
+**S15 验收**：所有页面数据来自真实 API；公司页首屏 < 500ms（本地 DB）；无 console error。
 
 ---
 
-## 贯穿全程的规则（写给每个 Sprint）
+## Sprint 16：收尾 + iOS 规划（M3f）
 
-1. **k-匿名与法务红线**：任何新展示面（API 或页面）上线前过 `lib/server/anonymity.ts`，不允许绕过。
-2. **审核优先于自动可见**：违约库、身份卡敏感字段（高光时刻/拒绝陈列位）一律先审后发；普通评价维持现状态机。
-3. **PIPL 最小化**：验证原件审完即删、薪资类信息 M3 前不碰、所有敏感字段在 schema review 时问一句"能不能不存"。
-4. **遵守仓库规约**：写代码前先读 `node_modules/next/dist/docs/` 对应章节（本仓库 Next.js 与常识版本有 breaking changes）。
+### T16.1 bug bash
+- 全站走查：auth 流程、评论交互、拍卖状态迁移、DM 请求队列
+- 移动端响应式检查（< 780px 单栏）
+- 暗色模式兼容
 
-## 明确不做（防 scope creep）
+### T16.2 文档同步
+- DEV_PLAN.md ↔ 实际代码一致
+- API routes 文档（给 iOS 端参考）
+- README.md 更新：本地开发/测试/部署指令
 
-- M3 前不做：拍卖竞价系统、L3 薪资验证、圈层私聊、预测市场、可视化公司、高光馆、一技封神。
-- 不接 NLP 情感分析（评分代理够用）、不接 BI、不做 App（Web 优先）。
+### T16.3 iOS 追齐计划
+- 评估 iOS 当前差距（清单：拍卖/圈层/私聊/高光馆/技能/感谢信/违约库）
+- 输出 iOS Sprint 计划文档（S17-S20），等 Web 稳定后启动
+
+**S16 验收**：Web 端 0 已知 bug；DEV_PLAN 与代码一致；iOS 追齐计划就绪。
+
+---
+
+## 贯穿全程的规则（v2.0 不变）
+
+1. **k-匿名与法务红线**：任何新展示面过 `lib/server/anonymity.ts`，不允许绕过。
+2. **审核优先于自动可见**：违约库、身份卡敏感字段、高光时刻一律先审后发。
+3. **PIPL 最小化**：验证原件审完即删、薪资类信息不碰、敏感字段问一句"能不能不存"。
+4. **遵守仓库规约**：写代码前先读 `node_modules/next/dist/docs/` 对应章节。
+5. **Web 优先**：iOS 暂不跟进新功能，待 Web 端全部验收通过后再启动追齐。
+
+## 明确不做（v2.0 scope boundary）
+
+- iOS 追齐（S16 只出计划，不写代码）
+- 支付通道 / 个税代扣 / 经营性 ICP（M4 法务通过后再补）
+- NLP 情感分析（评分代理够用）
+- BI 系统（SQL + admin 页够用）
+- L3 薪资验证（PIPL 红线，M4 评估）

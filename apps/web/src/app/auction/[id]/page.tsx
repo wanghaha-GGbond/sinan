@@ -17,6 +17,8 @@ import { auctions } from "@/db/schema/auctions"
 import { eq, sql } from "drizzle-orm"
 
 import { formatPrice } from "@/lib/server/auction-view"
+import { Countdown } from "@/components/auction/countdown"
+import { AuctionBidFormInline } from "@/components/auction/auction-bid-form-inline"
 
 export const dynamic = "force-dynamic"
 
@@ -199,12 +201,26 @@ export default async function AuctionDetailPage({
         <div className="mt-3 flex items-baseline gap-3">
           <span className="text-3xl font-bold text-foreground">{bidCount}</span>
           <span className="text-sm text-muted-foreground">人出价</span>
+          {auction.status === "live" && (
+            <Countdown
+              endsAt={auction.endsAt.toISOString()}
+              className="ml-auto text-xs text-primary font-medium"
+            />
+          )}
+          {auction.status === "closed" && (
+            <span className="ml-auto text-xs text-muted-foreground">已截拍 · 等嘉宾选标</span>
+          )}
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
           盲拍出价,互相看不到金额和身份(08 §2 匿名规则)。
           出价人身份仅以段位形式在成交时公示。
         </p>
       </SolidCard>
+
+      {/* Inline bid form — only shown when live */}
+      {auction.status === "live" && (
+        <AuctionBidFormInline auctionId={auction.id} endsAt={auction.endsAt.toISOString()} />
+      )}
 
       {isSettled ? (
         <SolidCard variant="elevated" className="p-6">
