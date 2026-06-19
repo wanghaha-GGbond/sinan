@@ -11,6 +11,8 @@ import {
   isValidGratitudeContent,
   isWithinGratitudeWindow,
 } from "@/lib/server/p1-m4-services"
+import { hasAttackWord, hasSensitive, maskSensitiveContent } from "@/lib/content-guard"
+import { checkRateLimit, getRateLimitKey } from "@/lib/server/rate-limit"
 
 export const dynamic = "force-dynamic"
 
@@ -49,6 +51,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "请先登录" }, { status: 401 })
   }
 
+  // Per-user/IP throttle. Gratitude has a 12h per-pair cap inside the
+  // service, but a malicious account could target many different users
+  // — outer per-account rate limit closes that hole.
+  const rl = checkRateLimit(
+    `gratitude-submit:${user.userId}:${getRateLimitKey(request, "/api/gratitude")}`,
+    { maxRequests: 10, windowSeconds: 60 }
+  )
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "提交太频繁，请稍后再试", retryAfter: rl.retryAfter },
+      { status: 429 }
+    )
+  }
+
   let body: { toUserId?: unknown; content?: unknown; isAnonymous?: unknown }
   try {
     body = await request.json()
@@ -63,6 +79,16 @@ export async function POST(request: NextRequest) {
   }
   if (!isValidGratitudeContent(body.content)) {
     return NextResponse.json({ error: "内容长度不合法" }, { status: 400 })
+  }
+
+  // PII / attack-word guard. Gratitude is "no moderation" per spec
+  // (rendered immediately), so the guard is the only safety net.
+  const content = body.content.trim()
+  if (hasSensitive(content) || hasAttackWord(content)) {
+    return NextResponse.json(
+      { error: "内容包含不适合公开展示的信息，请调整后再发布。" },
+      { status: 400 }
+    )
   }
 
   try {
@@ -106,7 +132,7 @@ export async function POST(request: NextRequest) {
       .values({
         fromUserId: user.userId,
         toUserId: body.toUserId,
-        content: body.content.trim(),
+        content: maskSensitiveContent(content),
         isAnonymous: body.isAnonymous === true ? "true" : "false",
       })
       .returning()

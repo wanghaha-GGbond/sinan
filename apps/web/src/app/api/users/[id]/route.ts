@@ -1,13 +1,30 @@
 import { NextRequest, NextResponse } from "next/server"
 
+import { checkRateLimit, getRateLimitKey } from "@/lib/server/rate-limit"
+
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
 
   if (!id) {
     return NextResponse.json({ error: "Missing id" }, { status: 400 })
+  }
+
+  // Public profile read. Without a cap, an attacker can iterate UUIDs
+  // and harvest the entire user directory (display name + trust level
+  // + job band). 60/min per IP is well above legitimate browsing but
+  // makes scanning O(N) over the whole UUID space infeasible.
+  const rl = checkRateLimit(
+    `user-profile:${getRateLimitKey(request, "/api/users/[id]")}`,
+    { maxRequests: 60, windowSeconds: 60 }
+  )
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests", retryAfter: rl.retryAfter },
+      { status: 429 }
+    )
   }
 
   try {

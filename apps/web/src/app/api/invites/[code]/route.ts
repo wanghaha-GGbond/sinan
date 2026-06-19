@@ -1,13 +1,31 @@
 import { NextRequest, NextResponse } from "next/server"
 
+import { checkRateLimit, getRateLimitKey } from "@/lib/server/rate-limit"
+
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ code: string }> }
 ) {
   const { code } = await params
 
   if (!code) {
     return NextResponse.json({ error: "Missing code" }, { status: 400 })
+  }
+
+  // Public invite preview — any visitor can probe a code. Apply a
+  // soft per-IP cap so brute-force enumeration (1.1T combinations)
+  // doesn't translate into a cheap scanning primitive. Authenticated
+  // users hit this through a normal browser flow, so 30/min is well
+  // above human rate.
+  const rl = checkRateLimit(
+    `invite-preview:${getRateLimitKey(request, "/api/invites/[code]")}`,
+    { maxRequests: 30, windowSeconds: 60 }
+  )
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests", retryAfter: rl.retryAfter },
+      { status: 429 }
+    )
   }
 
   try {

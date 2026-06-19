@@ -38,40 +38,48 @@ export async function GET(request: Request) {
       )
       .groupBy(reviews.companyId)
 
-    for (const row of rows) {
+    // Pre-compute every row's score + components in memory, then ship
+    // a single batched INSERT ... ON CONFLICT. N companies used to mean
+    // 1 SELECT + N round-trips; this is now 1 SELECT + 1 INSERT.
+    const now = new Date()
+    const writes = rows.map((row) => {
       const dimensionScore = Number(row.dimensionAverage ?? 0) * 20
       const activityBoost = Math.min(10, Math.log2(Number(row.sampleCount) + 1) * 3)
       const usefulBoost = Math.min(5, Math.log2(Number(row.usefulTotal ?? 0) + 1))
-      const score = Math.max(0, Math.min(100, dimensionScore * 0.85 + activityBoost + usefulBoost))
+      const score = Math.max(
+        0,
+        Math.min(100, dimensionScore * 0.85 + activityBoost + usefulBoost)
+      )
+      return {
+        companyId: row.companyId,
+        date: day,
+        score: score.toFixed(1),
+        sampleCount: Number(row.sampleCount),
+        components: {
+          dimensions: Number(dimensionScore.toFixed(1)),
+          activity: Number(activityBoost.toFixed(1)),
+          useful: Number(usefulBoost.toFixed(1)),
+        },
+        updatedAt: now,
+      }
+    })
+
+    if (writes.length > 0) {
       await db
         .insert(companySentimentDaily)
-        .values({
-          companyId: row.companyId,
-          date: day,
-          score: score.toFixed(1),
-          sampleCount: Number(row.sampleCount),
-          components: {
-            dimensions: Number(dimensionScore.toFixed(1)),
-            activity: Number(activityBoost.toFixed(1)),
-            useful: Number(usefulBoost.toFixed(1)),
-          },
-        })
+        .values(writes)
         .onConflictDoUpdate({
           target: [companySentimentDaily.companyId, companySentimentDaily.date],
           set: {
-            score: score.toFixed(1),
-            sampleCount: Number(row.sampleCount),
-            components: {
-              dimensions: Number(dimensionScore.toFixed(1)),
-              activity: Number(activityBoost.toFixed(1)),
-              useful: Number(usefulBoost.toFixed(1)),
-            },
-            updatedAt: new Date(),
+            score: sql`excluded.score`,
+            sampleCount: sql`excluded.sample_count`,
+            components: sql`excluded.components`,
+            updatedAt: sql`excluded.updated_at`,
           },
         })
     }
 
-    return NextResponse.json({ date: day, companiesUpdated: rows.length })
+    return NextResponse.json({ date: day, companiesUpdated: writes.length })
   } catch (error) {
     console.error("sentiment cron failed:", error)
     return NextResponse.json({ error: "Aggregation failed" }, { status: 503 })

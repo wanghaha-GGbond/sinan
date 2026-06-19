@@ -62,31 +62,39 @@ export async function PATCH(
     const data = parsed.data
 
     if (data.action === "approve") {
-      const { grantedTrustLevel } = await approveVerification(
-        verificationId,
-        moderator.userId
-      )
-      return NextResponse.json({ action: "approved", grantedTrustLevel })
+      const result = await approveVerification(verificationId, moderator.userId)
+      if (result.kind === "error") {
+        return NextResponse.json(
+          { error: result.message, code: result.code },
+          { status: result.status }
+        )
+      }
+      return NextResponse.json({ action: "approved", grantedTrustLevel: result.grantedTrustLevel })
     }
 
     if (data.action === "reject") {
-      await rejectVerification(verificationId, moderator.userId, data.rejectReason)
+      const result = await rejectVerification(verificationId, moderator.userId, data.rejectReason)
+      if (result.kind === "error") {
+        return NextResponse.json(
+          { error: result.message, code: result.code },
+          { status: result.status }
+        )
+      }
       return NextResponse.json({ action: "rejected" })
     }
 
     if (data.action === "revoke") {
-      await revokeVerification(verificationId, moderator.userId, data.rejectReason)
+      const result = await revokeVerification(verificationId, moderator.userId, data.rejectReason)
+      if (result.kind === "error") {
+        return NextResponse.json(
+          { error: result.message, code: result.code },
+          { status: result.status }
+        )
+      }
       return NextResponse.json({ action: "revoked" })
     }
   } catch (error) {
-    const msg = error instanceof Error ? error.message : "操作失败"
-    console.error("[moderation/company-verifications] PATCH failed:", error)
-    if (
-      msg === "Verification not found" ||
-      msg === "Only approved verifications can be revoked"
-    ) {
-      return NextResponse.json({ error: msg }, { status: 400 })
-    }
+    console.error("[moderation/company-verifications] PATCH unexpected failure:", error)
     return NextResponse.json({ error: "操作失败，请稍后重试" }, { status: 500 })
   }
 }

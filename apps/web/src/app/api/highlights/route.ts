@@ -12,6 +12,8 @@ import {
   HIGHLIGHT_CONTENT_MIN,
   isValidHighlightContent,
 } from "@/lib/server/p1-m4-services"
+import { hasAttackWord, hasSensitive, maskSensitiveContent } from "@/lib/content-guard"
+import { checkRateLimit } from "@/lib/server/rate-limit"
 
 export const dynamic = "force-dynamic"
 
@@ -50,6 +52,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "请先登录" }, { status: 401 })
   }
 
+  // Per-user throttle: prevents a single account from spamming the
+  // moderation queue. 10/minute is well above the natural rate at
+  // which a human writes new highlights.
+  const rl = checkRateLimit(
+    `highlight-submit:${user.userId}`,
+    { maxRequests: 10, windowSeconds: 60 }
+  )
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "提交太频繁，请稍后再试", retryAfter: rl.retryAfter },
+      { status: 429 }
+    )
+  }
+
   let body: { content?: unknown }
   try {
     body = await request.json()
@@ -62,6 +78,16 @@ export async function POST(request: NextRequest) {
       {
         error: `内容需 ${HIGHLIGHT_CONTENT_MIN}-${HIGHLIGHT_CONTENT_MAX} 字`,
       },
+      { status: 400 }
+    )
+  }
+
+  // PII / attack-word guard — same gate as reviews and discussions, so
+  // high-light content cannot leak phone/email or use slur vocabulary.
+  const trimmedContent = body.content.trim()
+  if (hasSensitive(trimmedContent) || hasAttackWord(trimmedContent)) {
+    return NextResponse.json(
+      { error: "内容包含不适合公开展示的信息，请调整后再发布。" },
       { status: 400 }
     )
   }
@@ -84,7 +110,7 @@ export async function POST(request: NextRequest) {
       .insert(highlights)
       .values({
         userId: user.userId,
-        content: body.content.trim(),
+        content: maskSensitiveContent(trimmedContent),
         status: "pending",
       })
       .returning()

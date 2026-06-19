@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/server/auth"
+import { checkRateLimit, getRateLimitKey } from "@/lib/server/rate-limit"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -241,7 +242,20 @@ function getDefaultBadges(): Badge[] {
 // GET /api/me — user dashboard aggregation
 // ---------------------------------------------------------------------------
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Dashboard aggregator fans out to ~6 sequential queries. Cap per-IP
+  // so a misbehaving client can't pin the connection pool.
+  const rl = checkRateLimit(
+    `me-dashboard:${getRateLimitKey(request, "/api/me")}`,
+    { maxRequests: 60, windowSeconds: 60 }
+  )
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests", retryAfter: rl.retryAfter },
+      { status: 429 }
+    )
+  }
+
   const authUser = await getAuthUser()
 
   // Default fallback when not authenticated

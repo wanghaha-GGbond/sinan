@@ -16,17 +16,32 @@ import {
   shouldPromoteSkillToApproved,
   SKILL_APPROVAL_THRESHOLD,
 } from "@/lib/server/p1-m4-services"
+import { checkRateLimit, getRateLimitKey } from "@/lib/server/rate-limit"
 
 export const dynamic = "force-dynamic"
 
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { getAuthUser } = await import("@/lib/server/auth")
   const user = await getAuthUser()
   if (!user) {
     return NextResponse.json({ error: "请先登录" }, { status: 401 })
+  }
+
+  // Per-user/IP throttle. The unique index already blocks duplicates,
+  // but a probe-storm against many different skills wastes write IO
+  // and pollutes logs. 30/minute is well above genuine human rate.
+  const rl = checkRateLimit(
+    `skill-endorse:${user.userId}:${getRateLimitKey(request, "/api/skills/[id]/endorse")}`,
+    { maxRequests: 30, windowSeconds: 60 }
+  )
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "操作太频繁，请稍后再试", retryAfter: rl.retryAfter },
+      { status: 429 }
+    )
   }
 
   const { id: skillId } = await params

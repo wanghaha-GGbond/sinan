@@ -8,6 +8,8 @@ import { desc, eq } from "drizzle-orm"
 import { skills } from "@/db/schema/p1-features"
 import { users } from "@/db/schema/users"
 import { isValidSkillPayload } from "@/lib/server/p1-m4-services"
+import { hasAttackWord, hasSensitive, maskSensitiveContent } from "@/lib/content-guard"
+import { checkRateLimit, getRateLimitKey } from "@/lib/server/rate-limit"
 
 export const dynamic = "force-dynamic"
 
@@ -48,6 +50,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "请先登录" }, { status: 401 })
   }
 
+  // Per-user/IP throttle. Skills are public stream items — without a
+  // cap, one account can flood the feed. Use IP fallback for unauth
+  // probes (auth gate above catches them, but defense in depth).
+  const rl = checkRateLimit(
+    `skill-submit:${user.userId}:${getRateLimitKey(request, "/api/skills")}`,
+    { maxRequests: 10, windowSeconds: 60 }
+  )
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "提交太频繁，请稍后再试", retryAfter: rl.retryAfter },
+      { status: 429 }
+    )
+  }
+
   let body: { name?: unknown; description?: unknown; evidenceNote?: unknown }
   try {
     body = await request.json()
@@ -56,6 +72,23 @@ export async function POST(request: NextRequest) {
   }
   if (!isValidSkillPayload(body)) {
     return NextResponse.json({ error: "字段不合法" }, { status: 400 })
+  }
+
+  // PII / attack-word guard across all three free-text fields.
+  // A skill submission could otherwise leak contact info in name or
+  // description, or carry slur language in the evidence note.
+  const name = body.name.trim()
+  const description = body.description.trim()
+  const evidenceNote = body.evidenceNote.trim()
+  const fields = { name, description, evidenceNote }
+  const tainted = (Object.keys(fields) as (keyof typeof fields)[]).find(
+    (k) => hasSensitive(fields[k]) || hasAttackWord(fields[k])
+  )
+  if (tainted) {
+    return NextResponse.json(
+      { error: `${tainted} 包含不适合公开展示的信息，请调整后再发布。` },
+      { status: 400 }
+    )
   }
 
   try {
@@ -76,9 +109,9 @@ export async function POST(request: NextRequest) {
       .insert(skills)
       .values({
         userId: user.userId,
-        name: body.name.trim(),
-        description: body.description.trim(),
-        evidenceNote: body.evidenceNote.trim(),
+        name: maskSensitiveContent(name),
+        description: maskSensitiveContent(description),
+        evidenceNote: maskSensitiveContent(evidenceNote),
         status: "pending",
       })
       .returning()
