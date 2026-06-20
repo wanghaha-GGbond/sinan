@@ -14,6 +14,7 @@ import { usePathname } from "next/navigation"
 
 import { SolidButton } from "@/components/ui/solid-button"
 import { SolidTopbar } from "@/components/ui/solid-topbar"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { useAuth } from "@/lib/auth-context"
 
 const intelLinks = [
@@ -83,6 +84,7 @@ function HomeHeader() {
                   写评价
                 </Link>
               </SolidButton>
+              <ThemeToggle />
               <button
                 onClick={() => logout()}
                 aria-label="退出登录"
@@ -108,6 +110,7 @@ function HomeHeader() {
                   写评价
                 </Link>
               </SolidButton>
+              <ThemeToggle />
               <SolidButton asChild variant="dark" size="sm" data-testid="home-search-link">
                 <Link href="/search" aria-label="搜索">
                   <Search data-icon="inline-start" />
@@ -134,6 +137,7 @@ function CompanyHeader() {
       }
       rightSlot={
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <SolidButton asChild variant="primary" size="sm">
             <Link href="/submit/review">
               <PenLine className="size-3.5" />
@@ -156,6 +160,7 @@ function SearchHeader() {
       variant="default"
       rightSlot={
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <SolidButton asChild variant="primary" size="sm">
             <Link href="/submit/review">
               <PenLine className="size-3.5" />

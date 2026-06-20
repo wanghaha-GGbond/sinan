@@ -442,15 +442,19 @@
   }
 
   .solid-card {
-    background: #ffffff;
+    background: var(--card);
     border-radius: 28px;
-    box-shadow: 0 8px 0 rgba(17, 24, 39, 0.045), 0 18px 36px rgba(17, 24, 39, 0.06);
+    box-shadow:
+      0 8px 0 color-mix(in oklch, var(--foreground) 4.5%, transparent),
+      0 18px 36px color-mix(in oklch, var(--foreground) 6%, transparent);
   }
 
   .solid-card-subtle {
-    background: #ffffff;
+    background: var(--card);
     border-radius: 26px;
-    box-shadow: 0 6px 0 rgba(17, 24, 39, 0.035), 0 16px 32px rgba(17, 24, 39, 0.05);
+    box-shadow:
+      0 6px 0 color-mix(in oklch, var(--foreground) 3.5%, transparent),
+      0 16px 32px color-mix(in oklch, var(--foreground) 5%, transparent);
   }
 
   .btn-primary-modern {

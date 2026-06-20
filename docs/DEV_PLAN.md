@@ -23,16 +23,45 @@
 
 ---
 
-## 总览（v2.0 — Sprint 11-16）
+## 总览（v2.0 — Sprint 11-17）
 
-| Sprint | 阶段 | 主题 | 核心交付 |
-|---|---|---|---|
-| S11 | M3a | 拍卖功能化收尾 | 前端交互闭环、嘉宾管理页、结算通知 |
-| S12 | M3b | 圈层 + 私聊前端 | 圈层浏览/加入/背书、私聊 inbox/thread/请求队列前端 |
-| S13 | M3c | P1 前端完善 | 高光馆/一技封神/感谢信漂流前端完整化 |
-| S14 | M3d | 测试补全 | 单元测试覆盖 server libs、E2E 覆盖核心用户路径 |
-| S15 | M3e | 性能 + 质量 | 去 mock data、SQL 查询优化、错误边界、a11y |
-| S16 | M3f | 收尾 + iOS 规划 | bug bash、文档同步、iOS 追齐计划 |
+| Sprint | 阶段 | 主题 | 核心交付 | 状态 |
+|---|---|---|---|---|
+| S11 | M3a | 拍卖功能化收尾 | 前端交互闭环、嘉宾管理页、结算通知 | ✅ `0c6a583` `3be6da1` `ca5bc9a` |
+| S12 | M3b | 圈层 + 私聊前端 | 圈层浏览/加入/背书、私聊 inbox/thread/请求队列前端 | ✅ `06179e8` `4f8ea46` `954bfef` |
+| S13 | M3c | P1 前端完善 | 高光馆/一技封神/感谢信漂流前端完整化 | ✅ `dec31fc` `8d0b4d2` |
+| S14 | M3d | 测试补全 | 单元测试覆盖 server libs、E2E 覆盖核心用户路径 | 🟡 6 spec 文件已建,需扩 case |
+| S15 | M3e | 性能 + 质量 | 去 mock data、SQL 查询优化、错误边界、a11y | 🟡 后端 hardening 已做(`22e68f1`),前端 review-driven 项收尾中 |
+| S16 | M3f | 收尾 + iOS 规划 | bug bash、安全 middleware、移动端、暗色模式、文档同步 | 🔄 进行中 |
+| S17 | M3g | DB 真会话 + 收口 | Neon HTTP → Pool 切换、真事务/锁生效、DEV_PLAN 同步 | ✅ `8509cf6` + 本次 docs 更新 |
+
+### S14 / S15 / S16 / S17 详细状态
+
+**S14（测试）** 进展：
+- ✅ 已建：`auction-engine.spec.ts` (6) / `circles.spec.ts` (8) / `dm-engine.spec.ts` (8) / `anonymity.spec.ts` (2) / `sinan.spec.ts` (E2E) / `visual.spec.ts`
+- 🟡 缺口：`verification` / `invites` / 5 个 service 的事务边界/并发路径测试覆盖几乎空白；E2E 在 sandbox 跑需真 `DATABASE_URL`
+- 下一步（Sprint 18）：扩 `verification.spec.ts` + `invites.spec.ts` + 真 Neon 后跑 playwright E2E
+
+**S15（性能 + 质量）** 进展：
+- ✅ `22e68f1` review-driven 后端改善：C2 (anonymity 跨状态降级) + H3 (verification approve 事务) + H4 (issueInitialInvites 并发锁) + H5 (cron 任务幂等)
+- ✅ `48deaf6` 修 React 19 `react-hooks/set-state-in-effect` 警告（`/me/highlights` + `/me/skills`）
+- 🟡 前端 review 剩余项（mock data 替换 / N+1 / a11y focus 顺序）排到 Sprint 18
+
+**S16（收尾）** 进展（本次 commit）：
+- 🔄 安全 middleware (CSP / CORS / X-Frame-Options / X-Content-Type-Options / Referrer-Policy)
+- 🔄 移动端响应式审计（< 780px 单栏）
+- 🔄 暗色模式 (theme switch + `dark:` 全面 audit)
+- ✅ DEV_PLAN 同步到代码现状（本文件本次更新）
+
+**S17（DB 真会话）** 进展：
+- ✅ `8509cf6` Neon HTTP → WebSocket Pool 切换
+  - 真实 PG session：`BEGIN/COMMIT/ROLLBACK` 真回滚
+  - `SELECT FOR UPDATE` 真拿 row lock
+  - `pg_advisory_xact_lock` 正常工作（invites 防并发重发）
+  - 22 处 service 调用从哑 driver 升级到真 PG 语义
+  - Edge runtime 兼容：`/api/og/sentiment` build 后 bundle 不含 Pool/neon-serverless/WebSocket 引用
+  - 无 polyfill 依赖：Node 22.22.3 内置 WebSocket
+  - service 代码零改动（drizzle API 在 `neon-http` ↔ `neon-serverless` 之间完全兼容）
 
 ---
 
@@ -183,6 +212,18 @@ E2E 测试(`sinan.spec.ts`)存在但未跑通。
 3. **PIPL 最小化**：验证原件审完即删、薪资类信息不碰、敏感字段问一句"能不能不存"。
 4. **遵守仓库规约**：写代码前先读 `node_modules/next/dist/docs/` 对应章节。
 5. **Web 优先**：iOS 暂不跟进新功能，待 Web 端全部验收通过后再启动追齐。
+6. **DB driver 单一来源**：Web 端只跑 Postgres + `@neondatabase/serverless` Pool（`apps/web/src/db/client.ts`）。不要回退 `neon-http` 或尝试 SQLite/双 dialect —— PG 独有特性（`FOR UPDATE` / `pg_advisory_xact_lock` / `gen_random_uuid()` / ENUM）是 22 处 service 的安全网。
+
+---
+
+## 路线图（Sprint 18+）
+
+| Sprint | 主题 | 目标 |
+|---|---|---|
+| S18 | 测试硬化 + a11y + 性能收口 | verification/invites/auction/dm 单测扩到 80%；E2E 跑通核心 5 路径；review mock data 替换完；a11y focus 顺序 + error/loading 全覆盖 |
+| S19 | M3 探索期功能（待法务通过后启动） | 拍卖真实结算 + 资金通道（仅评估，不接）、圈子付费加入（评估中） |
+| S20 | iOS 追齐（评估） | 启动前重评估：Web 端 M3 全部收口、CI 稳定、E2E 绿 |
+| M4 | 法务通过后的真实支付 + 经营性 ICP | 当前 hold，由法务/合规同事评估启动时机 |
 
 ## 明确不做（v2.0 scope boundary）
 

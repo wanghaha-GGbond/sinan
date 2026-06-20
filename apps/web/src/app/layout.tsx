@@ -6,6 +6,7 @@ import { FirstRunHint } from "@/components/layout/first-run-hint";
 import { KeyboardShortcuts } from "@/components/layout/keyboard-shortcuts";
 import { QueryProvider } from "@/providers/query-provider";
 import { AuthProvider } from "@/lib/auth-context";
+import { ThemeProvider, THEME_INIT_SCRIPT } from "@/lib/theme-context";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -33,15 +34,25 @@ export default function RootLayout({
       lang="zh-CN"
       data-scroll-behavior="smooth"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        {/* Pre-hydration: set <html class="dark"> before first paint
+            to avoid a light↔dark flash on reload. The script reads
+            localStorage("sinan:theme") and falls back to system pref.
+            self-contained; no module syntax. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="min-h-full">
         <QueryProvider>
-          <AuthProvider>
-            <AppShell>{children}</AppShell>
-            <FirstRunHint />
-            <KeyboardShortcuts />
-            <Toaster />
-          </AuthProvider>
+          <ThemeProvider>
+            <AuthProvider>
+              <AppShell>{children}</AppShell>
+              <FirstRunHint />
+              <KeyboardShortcuts />
+              <Toaster />
+            </AuthProvider>
+          </ThemeProvider>
         </QueryProvider>
       </body>
     </html>
