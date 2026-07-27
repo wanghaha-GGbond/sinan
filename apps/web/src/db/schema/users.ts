@@ -19,6 +19,8 @@ export const users = pgTable(
 
     trustLevel: integer("trust_level").default(0).notNull(),
     reputationScore: integer("reputation_score").default(0).notNull(),
+    // M4 积分竞猜内部账户,每周一发 100 points,亏完归零不充值
+    pointsBalance: integer("points_balance").default(0).notNull(),
 
     inviterUserId: uuid("inviter_user_id"),
 
