@@ -1,8 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
-import { Search, Sparkles, Building2, TrendingUp, ArrowRight } from "lucide-react"
+import { useEffect, useState } from "react"
+import { Search, TrendingUp, ArrowRight } from "lucide-react"
 
 import { CompanyCard } from "@/components/company/company-card"
 import { SolidButton } from "@/components/ui/solid-button"
@@ -10,9 +10,7 @@ import { SolidEmptyState } from "@/components/ui/solid-empty-state"
 import { SolidSearchInput } from "@/components/ui/solid-search-input"
 import { searchCompanies } from "@/lib/api/companies"
 import type { CompanyListItem } from "@/lib/api/types"
-import { popularSearches, recommendedCompanyItems } from "@/lib/mock-data"
-
-const STOPWORDS = ["公司", "有限", "股份", "集团", "科技", "网络", "信息", "(", ")", "（", "）", " ", "的"]
+const popularSearches = ["字节跳动", "腾讯", "阿里巴巴", "小红书", "美团", "华为"]
 
 export default function SearchPage() {
   const [query, setQuery] = useState("")
@@ -73,7 +71,7 @@ export default function SearchPage() {
       {!loading && !error && results.length === 0 && debouncedQuery.trim() ? (
         <SmartEmptyState
           query={debouncedQuery.trim()}
-          onSubmit={(text) => setQuery(text)}
+          onSubmit={setQuery}
         />
       ) : null}
       {!loading && results.length > 0 && (
@@ -94,22 +92,6 @@ export default function SearchPage() {
 }
 
 function SmartEmptyState({ query, onSubmit }: { query: string; onSubmit: (text: string) => void }) {
-  // Try 3 retrieval strategies and surface the best matches as
-  // suggestions, instead of just 'no results'. This is what
-  // Linear / Notion / Vercel do — 'empty' is a chance to be
-  // useful, not just to apologize.
-  const suggestions = useMemo(() => {
-    const clean = query
-      .split("")
-      .filter((c) => !STOPWORDS.includes(c))
-      .join("")
-      .toLowerCase()
-    if (!clean) return []
-    return recommendedCompanyItems
-      .filter((c) => c.companyName.toLowerCase().includes(clean) || c.industry.includes(query))
-      .slice(0, 3)
-  }, [query])
-
   return (
     <div>
       <SolidEmptyState
@@ -122,33 +104,6 @@ function SmartEmptyState({ query, onSubmit }: { query: string; onSubmit: (text: 
         }
       />
       <div className="mt-6 space-y-4 text-left">
-        {suggestions.length > 0 ? (
-          <div>
-            <p className="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-              <Sparkles className="size-3" />
-              你是不是要找
-            </p>
-            <ul className="mt-2.5 flex flex-col gap-1.5">
-              {suggestions.map((c) => (
-                <li key={c.id}>
-                  <button
-                    type="button"
-                    onClick={() => onSubmit(c.companyName)}
-                    className="flex w-full min-h-11 items-center gap-3 rounded-xl border border-border/60 bg-card px-3.5 py-2 text-left text-sm transition hover:border-primary hover:bg-primary-tint/50"
-                  >
-                    <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary-tint text-primary-deep">
-                      <Building2 className="size-3.5" />
-                    </span>
-                    <span className="min-w-0 flex-1 truncate text-foreground">{c.companyName}</span>
-                    <span className="text-xs text-muted-foreground">{c.industry}</span>
-                    <ArrowRight className="size-3.5 text-muted-foreground" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-
         <div>
           <p className="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
             <Search className="size-3" />

@@ -415,7 +415,7 @@ export async function confirmVerificationCode(
   const { companyVerifications } = await import("@/db/schema/company-verifications")
   const { users } = await import("@/db/schema/users")
   const { companies } = await import("@/db/schema/companies")
-  const { eq, and, isNull, desc, sql } = await import("drizzle-orm")
+  const { eq, and, isNull, desc, lt, sql } = await import("drizzle-orm")
 
   const now = new Date()
 
@@ -437,11 +437,24 @@ export async function confirmVerificationCode(
 
   const submittedHash = hashCode(submittedCode)
   if (submittedHash !== codeRow.codeHash) {
-    await db
+    const [attempted] = await db
       .update(emailVerificationCodes)
-      .set({ attemptCount: codeRow.attemptCount + 1 })
-      .where(eq(emailVerificationCodes.id, codeRow.id))
-    return "invalid"
+      .set({
+        attemptCount: sql`LEAST(${emailVerificationCodes.attemptCount} + 1, ${MAX_ATTEMPTS})`,
+      })
+      .where(
+        and(
+          eq(emailVerificationCodes.id, codeRow.id),
+          isNull(emailVerificationCodes.consumedAt),
+          lt(emailVerificationCodes.attemptCount, MAX_ATTEMPTS)
+        )
+      )
+      .returning({ attemptCount: emailVerificationCodes.attemptCount })
+    return attempted?.attemptCount === MAX_ATTEMPTS
+      ? "too_many_attempts"
+      : attempted
+        ? "invalid"
+        : "too_many_attempts"
   }
 
   // Code matches — consume it + approve verification in one transaction
@@ -454,7 +467,8 @@ export async function confirmVerificationCode(
         .where(
           and(
             eq(emailVerificationCodes.id, codeRow.id),
-            isNull(emailVerificationCodes.consumedAt)
+            isNull(emailVerificationCodes.consumedAt),
+            lt(emailVerificationCodes.attemptCount, MAX_ATTEMPTS)
           )
         )
         .returning({ id: emailVerificationCodes.id })

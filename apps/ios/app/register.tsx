@@ -1,29 +1,37 @@
 import { useState } from "react"
-import { ScrollView, StyleSheet, Text, View } from "react-native"
-import { Link, router } from "expo-router"
+import { Linking, ScrollView, StyleSheet, Text, View } from "react-native"
+import { Link, router, useLocalSearchParams } from "expo-router"
 import { COLORS } from "../theme"
 import { SolidButton } from "../components/SolidButton"
 import { AppFooter } from "../components/AppShellBits"
 import { SolidCard } from "../components/SolidCard"
 import { SolidInput } from "../components/SolidInput"
+import { getWebUrl, register } from "../lib/api"
+import { getSafeAppPath } from "../lib/navigation"
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const PHONE_RE = /^1[3-9]\d{9}$/
 
 export default function RegisterScreen() {
+  const params = useLocalSearchParams<{ next?: string | string[] }>()
+  const nextPath = getSafeAppPath(params.next)
   const [mode, setMode] = useState<"email" | "phone">("email")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [inviteCode, setInviteCode] = useState("")
   const [error, setError] = useState("")
   const [submitting, setSubmitting] = useState(false)
 
-  function submit() {
+  async function submit() {
     setError("")
-    if (mode === "email" && !email.trim()) {
-      setError("请输入邮箱")
+    if (mode === "email" && !EMAIL_RE.test(email.trim())) {
+      setError("请输入有效邮箱")
       return
     }
-    if (mode === "phone" && !phone.trim()) {
-      setError("请输入手机号")
+    if (mode === "phone" && !PHONE_RE.test(phone.trim())) {
+      setError("请输入有效手机号")
       return
     }
     if (password.length < 8) {
@@ -34,11 +42,23 @@ export default function RegisterScreen() {
       setError("两次密码输入不一致")
       return
     }
+    if (!inviteCode.trim()) {
+      setError("请输入邀请码")
+      return
+    }
     setSubmitting(true)
-    window.setTimeout(() => {
+    try {
+      await register({
+        ...(mode === "email" ? { email: email.trim().toLowerCase() } : { phone: phone.trim() }),
+        password,
+        inviteCode: inviteCode.trim().toUpperCase(),
+      })
+      router.replace(nextPath as never)
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "注册失败")
+    } finally {
       setSubmitting(false)
-      router.replace("/")
-    }, 300)
+    }
   }
 
   return (
@@ -74,6 +94,9 @@ export default function RegisterScreen() {
           <Field label="确认密码">
             <SolidInput value={confirmPassword} onChangeText={setConfirmPassword} placeholder="再次输入密码" secureTextEntry />
           </Field>
+          <Field label="邀请码">
+            <SolidInput value={inviteCode} onChangeText={setInviteCode} placeholder="8 位邀请码" autoCapitalize="characters" maxLength={8} />
+          </Field>
 
           {error ? (
             <View style={S.errorBox}>
@@ -82,15 +105,21 @@ export default function RegisterScreen() {
           ) : null}
 
           <View style={S.privacyBox}>
-            <Text style={S.privacyText}>注册即表示同意司南的匿名保护规则。你的身份信息不会向公司方公开。</Text>
+            <Text style={S.privacyText}>
+              注册即表示同意
+              <Text style={S.privacyLink} onPress={() => void Linking.openURL(getWebUrl("/legal/terms"))}>《用户协议》</Text>
+              和
+              <Text style={S.privacyLink} onPress={() => void Linking.openURL(getWebUrl("/legal/privacy"))}>《隐私政策》</Text>
+              。你的身份信息不会向公司方公开。
+            </Text>
           </View>
 
-          <SolidButton title={submitting ? "注册中..." : "注册"} size="lg" disabled={submitting} onPress={submit} />
+          <SolidButton title={submitting ? "注册中..." : "注册"} size="lg" disabled={submitting} onPress={() => void submit()} />
         </View>
 
         <View style={S.switchLine}>
           <Text style={S.switchText}>已有账号？</Text>
-          <Link href="/login" asChild>
+          <Link href={{ pathname: "/login", params: { next: nextPath } }} asChild>
             <SolidButton title="登录" variant="ghost" size="sm" />
           </Link>
         </View>
@@ -134,6 +163,7 @@ const S = StyleSheet.create({
   errorText: { fontSize: 13, color: COLORS.danger, fontWeight: "700" },
   privacyBox: { borderRadius: 18, backgroundColor: COLORS.surfaceHover, padding: 13 },
   privacyText: { fontSize: 12, color: COLORS.muted, lineHeight: 18 },
+  privacyLink: { color: COLORS.primary, fontWeight: "800", textDecorationLine: "underline" },
   switchLine: { flexDirection: "row", alignItems: "center", justifyContent: "center", marginTop: 20, gap: 4 },
   switchText: { fontSize: 13, color: COLORS.muted },
 })

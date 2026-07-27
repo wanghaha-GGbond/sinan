@@ -2,17 +2,44 @@
   "expo": {
     "name": "司南",
     "slug": "sinan",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon-v2.png",
     "scheme": "sinan",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "experiments": {
+      "autolinkingModuleResolution": true,
+      "typedRoutes": true
+    },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.sinan.app"
+      "bundleIdentifier": "com.sinan.app",
+      "buildNumber": "1",
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "privacyManifests": {
+        "NSPrivacyTracking": false,
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryFileTimestamp",
+            "NSPrivacyAccessedAPITypeReasons": ["C617.1"]
+          }
+        ]
+      }
     },
-    "platforms": ["ios", "web"],
-    "plugins": ["expo-router"]
+    "platforms": [
+      "ios",
+      "web"
+    ],
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ]
   }
 }

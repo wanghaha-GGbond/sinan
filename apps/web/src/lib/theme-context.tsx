@@ -70,7 +70,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   // `react-hooks/set-state-in-effect` rule flags it as a cascading render.
   useEffect(() => {
     const handle = window.setTimeout(() => {
-      const stored = readStoredTheme() ?? "system"
+      const stored = readStoredTheme() ?? "light"
       setThemeState(stored)
       setResolved(applyThemeClass(stored))
     }, 0)
@@ -135,4 +135,4 @@ export function useTheme(): ThemeState {
  * Keep it small + self-contained — no module syntax, no closures
  * over page data, no console statements.
  */
-export const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem("sinan:theme");var d=t==="dark"||((t==null||t==="system")&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);}catch(e){}})();`
+export const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem("sinan:theme");var d=t==="dark"||(t==="system"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);}catch(e){}})();`

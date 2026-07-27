@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Compass, Home, Search, PenLine, TrendingUp, ArrowRight } from "lucide-react"
+import { BookOpen, Compass, Home, Search, PenLine, ArrowRight } from "lucide-react"
 
 import { SolidButton } from "@/components/ui/solid-button"
 import { SolidCard } from "@/components/ui/solid-card"
@@ -62,11 +62,11 @@ export default function NotFound() {
         </Link>
         ,
         <Link
-          href="/salaries"
+          href="/research"
           className="ml-1 inline-flex items-center gap-0.5 font-medium text-foreground underline-offset-4 hover:underline"
         >
-          查薪资区间
-          <TrendingUp className="size-3" />
+          浏览公司研报
+          <BookOpen className="size-3" />
         </Link>
       </p>
     </section>

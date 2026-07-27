@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import React, { useMemo, useState } from "react"
+import React, { useEffect, useState } from "react"
 import {
   Building2,
   CheckCircle2,
@@ -16,7 +16,8 @@ import { SolidButton } from "@/components/ui/solid-button"
 import { SolidCard } from "@/components/ui/solid-card"
 import { Textarea } from "@/components/ui/textarea"
 import { useAuth } from "@/lib/auth-context"
-import { companies } from "@/lib/mock-data"
+import { searchCompanies } from "@/lib/api/companies"
+import type { CompanyListItem } from "@/lib/types"
 
 type ProofType = "work_email" | "business_document"
 
@@ -28,12 +29,9 @@ export function VerificationForm({
   initialCompanyName: string
 }) {
   const { user, loading } = useAuth()
-  const initialCompany = useMemo(
-    () => companies.find((company) => company.id === initialCompanyId),
-    [initialCompanyId]
-  )
-  const [companyId, setCompanyId] = useState(initialCompany?.id ?? initialCompanyId)
-  const [companyName, setCompanyName] = useState(initialCompany?.name ?? initialCompanyName)
+  const [companyOptions, setCompanyOptions] = useState<CompanyListItem[]>([])
+  const [companyId, setCompanyId] = useState(initialCompanyId)
+  const [companyName, setCompanyName] = useState(initialCompanyName)
   const [applicantName, setApplicantName] = useState("")
   const [workEmail, setWorkEmail] = useState("")
   const [jobTitle, setJobTitle] = useState("")
@@ -50,8 +48,16 @@ export function VerificationForm({
   const [codeConfirming, setCodeConfirming] = useState(false)
   const [verified, setVerified] = useState(false)
 
+  useEffect(() => {
+    let active = true
+    searchCompanies({}).then((result) => {
+      if (active && result.data) setCompanyOptions(result.data.companies)
+    })
+    return () => { active = false }
+  }, [])
+
   function chooseCompany(value: string) {
-    const company = companies.find((item) => item.id === value)
+    const company = companyOptions.find((item) => item.id === value)
     setCompanyId(value)
     setCompanyName(company?.name ?? "")
   }
@@ -148,7 +154,7 @@ export function VerificationForm({
           <h1 className="mt-4 text-2xl font-semibold text-foreground">登录后申请公司认证</h1>
           <p className="mt-2 text-sm text-muted-foreground">认证申请需要绑定负责人账号，以便查询审核状态。</p>
           <SolidButton asChild className="mt-6" variant="primary">
-            <Link href="/login">登录 / 注册</Link>
+            <Link href="/login?next=%2Fcompany-verification">登录 / 注册</Link>
           </SolidButton>
         </SolidCard>
       </section>
@@ -279,10 +285,10 @@ export function VerificationForm({
                 required
               >
                 <option value="">请选择公司</option>
-                {companyId && !companies.some((company) => company.id === companyId) ? (
+                {companyId && !companyOptions.some((company) => company.id === companyId) ? (
                   <option value={companyId}>{companyName}</option>
                 ) : null}
-                {companies.map((company) => (
+                {companyOptions.map((company) => (
                   <option key={company.id} value={company.id}>
                     {company.name} · {company.city}
                   </option>

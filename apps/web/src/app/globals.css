@@ -7,8 +7,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: "Avenir Next", Avenir, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   --font-heading: var(--font-sans);
 
   /* Impeccable §Typography: 1.25x modular type scale from 16px base.
@@ -143,7 +143,7 @@
      are reserved for the few cases (lock-in product brand
      identity, code comments) where readability beats
      perceptual uniformity. Visual values are 1:1. */
-  --background: oklch(1 0 0);
+  --background: oklch(0.992 0.008 156);  /* white mint #f8fffb */
   --foreground: oklch(0.21 0.02 264);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.21 0.02 264);
@@ -166,8 +166,8 @@
   --signal-foreground: oklch(1 0 0);
   --secondary: oklch(1 0 0);
   --secondary-foreground: oklch(0.39 0.08 158);    /* emerald-800 */
-  --muted: oklch(0.97 0.012 156);                   /* green-tinted cream (brand hue) */
-  --muted-hover: oklch(0.94 0.025 156);
+  --muted: oklch(0.975 0.018 156);                  /* pale mint section surface */
+  --muted-hover: oklch(0.95 0.035 156);
   --muted-foreground: oklch(0.55 0.012 264);     /* gray-500 with the faintest green undertone */
   --accent: oklch(0.98 0.01 154);
   --accent-foreground: oklch(0.39 0.08 158);
@@ -190,9 +190,9 @@
   --tw-pink: oklch(0.65 0.22 0);          /* was #F91880 */
   --tw-pink-surface: oklch(0.95 0.04 350); /* was #FCE7F3 */
   --tw-border: oklch(0.92 0.005 95);
-  --tw-surface: oklch(0.97 0.01 264);
-  --tw-mute: oklch(0.96 0.005 156);
-  --tw-mute-soft: oklch(0.98 0.005 156);
+  --tw-surface: oklch(0.985 0.01 156);
+  --tw-mute: oklch(0.97 0.014 156);
+  --tw-mute-soft: oklch(0.99 0.008 156);
   --tw-gray-50: oklch(0.985 0 0);
   --tw-slate-700: oklch(0.37 0.04 264);
   /* Recharts palette (used by components/company/company-intelligence-panel).
@@ -204,13 +204,13 @@
   --chart-4: oklch(0.62 0.16 56);
   --chart-5: oklch(0.37 0.04 264);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0.006 95);
+  --sidebar: oklch(0.985 0.014 156);
   --sidebar-foreground: oklch(0.18 0.025 220);
   --sidebar-primary: oklch(0.34 0.075 205);
   --sidebar-primary-foreground: oklch(0.985 0.006 95);
   --sidebar-accent: oklch(0.93 0.025 175);
   --sidebar-accent-foreground: oklch(0.25 0.055 205);
-  --sidebar-border: oklch(0.89 0.014 95);
+  --sidebar-border: oklch(0.90 0.025 156);
   --sidebar-ring: oklch(0.64 0.08 175);
 }
 
@@ -418,10 +418,10 @@
 
 @layer components {
   .glass-panel {
-    background: rgba(247, 248, 242, 0.9);
+    background: rgba(248, 255, 251, 0.9);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(209, 213, 200, 0.5);
+    border: 1px solid rgba(189, 237, 221, 0.55);
     box-shadow: 0 8px 24px rgba(17, 24, 39, 0.05);
   }
 
@@ -477,15 +477,15 @@
 
   .btn-secondary-solid {
     border-radius: 18px;
-    background: #f1f5ef;
+    background: #effbf5;
     color: #1f2937;
-    box-shadow: 0 4px 0 #d1d5c8;
+    box-shadow: 0 4px 0 #ccebdd;
     transition: all 0.15s ease-out;
   }
 
   .btn-secondary-solid:active {
     transform: translateY(2px);
-    box-shadow: 0 2px 0 #d1d5c8;
+    box-shadow: 0 2px 0 #ccebdd;
   }
 }
 

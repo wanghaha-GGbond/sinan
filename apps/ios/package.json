@@ -7,15 +7,24 @@
     "dev": "expo start",
     "ios": "expo start --ios",
     "android": "expo start --android",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit",
+    "export:ios": "expo export --platform ios --output-dir .build/ios-export --clear",
+    "release:check-config": "node scripts/check-release-config.mjs",
+    "release:check-config:ci": "node scripts/check-release-config.mjs --ci",
+    "verify": "npm run typecheck && npm run release:check-config:ci && npm run export:ios",
+    "build:simulator": "npx eas-cli build --platform ios --profile simulator",
+    "build:testflight": "npx eas-cli build --platform ios --profile production",
+    "submit:testflight": "npx eas-cli submit --platform ios --profile production"
   },
   "dependencies": {
-    "@react-native-async-storage/async-storage": "2.1.0",
+    "@react-native-async-storage/async-storage": "2.2.0",
     "@sinan/shared": "*",
     "expo": "~54.0.0",
     "expo-constants": "~18.0.13",
     "expo-linking": "~8.0.12",
     "expo-router": "~6.0.24",
+    "expo-secure-store": "~15.0.8",
     "expo-status-bar": "~3.0.9",
     "lucide-react-native": "^0.469.0",
     "react": "19.1.0",
@@ -23,8 +32,8 @@
     "react-native": "0.81.5",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
-    "react-native-web": "^0.21.0",
-    "react-native-svg": "15.8.0"
+    "react-native-svg": "15.12.1",
+    "react-native-web": "^0.21.0"
   },
   "devDependencies": {
     "@types/react": "~19.1.10",

@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server"
-import { getAuthUser } from "@/lib/server/auth"
+import { NextRequest, NextResponse } from "next/server"
+import { getAuthUserFromRequest } from "@/lib/server/auth"
 
-export async function GET() {
-  const user = await getAuthUser()
+export async function GET(request: NextRequest) {
+  const user = await getAuthUserFromRequest(request)
 
   if (!user) {
     return NextResponse.json({ user: null })
@@ -13,7 +13,7 @@ export async function GET() {
 
     // Dynamic import to avoid build-time DATABASE_URL requirement
     const { users } = await import("@/db/schema/users")
-    const { eq } = await import("drizzle-orm")
+    const { and, eq, isNull } = await import("drizzle-orm")
 
     const [row] = await db
       .select({
@@ -23,7 +23,7 @@ export async function GET() {
         trustLevel: users.trustLevel,
       })
       .from(users)
-      .where(eq(users.id, user.userId))
+      .where(and(eq(users.id, user.userId), eq(users.status, "active"), isNull(users.deletedAt)))
       .limit(1)
 
     if (!row) {

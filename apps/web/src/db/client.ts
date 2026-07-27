@@ -1,5 +1,7 @@
 import { Pool, neonConfig } from "@neondatabase/serverless"
-import { drizzle } from "drizzle-orm/neon-serverless"
+import { drizzle as drizzleNeon, type NeonDatabase } from "drizzle-orm/neon-serverless"
+import { drizzle as drizzleNodePostgres } from "drizzle-orm/node-postgres"
+import { Pool as NodePostgresPool } from "pg"
 
 import * as schema from "./schema"
 
@@ -46,7 +48,18 @@ if (!databaseUrl) {
   throw new Error("DATABASE_URL is not set")
 }
 
-const pool = new Pool({ connectionString: databaseUrl })
+const useNodePostgres = process.env.DATABASE_DRIVER === "node-postgres"
+const pool = useNodePostgres
+  ? new NodePostgresPool({ connectionString: databaseUrl })
+  : new Pool({ connectionString: databaseUrl })
 
-export const db = drizzle(pool, { schema })
+// The two Drizzle adapters expose the same relational/query surface used by
+// the application. Production keeps the Neon WebSocket adapter; the explicit
+// node-postgres mode lets CI exercise real transactions against disposable
+// PostgreSQL without changing production behavior.
+export const db = (
+  useNodePostgres
+    ? drizzleNodePostgres(pool as NodePostgresPool, { schema })
+    : drizzleNeon(pool as Pool, { schema })
+) as unknown as NeonDatabase<typeof schema>
 export { pool }

@@ -2,9 +2,10 @@
 
 import Link from "next/link"
 import {
+  BookOpen,
   Compass,
+  Home,
   LogOut,
-  MessageSquareText,
   PenLine,
   Search,
   User,
@@ -23,9 +24,46 @@ const intelLinks = [
   // the surfaces are now reachable through the company page and search
   // results only. Interviews and community stay because they're the
   // two dimensions every 打工人 evaluation actually answers to.
-  { href: "/interviews", label: "面试", icon: MessageSquareText },
-  { href: "/community", label: "社区", icon: UsersRound },
+  { href: "/research", label: "研报", icon: BookOpen },
 ]
+
+const mobileAppLinks = [
+  { href: "/", label: "推荐", icon: Home, match: (pathname: string) => pathname === "/" },
+  { href: "/search", label: "搜索", icon: Search, match: (pathname: string) => pathname.startsWith("/search") || pathname.startsWith("/company/") },
+  { href: "/submit/review", label: "评价", icon: PenLine, match: (pathname: string) => pathname.startsWith("/submit/review") },
+  { href: "/research", label: "研报", icon: BookOpen, match: (pathname: string) => pathname.startsWith("/research") },
+  { href: "/me", label: "我的", icon: User, match: (pathname: string) => pathname.startsWith("/me") || pathname.startsWith("/settings/") },
+]
+
+function MobileAppNav({ pathname }: { pathname: string }) {
+  return (
+    <nav
+      aria-label="App 主导航"
+      className="fixed inset-x-0 bottom-0 z-sticky border-t border-primary-surface-border/70 bg-card/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(14,143,95,0.08)] backdrop-blur-xl sm:hidden"
+    >
+      <div className="mx-auto grid h-16 max-w-lg grid-cols-5 px-1">
+        {mobileAppLinks.map((item) => {
+          const active = item.match(pathname)
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={active ? "page" : undefined}
+              className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-semibold transition ${
+                active ? "text-primary-deep" : "text-muted-foreground active:bg-muted"
+              }`}
+            >
+              <span className={`flex size-8 items-center justify-center rounded-full ${active ? "bg-primary-tint" : ""}`}>
+                <item.icon className="size-4" aria-hidden="true" />
+              </span>
+              <span>{item.label}</span>
+            </Link>
+          )
+        })}
+      </div>
+    </nav>
+  )
+}
 
 function IntelNav() {
   const pathname = usePathname()
@@ -176,23 +214,51 @@ function SearchHeader() {
   )
 }
 
+function AuthHeader() {
+  return (
+    <SolidTopbar
+      title="司南"
+      variant="compact"
+      leftSlot={
+        <Link href="/" className="inline-flex min-h-11 items-center gap-2 font-semibold text-foreground">
+          <span className="flex size-8 items-center justify-center rounded-full bg-primary-tint text-primary-deep">
+            <Compass className="size-4" aria-hidden="true" />
+          </span>
+          司南
+        </Link>
+      }
+      rightSlot={<ThemeToggle />}
+    />
+  )
+}
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
 
   const isHome = pathname === "/"
   const isCompany = pathname.startsWith("/company")
   const isSearch = pathname.startsWith("/search")
+  const isAuthRoute = pathname.startsWith("/login") || pathname.startsWith("/register") || pathname.startsWith("/invite/")
   const showIntelNav = isHome || isCompany || isSearch || intelLinks.some((item) => pathname.startsWith(item.href))
+  const hideMobileAppNav =
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/register") ||
+    pathname.startsWith("/invite/") ||
+    pathname.startsWith("/moderation/") ||
+    pathname.startsWith("/admin/")
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {isHome ? <HomeHeader /> : isSearch ? <SearchHeader /> : isCompany ? <CompanyHeader /> : <CompanyHeader />}
+      {isHome ? <HomeHeader /> : isAuthRoute ? <AuthHeader /> : isSearch ? <SearchHeader /> : isCompany ? <CompanyHeader /> : <CompanyHeader />}
       {showIntelNav ? <IntelNav /> : null}
-      <main>{children}</main>
-      <footer className="border-t">
+      <main className={hideMobileAppNav ? undefined : "pb-20 sm:pb-0"}>{children}</main>
+      <footer className={`border-t ${hideMobileAppNav ? "" : "mb-16 sm:mb-0"}`}>
         <div className="mx-auto flex w-full max-w-page flex-col gap-2 px-4 py-6 text-sm text-muted-foreground sm:px-6 md:flex-row md:items-center md:justify-between">
           <p>司南:入职前,先看清方向。</p>
           <div className="flex flex-wrap items-center gap-3 text-xs">
+            <Link href="/legal/privacy" className="hover:text-foreground">隐私政策</Link>
+            <Link href="/legal/terms" className="hover:text-foreground">用户协议</Link>
+            <Link href="/settings/account" className="hover:text-foreground">账号与数据</Link>
             <span
               className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 font-semibold text-foreground"
               data-testid="footer-toc-promise"
@@ -205,6 +271,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </footer>
+      {hideMobileAppNav ? null : <MobileAppNav pathname={pathname} />}
     </div>
   )
 }

@@ -10,6 +10,7 @@ import {
   Flame,
   Lock,
   LogIn,
+  LogOut,
   Navigation,
   ShieldAlert,
   ShieldCheck,
@@ -201,7 +202,7 @@ export default function MePage() {
             匿名保护,不向公司开放身份
           </p>
           <SolidButton asChild variant="primary" size="lg" className="mt-6 w-full">
-            <Link href="/login">
+            <Link href="/login?next=%2Fme">
               <LogIn className="size-4" />
               登录 / 注册
             </Link>
@@ -372,6 +373,7 @@ function MeContent({
   invites = { total: 0, used: 0, unused: [] },
   identity,
 }: MeContentProps) {
+  const { logout } = useAuth()
   const [favoritesOpen, setFavoritesOpen] = useState(false)
   const [badgesOpen, setBadgesOpen] = useState(false)
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
@@ -403,9 +405,15 @@ function MeContent({
             <span>{trustLevel > 0 ? "身份已核验" : "身份待核验"}</span>
           </p>
         </div>
-        <div className="flex items-center gap-1 rounded-full bg-muted px-4 py-2 text-sm font-medium text-muted-foreground">
-          指路人
-          <ChevronRight className="size-3.5" />
+        <div className="flex items-center gap-2">
+          <div className="hidden items-center gap-1 rounded-full bg-muted px-4 py-2 text-sm font-medium text-muted-foreground sm:flex">
+            指路人
+            <ChevronRight className="size-3.5" />
+          </div>
+          <SolidButton type="button" variant="ghost" size="sm" onClick={() => void logout()} aria-label="退出登录">
+            <LogOut className="size-4" aria-hidden="true" />
+            <span className="hidden sm:inline">退出</span>
+          </SolidButton>
         </div>
       </div>
 

@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { BadgeCheck, PenLine, ShieldCheck } from "lucide-react"
+import { notFound } from "next/navigation"
 
 import { CompanyIntelligencePanel } from "@/components/company/company-intelligence-panel"
 import { CompanyReviewFeed } from "@/components/company/company-review-feed"
@@ -11,150 +12,33 @@ import { EmptyState } from "@/components/common/state-blocks"
 import { Badge } from "@/components/ui/badge"
 import { SolidButton } from "@/components/ui/solid-button"
 import { SolidCard } from "@/components/ui/solid-card"
-import { getCompany } from "@/lib/api/companies"
-import { getReviews } from "@/lib/api/reviews"
-import { companies as mockCompanies } from "@/lib/mock-data"
 import type { CompanyListItem, Review } from "@/lib/types"
-import type { ReviewListItem } from "@/lib/api/types"
 import { getDepartmentInsights, type DepartmentInsight } from "@/lib/server/department-insights"
-
-function mapToReview(item: ReviewListItem): Review {
-  const rawEmployment = item.employmentStatus ?? ""
-  const relationMap: Record<string, Review["relation"]> = {
-    "在职员工": "在职员工",
-    "离职员工": "离职员工",
-    "面试者": "面试者",
-    "实习生": "实习生",
-    "外包 / 派遣": "外包 / 派遣",
-  }
-  const relation = (relationMap[rawEmployment] ?? "面试者") as Review["relation"]
-
-  return {
-    id: item.id,
-    companyId: item.companyId,
-    role: "匿名评价者",
-    relation,
-    tenure: "",
-    score: Number(item.directionScore),
-    title: item.title,
-    content: item.content ?? item.summary ?? item.title,
-    tags: item.tags ?? [],
-    helpful: item.usefulCount,
-    commentCount: item.discussionCount,
-    shortComment: item.title,
-    jobCategory: item.jobTitle ?? "",
-    employmentStatus: (rawEmployment || "面试者") as Review["employmentStatus"],
-    trustLevel: 3,
-    city: item.city ?? "未知",
-    comments: [],
-    createdAt: item.createdAt,
-    verifiedHint: "",
-  }
-}
+import { getPublicCompanyDetail, getPublicCompanyReviews } from "@/lib/server/public-company-data"
+import { mapPublicReview } from "@/lib/review-mappers"
 
 export default async function CompanyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const [companyRes, reviewsRes, departmentInsights] = await Promise.all([
-    getCompany(id),
-    getReviews({ companyId: id }),
-    getDepartmentInsights(id),
-  ])
-
-  if (companyRes.loading || reviewsRes.loading) {
-    // Skeleton that mirrors the final layout's structure, not a
-    // generic spinner. CLS = 0, the user sees the shape of the
-    // page before the data arrives.
+  let company: CompanyListItem | null
+  let reviewItems: Awaited<ReturnType<typeof getPublicCompanyReviews>>
+  let departmentInsights: DepartmentInsight[]
+  try {
+    ;[company, reviewItems, departmentInsights] = await Promise.all([
+      getPublicCompanyDetail(id),
+      getPublicCompanyReviews(id),
+      getDepartmentInsights(id),
+    ])
+  } catch {
     return (
-      <section className="mx-auto flex w-full max-w-page flex-col gap-4 px-4 py-6 sm:px-6">
-        <div className="flex items-center gap-3">
-          <div className="size-12 animate-pulse rounded-2xl bg-muted" />
-          <div className="flex-1 space-y-2">
-            <div className="h-5 w-44 animate-pulse rounded-md bg-muted" />
-            <div className="h-3.5 w-72 animate-pulse rounded-md bg-muted" />
-          </div>
-          <div className="size-12 animate-pulse rounded-full bg-muted" />
-        </div>
-        <div className="grid gap-3 sm:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-24 animate-pulse rounded-2xl bg-muted" />
-          ))}
-        </div>
-        <div className="h-40 animate-pulse rounded-3xl bg-muted" />
-        <div className="h-64 animate-pulse rounded-3xl bg-muted" />
-        <div className="space-y-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-28 animate-pulse rounded-2xl bg-muted" />
-          ))}
-        </div>
-      </section>
+      <ErrorState
+        title="加载这家公司没成功"
+        message="公司数据暂时不可用。请稍后重试，评价不会回退到演示数据。"
+      />
     )
   }
 
-  if (companyRes.error) {
-    // Fallback to mock data when the API is unavailable (no DB,
-    // DB not seeded, dev-mode without DATABASE_URL, etc.). The
-    // home page links land here straight from the rec feed, so
-    // a stub DB must not render an error state. Look up the
-    // mock `companies` array; if we don't have one, fall back
-    // to the actual ErrorState. The review list also falls
-    // back if its own API call errored.
-    const mockCompany = mockCompanies.find((c) => c.id === id)
-    if (!mockCompany) {
-      return (
-        <ErrorState
-          title="加载这家公司没成功"
-          message={`${companyRes.error}。刷新一下试试,或换一家公司看看。`}
-        />
-      )
-    }
-    const company: CompanyListItem = {
-      id: mockCompany.id,
-      name: mockCompany.name,
-      registeredName: null,
-      shortName: mockCompany.shortName ?? null,
-      englishName: null,
-      aliases: null,
-      city: mockCompany.city,
-      industry: mockCompany.industry,
-      size: mockCompany.size ?? null,
-      financingStage: mockCompany.stage ?? null,
-      website: null,
-      logoUrl: null,
-      description: null,
-      reviewStatus: mockCompany.reviewStatus === "reviewable" ? "reviewable" : "pending_review",
-      claimedStatus: mockCompany.claimedStatus === "claimed" ? "claimed" : "unclaimed",
-      verifiedIdentityCount: mockCompany.verifiedIdentityCount ?? 0,
-      source: "platform_seed",
-      businessStatus: null,
-      foundedDate: null,
-      unifiedSocialCreditCode: null,
-      registeredAddress: null,
-      legalRepresentative: null,
-      createdAt: "2024-01-01T00:00:00Z",
-      updatedAt: "2024-01-01T00:00:00Z",
-      directionScore: mockCompany.directionScore,
-      recommendationRate: mockCompany.recommendationRate,
-      reviewCount: mockCompany.reviewCount,
-      salaryRange: null,
-      riskLevel: mockCompany.riskLevel,
-      riskTags: mockCompany.riskTags,
-      highlights: mockCompany.highlights,
-    }
-    return renderCompanyPage(
-      company,
-      [],
-      // getCompanySnapshot reads company.reviews.filter(...).
-      // The mock Company shape has no `reviews` field; pass an
-      // empty array so the panel renders its 0-data state
-      // (no-open-roles chip, no-interviews stat) rather than
-      // crashing on undefined.map.
-      { ...(company as unknown as Parameters<typeof CompanyIntelligencePanel>[0]["company"]), reviews: [] },
-      []
-    )
-  }
-
-  const company = companyRes.data!.company
-  const mappedReviews: Review[] = (reviewsRes.data?.reviews ?? []).map(mapToReview)
+  if (!company) notFound()
+  const mappedReviews = reviewItems.map(mapPublicReview)
 
   if (company.reviewStatus === "pending_review") {
     return (

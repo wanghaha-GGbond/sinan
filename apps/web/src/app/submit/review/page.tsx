@@ -22,6 +22,8 @@ import { findSimilarCompanies } from "@/lib/company-dedupe"
 import { validateCompanySubmission } from "@/lib/content-guard"
 import { buildQuestionnaireSession } from "@/lib/questionnaire/question-bank"
 import { searchCompanies, getCompany } from "@/lib/api/companies"
+import { useAuth } from "@/lib/auth-context"
+import { withNext } from "@/lib/navigation"
 import type { Company, CompanyListItem } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -233,6 +235,36 @@ function FieldError({ message }: { message?: string }) {
 }
 
 export default function SubmitReviewPage() {
+  const { user, loading } = useAuth()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const query = searchParams.toString()
+  const nextPath = `/submit/review${query ? `?${query}` : ""}`
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace(withNext("/login", nextPath))
+    }
+  }, [loading, nextPath, router, user])
+
+  if (loading || !user) {
+    return (
+      <section
+        className="mx-auto flex min-h-[60vh] w-full max-w-section items-center justify-center px-4 py-10"
+        data-testid="submit-auth-gate"
+      >
+        <div className="flex items-center gap-3 rounded-2xl border bg-card px-5 py-4 text-sm text-muted-foreground shadow-sm">
+          <Loader2 className="size-4 animate-spin text-primary" aria-hidden="true" />
+          {loading ? "正在确认登录状态…" : "正在前往登录…"}
+        </div>
+      </section>
+    )
+  }
+
+  return <SubmitReviewForm />
+}
+
+function SubmitReviewForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [step, setStep] = useState(0)

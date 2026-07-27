@@ -1,13 +1,20 @@
 import { useState } from "react"
 import { ScrollView, StyleSheet, Text, View } from "react-native"
-import { Link, router } from "expo-router"
+import { Link, router, useLocalSearchParams } from "expo-router"
 import { COLORS } from "../theme"
 import { SolidButton } from "../components/SolidButton"
 import { AppFooter } from "../components/AppShellBits"
 import { SolidCard } from "../components/SolidCard"
 import { SolidInput } from "../components/SolidInput"
+import { login } from "../lib/api"
+import { getSafeAppPath } from "../lib/navigation"
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const PHONE_RE = /^1[3-9]\d{9}$/
 
 export default function LoginScreen() {
+  const params = useLocalSearchParams<{ next?: string | string[] }>()
+  const nextPath = getSafeAppPath(params.next)
   const [mode, setMode] = useState<"email" | "phone">("email")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
@@ -15,25 +22,32 @@ export default function LoginScreen() {
   const [error, setError] = useState("")
   const [submitting, setSubmitting] = useState(false)
 
-  function submit() {
+  async function submit() {
     setError("")
-    if (mode === "email" && !email.trim()) {
-      setError("请输入邮箱")
+    if (mode === "email" && !EMAIL_RE.test(email.trim())) {
+      setError("请输入有效邮箱")
       return
     }
-    if (mode === "phone" && !phone.trim()) {
-      setError("请输入手机号")
+    if (mode === "phone" && !PHONE_RE.test(phone.trim())) {
+      setError("请输入有效手机号")
       return
     }
-    if (!password) {
-      setError("请输入密码")
+    if (password.length < 8) {
+      setError("密码至少 8 位字符")
       return
     }
     setSubmitting(true)
-    window.setTimeout(() => {
+    try {
+      await login({
+        ...(mode === "email" ? { email: email.trim().toLowerCase() } : { phone: phone.trim() }),
+        password,
+      })
+      router.replace(nextPath as never)
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "登录失败")
+    } finally {
       setSubmitting(false)
-      router.replace("/")
-    }, 300)
+    }
   }
 
   return (
@@ -73,12 +87,12 @@ export default function LoginScreen() {
             </View>
           ) : null}
 
-          <SolidButton title={submitting ? "登录中..." : "登录"} size="lg" disabled={submitting} onPress={submit} />
+          <SolidButton title={submitting ? "登录中..." : "登录"} size="lg" disabled={submitting} onPress={() => void submit()} />
         </View>
 
         <View style={S.switchLine}>
           <Text style={S.switchText}>还没有账号？</Text>
-          <Link href="/register" asChild>
+          <Link href={{ pathname: "/register", params: { next: nextPath } }} asChild>
             <SolidButton title="注册" variant="ghost" size="sm" />
           </Link>
         </View>

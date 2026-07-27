@@ -28,11 +28,13 @@ export function ReviewCard({
   companyId,
   expanded = false,
   showDetailLink = true,
+  showDiscussionLink = false,
 }: {
   review: Review
   companyId?: string
   expanded?: boolean
   showDetailLink?: boolean
+  showDiscussionLink?: boolean
 }) {
   const [liked, setLiked] = useState(() => isReviewUseful(review.id))
   const [isExpanded, setIsExpanded] = useState(expanded)
@@ -67,7 +69,7 @@ export function ReviewCard({
         </div>
 
         <div className="space-y-2">
-          {detailHref ? (
+          {detailHref && showDiscussionLink ? (
             <Link href={detailHref} className="block">
               <p
                 className={`max-w-prose whitespace-pre-line text-sm leading-7 text-[var(--tw-slate)] ${

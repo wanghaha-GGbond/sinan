@@ -10,6 +10,8 @@
 import { cookies } from "next/headers"
 import { SignJWT, jwtVerify } from "jose"
 import crypto from "node:crypto"
+import type { NextRequest } from "next/server"
+import { isDevAuthEnabled } from "@/lib/server/dev-auth"
 
 // ---------------------------------------------------------------------------
 // Config
@@ -159,19 +161,51 @@ export async function clearAuthCookie(): Promise<void> {
  * Extract the current user from an incoming request's auth cookie.
  * Returns null if no valid token is present.
  */
+async function validateActiveAuthUser(user: AuthUser | null): Promise<AuthUser | null> {
+  if (!user) return null
+  if (!process.env.DATABASE_URL) return isDevAuthEnabled() ? user : null
+
+  try {
+    const { and, eq, isNull } = await import("drizzle-orm")
+    const { db } = await import("@/db/client")
+    const { users } = await import("@/db/schema/users")
+    const [active] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(and(eq(users.id, user.userId), eq(users.status, "active"), isNull(users.deletedAt)))
+      .limit(1)
+    return active ? user : null
+  } catch {
+    return null
+  }
+}
+
 export async function getAuthUser(): Promise<AuthUser | null> {
   const jar = await cookies()
   const token = jar.get(TOKEN_COOKIE)?.value
   if (!token) return null
-  return verifyToken(token)
+  return validateActiveAuthUser(await verifyToken(token))
+}
+
+/** Native clients authenticate with the same JWT via Authorization. */
+export async function getAuthUserFromRequest(request: NextRequest): Promise<AuthUser | null> {
+  const authorization = request.headers.get("authorization")
+
+  if (authorization?.startsWith("Bearer ")) {
+    const token = authorization.slice(7).trim()
+    if (token) return validateActiveAuthUser(await verifyToken(token))
+  } else {
+    return getAuthUser()
+  }
+  return null
 }
 
 /**
  * Require authentication. Returns the user or throws a Response that
  * the caller should return directly.
  */
-export async function requireAuthUser(): Promise<AuthUser> {
-  const user = await getAuthUser()
+export async function requireAuthUser(request?: NextRequest): Promise<AuthUser> {
+  const user = request ? await getAuthUserFromRequest(request) : await getAuthUser()
   if (!user) {
     throw new Response(
       JSON.stringify({ error: "Authentication required" }),
@@ -184,8 +218,8 @@ export async function requireAuthUser(): Promise<AuthUser> {
 /**
  * Require moderator or admin role.
  */
-export async function requireModerator(): Promise<AuthUser> {
-  const user = await requireAuthUser()
+export async function requireModerator(request?: NextRequest): Promise<AuthUser> {
+  const user = await requireAuthUser(request)
   if (user.role !== "moderator" && user.role !== "admin") {
     throw new Response(
       JSON.stringify({ error: "Moderator privileges required" }),

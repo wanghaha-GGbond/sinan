@@ -5,7 +5,7 @@ export const COLORS = {
   // 品牌色
   primary: "#19C37D",
   primaryDark: "#0E8F5F",
-  primarySoft: "#DFF8EC",
+  primarySoft: "#E4F9EF",
   primaryForeground: "#07563A",
 
   // 中性色
@@ -16,14 +16,14 @@ export const COLORS = {
   mutedLight: "#9CA3AF",
 
   // 背景
-  bg: "#F7F8F2",
+  bg: "#F8FFFB",
   surface: "#FFFFFF",
-  surfaceMuted: "#F9FAF7",
-  surfaceHover: "#F1F5EF",
+  surfaceMuted: "#F4FCF8",
+  surfaceHover: "#EFFBF5",
 
   // 边框
-  border: "#E5E7DB",
-  borderSoft: "rgba(229,231,219,0.6)",
+  border: "#D6EEE2",
+  borderSoft: "rgba(214,238,226,0.65)",
 
   // 语义色
   risk: "#C76A15",
@@ -39,7 +39,7 @@ export const COLORS = {
   // 别名（兼容旧代码）
   card: "#FFFFFF",
   darkSecondary: "#374151",
-  primaryLight: "#DFF8EC",
+  primaryLight: "#E4F9EF",
 } as const
 
 // 对齐 Web: rounded-2xl(16px) card, rounded-[18px] button, rounded-3xl(24px) hero
@@ -72,7 +72,7 @@ export const SHADOWS = {
     elevation: 6,
   },
   buttonSecondary: {
-    shadowColor: "#D1D5C8",
+    shadowColor: "#CCEBDD",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1,
     shadowRadius: 0,

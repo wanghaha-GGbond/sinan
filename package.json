@@ -1,14 +1,28 @@
 {
   "name": "sinan",
   "private": true,
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
+    "audit:release": "npm audit --omit=dev --audit-level=high",
     "dev:web": "npm run dev --workspace=@sinan/web",
     "dev:ios": "npm run dev --workspace=@sinan/ios",
     "build:web": "npm run build --workspace=@sinan/web"
   },
   "overrides": {
+    "hono": "4.12.27",
+    "js-yaml": "4.3.0",
+    "postcss": "8.5.16",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "react-native-svg": "15.12.1",
+    "tar": "7.5.19",
+    "undici": "6.27.0"
+  },
+  "devDependencies": {
+    "expo-router": "6.0.24",
+    "react-native-svg": "15.12.1"
   }
 }

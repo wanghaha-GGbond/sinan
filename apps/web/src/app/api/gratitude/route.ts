@@ -3,7 +3,7 @@
  * POST /api/gratitude — 写一封感谢信 (登录 + L1+,12 小时封顶)
  */
 import { NextRequest, NextResponse } from "next/server"
-import { desc, eq } from "drizzle-orm"
+import { and, desc, eq, isNull } from "drizzle-orm"
 
 import { gratitude } from "@/db/schema/p1-features"
 import { users } from "@/db/schema/users"
@@ -71,10 +71,12 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
   }
-  if (typeof body.toUserId !== "string" || !body.toUserId) {
-    return NextResponse.json({ error: "missing toUserId" }, { status: 400 })
-  }
-  if (body.toUserId === user.userId) {
+  const toUserId =
+    typeof body.toUserId === "string" && body.toUserId.trim()
+      ? body.toUserId.trim()
+      : null
+
+  if (toUserId === user.userId) {
     return NextResponse.json({ error: "不能给自己写感谢信" }, { status: 400 })
   }
   if (!isValidGratitudeContent(body.content)) {
@@ -106,18 +108,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 12 小时封顶:查 fromUser 上次给 toUser 写信的时间
-    const { and, desc: drizzleDesc } = await import("drizzle-orm")
+    if (toUserId) {
+      const [recipient] = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.id, toUserId))
+        .limit(1)
+      if (!recipient) {
+        return NextResponse.json({ error: "收件人不存在" }, { status: 404 })
+      }
+    }
+
+    // 12 小时封顶:查 fromUser 上次给同一收件人或漂流池写信的时间
     const [last] = await db
       .select({ createdAt: gratitude.createdAt })
       .from(gratitude)
       .where(
         and(
           eq(gratitude.fromUserId, user.userId),
-          eq(gratitude.toUserId, body.toUserId)
+          toUserId ? eq(gratitude.toUserId, toUserId) : isNull(gratitude.toUserId)
         )
       )
-      .orderBy(drizzleDesc(gratitude.createdAt))
+      .orderBy(desc(gratitude.createdAt))
       .limit(1)
 
     if (last && isWithinGratitudeWindow(last.createdAt)) {
@@ -131,7 +143,7 @@ export async function POST(request: NextRequest) {
       .insert(gratitude)
       .values({
         fromUserId: user.userId,
-        toUserId: body.toUserId,
+        toUserId,
         content: maskSensitiveContent(content),
         isAnonymous: body.isAnonymous === true ? "true" : "false",
       })

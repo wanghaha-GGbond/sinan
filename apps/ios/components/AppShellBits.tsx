@@ -1,14 +1,13 @@
+import { useCallback, useState } from "react"
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native"
-import { router, usePathname } from "expo-router"
+import { router, useFocusEffect, usePathname } from "expo-router"
 import { COLORS, RADIUS, SHADOWS } from "../theme"
 import { SolidButton } from "./SolidButton"
+import { getSession, logout, type SessionUser } from "../lib/api"
 
 const intelLinks = [
-  { href: "/salaries", label: "薪资" },
-  { href: "/interviews", label: "面试" },
-  { href: "/jobs", label: "机会" },
-  { href: "/benefits", label: "福利" },
-  { href: "/community", label: "社区" },
+  { href: "/search", label: "公司" },
+  { href: "/research", label: "研报" },
 ]
 
 export function IntelNav() {
@@ -43,11 +42,29 @@ export function AppFooter() {
 }
 
 export function HomeHeaderActions() {
+  const [user, setUser] = useState<SessionUser | null>(null)
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true
+      getSession()
+        .then((session) => { if (active) setUser(session) })
+        .catch(() => { if (active) setUser(null) })
+      return () => { active = false }
+    }, []),
+  )
+
+  async function signOut() {
+    await logout()
+    setUser(null)
+  }
+
   return (
     <View style={S.actions}>
-      <SolidButton title="登录" variant="ghost" size="sm" onPress={() => router.push("/login")} style={S.actionButton} />
+      {!user ? <SolidButton title="登录" variant="ghost" size="sm" onPress={() => router.push("/login")} style={S.actionButton} /> : null}
       <SolidButton title="我的" variant="secondary" size="sm" onPress={() => router.push("/me")} style={S.actionButton} />
       <SolidButton title="写评价" variant="primary" size="sm" onPress={() => router.push("/submit")} style={S.actionButton} />
+      {user ? <SolidButton title="退出" variant="ghost" size="sm" onPress={() => void signOut()} style={S.actionButton} /> : null}
       <SolidButton title="搜索" variant="dark" size="sm" onPress={() => router.push("/search")} style={S.actionButton} />
     </View>
   )

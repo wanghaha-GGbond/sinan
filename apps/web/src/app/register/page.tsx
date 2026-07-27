@@ -8,6 +8,7 @@ import { Compass, Mail, Phone, Shield, Loader2, Ticket } from "lucide-react"
 import { SolidButton } from "@/components/ui/solid-button"
 import { SolidCard } from "@/components/ui/solid-card"
 import { useAuth } from "@/lib/auth-context"
+import { getSafeNextPath, withNext } from "@/lib/navigation"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PHONE_RE = /^1[3-9]\d{9}$/
@@ -16,6 +17,11 @@ export default function RegisterPage() {
   const { register, user } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const requestedNext = searchParams.get("next")
+  const nextPath = getSafeNextPath(
+    requestedNext,
+    "/submit/review?mode=add-company&onboarding=1",
+  )
   const [mode, setMode] = useState<"email" | "phone">("email")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
@@ -35,8 +41,8 @@ export default function RegisterPage() {
   const confirmRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
-    if (user) router.replace("/submit/review?mode=add-company&onboarding=1")
-  }, [user, router])
+    if (user) router.replace(nextPath)
+  }, [user, router, nextPath])
 
   useEffect(() => {
     let active = true
@@ -91,12 +97,20 @@ export default function RegisterPage() {
       confirmRef.current?.focus()
       return
     }
-    if (emailError || phoneError || passwordError || confirmError) {
+    const invalidEmail = mode === "email" && !EMAIL_RE.test(email.trim())
+    const invalidPhone = mode === "phone" && !PHONE_RE.test(phone.trim())
+    const invalidPassword = password.length < 8
+    const invalidConfirmation = confirmPassword !== password
+    if (invalidEmail || invalidPhone || invalidPassword || invalidConfirmation) {
       // Focus the first invalid field
-      if (emailError) emailRef.current?.focus()
-      else if (phoneError) phoneRef.current?.focus()
-      else if (passwordError) passwordRef.current?.focus()
-      else if (confirmError) confirmRef.current?.focus()
+      if (invalidEmail) emailRef.current?.focus()
+      else if (invalidPhone) phoneRef.current?.focus()
+      else if (invalidPassword) passwordRef.current?.focus()
+      else confirmRef.current?.focus()
+      return
+    }
+    if (inviteRequired && !inviteCode.trim()) {
+      setError("请输入有效的邀请码")
       return
     }
 
@@ -112,7 +126,7 @@ export default function RegisterPage() {
     if (result.error) {
       setError(result.error)
     } else {
-      router.push("/submit/review?mode=add-company&onboarding=1")
+      router.replace(nextPath)
     }
   }
 
@@ -336,7 +350,7 @@ export default function RegisterPage() {
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           已有账号？{" "}
-          <Link href="/login" className="font-semibold text-primary hover:underline">
+          <Link href={withNext("/login", nextPath)} className="font-semibold text-primary hover:underline">
             登录
           </Link>
         </p>

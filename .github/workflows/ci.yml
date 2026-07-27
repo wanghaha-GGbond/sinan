@@ -1,0 +1,138 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  migration-sql:
+    name: PostgreSQL migrations and core flows
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: sinan
+          POSTGRES_PASSWORD: sinan_test_only
+          POSTGRES_DB: sinan_migration
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sinan -d sinan_migration"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://sinan:sinan_test_only@127.0.0.1:5432/sinan_migration
+      DATABASE_DRIVER: node-postgres
+      AUTH_SECRET: ci-only-auth-secret-12345678901234567890
+      INVITE_REQUIRED: "true"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate migration metadata
+        run: npm run db:check --workspace=@sinan/web
+
+      - name: Apply migrations to empty PostgreSQL
+        run: npm run db:migrate --workspace=@sinan/web
+
+      - name: Verify migration idempotency
+        run: npm run db:migrate --workspace=@sinan/web
+
+      - name: Run database concurrency tests
+        run: npm run test:integration --workspace=@sinan/web
+
+      - name: Run real core release API flow
+        run: npm run test:e2e:release --workspace=@sinan/web
+
+  quality:
+    name: Quality and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Reject high or critical production dependency vulnerabilities
+        run: npm run audit:release
+
+      - name: Validate migrations
+        run: npm run db:check --workspace=@sinan/web
+
+      - name: Run release verification
+        run: npm run verify --workspace=@sinan/web
+
+  e2e:
+    name: Chromium E2E
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run critical E2E flows
+        run: npm run test:e2e --workspace=@sinan/web
+
+  ios:
+    name: iOS typecheck and bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EXPO_PUBLIC_API_URL: https://api.sinan.invalid
+      EXPO_PUBLIC_LAUNCH_SCOPE_ONLY: "true"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify iOS release bundle
+        run: npm run verify --workspace=@sinan/ios

@@ -3,10 +3,11 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { notFound } from "next/navigation"
 
 import { ReviewCard } from "@/components/review/review-card"
-import { ReviewDiscussionSection } from "@/components/review/review-discussion-section"
+import { ErrorState } from "@/components/common/error-state"
 import { Card, CardContent } from "@/components/ui/card"
 import { SolidButton } from "@/components/ui/solid-button"
-import { getCompany, getCompanyReview, getReviewDiscussions } from "@/lib/mock-data"
+import { mapPublicReview } from "@/lib/review-mappers"
+import { getPublicCompanyDetail, getPublicCompanyReviews } from "@/lib/server/public-company-data"
 
 export default async function ReviewDetailPage({
   params,
@@ -14,17 +15,24 @@ export default async function ReviewDetailPage({
   params: Promise<{ id: string; reviewId: string }>
 }) {
   const { id, reviewId } = await params
-  const company = getCompany(id)
-  const review = getCompanyReview(id, reviewId)
-
-  if (!review) {
-    notFound()
+  let company: Awaited<ReturnType<typeof getPublicCompanyDetail>>
+  let reviewItems: Awaited<ReturnType<typeof getPublicCompanyReviews>>
+  try {
+    ;[company, reviewItems] = await Promise.all([
+      getPublicCompanyDetail(id),
+      getPublicCompanyReviews(id),
+    ])
+  } catch {
+    return <ErrorState title="评价暂时不可用" message="真实评价加载失败，请稍后重试。" />
   }
-  const currentIndex = company.reviews.findIndex((item) => item.id === review.id)
-  const prevReview = currentIndex > 0 ? company.reviews[currentIndex - 1] : null
-  const nextReview = currentIndex < company.reviews.length - 1 ? company.reviews[currentIndex + 1] : null
-  const related = company.reviews.filter((item) => item.id !== review.id).slice(0, 3)
-  const discussions = getReviewDiscussions(review.id)
+  if (!company) notFound()
+  const reviews = reviewItems.map(mapPublicReview)
+  const review = reviews.find((item) => item.id === reviewId)
+  if (!review) notFound()
+  const currentIndex = reviews.findIndex((item) => item.id === review.id)
+  const prevReview = currentIndex > 0 ? reviews[currentIndex - 1] : null
+  const nextReview = currentIndex < reviews.length - 1 ? reviews[currentIndex + 1] : null
+  const related = reviews.filter((item) => item.id !== review.id).slice(0, 3)
 
   return (
     <section className="mx-auto flex w-full max-w-section flex-col gap-5 px-4 py-8 pb-24 sm:px-6">
@@ -42,14 +50,6 @@ export default async function ReviewDetailPage({
         </p>
       </div>
 
-      {company.vibeTag ? (
-        <Card className="solid-card-subtle border border-border/60">
-          <CardContent className="p-4 text-sm text-[var(--tw-slate)]">
-            这家公司当前体感标签：<span className="font-semibold text-foreground">{company.vibeTag.name}</span>
-          </CardContent>
-        </Card>
-      ) : null}
-
       <ReviewCard review={review} companyId={id} expanded showDetailLink={false} />
 
       <Card className="solid-card-subtle border border-border/60">
@@ -59,7 +59,11 @@ export default async function ReviewDetailPage({
         </CardContent>
       </Card>
 
-      <ReviewDiscussionSection reviewId={review.id} companyId={company.id} initialItems={discussions} />
+      <Card id="followups" className="border border-border/60">
+        <CardContent className="p-4 text-sm text-muted-foreground">
+          首发 Beta 暂不开放公开追问；你仍可举报不实或泄露身份的信息。
+        </CardContent>
+      </Card>
 
       <div className="grid gap-3 sm:grid-cols-2">
         {prevReview ? (

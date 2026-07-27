@@ -148,7 +148,7 @@ export default async function AuctionManagePage({
       </SolidCard>
 
       {auction.status === "draft" ? (
-        <DraftManage auctionId={auction.id} />
+        <DraftManage />
       ) : auction.status === "live" ? (
         <LiveManage />
       ) : auction.status === "closed" ? (
@@ -168,7 +168,7 @@ export default async function AuctionManagePage({
   )
 }
 
-function DraftManage({ auctionId: _ }: { auctionId: string }) {
+function DraftManage() {
   return (
     <SolidCard variant="subtle" className="p-6">
       <h2 className="text-base font-semibold">专场准备就绪</h2>

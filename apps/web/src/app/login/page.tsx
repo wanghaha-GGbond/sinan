@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Compass, Mail, Phone, Loader2 } from "lucide-react"
 
 import { SolidButton } from "@/components/ui/solid-button"
 import { SolidCard } from "@/components/ui/solid-card"
 import { useAuth } from "@/lib/auth-context"
+import { getSafeNextPath, withNext } from "@/lib/navigation"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PHONE_RE = /^1[3-9]\d{9}$/
@@ -15,6 +16,8 @@ const PHONE_RE = /^1[3-9]\d{9}$/
 export default function LoginPage() {
   const { login, user } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const nextPath = getSafeNextPath(searchParams.get("next"))
   const [mode, setMode] = useState<"email" | "phone">("email")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
@@ -29,8 +32,8 @@ export default function LoginPage() {
 
   // Redirect if already logged in
   useEffect(() => {
-    if (user) router.replace("/")
-  }, [user, router])
+    if (user) router.replace(nextPath)
+  }, [user, router, nextPath])
 
   if (user) return null
 
@@ -66,7 +69,13 @@ export default function LoginPage() {
       passwordRef.current?.focus()
       return
     }
-    if (emailError || phoneError || passwordError) {
+    const invalidEmail = mode === "email" && !EMAIL_RE.test(email.trim())
+    const invalidPhone = mode === "phone" && !PHONE_RE.test(phone.trim())
+    const invalidPassword = password.length < 8
+    if (invalidEmail || invalidPhone || invalidPassword) {
+      if (invalidEmail) emailRef.current?.focus()
+      else if (invalidPhone) phoneRef.current?.focus()
+      else passwordRef.current?.focus()
       return
     }
 
@@ -81,7 +90,7 @@ export default function LoginPage() {
     if (result.error) {
       setError(result.error)
     } else {
-      router.push("/")
+      router.replace(nextPath)
     }
   }
 
@@ -248,7 +257,7 @@ export default function LoginPage() {
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           还没有账号？{" "}
-          <Link href="/register" className="font-semibold text-primary hover:underline">
+          <Link href={withNext("/register", nextPath)} className="font-semibold text-primary hover:underline">
             注册
           </Link>
         </p>

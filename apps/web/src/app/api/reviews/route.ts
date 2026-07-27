@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-import { and, eq, inArray, isNull, desc, sql } from "drizzle-orm"
+import { and, eq, inArray, isNull, desc, gte, sql } from "drizzle-orm"
 import { companies } from "@/db/schema/companies"
 import { reviews } from "@/db/schema/reviews"
 import { toPublicReviewView } from "@/lib/server/review-view"
-import { getAuthUser } from "@/lib/server/auth"
+import { getAuthUserFromRequest } from "@/lib/server/auth"
 import { getOrCreateAnonymousProfile } from "@/lib/server/anonymous-profile"
 import { hasSensitive, hasAttackWord } from "@/lib/content-guard"
 import { departments } from "@/db/schema/departments"
@@ -32,6 +32,14 @@ const ROLE_LABELS: Record<string, string> = {
 }
 
 export async function POST(request: NextRequest) {
+  const authUser = await getAuthUserFromRequest(request)
+  if (!authUser) {
+    return NextResponse.json(
+      { error: "Authentication required" },
+      { status: 401 },
+    )
+  }
+
   let body: Record<string, unknown>
   try {
     body = await request.json()
@@ -87,6 +95,24 @@ export async function POST(request: NextRequest) {
   try {
     const { db } = await import("@/db/client")
 
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    const [recentSubmissionCount] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(reviews)
+      .where(
+        and(
+          eq(reviews.authorUserId, authUser.userId),
+          gte(reviews.createdAt, oneDayAgo),
+          isNull(reviews.deletedAt),
+        ),
+      )
+    if (Number(recentSubmissionCount?.count ?? 0) >= 5) {
+      return NextResponse.json(
+        { error: "Daily review submission limit reached" },
+        { status: 429 },
+      )
+    }
+
     const [company] = await db
       .select({ id: companies.id, reviewStatus: companies.reviewStatus })
       .from(companies)
@@ -121,19 +147,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Extract auth user (optional — works without login too)
-    const authUser = await getAuthUser()
     let anonProfile = null
-    if (authUser) {
-      try {
-        anonProfile = await getOrCreateAnonymousProfile({
-          userId: authUser.userId,
-          scope: { scopeType: "company", scopeId: companyId },
-          role: authorRole,
-        })
-      } catch {
-        // Non-fatal: continue without anonymous profile
-      }
+    try {
+      anonProfile = await getOrCreateAnonymousProfile({
+        userId: authUser.userId,
+        scope: { scopeType: "company", scopeId: companyId },
+        role: authorRole,
+      })
+    } catch {
+      // Non-fatal: the review remains linked to the private account id while
+      // public serializers continue to expose only the anonymous role label.
     }
 
     const authorLabel = ROLE_LABELS[authorRole] ?? "匿名评价者"
@@ -143,7 +166,7 @@ export async function POST(request: NextRequest) {
       .values({
         companyId,
         departmentId,
-        authorUserId: authUser?.userId ?? null,
+        authorUserId: authUser.userId,
         anonymousProfileId: anonProfile?.id ?? null,
         authorRole: authorRole as (typeof VALID_ROLES)[number],
         authorLabel,

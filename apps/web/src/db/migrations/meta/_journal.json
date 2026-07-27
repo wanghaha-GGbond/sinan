@@ -106,6 +106,20 @@
       "when": 1781355000000,
       "tag": "0014_m3_circles_dm",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1781967600000,
+      "tag": "0015_m3_p1_features",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1783224389000,
+      "tag": "0016_m2_auctions",
+      "breakpoints": true
     }
   ]
 }
