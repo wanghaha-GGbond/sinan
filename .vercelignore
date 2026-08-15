@@ -1,0 +1,17 @@
+.git
+.github
+.vercel
+node_modules
+**/node_modules
+
+# Local build and test output
+apps/web/.next
+apps/web/.research-browser
+apps/web/playwright-report
+apps/web/test-results
+apps/web/tests
+apps/web/*.log
+
+# The preview project only deploys apps/web and packages/shared.
+apps/ios
+docs
