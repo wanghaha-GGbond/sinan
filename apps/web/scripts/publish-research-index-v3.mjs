@@ -252,9 +252,9 @@ async function createCandidate(pool, document) {
             detail.effectiveSampleSize ?? 0,
             detail.sourceCount ?? 0,
             detail.evidenceCount ?? 0,
-            detail.reasons ?? [],
-            detail.limitations ?? [],
-            detail.evidenceRefs ?? [],
+            JSON.stringify(detail.reasons ?? []),
+            JSON.stringify(detail.limitations ?? []),
+            JSON.stringify(detail.evidenceRefs ?? []),
             document.generatedAt,
           ]
         )
