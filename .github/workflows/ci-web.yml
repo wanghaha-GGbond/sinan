@@ -29,24 +29,6 @@ jobs:
     name: Web quality, audit and build
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    env:
-      AUTH_SECRET: ci-only-auth-secret-12345678901234567890
-      DATABASE_URL: postgresql://sinan:ci@127.0.0.1:5432/sinan
-      DATABASE_ADAPTER: pg
-      CRON_SECRET: ci-only-cron-secret
-      MAIL_PROVIDER: aliyun-direct-mail
-      MAIL_FROM_DOMAIN: sinanapp.cn
-      ALIYUN_DM_ACCOUNT_NAME: no-reply@sinanapp.cn
-      ALIYUN_DM_REGION: cn-hangzhou
-      ERROR_REPORTING_MODE: stdout
-      APP_RELEASE: ${{ github.sha }}
-      NEXT_PUBLIC_APP_URL: https://sinanapp.cn
-      NEXT_PUBLIC_ICP_FILING_NUMBER: 浙ICP备CI-PENDING号
-      NEXT_PUBLIC_APP_ENV: staging
-      NEXT_PUBLIC_API_ENABLED: "true"
-      SUPPORT_EMAIL: support@sinanapp.cn
-      INVITE_REQUIRED: "true"
-      LAUNCH_SCOPE_ONLY: "true"
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -57,6 +39,24 @@ jobs:
       - name: Reject high or critical Web production vulnerabilities
         run: npm audit --workspace=@sinan/web --omit=dev --audit-level=high
       - name: Validate release environment contract
+        env:
+          AUTH_SECRET: ci-only-auth-secret-12345678901234567890
+          DATABASE_URL: postgresql://sinan:ci@127.0.0.1:5432/sinan
+          DATABASE_ADAPTER: pg
+          CRON_SECRET: ci-only-cron-secret
+          MAIL_PROVIDER: aliyun-direct-mail
+          MAIL_FROM_DOMAIN: sinanapp.cn
+          ALIYUN_DM_ACCOUNT_NAME: no-reply@sinanapp.cn
+          ALIYUN_DM_REGION: cn-hangzhou
+          ERROR_REPORTING_MODE: stdout
+          APP_RELEASE: ${{ github.sha }}
+          NEXT_PUBLIC_APP_URL: https://sinanapp.cn
+          NEXT_PUBLIC_ICP_FILING_NUMBER: 浙ICP备CI-PENDING号
+          NEXT_PUBLIC_APP_ENV: staging
+          NEXT_PUBLIC_API_ENABLED: "true"
+          SUPPORT_EMAIL: support@sinanapp.cn
+          INVITE_REQUIRED: "true"
+          LAUNCH_SCOPE_ONLY: "true"
         run: npm run release:check-env --workspace=@sinan/web
       - run: npm run db:check --workspace=@sinan/web
       - run: npm run lint --workspace=@sinan/web
