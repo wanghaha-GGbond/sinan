@@ -30,10 +30,19 @@ export function mapPublicReview(item: ReviewListItem): Review {
     shortComment: item.title,
     jobCategory: item.jobTitle ?? "",
     employmentStatus: relation,
-    trustLevel: 0,
+    trustLevel:
+      item.publicAuthor?.verificationLevel === "L2"
+        ? 2
+        : item.publicAuthor?.verificationLevel === "L1"
+          ? 1
+          : 0,
     city: item.city ?? "未知",
     comments: [],
     createdAt: item.createdAt,
-    verifiedHint: "",
+    verifiedHint: item.publicAuthor?.verifiedForCompany
+      ? `${item.publicAuthor.verificationLevel} 公司身份已核验`
+      : "身份未核验",
+    verified: Boolean(item.publicAuthor?.verifiedForCompany),
+    isUsefulByCurrentUser: item.isUsefulByCurrentUser,
   }
 }

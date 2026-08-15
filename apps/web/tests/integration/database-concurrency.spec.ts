@@ -11,6 +11,7 @@ import { emailVerificationCodes } from "../../src/db/schema/email-verification-c
 import { invites } from "../../src/db/schema/invites"
 import { moderationEvents } from "../../src/db/schema/moderation-events"
 import { reviews } from "../../src/db/schema/reviews"
+import { reviewUsefulVotes } from "../../src/db/schema/review-useful-votes"
 import { users } from "../../src/db/schema/users"
 import {
   exerciseHeartPick,
@@ -23,6 +24,7 @@ import {
   MAX_ATTEMPTS,
 } from "../../src/lib/server/verification"
 import { moderateReview } from "../../src/lib/server/review-moderation"
+import { setReviewUseful } from "../../src/lib/server/review-useful"
 
 const createdUserIds: string[] = []
 const createdCompanyIds: string[] = []
@@ -45,6 +47,7 @@ async function createUser(label: string) {
 test.afterEach(async () => {
   if (createdReviewIds.length > 0) {
     await db.delete(moderationEvents).where(inArray(moderationEvents.entityId, createdReviewIds))
+    await db.delete(reviewUsefulVotes).where(inArray(reviewUsefulVotes.reviewId, createdReviewIds))
     await db.delete(reviews).where(inArray(reviews.id, createdReviewIds))
     createdReviewIds.length = 0
   }
@@ -270,4 +273,69 @@ test("concurrent review moderation publishes once and writes one audit event", a
   const auditRows = await db.select().from(moderationEvents).where(eq(moderationEvents.entityId, review.id))
   expect(auditRows).toHaveLength(1)
   expect(auditRows[0]).toMatchObject({ fromStatus: "pending_review", toStatus: "visible", actorUserId: moderatorId })
+})
+
+test("review useful votes are persistent, idempotent, and preserve the legacy baseline", async () => {
+  const voterId = await createUser("review-voter")
+  const [company] = await db
+    .insert(companies)
+    .values({
+      name: `Useful Vote ${randomUUID()}`,
+      city: "上海",
+      industry: "科技",
+      reviewStatus: "reviewable",
+    })
+    .returning({ id: companies.id })
+  createdCompanyIds.push(company.id)
+  const [review] = await db
+    .insert(reviews)
+    .values({
+      companyId: company.id,
+      authorRole: "former_employee",
+      authorLabel: "匿名过来人",
+      title: "有用票持久化测试",
+      content: "这是一条用于验证有用票服务端持久化和历史基线的测试评价。",
+      directionScore: "7.5",
+      usefulCount: 9,
+      usefulVoteBaseline: 9,
+      status: "visible",
+      ratingDimensions: {
+        pay_worth: 7,
+        growth: 8,
+        leader: 7,
+        overtime_truth: 7,
+        promise_delivery: 8,
+      },
+    })
+    .returning({ id: reviews.id })
+  createdReviewIds.push(review.id)
+
+  const results = await Promise.all([
+    setReviewUseful({ reviewId: review.id, userId: voterId, useful: true }),
+    setReviewUseful({ reviewId: review.id, userId: voterId, useful: true }),
+  ])
+  expect(results.every((result) => result.kind === "updated")).toBe(true)
+
+  const [storedAfterAdd] = await db
+    .select({ usefulCount: reviews.usefulCount })
+    .from(reviews)
+    .where(eq(reviews.id, review.id))
+  expect(storedAfterAdd.usefulCount).toBe(10)
+  expect(
+    await db
+      .select()
+      .from(reviewUsefulVotes)
+      .where(eq(reviewUsefulVotes.reviewId, review.id))
+  ).toHaveLength(1)
+
+  const removed = await setReviewUseful({
+    reviewId: review.id,
+    userId: voterId,
+    useful: false,
+  })
+  expect(removed).toMatchObject({
+    kind: "updated",
+    usefulCount: 9,
+    isUsefulByCurrentUser: false,
+  })
 })

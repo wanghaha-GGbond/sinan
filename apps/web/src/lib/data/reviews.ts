@@ -81,6 +81,39 @@ export type SubmitReviewResult =
   | { ok: true; review: Review; message: string }
   | { ok: false; error: string }
 
+export type ToggleReviewUsefulResult =
+  | { ok: true; usefulCount: number; isUsefulByCurrentUser: boolean }
+  | { ok: false; error: string; authenticationRequired?: boolean }
+
+export async function toggleReviewUsefulData(
+  reviewId: string,
+  useful: boolean
+): Promise<ToggleReviewUsefulResult> {
+  try {
+    const response = await fetch(`/api/reviews/${reviewId}/useful`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ useful }),
+    })
+    const data = await response.json()
+    if (!response.ok) {
+      return {
+        ok: false,
+        error: data.error ?? "有用标记失败",
+        authenticationRequired: response.status === 401,
+      }
+    }
+    return {
+      ok: true,
+      usefulCount: Number(data.usefulCount),
+      isUsefulByCurrentUser: Boolean(data.isUsefulByCurrentUser),
+    }
+  } catch {
+    return { ok: false, error: "网络连接失败，请稍后重试" }
+  }
+}
+
 export async function submitReviewData(
   input: SubmitReviewInput
 ): Promise<SubmitReviewResult> {

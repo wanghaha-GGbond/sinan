@@ -120,6 +120,20 @@
       "when": 1783224389000,
       "tag": "0016_m2_auctions",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1783862400000,
+      "tag": "0017_research_indices_v3",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1786521600000,
+      "tag": "0018_review_useful_votes",
+      "breakpoints": true
     }
   ]
 }

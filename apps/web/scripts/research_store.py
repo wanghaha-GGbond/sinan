@@ -280,6 +280,78 @@ CREATE TABLE IF NOT EXISTS collection_runs (
   synced_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS research_evidence (
+  id TEXT PRIMARY KEY,
+  company_name TEXT NOT NULL,
+  index_key TEXT NOT NULL,
+  scope_type TEXT NOT NULL DEFAULT 'company',
+  scope_key TEXT NOT NULL DEFAULT 'company',
+  department_name TEXT,
+  city TEXT,
+  job_family TEXT,
+  source_kind TEXT NOT NULL,
+  source_type TEXT NOT NULL,
+  source_url TEXT,
+  title TEXT,
+  excerpt TEXT,
+  effect REAL NOT NULL,
+  source_weight REAL NOT NULL,
+  freshness_weight REAL NOT NULL,
+  relevance_weight REAL NOT NULL,
+  trust_weight REAL NOT NULL,
+  evidence_hash TEXT NOT NULL,
+  cluster_key TEXT NOT NULL,
+  published_at TEXT,
+  collected_at TEXT,
+  review_status TEXT NOT NULL DEFAULT 'pending',
+  raw_json TEXT NOT NULL,
+  UNIQUE(company_name, index_key, evidence_hash, scope_key)
+);
+
+CREATE TABLE IF NOT EXISTS research_index_runs (
+  id TEXT PRIMARY KEY,
+  fingerprint TEXT NOT NULL UNIQUE,
+  model_version TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'candidate',
+  data_as_of TEXT,
+  source_counts_json TEXT NOT NULL,
+  generated_at TEXT,
+  reviewed_at TEXT,
+  review_note TEXT
+);
+
+CREATE TABLE IF NOT EXISTS company_index_scores (
+  id TEXT PRIMARY KEY,
+  run_id TEXT NOT NULL REFERENCES research_index_runs(id) ON DELETE CASCADE,
+  company_name TEXT NOT NULL,
+  index_key TEXT NOT NULL,
+  index_group TEXT NOT NULL,
+  scope_type TEXT NOT NULL DEFAULT 'company',
+  scope_key TEXT NOT NULL DEFAULT 'company',
+  raw_score REAL NOT NULL,
+  score REAL,
+  confidence REAL NOT NULL,
+  effective_sample_size REAL NOT NULL DEFAULT 0,
+  source_count INTEGER NOT NULL DEFAULT 0,
+  evidence_count INTEGER NOT NULL DEFAULT 0,
+  reasons_json TEXT NOT NULL,
+  limitations_json TEXT NOT NULL,
+  evidence_refs_json TEXT NOT NULL,
+  publish_status TEXT NOT NULL DEFAULT 'candidate',
+  generated_at TEXT,
+  UNIQUE(run_id, company_name, scope_type, scope_key, index_key)
+);
+
+CREATE TABLE IF NOT EXISTS company_index_evidence_links (
+  id TEXT PRIMARY KEY,
+  score_id TEXT NOT NULL REFERENCES company_index_scores(id) ON DELETE CASCADE,
+  evidence_id TEXT NOT NULL REFERENCES research_evidence(id) ON DELETE CASCADE,
+  effect REAL NOT NULL,
+  weight REAL NOT NULL,
+  contribution REAL NOT NULL,
+  UNIQUE(score_id, evidence_id)
+);
+
 CREATE INDEX IF NOT EXISTS idx_observations_company_platform
   ON observations(company_name, platform, access);
 
@@ -318,6 +390,12 @@ CREATE INDEX IF NOT EXISTS idx_gaps_severity_company
 
 CREATE INDEX IF NOT EXISTS idx_search_company_kind
   ON search_documents(company_name, source_kind);
+
+CREATE INDEX IF NOT EXISTS idx_research_evidence_company_key
+  ON research_evidence(company_name, index_key, review_status);
+
+CREATE INDEX IF NOT EXISTS idx_company_index_scores_run_company
+  ON company_index_scores(run_id, company_name);
 
 DROP VIEW IF EXISTS company_research_overview;
 CREATE VIEW company_research_overview AS
@@ -792,7 +870,7 @@ def upsert_company_index(conn, company_index: dict, weights: dict, generated_at:
     """,
     (
       company_name,
-      company_index.get("overallScore"),
+      company_index.get("overallScore") if company_index.get("overallScore") is not None else 50,
       company_index.get("rawOverallScore"),
       company_index.get("confidence"),
       company_index.get("modelVersion"),
@@ -886,7 +964,145 @@ def upsert_company_index(conn, company_index: dict, weights: dict, generated_at:
           evidence.get("weight"),
           generated_at,
         ),
+    )
+
+
+def stable_v3_id(value: str) -> str:
+  return hashlib.sha256(value.encode("utf8")).hexdigest()[:32]
+
+
+def sync_v3_index(conn, indices_doc: dict):
+  companies = indices_doc.get("companies") or []
+  signals = indices_doc.get("evidenceSignals") or []
+  fingerprint_payload = {
+    "modelVersion": indices_doc.get("modelVersion"),
+    "dataAsOf": indices_doc.get("dataAsOf"),
+    "sourceCounts": indices_doc.get("sourceCounts"),
+    "companies": companies,
+    "evidenceSignals": signals,
+  }
+  fingerprint = hashlib.sha256(
+    json.dumps(fingerprint_payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf8")
+  ).hexdigest()
+  run_id = stable_v3_id(f"run|{fingerprint}")
+  conn.execute(
+    """
+    INSERT OR REPLACE INTO research_index_runs (
+      id, fingerprint, model_version, status, data_as_of,
+      source_counts_json, generated_at
+    ) VALUES (?, ?, ?, 'candidate', ?, ?, ?)
+    """,
+    (
+      run_id,
+      fingerprint,
+      indices_doc.get("modelVersion") or "unknown",
+      indices_doc.get("dataAsOf"),
+      json_dump(indices_doc.get("sourceCounts") or {}),
+      indices_doc.get("generatedAt"),
+    ),
+  )
+  for signal in signals:
+    conn.execute(
+      """
+      INSERT OR REPLACE INTO research_evidence (
+        id, company_name, index_key, scope_type, scope_key,
+        department_name, city, job_family, source_kind, source_type,
+        source_url, title, excerpt, effect, source_weight,
+        freshness_weight, relevance_weight, trust_weight, evidence_hash,
+        cluster_key, published_at, collected_at, review_status, raw_json
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)
+      """,
+      (
+        signal.get("id") or stable_v3_id(json.dumps(signal, ensure_ascii=False, sort_keys=True)),
+        signal.get("companyName"),
+        signal.get("indexKey"),
+        signal.get("scopeType") or "company",
+        signal.get("scopeKey") or "company",
+        signal.get("departmentName"),
+        signal.get("city"),
+        signal.get("jobFamily"),
+        signal.get("sourceKind") or "unknown",
+        signal.get("sourceType") or "unknown",
+        signal.get("sourceUrl"),
+        signal.get("title"),
+        signal.get("excerpt"),
+        signal.get("effect", 0),
+        signal.get("sourceWeight", 0),
+        signal.get("freshnessWeight", 0),
+        signal.get("relevanceWeight", 0),
+        signal.get("trustWeight", 0),
+        signal.get("evidenceHash") or stable_v3_id(json.dumps(signal, ensure_ascii=False, sort_keys=True)),
+        signal.get("clusterKey") or signal.get("sourceUrl") or signal.get("id"),
+        signal.get("publishedAt"),
+        signal.get("collectedAt"),
+        json_dump(signal),
+      ),
+    )
+
+  evidence_ids = {signal.get("id"): signal.get("id") for signal in signals if signal.get("id")}
+  for company in companies:
+    company_name = company.get("name")
+    fun_keys = set((company.get("funIndices") or {}).keys())
+    rows = [
+      ("overall", "overall", "company", "company", company.get("overallScore"), company.get("rawOverallScore", 50), company.get("confidence", 0), company),
+      *[("core", key, "company", "company", value.get("score"), value.get("rawScore", value.get("score", 50)), value.get("confidence", 0), value) for key, value in (company.get("components") or {}).items()],
+      *[("fun", f"fun_{key}", "company", "company", value.get("score"), value.get("rawScore", value.get("score", 50)), value.get("confidence", 0), value) for key, value in (company.get("funIndices") or {}).items()],
+    ]
+    for slice_item in company.get("slices") or []:
+      index_key = slice_item.get("indexKey") or "unknown"
+      group = "fun" if index_key in fun_keys else "core"
+      rows.append((group, f"fun_{index_key}" if group == "fun" else index_key, slice_item.get("scopeType") or "company", slice_item.get("scopeKey") or "company", slice_item.get("score"), slice_item.get("rawScore", slice_item.get("score", 50)), slice_item.get("confidence", 0), slice_item))
+    for index_group, index_key, scope_type, scope_key, score, raw_score, confidence, detail in rows:
+      score_id = stable_v3_id(f"{run_id}|{company_name}|{index_key}|{scope_type}|{scope_key}")
+      conn.execute(
+        """
+        INSERT OR REPLACE INTO company_index_scores (
+          id, run_id, company_name, index_key, index_group, scope_type,
+          scope_key, raw_score, score, confidence, effective_sample_size,
+          source_count, evidence_count, reasons_json, limitations_json,
+          evidence_refs_json, publish_status, generated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'candidate', ?)
+        """,
+        (
+          score_id,
+          run_id,
+          company_name,
+          index_key,
+          index_group,
+          scope_type,
+          scope_key,
+          raw_score if raw_score is not None else 50,
+          score,
+          confidence,
+          detail.get("effectiveSampleSize", 0),
+          detail.get("sourceCount", 0),
+          detail.get("evidenceCount", 0),
+          json_dump(detail.get("reasons") or []),
+          json_dump(detail.get("limitations") or []),
+          json_dump(detail.get("evidenceRefs") or []),
+          indices_doc.get("generatedAt"),
+        ),
       )
+      for reference in detail.get("evidenceRefs") or []:
+        evidence_id = evidence_ids.get(reference.get("evidenceId"))
+        if not evidence_id:
+          continue
+        link_id = stable_v3_id(f"{score_id}|{evidence_id}")
+        conn.execute(
+          """
+          INSERT OR REPLACE INTO company_index_evidence_links (
+            id, score_id, evidence_id, effect, weight, contribution
+          ) VALUES (?, ?, ?, ?, ?, ?)
+          """,
+          (
+            link_id,
+            score_id,
+            evidence_id,
+            reference.get("effect", 0),
+            reference.get("weight", 0),
+            float(reference.get("effect", 0)) * float(reference.get("weight", 0)),
+          ),
+        )
 
 
 def snapshot_company_indices(
@@ -938,7 +1154,7 @@ def snapshot_company_indices(
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        (run_id, company_name, index_key, index_group, score, confidence, evidence_count, json_dump(raw)),
+        (run_id, company_name, index_key, index_group, score if score is not None else 50, confidence, evidence_count, json_dump(raw)),
       )
   return True
 
@@ -1381,6 +1597,10 @@ def sync(args):
       "company_index_evidence",
       "company_index_components",
       "company_indices",
+      "company_index_evidence_links",
+      "company_index_scores",
+      "research_evidence",
+      "research_index_runs",
       "company_departments",
       "evidence_items",
       "observations",
@@ -1415,6 +1635,7 @@ def sync(args):
       upsert_external_evidence(conn, item)
     for item in theme_items:
       upsert_theme_evidence(conn, item)
+    sync_v3_index(conn, indices_doc)
     snapshot_company_indices(
       conn,
       indices_doc,
@@ -1458,6 +1679,10 @@ def summary(args):
       ("company_index_evidence", "SELECT COUNT(*) AS count FROM company_index_evidence"),
       ("index_runs", "SELECT COUNT(*) AS count FROM index_runs"),
       ("company_index_history", "SELECT COUNT(*) AS count FROM company_index_history"),
+      ("research_evidence_v3", "SELECT COUNT(*) AS count FROM research_evidence"),
+      ("research_index_runs_v3", "SELECT COUNT(*) AS count FROM research_index_runs"),
+      ("company_index_scores_v3", "SELECT COUNT(*) AS count FROM company_index_scores"),
+      ("company_index_evidence_links_v3", "SELECT COUNT(*) AS count FROM company_index_evidence_links"),
       ("company_signals", "SELECT COUNT(*) AS count FROM company_signals"),
       ("research_gaps", "SELECT COUNT(*) AS count FROM research_gaps"),
       ("analyst_reviews", "SELECT COUNT(*) AS count FROM analyst_reviews"),

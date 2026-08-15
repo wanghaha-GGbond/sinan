@@ -63,7 +63,14 @@ export type ReviewListItem = {
   authorRole: string
   authorLabel: string
   usefulCount: number
+  isUsefulByCurrentUser?: boolean
   discussionCount: number
+  publicAuthor?: {
+    label: string
+    role: string
+    verificationLevel: "none" | "L1" | "L2"
+    verifiedForCompany: boolean
+  }
   status: string
   createdAt: string
   tags: string[] | null
@@ -90,6 +97,7 @@ export type Review = {
   createdAt: string
   verifiedHint: string
   verified?: boolean
+  isUsefulByCurrentUser?: boolean
   questionnaire?: ReviewQuestionnaire
 }
 

@@ -3,22 +3,38 @@ import indexData from "@/db/seeds/reports/company-indices.json"
 
 export type ScoreDetail = {
   score: number
+  rawScore?: number
   confidence: number
   evidenceCount: number
+  effectiveSampleSize?: number
+  sourceCount?: number
+  dataAsOf?: string
   reasons: string[]
   limitations: string[]
+  evidenceRefs?: Array<{
+    evidenceId?: string
+    sourceKind?: string
+    title?: string
+    url?: string
+    effect?: number
+    weight?: number
+  }>
 }
 
 export type CompanyIndex = {
   name: string
   city: string
   industry: string
-  overallScore: number
+  overallScore: number | null
   rawOverallScore: number
   confidence: number
   funTag: string
   components: Record<string, ScoreDetail>
   funIndices: Record<string, ScoreDetail>
+  dataAsOf?: string
+  runId?: string
+  publishStatus?: "candidate" | "published"
+  slices?: Array<ScoreDetail & { indexKey: string; scopeType: string; scopeKey: string }>
 }
 
 export type CompanyCard = {
