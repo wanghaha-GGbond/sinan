@@ -6,7 +6,7 @@ import { Pool as NodePostgresPool } from "pg"
 import * as schema from "./schema"
 
 /**
- * Drizzle + Neon Postgres client.
+ * Drizzle PostgreSQL client.
  *
  * Why neon-serverless (WebSocket) instead of neon-http:
  *   The HTTP driver silently batches every "transaction" into a single
@@ -48,15 +48,27 @@ if (!databaseUrl) {
   throw new Error("DATABASE_URL is not set")
 }
 
-const useNodePostgres = process.env.DATABASE_DRIVER === "node-postgres"
+const databaseAdapter =
+  process.env.DATABASE_ADAPTER ??
+  (process.env.DATABASE_DRIVER === "node-postgres"
+    ? "pg"
+    : process.env.NODE_ENV === "production"
+      ? "pg"
+      : "neon")
+
+if (databaseAdapter !== "pg" && databaseAdapter !== "neon") {
+  throw new Error(`Unsupported DATABASE_ADAPTER: ${databaseAdapter}`)
+}
+
+const useNodePostgres = databaseAdapter === "pg"
 const pool = useNodePostgres
   ? new NodePostgresPool({ connectionString: databaseUrl })
   : new Pool({ connectionString: databaseUrl })
 
 // The two Drizzle adapters expose the same relational/query surface used by
-// the application. Production keeps the Neon WebSocket adapter; the explicit
-// node-postgres mode lets CI exercise real transactions against disposable
-// PostgreSQL without changing production behavior.
+// the application. Mainland production uses node-postgres for RDS sessions,
+// transactions, row locks and advisory locks. Neon remains an explicit
+// optional adapter for non-mainland environments.
 export const db = (
   useNodePostgres
     ? drizzleNodePostgres(pool as NodePostgresPool, { schema })

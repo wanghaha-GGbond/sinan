@@ -40,6 +40,17 @@ export async function reportServerError(event: ServerErrorEvent) {
   // free of request headers, bodies, cookies, query strings and stack traces.
   console.error(JSON.stringify({ level: "error", event: "server_request_error", ...event }))
 
+  const mode = process.env.ERROR_REPORTING_MODE ?? "stdout"
+  if (mode === "stdout") return
+  if (mode !== "webhook") {
+    console.error(JSON.stringify({
+      level: "error",
+      event: "error_reporting_configuration_invalid",
+      mode,
+    }))
+    return
+  }
+
   const webhook = process.env.ERROR_REPORTING_WEBHOOK
   if (!webhook) return
 

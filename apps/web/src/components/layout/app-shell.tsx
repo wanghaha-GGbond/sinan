@@ -234,6 +234,7 @@ function AuthHeader() {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const icpFilingNumber = process.env.NEXT_PUBLIC_ICP_FILING_NUMBER
 
   const isHome = pathname === "/"
   const isCompany = pathname.startsWith("/company")
@@ -259,6 +260,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Link href="/legal/privacy" className="hover:text-foreground">隐私政策</Link>
             <Link href="/legal/terms" className="hover:text-foreground">用户协议</Link>
             <Link href="/settings/account" className="hover:text-foreground">账号与数据</Link>
+            {icpFilingNumber ? (
+              <a
+                href="https://beian.miit.gov.cn/"
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-foreground"
+              >
+                {icpFilingNumber}
+              </a>
+            ) : null}
             <span
               className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 font-semibold text-foreground"
               data-testid="footer-toc-promise"

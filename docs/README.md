@@ -16,6 +16,7 @@
 | 08 | [08-compliance-risk.md](08-compliance-risk.md) | 名誉权、PIPL、k-匿名规则、审核 SOP | 法务 / 审核 / 开发 |
 | 09 | [09-metrics.md](09-metrics.md) | 北极星、守门指标、漏斗、各功能验收线 | 所有人 |
 | — | [DEV_PLAN.md](DEV_PLAN.md) | Sprint 0-10 执行级任务拆解（07 的细化） | 开发 |
+| — | [china-production-runbook.md](china-production-runbook.md) | 中国大陆 Web + iOS 生产部署、备案与回滚手册 | 开发 / 运维 / 发布负责人 |
 
 ## 文档约定
 

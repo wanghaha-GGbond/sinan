@@ -1,0 +1,131 @@
+name: Release Web to Alibaba Cloud
+
+on:
+  push:
+    tags:
+      - "web-v*"
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Semantic image tag, for example web-v0.1.0-rc.1"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: sinan-production-web
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build, scan, push and deploy immutable image
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    environment: production
+    env:
+      ALIYUN_REGION: cn-hangzhou
+      ACR_REGISTRY: ${{ vars.ACR_REGISTRY }}
+      ECS_INSTANCE_ID: ${{ vars.ECS_INSTANCE_ID }}
+      IMAGE_REPOSITORY: ${{ vars.ACR_REGISTRY }}/sinan/web
+    steps:
+      - uses: actions/checkout@v6
+      - uses: aliyun/configure-aliyun-credentials-action@v1
+        with:
+          role-to-assume: ${{ vars.ALIYUN_GITHUB_ROLE_ARN }}
+          oidc-provider-arn: ${{ vars.ALIYUN_GITHUB_OIDC_PROVIDER_ARN }}
+          role-session-name: sinan-web-${{ github.run_id }}
+          audience: github-actions
+
+      - name: Resolve immutable and semantic tags
+        id: tags
+        env:
+          DISPATCH_TAG: ${{ inputs.release_tag }}
+        run: |
+          semantic_tag="${GITHUB_REF_TYPE:+$GITHUB_REF_NAME}"
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            semantic_tag="$DISPATCH_TAG"
+          fi
+          echo "semantic=$semantic_tag" >> "$GITHUB_OUTPUT"
+          echo "sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Build image
+        run: |
+          docker build \
+            --file apps/web/Dockerfile \
+            --build-arg NEXT_PUBLIC_APP_URL=https://sinanapp.cn \
+            --build-arg NEXT_PUBLIC_APP_ENV=production \
+            --tag "$IMAGE_REPOSITORY:${{ steps.tags.outputs.sha }}" \
+            --tag "$IMAGE_REPOSITORY:${{ steps.tags.outputs.semantic }}" \
+            .
+
+      - name: Scan production image
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: ${{ env.IMAGE_REPOSITORY }}:${{ steps.tags.outputs.sha }}
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          severity: HIGH,CRITICAL
+
+      - name: Install Alibaba Cloud CLI
+        run: |
+          curl --fail --silent --show-error --location \
+            https://aliyuncli.alicdn.com/aliyun-cli-linux-latest-amd64.tgz \
+            --output /tmp/aliyun-cli.tgz
+          tar -xzf /tmp/aliyun-cli.tgz -C /tmp
+          sudo install /tmp/aliyun /usr/local/bin/aliyun
+
+      - name: Log in to ACR with temporary RAM credentials
+        run: |
+          auth_json=$(aliyun cr GetAuthorizationToken --RegionId "$ALIYUN_REGION")
+          username=$(jq -r '.UserName' <<<"$auth_json")
+          token=$(jq -r '.AuthorizationToken' <<<"$auth_json")
+          echo "::add-mask::$token"
+          printf '%s' "$token" | docker login "$ACR_REGISTRY" --username "$username" --password-stdin
+
+      - name: Push immutable and semantic tags
+        run: |
+          docker push "$IMAGE_REPOSITORY:${{ steps.tags.outputs.sha }}"
+          docker push "$IMAGE_REPOSITORY:${{ steps.tags.outputs.semantic }}"
+
+      - name: Deploy through ECS Cloud Assistant
+        run: |
+          deploy_payload=$(base64 -w0 deploy/scripts/deploy-web.sh)
+          remote_payload=$(base64 -w0 deploy/scripts/remote-deploy-web.sh)
+          command=$(printf '%s\n' \
+            'set -euo pipefail' \
+            'install -d -m 0750 /opt/sinan' \
+            "printf '%s' '$deploy_payload' | base64 -d > /opt/sinan/deploy-web.sh" \
+            "printf '%s' '$remote_payload' | base64 -d > /opt/sinan/remote-deploy-web.sh" \
+            'chmod 0750 /opt/sinan/deploy-web.sh /opt/sinan/remote-deploy-web.sh' \
+            "ALIYUN_REGION='$ALIYUN_REGION' /opt/sinan/remote-deploy-web.sh '$IMAGE_REPOSITORY:${{ steps.tags.outputs.sha }}'")
+          command_content=$(printf '%s' "$command" | base64 -w0)
+          response=$(aliyun ecs RunCommand \
+            --RegionId "$ALIYUN_REGION" \
+            --Type RunShellScript \
+            --ContentEncoding Base64 \
+            --CommandContent "$command_content" \
+            --InstanceId.1 "$ECS_INSTANCE_ID" \
+            --Timeout 900)
+          invoke_id=$(jq -r '.InvokeId' <<<"$response")
+          for attempt in {1..90}; do
+            result=$(aliyun ecs DescribeInvocationResults \
+              --RegionId "$ALIYUN_REGION" \
+              --InvokeId "$invoke_id" \
+              --InstanceId "$ECS_INSTANCE_ID")
+            status=$(jq -r '.. | objects | .InvocationStatus? // empty' <<<"$result" | head -1)
+            case "$status" in
+              Finished) exit 0 ;;
+              Failed|Stopped|Stopping)
+                jq -r '.. | objects | .Output? // empty' <<<"$result" | base64 -d || true
+                exit 1
+                ;;
+            esac
+            sleep 10
+          done
+          echo "Cloud Assistant deployment timed out" >&2
+          exit 1
+

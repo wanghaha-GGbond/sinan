@@ -7,13 +7,31 @@ const requiredRuntimeVariables = [
   "AUTH_SECRET",
   "DATABASE_URL",
   "CRON_SECRET",
-  "RESEND_API_KEY",
+  "DATABASE_ADAPTER",
   "MAIL_FROM_DOMAIN",
-  "ERROR_REPORTING_WEBHOOK",
+  "ERROR_REPORTING_MODE",
   "APP_RELEASE",
   "NEXT_PUBLIC_APP_URL",
+  "NEXT_PUBLIC_ICP_FILING_NUMBER",
   "SUPPORT_EMAIL",
 ] as const
+
+function hasValidMailConfiguration() {
+  if (process.env.MAIL_PROVIDER === "aliyun-direct-mail") {
+    return Boolean(
+      process.env.ALIYUN_DM_ACCOUNT_NAME?.trim() &&
+      process.env.ALIYUN_DM_REGION?.trim()
+    )
+  }
+  return process.env.MAIL_PROVIDER === "resend" && Boolean(process.env.RESEND_API_KEY?.trim())
+}
+
+function hasValidErrorReportingConfiguration() {
+  return process.env.ERROR_REPORTING_MODE === "stdout" || (
+    process.env.ERROR_REPORTING_MODE === "webhook" &&
+    Boolean(process.env.ERROR_REPORTING_WEBHOOK?.trim())
+  )
+}
 
 function hasValidRuntimeConfiguration() {
   return (
@@ -21,7 +39,9 @@ function hasValidRuntimeConfiguration() {
     process.env.INVITE_REQUIRED === "true" &&
     process.env.NEXT_PUBLIC_API_ENABLED === "true" &&
     process.env.LAUNCH_SCOPE_ONLY === "true" &&
-    process.env.MAIL_PROVIDER === "resend" &&
+    (process.env.DATABASE_ADAPTER === "pg" || process.env.DATABASE_ADAPTER === "neon") &&
+    hasValidMailConfiguration() &&
+    hasValidErrorReportingConfiguration() &&
     (process.env.NEXT_PUBLIC_APP_ENV === "staging" ||
       process.env.NEXT_PUBLIC_APP_ENV === "production")
   )
