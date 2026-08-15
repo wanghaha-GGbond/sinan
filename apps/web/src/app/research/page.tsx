@@ -4,9 +4,9 @@ import { ArrowRight, BarChart3, BookOpen, Database, ShieldCheck } from "lucide-r
 
 import {
   companyCards,
-  companyIndices,
   componentLabels,
   getCompanySlug,
+  mergeCompanyIndices,
   researchGeneratedAt,
   researchSummary,
 } from "@/lib/research-report"
@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic"
 
 export default async function ResearchPage() {
   const published = await getPublishedResearchSnapshot()
-  const indices = published?.companies ?? companyIndices
+  const indices = mergeCompanyIndices(published?.companies)
   const sorted = [...indices].sort((a, b) => (b.overallScore ?? -1) - (a.overallScore ?? -1))
   const generatedAt = published?.generatedAt ?? researchGeneratedAt
 

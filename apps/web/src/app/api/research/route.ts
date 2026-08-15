@@ -2,8 +2,8 @@ import { NextResponse } from "next/server"
 
 import {
   companyCards,
-  companyIndices,
   getCompanySlug,
+  mergeCompanyIndices,
   researchGeneratedAt,
   researchSummary,
 } from "@/lib/research-report"
@@ -11,7 +11,7 @@ import { getPublishedResearchSnapshot } from "@/lib/server/published-research"
 
 export async function GET() {
   const published = await getPublishedResearchSnapshot()
-  const indices = published?.companies ?? companyIndices
+  const indices = mergeCompanyIndices(published?.companies)
   const cardsByName = new Map(companyCards.map((card) => [card.name, card]))
   const companies = [...indices]
     .sort((a, b) => (b.overallScore ?? -1) - (a.overallScore ?? -1))

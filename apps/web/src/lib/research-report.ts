@@ -89,6 +89,18 @@ export const researchGeneratedAt = (insightData as { generatedAt: string }).gene
 export const companyCards = (insightData as unknown as { cards: CompanyCard[] }).cards
 export const companyIndices = (indexData as unknown as { companies: CompanyIndex[] }).companies
 
+export function mergeCompanyIndices(published: CompanyIndex[] | undefined) {
+  if (!published?.length) return companyIndices
+
+  const publishedByName = new Map(published.map((index) => [index.name, index]))
+  const staticNames = new Set(companyIndices.map((index) => index.name))
+
+  return [
+    ...companyIndices.map((index) => publishedByName.get(index.name) ?? index),
+    ...published.filter((index) => !staticNames.has(index.name)),
+  ]
+}
+
 const companySlugs: Record<string, string> = {
   字节跳动: "bytedance",
   腾讯: "tencent",

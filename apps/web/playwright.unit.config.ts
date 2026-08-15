@@ -14,6 +14,7 @@ export default defineConfig({
     "launch-scope.spec.ts",
     "launch-scope-response.spec.ts",
     "navigation.spec.ts",
+    "research-report.spec.ts",
     "review-moderation.spec.ts",
     "review-data.spec.ts",
     "review-view.spec.ts",
