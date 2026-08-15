@@ -10,6 +10,7 @@ const production = easConfig.build?.production ?? {}
 const submit = easConfig.submit?.production?.ios ?? {}
 const apiUrl = process.env.EXPO_PUBLIC_API_URL?.trim()
 const launchScopeOnly = process.env.EXPO_PUBLIC_LAUNCH_SCOPE_ONLY
+const appFilingNumber = process.env.EXPO_PUBLIC_APP_FILING_NUMBER?.trim()
 
 const errors = []
 const warnings = []
@@ -59,6 +60,17 @@ if (!apiUrl) {
 
 if (launchScopeOnly !== "true") {
   errors.push("EXPO_PUBLIC_LAUNCH_SCOPE_ONLY must be true for preview and production")
+}
+if (!appFilingNumber) {
+  errors.push("EXPO_PUBLIC_APP_FILING_NUMBER is required before TestFlight/App Store release")
+} else if (!ciMode && appFilingNumber.includes("PENDING")) {
+  errors.push("EXPO_PUBLIC_APP_FILING_NUMBER must contain the issued APP filing number")
+}
+if (easConfig.build?.preview?.env?.EXPO_PUBLIC_API_URL !== "https://staging.sinanapp.cn") {
+  errors.push("eas.json: preview API must use https://staging.sinanapp.cn")
+}
+if (production.env?.EXPO_PUBLIC_API_URL !== "https://sinanapp.cn") {
+  errors.push("eas.json: production API must use https://sinanapp.cn")
 }
 if (easConfig.build?.preview?.env?.EXPO_PUBLIC_LAUNCH_SCOPE_ONLY !== "true") {
   errors.push("eas.json: preview must enable EXPO_PUBLIC_LAUNCH_SCOPE_ONLY")

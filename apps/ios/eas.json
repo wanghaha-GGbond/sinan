@@ -16,12 +16,14 @@
     "preview": {
       "distribution": "internal",
       "env": {
+        "EXPO_PUBLIC_API_URL": "https://staging.sinanapp.cn",
         "EXPO_PUBLIC_LAUNCH_SCOPE_ONLY": "true"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
+        "EXPO_PUBLIC_API_URL": "https://sinanapp.cn",
         "EXPO_PUBLIC_LAUNCH_SCOPE_ONLY": "true"
       }
     }

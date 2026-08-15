@@ -36,7 +36,14 @@ export type ReviewListItem = {
   authorLabel: string
   authorRole: string
   usefulCount: number
+  isUsefulByCurrentUser?: boolean
   discussionCount: number
+  publicAuthor?: {
+    label: string
+    role: string
+    verificationLevel: "none" | "L1" | "L2"
+    verifiedForCompany: boolean
+  }
   createdAt: string
 }
 
@@ -162,6 +169,23 @@ export async function getCompany(companyId: string) {
 export async function getCompanyReviews(companyId: string) {
   const result = await request<{ reviews: ReviewListItem[] }>(`/api/companies/${companyId}/reviews`)
   return result.reviews
+}
+
+export async function getReview(reviewId: string) {
+  const result = await request<{ review: ReviewListItem }>(
+    `/api/reviews/${encodeURIComponent(reviewId)}`
+  )
+  return result.review
+}
+
+export async function setReviewUseful(reviewId: string, useful: boolean) {
+  return request<{
+    usefulCount: number
+    isUsefulByCurrentUser: boolean
+  }>(`/api/reviews/${encodeURIComponent(reviewId)}/useful`, {
+    method: "POST",
+    body: JSON.stringify({ useful }),
+  })
 }
 
 export async function getResearchReports() {

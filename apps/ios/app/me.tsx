@@ -16,6 +16,7 @@ import {
 import { COLORS } from "../theme"
 
 export default function MeScreen() {
+  const appFilingNumber = process.env.EXPO_PUBLIC_APP_FILING_NUMBER
   const [user, setUser] = useState<SessionUser | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -85,6 +86,11 @@ export default function MeScreen() {
           <Text style={S.title}>法律与隐私</Text>
           <Text style={S.body}>查看完整政策，了解匿名边界、数据用途和内容审核规则。</Text>
           <View style={S.actions}><SolidButton title="隐私政策" variant="ghost" onPress={() => void Linking.openURL(getWebUrl("/legal/privacy"))} /><SolidButton title="用户协议" variant="ghost" onPress={() => void Linking.openURL(getWebUrl("/legal/terms"))} /></View>
+        </SolidCard>
+        <SolidCard variant="subtle" style={S.card}>
+          <Text style={S.title}>关于司南</Text>
+          <Text style={S.body}>版本 0.2.0 · com.sinan.app</Text>
+          <Text style={S.body}>APP备案号：{appFilingNumber || "尚未配置"}</Text>
         </SolidCard>
       </ScrollView>
     </View>
