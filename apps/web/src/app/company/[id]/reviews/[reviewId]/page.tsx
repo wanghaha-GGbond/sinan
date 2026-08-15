@@ -7,7 +7,11 @@ import { ErrorState } from "@/components/common/error-state"
 import { Card, CardContent } from "@/components/ui/card"
 import { SolidButton } from "@/components/ui/solid-button"
 import { mapPublicReview } from "@/lib/review-mappers"
-import { getPublicCompanyDetail, getPublicCompanyReviews } from "@/lib/server/public-company-data"
+import {
+  getPublicCompanyDetail,
+  getPublicCompanyReviews,
+  getPublicReviewDetail,
+} from "@/lib/server/public-company-data"
 
 export default async function ReviewDetailPage({
   params,
@@ -16,19 +20,21 @@ export default async function ReviewDetailPage({
 }) {
   const { id, reviewId } = await params
   let company: Awaited<ReturnType<typeof getPublicCompanyDetail>>
+  let reviewItem: Awaited<ReturnType<typeof getPublicReviewDetail>>
   let reviewItems: Awaited<ReturnType<typeof getPublicCompanyReviews>>
   try {
-    ;[company, reviewItems] = await Promise.all([
+    ;[company, reviewItem, reviewItems] = await Promise.all([
       getPublicCompanyDetail(id),
+      getPublicReviewDetail(id, reviewId),
       getPublicCompanyReviews(id),
     ])
   } catch {
     return <ErrorState title="评价暂时不可用" message="真实评价加载失败，请稍后重试。" />
   }
   if (!company) notFound()
+  if (!reviewItem) notFound()
   const reviews = reviewItems.map(mapPublicReview)
-  const review = reviews.find((item) => item.id === reviewId)
-  if (!review) notFound()
+  const review = mapPublicReview(reviewItem)
   const currentIndex = reviews.findIndex((item) => item.id === review.id)
   const prevReview = currentIndex > 0 ? reviews[currentIndex - 1] : null
   const nextReview = currentIndex < reviews.length - 1 ? reviews[currentIndex + 1] : null

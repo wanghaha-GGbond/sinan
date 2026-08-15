@@ -7,11 +7,14 @@ import {
   researchGeneratedAt,
   researchSummary,
 } from "@/lib/research-report"
+import { getPublishedResearchSnapshot } from "@/lib/server/published-research"
 
-export function GET() {
+export async function GET() {
+  const published = await getPublishedResearchSnapshot()
+  const indices = published?.companies ?? companyIndices
   const cardsByName = new Map(companyCards.map((card) => [card.name, card]))
-  const companies = [...companyIndices]
-    .sort((a, b) => b.overallScore - a.overallScore)
+  const companies = [...indices]
+    .sort((a, b) => (b.overallScore ?? -1) - (a.overallScore ?? -1))
     .map((index) => ({
       slug: getCompanySlug(index.name),
       name: index.name,
@@ -24,7 +27,7 @@ export function GET() {
     }))
 
   return NextResponse.json(
-    { generatedAt: researchGeneratedAt, summary: researchSummary, companies },
+    { generatedAt: published?.generatedAt ?? researchGeneratedAt, summary: researchSummary, companies },
     { headers: { "Cache-Control": "public, max-age=300, stale-while-revalidate=3600" } }
   )
 }

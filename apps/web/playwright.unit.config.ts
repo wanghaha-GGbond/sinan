@@ -16,6 +16,7 @@ export default defineConfig({
     "navigation.spec.ts",
     "review-moderation.spec.ts",
     "review-data.spec.ts",
+    "review-view.spec.ts",
     "verification.spec.ts",
   ],
   timeout: 10_000,

@@ -3,6 +3,8 @@ import { and, eq, isNull, inArray, desc, lt, or } from "drizzle-orm"
 import { companies } from "@/db/schema/companies"
 import { reviews } from "@/db/schema/reviews"
 import { toPublicReviewView } from "@/lib/server/review-view"
+import { getAuthUserFromRequest } from "@/lib/server/auth"
+import { getPublicReviewMetadata } from "@/lib/server/public-review-query"
 
 type SortKey = "latest" | "useful"
 
@@ -133,9 +135,13 @@ export async function GET(
     const hasMore = rows.length > limit
     const resultRows = hasMore ? rows.slice(0, limit) : rows
     const last = resultRows[resultRows.length - 1]
+    const authUser = await getAuthUserFromRequest(request)
+    const metadata = await getPublicReviewMetadata(resultRows, authUser?.userId)
 
     return NextResponse.json({
-      reviews: resultRows.map(toPublicReviewView),
+      reviews: resultRows.map((row) =>
+        toPublicReviewView(row, metadata.get(row.id))
+      ),
       nextCursor: hasMore && last
         ? encodeCursor(sort, last.usefulCount, last.createdAt, last.id)
         : null,

@@ -11,6 +11,9 @@ import {
   getResearchCompany,
   type ScoreDetail,
 } from "@/lib/research-report"
+import { getPublishedResearchCompany } from "@/lib/server/published-research"
+
+export const dynamic = "force-dynamic"
 
 export function generateStaticParams() {
   return companyIndices.map((company) => ({ slug: getCompanySlug(company.name) }))
@@ -26,7 +29,8 @@ export default async function CompanyResearchPage({ params }: { params: Promise<
   const { slug } = await params
   const result = getResearchCompany(slug)
   if (!result) notFound()
-  const { card, index } = result
+  const { card } = result
+  const index = (await getPublishedResearchCompany(card.name)) ?? result.index
 
   return (
     <div className="pb-16">
@@ -40,7 +44,7 @@ export default async function CompanyResearchPage({ params }: { params: Promise<
               <p className="mt-4 max-w-prose-sm text-base leading-relaxed text-muted-foreground">{card.oneLine}</p>
             </div>
             <div className="flex items-end gap-3 rounded-3xl bg-foreground p-5 text-white">
-              <div><span className="text-xs text-white/60">司南总指数</span><strong className="block font-mono text-4xl">{index.overallScore}</strong></div>
+              <div><span className="text-xs text-white/60">司南总指数</span><strong className="block font-mono text-4xl">{index.overallScore ?? "待补证据"}</strong></div>
               <span className="pb-1 text-xs text-white/60">/ 100<br />可信度 {index.confidence}%</span>
             </div>
           </div>

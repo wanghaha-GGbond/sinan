@@ -27,7 +27,14 @@ export type PublicReviewView = {
   ratingDimensions: unknown
   officeExperienceScore: string | null
   usefulCount: number
+  isUsefulByCurrentUser: boolean
   discussionCount: number
+  publicAuthor: {
+    label: string
+    role: string
+    verificationLevel: "none" | "L1" | "L2"
+    verifiedForCompany: boolean
+  }
   status: string
   createdAt: string
   updatedAt: string
@@ -43,9 +50,22 @@ export type PublicReviewView = {
  * instead of the raw content field.
  */
 export function toPublicReviewView(
-  row: InferSelectModel<typeof reviews>
+  row: InferSelectModel<typeof reviews>,
+  metadata?: {
+    companyVerificationLevel?: number | null
+    isUsefulByCurrentUser?: boolean | null
+  }
 ): PublicReviewView {
   const isLimited = row.status === "limited_visible"
+  const rawVerificationLevel = Math.max(
+    0,
+    Number(metadata?.companyVerificationLevel ?? 0)
+  )
+  const verificationLevel = rawVerificationLevel >= 2
+    ? "L2"
+    : rawVerificationLevel >= 1
+      ? "L1"
+      : "none"
 
   return {
     id: row.id,
@@ -68,7 +88,14 @@ export function toPublicReviewView(
       ? String(row.officeExperienceScore)
       : null,
     usefulCount: row.usefulCount,
+    isUsefulByCurrentUser: Boolean(metadata?.isUsefulByCurrentUser),
     discussionCount: row.discussionCount,
+    publicAuthor: {
+      label: row.authorLabel,
+      role: row.authorRole,
+      verificationLevel,
+      verifiedForCompany: verificationLevel !== "none",
+    },
     status: row.status,
     createdAt:
       row.createdAt instanceof Date

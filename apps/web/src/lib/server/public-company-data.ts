@@ -5,6 +5,47 @@ import { reviews } from "@/db/schema/reviews"
 import type { CompanyListItem, ReviewListItem } from "@/lib/types"
 import { toPublicCompanyView } from "@/lib/server/company-view"
 import { toPublicReviewView } from "@/lib/server/review-view"
+import { getAuthUser } from "@/lib/server/auth"
+import {
+  findPublicReview,
+  getPublicReviewMetadata,
+} from "@/lib/server/public-review-query"
+
+function toReviewListItem(
+  row: typeof reviews.$inferSelect,
+  view: ReturnType<typeof toPublicReviewView>
+): ReviewListItem {
+  const tags =
+    row.questionnaire &&
+    typeof row.questionnaire === "object" &&
+    !Array.isArray(row.questionnaire)
+      ? ((row.questionnaire as Record<string, unknown>).tags as
+          | string[]
+          | undefined) ?? null
+      : null
+
+  return {
+    id: view.id,
+    companyId: view.companyId,
+    title: view.title,
+    content: view.content,
+    summary: view.summary,
+    directionScore: view.directionScore,
+    recommendToJoin: view.recommendToJoin,
+    employmentStatus: view.employmentStatus,
+    jobTitle: view.jobTitle,
+    city: view.city,
+    authorRole: view.authorRole,
+    authorLabel: view.authorLabel,
+    usefulCount: view.usefulCount,
+    isUsefulByCurrentUser: view.isUsefulByCurrentUser,
+    discussionCount: view.discussionCount,
+    publicAuthor: view.publicAuthor,
+    status: view.status,
+    createdAt: view.createdAt,
+    tags,
+  }
+}
 
 export async function getPublicCompanyDetail(
   companyId: string,
@@ -74,31 +115,25 @@ export async function getPublicCompanyReviews(
     .orderBy(desc(reviews.usefulCount), desc(reviews.createdAt), desc(reviews.id))
     .limit(Math.min(Math.max(limit, 1), 50))
 
-  return rows.map((row) => {
-    const view = toPublicReviewView(row)
-    const tags =
-      row.questionnaire && typeof row.questionnaire === "object" && !Array.isArray(row.questionnaire)
-        ? ((row.questionnaire as Record<string, unknown>).tags as string[] | undefined) ?? null
-        : null
+  const authUser = await getAuthUser()
+  const metadata = await getPublicReviewMetadata(rows, authUser?.userId)
 
-    return {
-      id: view.id,
-      companyId: view.companyId,
-      title: view.title,
-      content: view.content,
-      summary: view.summary,
-      directionScore: view.directionScore,
-      recommendToJoin: view.recommendToJoin,
-      employmentStatus: view.employmentStatus,
-      jobTitle: view.jobTitle,
-      city: view.city,
-      authorRole: view.authorRole,
-      authorLabel: view.authorLabel,
-      usefulCount: view.usefulCount,
-      discussionCount: view.discussionCount,
-      status: view.status,
-      createdAt: view.createdAt,
-      tags,
-    }
-  })
+  return rows.map((row) =>
+    toReviewListItem(row, toPublicReviewView(row, metadata.get(row.id)))
+  )
+}
+
+export async function getPublicReviewDetail(
+  companyId: string,
+  reviewId: string
+): Promise<ReviewListItem | null> {
+  const row = await findPublicReview(reviewId, companyId)
+  if (!row) return null
+
+  const authUser = await getAuthUser()
+  const metadata = await getPublicReviewMetadata([row], authUser?.userId)
+  return toReviewListItem(
+    row,
+    toPublicReviewView(row, metadata.get(row.id))
+  )
 }

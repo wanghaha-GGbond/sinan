@@ -11,7 +11,7 @@ import { SolidCard } from "@/components/ui/solid-card"
 import { TagPill } from "@/components/ui/tag-pill"
 import { ReportReviewButton } from "@/components/review/report-review-button"
 import type { Review } from "@/lib/types"
-import { isReviewUseful, toggleReviewUseful } from "@/lib/useful-storage"
+import { toggleReviewUsefulData } from "@/lib/data/reviews"
 
 function tagTone(tag: string): "risk" | "positive" | "neutral" {
   if (/(风险|慎重|压力|加班|不确定|波动|限制|慢)/.test(tag)) {
@@ -36,10 +36,11 @@ export function ReviewCard({
   showDetailLink?: boolean
   showDiscussionLink?: boolean
 }) {
-  const [liked, setLiked] = useState(() => isReviewUseful(review.id))
+  const [liked, setLiked] = useState(Boolean(review.isUsefulByCurrentUser))
+  const [likeCount, setLikeCount] = useState(review.helpful)
+  const [isVoting, setIsVoting] = useState(false)
   const [isExpanded, setIsExpanded] = useState(expanded)
   const isLong = useMemo(() => review.content.replace(/\s/g, "").length > 180, [review.content])
-  const likeCount = review.helpful + (liked ? 1 : 0)
   const detailHref = companyId ? `/company/${companyId}/reviews/${review.id}` : undefined
 
   return (
@@ -48,8 +49,8 @@ export function ReviewCard({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 space-y-1">
             <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm text-muted-foreground">
-              <span>匿名评价者</span>
-              <span>L{review.trustLevel}</span>
+              <span>{review.role || "匿名评价者"}</span>
+              <span>{review.trustLevel > 0 ? `L${review.trustLevel}` : "身份未核验"}</span>
               <span>{review.employmentStatus}</span>
               {review.verified && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
@@ -125,12 +126,29 @@ export function ReviewCard({
             variant="secondary"
             size="sm"
             aria-pressed={liked}
+            disabled={isVoting}
             data-testid={`like-review-${review.id}`}
             className="rounded-full aria-pressed:bg-secondary aria-pressed:text-secondary-foreground aria-pressed:shadow-[0_3px_0_rgba(14,143,95,0.22)]"
-            onClick={() => {
-              const next = toggleReviewUseful(review.id)
-              setLiked(next)
-              toast.success(next ? "已记录,你帮后来者筛出了一条有用评价" : "已取消有用标记")
+            onClick={async () => {
+              if (isVoting) return
+              setIsVoting(true)
+              const result = await toggleReviewUsefulData(review.id, !liked)
+              setIsVoting(false)
+              if (!result.ok) {
+                toast.error(
+                  result.authenticationRequired
+                    ? "登录后可标记有用"
+                    : result.error
+                )
+                return
+              }
+              setLiked(result.isUsefulByCurrentUser)
+              setLikeCount(result.usefulCount)
+              toast.success(
+                result.isUsefulByCurrentUser
+                  ? "已记录，你帮后来者筛出了一条有用评价"
+                  : "已取消有用标记"
+              )
             }}
           >
             <ThumbsUp className="size-4" />

@@ -1,4 +1,4 @@
-import { eq, inArray, or } from "drizzle-orm"
+import { and, count, eq, inArray, or } from "drizzle-orm"
 import { NextRequest, NextResponse } from "next/server"
 
 import { users } from "@/db/schema/users"
@@ -15,6 +15,7 @@ import { gratitude, highlights, skillEndorsements, skills } from "@/db/schema/p1
 import { promiseRecords } from "@/db/schema/promise-records"
 import { reviewDiscussions } from "@/db/schema/review-discussions"
 import { reviewReports } from "@/db/schema/review-reports"
+import { reviewUsefulVotes } from "@/db/schema/review-useful-votes"
 import { reviews } from "@/db/schema/reviews"
 import {
   ACCOUNT_DELETION_CONFIRMATION,
@@ -72,6 +73,36 @@ export async function DELETE(request: NextRequest) {
       await tx.update(reviewDiscussions).set({ authorUserId: null, authorFingerprintHash: null }).where(eq(reviewDiscussions.authorUserId, authUser.userId))
       await tx.update(reviewReports).set({ reporterUserId: null, reporterFingerprintHash: null }).where(eq(reviewReports.reporterUserId, authUser.userId))
       await tx.delete(discussionUsefulVotes).where(eq(discussionUsefulVotes.userId, authUser.userId))
+      const reviewVoteRows = await tx
+        .select({ reviewId: reviewUsefulVotes.reviewId })
+        .from(reviewUsefulVotes)
+        .where(eq(reviewUsefulVotes.userId, authUser.userId))
+      await tx.delete(reviewUsefulVotes).where(eq(reviewUsefulVotes.userId, authUser.userId))
+      for (const reviewId of new Set(reviewVoteRows.map((row) => row.reviewId))) {
+        const [{ activeVotes }] = await tx
+          .select({ activeVotes: count() })
+          .from(reviewUsefulVotes)
+          .where(
+            and(
+              eq(reviewUsefulVotes.reviewId, reviewId),
+              eq(reviewUsefulVotes.useful, true)
+            )
+          )
+        const [review] = await tx
+          .select({ baseline: reviews.usefulVoteBaseline })
+          .from(reviews)
+          .where(eq(reviews.id, reviewId))
+          .limit(1)
+        if (review) {
+          await tx
+            .update(reviews)
+            .set({
+              usefulCount: review.baseline + Number(activeVotes ?? 0),
+              updatedAt: deletedAt,
+            })
+            .where(eq(reviews.id, reviewId))
+        }
+      }
 
       await tx.update(companyCorrections).set({ submitterUserId: null, submitterFingerprintHash: null, contactEmail: null }).where(eq(companyCorrections.submitterUserId, authUser.userId))
       await tx.update(companyAppeals).set({ submitterUserId: null, submitterFingerprintHash: null, contactEmail: null }).where(eq(companyAppeals.submitterUserId, authUser.userId))

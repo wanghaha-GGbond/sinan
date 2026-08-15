@@ -10,14 +10,20 @@ import {
   researchGeneratedAt,
   researchSummary,
 } from "@/lib/research-report"
+import { getPublishedResearchSnapshot } from "@/lib/server/published-research"
 
 export const metadata: Metadata = {
   title: "公司研究 | 司南",
   description: "司南头部互联网与金融公司研究：职业机会、成长动能、工作体验与证据边界。",
 }
 
-export default function ResearchPage() {
-  const sorted = [...companyIndices].sort((a, b) => b.overallScore - a.overallScore)
+export const dynamic = "force-dynamic"
+
+export default async function ResearchPage() {
+  const published = await getPublishedResearchSnapshot()
+  const indices = published?.companies ?? companyIndices
+  const sorted = [...indices].sort((a, b) => (b.overallScore ?? -1) - (a.overallScore ?? -1))
+  const generatedAt = published?.generatedAt ?? researchGeneratedAt
 
   return (
     <div className="pb-16">
@@ -25,7 +31,7 @@ export default function ResearchPage() {
         <div className="mx-auto grid w-full max-w-hero gap-8 px-4 py-12 sm:px-6 md:grid-cols-[1.35fr_.65fr] md:py-18">
           <div>
             <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary-surface-border bg-primary-tint px-3 py-1 text-xs font-bold text-primary-deep">
-              <BookOpen className="size-3.5" /> 司南研究 · {researchGeneratedAt}
+              <BookOpen className="size-3.5" /> 司南研究 · {generatedAt}
             </p>
             <h1 className="max-w-3xl text-4xl font-extrabold leading-tight tracking-tight text-foreground sm:text-5xl">
               入职之前，先看懂<br /><span className="text-primary-deep">公司真正的方向。</span>
@@ -67,12 +73,12 @@ export default function ResearchPage() {
                 </div>
                 <div className="space-y-2">
                   <div className="h-2 overflow-hidden rounded-full bg-muted">
-                    <div className="h-full rounded-full bg-primary" style={{ width: `${company.overallScore}%` }} />
+                    <div className="h-full rounded-full bg-primary" style={{ width: `${company.overallScore ?? 0}%` }} />
                   </div>
                   <p className="text-xs text-muted-foreground">{company.funTag} · 可信度 {company.confidence}%</p>
                 </div>
                 <div className="flex items-center justify-between sm:justify-end sm:gap-3">
-                  <strong className="font-mono text-xl">{company.overallScore}</strong>
+                  <strong className="font-mono text-xl">{company.overallScore ?? "待补证据"}</strong>
                   <ArrowRight className="size-4 transition group-hover:translate-x-1" />
                 </div>
               </Link>
@@ -90,12 +96,12 @@ export default function ResearchPage() {
           <h2 id="cards-title" className="mb-5 text-2xl font-bold">逐家公司看</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {companyCards.map((card) => {
-              const index = companyIndices.find((item) => item.name === card.name)!
+              const index = indices.find((item) => item.name === card.name)!
               return (
                 <Link key={card.name} href={`/research/${getCompanySlug(card.name)}`} className="group rounded-3xl border bg-card p-6 shadow-sm transition hover:-translate-y-1 hover:border-primary-surface-border hover:shadow-md">
                   <div className="flex items-start justify-between gap-3">
                     <div><h3 className="text-xl font-bold">{card.name}</h3><p className="mt-1 text-xs text-muted-foreground">{card.city} · {card.industry}</p></div>
-                    <span className="rounded-full bg-muted px-2.5 py-1 font-mono text-sm font-bold">{index.overallScore}</span>
+                    <span className="rounded-full bg-muted px-2.5 py-1 font-mono text-sm font-bold">{index.overallScore ?? "待补证据"}</span>
                   </div>
                   <p className="mt-5 line-clamp-3 text-sm leading-relaxed text-muted-foreground">{card.oneLine}</p>
                   <div className="mt-5 grid grid-cols-5 gap-1" aria-label="五项研究指数">

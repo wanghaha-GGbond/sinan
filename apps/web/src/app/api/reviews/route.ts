@@ -8,6 +8,7 @@ import { getOrCreateAnonymousProfile } from "@/lib/server/anonymous-profile"
 import { hasSensitive, hasAttackWord } from "@/lib/content-guard"
 import { departments } from "@/db/schema/departments"
 import { reviewRatingDimensionsSchema } from "@/lib/review-ratings"
+import { getPublicReviewMetadata } from "@/lib/server/public-review-query"
 
 type SortMode = "latest" | "highest_score" | "most_helpful"
 
@@ -260,8 +261,10 @@ export async function GET(request: NextRequest) {
 
     const nextCursor = hasMore && resultRows.length > 0 ? resultRows[resultRows.length - 1]!.id : null
 
+    const authUser = await getAuthUserFromRequest(request)
+    const metadata = await getPublicReviewMetadata(resultRows, authUser?.userId)
     const reviewsList = resultRows.map((row) => {
-      const view = toPublicReviewView(row)
+      const view = toPublicReviewView(row, metadata.get(row.id))
       // Extract tags from questionnaire if present
       const tags: string[] | null =
         row.questionnaire && typeof row.questionnaire === "object" && !Array.isArray(row.questionnaire)
@@ -282,7 +285,9 @@ export async function GET(request: NextRequest) {
         authorRole: view.authorRole,
         authorLabel: view.authorLabel,
         usefulCount: view.usefulCount,
+        isUsefulByCurrentUser: view.isUsefulByCurrentUser,
         discussionCount: view.discussionCount,
+        publicAuthor: view.publicAuthor,
         status: view.status,
         createdAt: view.createdAt,
         tags,
