@@ -1,10 +1,48 @@
 import { and, eq, inArray, isNull, max } from "drizzle-orm"
 
 import { companyVerifications } from "@/db/schema/company-verifications"
+import { reviewAuthorBlocks } from "@/db/schema/review-author-blocks"
 import { reviewUsefulVotes } from "@/db/schema/review-useful-votes"
 import { reviews } from "@/db/schema/reviews"
 
 type PublicReviewRow = typeof reviews.$inferSelect
+
+export async function getBlockedReviewAuthorKeys(currentUserId?: string | null) {
+  const result = {
+    userIds: new Set<string>(),
+    anonymousProfileIds: new Set<string>(),
+    fingerprintHashes: new Set<string>(),
+  }
+  if (!currentUserId) return result
+
+  const { db } = await import("@/db/client")
+  const rows = await db
+    .select({
+      userId: reviewAuthorBlocks.blockedAuthorUserId,
+      anonymousProfileId: reviewAuthorBlocks.blockedAnonymousProfileId,
+      fingerprintHash: reviewAuthorBlocks.blockedAuthorFingerprintHash,
+    })
+    .from(reviewAuthorBlocks)
+    .where(eq(reviewAuthorBlocks.blockerUserId, currentUserId))
+
+  for (const row of rows) {
+    if (row.userId) result.userIds.add(row.userId)
+    if (row.anonymousProfileId) result.anonymousProfileIds.add(row.anonymousProfileId)
+    if (row.fingerprintHash) result.fingerprintHashes.add(row.fingerprintHash)
+  }
+  return result
+}
+
+export function isReviewAuthorBlocked(
+  row: Pick<PublicReviewRow, "authorUserId" | "anonymousProfileId" | "authorFingerprintHash">,
+  blocked: Awaited<ReturnType<typeof getBlockedReviewAuthorKeys>>,
+) {
+  return Boolean(
+    (row.authorUserId && blocked.userIds.has(row.authorUserId)) ||
+    (row.anonymousProfileId && blocked.anonymousProfileIds.has(row.anonymousProfileId)) ||
+    (row.authorFingerprintHash && blocked.fingerprintHashes.has(row.authorFingerprintHash)),
+  )
+}
 
 export type PublicReviewMetadata = {
   companyVerificationLevel: number

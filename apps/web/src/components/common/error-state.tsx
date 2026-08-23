@@ -4,8 +4,8 @@ import { AlertCircle, RefreshCw, Home } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
 
 export function ErrorState({
   title = "出了点问题",
@@ -27,27 +27,27 @@ export function ErrorState({
   const handleRetry = onRetry ?? (() => router.refresh())
   return (
     <section className="mx-auto flex w-full max-w-section flex-col items-center px-4 py-20 sm:py-24">
-      <SolidCard variant="subtle" className="w-full p-8 text-center" data-testid="error-state">
+      <WebSurface variant="subtle" className="w-full p-8 text-center" data-testid="error-state">
         <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-2xl bg-destructive/10">
           <AlertCircle className="size-6 text-destructive" />
         </div>
         <h1 className="text-xl font-semibold text-foreground">{title}</h1>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">{message}</p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-          <SolidButton onClick={handleRetry} variant="primary" size="md" data-testid="error-retry">
+          <WebButton onClick={handleRetry} variant="primary" size="md" data-testid="error-retry">
             <RefreshCw className="size-4" />
             重试
-          </SolidButton>
+          </WebButton>
           {showHome ? (
-            <SolidButton asChild variant="secondary" size="md" data-testid="error-home">
+            <WebButton asChild variant="secondary" size="md" data-testid="error-home">
               <Link href="/">
                 <Home className="size-4" />
                 回到推荐流
               </Link>
-            </SolidButton>
+            </WebButton>
           ) : null}
         </div>
-      </SolidCard>
+      </WebSurface>
     </section>
   )
 }

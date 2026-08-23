@@ -4,7 +4,7 @@ import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebSurface } from "@/components/ui/web-surface"
 import { useAuth } from "@/lib/auth-context"
 import { withNext } from "@/lib/navigation"
 
@@ -35,7 +35,7 @@ export function AccountSettingsClient() {
       <p className="mt-3 text-muted-foreground">
         你可以随时注销账号。注销后将立即退出登录，邮箱、手机号、密码、头像、工作邮箱、匿名画像和个人资料会被清除且无法恢复。
       </p>
-      <SolidCard className="mt-8 space-y-5 p-6">
+      <WebSurface className="mt-8 space-y-5 p-6">
         <div>
           <h2 className="text-xl font-semibold">注销账号</h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
@@ -43,7 +43,7 @@ export function AccountSettingsClient() {
           </p>
         </div>
         <DeleteAccountForm />
-      </SolidCard>
+      </WebSurface>
     </section>
   )
 }

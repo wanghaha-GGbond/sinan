@@ -233,12 +233,29 @@ function SubmitFormScreen() {
         content: form.content.trim(),
         directionScore: form.directionScore,
         jobTitle: form.role.trim(),
+        city: selectedCompany.city,
+        employmentStatus: form.relation,
+        recommendToJoin: form.directionScore >= 7,
         ratingDimensions: {
-          pay_worth: form.dimensions.salary,
-          growth: form.dimensions.growth,
-          leader: form.dimensions.management,
-          overtime_truth: form.dimensions.worklife,
-          promise_delivery: form.dimensions.integrity,
+          pay_worth: Math.max(1, Math.min(5, Math.round(form.dimensions.salary / 2))),
+          growth: Math.max(1, Math.min(5, Math.round(form.dimensions.growth / 2))),
+          leader: Math.max(1, Math.min(5, Math.round(form.dimensions.management / 2))),
+          overtime_truth: Math.max(1, Math.min(5, Math.round(form.dimensions.worklife / 2))),
+          promise_delivery: Math.max(1, Math.min(5, Math.round(form.dimensions.integrity / 2))),
+        },
+        questionnaire: {
+          tags: form.tags,
+          salaryRange: form.salaryRange.trim() || null,
+          // Keep the native payload identical to the Web questionnaire
+          // contract. The server and company profile algorithm read these
+          // fields at the top level.
+          salaryScore: form.dimensions.salary,
+          growthScore: form.dimensions.growth,
+          workLifeBalanceScore: form.dimensions.worklife,
+          managementClarityScore: form.dimensions.management,
+          collaborationScore: form.dimensions.culture,
+          stabilityScore: form.dimensions.stability,
+          integrityScore: form.dimensions.integrity,
         },
       })
       setSubmitted(true)

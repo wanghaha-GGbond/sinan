@@ -5,7 +5,7 @@ import { notFound } from "next/navigation"
 import { ReviewCard } from "@/components/review/review-card"
 import { ErrorState } from "@/components/common/error-state"
 import { Card, CardContent } from "@/components/ui/card"
-import { SolidButton } from "@/components/ui/solid-button"
+import { WebButton } from "@/components/ui/web-button"
 import { mapPublicReview } from "@/lib/review-mappers"
 import {
   getPublicCompanyDetail,
@@ -43,12 +43,12 @@ export default async function ReviewDetailPage({
   return (
     <section className="mx-auto flex w-full max-w-section flex-col gap-5 px-4 py-8 pb-24 sm:px-6">
       <div className="glass-panel sticky top-12 z-sticky flex items-center gap-3 rounded-2xl p-3">
-        <SolidButton asChild variant="ghost">
+        <WebButton asChild variant="ghost">
           <Link href={`/company/${id}`}>
           <ChevronLeft />
           返回公司评价流
           </Link>
-        </SolidButton>
+        </WebButton>
         <p className="flex flex-wrap gap-x-2.5 gap-y-1 text-sm text-muted-foreground">
           <span>{company.shortName}</span>
           <span>{company.industry}</span>
@@ -58,7 +58,7 @@ export default async function ReviewDetailPage({
 
       <ReviewCard review={review} companyId={id} expanded showDetailLink={false} />
 
-      <Card className="solid-card-subtle border border-border/60">
+      <Card className="web-surface web-surface-base border border-border/60">
         <CardContent className="p-4 text-sm text-[var(--tw-secondary)]">
           这条评价已帮助 <span className="font-semibold text-[var(--tw-ink-soft)]">{review.helpful}</span>{" "}
           位后来者
@@ -73,34 +73,34 @@ export default async function ReviewDetailPage({
 
       <div className="grid gap-3 sm:grid-cols-2">
         {prevReview ? (
-          <SolidButton asChild variant="secondary">
+          <WebButton asChild variant="secondary">
             <Link href={`/company/${id}/reviews/${prevReview.id}`}>
             <ChevronLeft />
             上一条评价
             </Link>
-          </SolidButton>
+          </WebButton>
         ) : (
-          <SolidButton variant="secondary" disabled>
+          <WebButton variant="secondary" disabled>
             <ChevronLeft />
             上一条评价
-          </SolidButton>
+          </WebButton>
         )}
         {nextReview ? (
-          <SolidButton asChild variant="secondary">
+          <WebButton asChild variant="secondary">
             <Link href={`/company/${id}/reviews/${nextReview.id}`}>
             下一条评价
             <ChevronRight />
             </Link>
-          </SolidButton>
+          </WebButton>
         ) : (
-          <SolidButton variant="secondary" disabled>
+          <WebButton variant="secondary" disabled>
             下一条评价
             <ChevronRight />
-          </SolidButton>
+          </WebButton>
         )}
       </div>
 
-      <Card className="solid-card-subtle border border-border/60">
+      <Card className="web-surface web-surface-base border border-border/60">
         <CardContent className="space-y-3 p-4">
           <h2 className="text-base font-semibold text-foreground">继续看这家公司</h2>
           {related.map((item) => (
@@ -119,7 +119,7 @@ export default async function ReviewDetailPage({
               </p>
             </Link>
           ))}
-          <SolidButton asChild><Link href={`/company/${id}`}>继续看这家公司</Link></SolidButton>
+          <WebButton asChild><Link href={`/company/${id}`}>继续看这家公司</Link></WebButton>
         </CardContent>
       </Card>
 
@@ -128,7 +128,7 @@ export default async function ReviewDetailPage({
       </p>
 
       <div className="glass-strong fixed inset-x-0 bottom-0 z-sticky border-t border-slate-200/70 p-3 sm:hidden">
-        <SolidButton asChild className="w-full"><Link href={`/company/${id}`}>继续看这家公司</Link></SolidButton>
+        <WebButton asChild className="w-full"><Link href={`/company/${id}`}>继续看这家公司</Link></WebButton>
       </div>
     </section>
   )

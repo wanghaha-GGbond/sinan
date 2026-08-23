@@ -12,7 +12,6 @@ const requiredRuntimeVariables = [
   "ERROR_REPORTING_MODE",
   "APP_RELEASE",
   "NEXT_PUBLIC_APP_URL",
-  "NEXT_PUBLIC_ICP_FILING_NUMBER",
   "SUPPORT_EMAIL",
 ] as const
 
@@ -34,6 +33,12 @@ function hasValidErrorReportingConfiguration() {
 }
 
 function hasValidRuntimeConfiguration() {
+  const appEnvironment = process.env.NEXT_PUBLIC_APP_ENV
+  const filingReady =
+    appEnvironment === "production"
+      ? Boolean(process.env.NEXT_PUBLIC_ICP_FILING_NUMBER?.trim())
+      : true
+
   return (
     requiredRuntimeVariables.every((name) => Boolean(process.env[name]?.trim())) &&
     process.env.INVITE_REQUIRED === "true" &&
@@ -42,8 +47,8 @@ function hasValidRuntimeConfiguration() {
     (process.env.DATABASE_ADAPTER === "pg" || process.env.DATABASE_ADAPTER === "neon") &&
     hasValidMailConfiguration() &&
     hasValidErrorReportingConfiguration() &&
-    (process.env.NEXT_PUBLIC_APP_ENV === "staging" ||
-      process.env.NEXT_PUBLIC_APP_ENV === "production")
+    (appEnvironment === "staging" || appEnvironment === "production") &&
+    filingReady
   )
 }
 

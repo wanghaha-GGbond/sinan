@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react"
 import { CheckCircle2, Flag, X } from "lucide-react"
 
-import { SolidButton } from "@/components/ui/solid-button"
+import { WebButton } from "@/components/ui/web-button"
 import { Textarea } from "@/components/ui/textarea"
 import { REPORT_REASONS, getReportForReview, submitReport, type ReportReasonId } from "@/lib/api/reports"
 
-export function ReportReviewButton({ reviewId }: { reviewId: string }) {
+export function ReportReviewButton({ reviewId, compact = false }: { reviewId: string; compact?: boolean }) {
   const [open, setOpen] = useState(false)
   const [reason, setReason] = useState<ReportReasonId | "">("")
   const [note, setNote] = useState("")
@@ -39,17 +39,17 @@ export function ReportReviewButton({ reviewId }: { reviewId: string }) {
 
   if (!open) {
     return (
-      <SolidButton
+      <WebButton
         type="button"
-        variant="risk"
+        variant="danger"
         size="sm"
-        className="rounded-full"
+        className="rounded-[9px]"
         data-testid={`report-button-${reviewId}`}
         onClick={() => setOpen(true)}
       >
         <Flag className="size-4" />
-        举报
-      </SolidButton>
+        {compact ? <span className="sr-only">举报</span> : "举报"}
+      </WebButton>
     )
   }
 
@@ -125,10 +125,10 @@ export function ReportReviewButton({ reviewId }: { reviewId: string }) {
         onChange={(event) => setNote(event.target.value)}
       />
       <div className="mt-3 flex items-center justify-end gap-2">
-        <SolidButton type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>
+        <WebButton type="button" variant="quiet" size="sm" onClick={() => setOpen(false)}>
           取消
-        </SolidButton>
-        <SolidButton
+        </WebButton>
+        <WebButton
           type="button"
           variant="primary"
           size="sm"
@@ -137,7 +137,7 @@ export function ReportReviewButton({ reviewId }: { reviewId: string }) {
           data-testid={`report-submit-${reviewId}`}
         >
           提交举报
-        </SolidButton>
+        </WebButton>
       </div>
     </div>
   )

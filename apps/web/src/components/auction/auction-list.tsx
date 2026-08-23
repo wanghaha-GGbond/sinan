@@ -18,8 +18,8 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Loader2, ShieldCheck } from "lucide-react"
 
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
 import { useAuth } from "@/lib/auth-context"
 import { Countdown } from "@/components/auction/countdown"
 
@@ -97,22 +97,22 @@ export function AuctionList() {
 
   if (items === null && !error) {
     return (
-      <SolidCard variant="subtle" className="p-5 text-sm text-muted-foreground">
+      <WebSurface variant="subtle" className="p-5 text-sm text-muted-foreground">
         <Loader2 className="mr-2 inline-block size-4 animate-spin" />
         正在读取专场…
-      </SolidCard>
+      </WebSurface>
     )
   }
 
   if (error) {
     return (
-      <SolidCard variant="risk" className="p-5">
+      <WebSurface variant="risk" className="p-5">
         <p className="text-sm font-semibold text-foreground">暂时读不到专场</p>
         <p className="mt-1 text-xs text-muted-foreground">{error}</p>
         <p className="mt-3 text-xs text-muted-foreground">
           没有数据库或未发布专场时,这一页会显示空白。等运营季开拍,这里会出现 10 场盲拍。
         </p>
-      </SolidCard>
+      </WebSurface>
     )
   }
 
@@ -183,9 +183,9 @@ function Section({
       {children.length > 0 ? (
         <div className="grid gap-3">{children}</div>
       ) : (
-        <SolidCard variant="subtle" className="p-4 text-sm text-muted-foreground">
+        <WebSurface variant="subtle" className="p-4 text-sm text-muted-foreground">
           {emptyText}
-        </SolidCard>
+        </WebSurface>
       )}
     </div>
   )
@@ -205,7 +205,7 @@ function AuctionRow({
   isAuthed: boolean
 }) {
   return (
-    <SolidCard
+    <WebSurface
       variant="default"
       className="p-5"
       data-testid={`auction-row-${item.id}`}
@@ -236,7 +236,7 @@ function AuctionRow({
       </div>
 
       {/* Bid button */}
-      <SolidButton
+      <WebButton
         type="button"
         variant="primary"
         className="w-full"
@@ -247,17 +247,17 @@ function AuctionRow({
         data-testid={`auction-pick-${item.id}`}
       >
         {selected ? "已选中，下方出价" : "出价"}
-      </SolidButton>
+      </WebButton>
 
       {selected ? <AuctionBidForm /> : null}
-    </SolidCard>
+    </WebSurface>
   )
 }
 
 function SettledRow({ item }: { item: AuctionItem }) {
   return (
     <Link href={`/auction/${item.id}`} className="block">
-      <SolidCard variant="subtle" className="p-4 transition-colors hover:bg-card">
+      <WebSurface variant="subtle" className="p-4 transition-colors hover:bg-card">
         <div className="mb-2 flex items-center justify-between">
           <span className="text-xs text-muted-foreground">已成交</span>
           <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
@@ -271,7 +271,7 @@ function SettledRow({ item }: { item: AuctionItem }) {
           </p>
           <p className="text-sm font-bold text-foreground">{item.guidePriceMaxLabel}</p>
         </div>
-      </SolidCard>
+      </WebSurface>
     </Link>
   )
 }
@@ -312,18 +312,18 @@ function AuctionBidFormInner({ auctionId }: { auctionId: string }) {
 
   if (!user) {
     return (
-      <SolidCard variant="risk" className="mt-4 p-4">
+      <WebSurface variant="risk" className="mt-4 p-4">
         <p className="text-sm font-semibold text-foreground">出价前请先登录</p>
         <p className="mt-1 text-xs text-muted-foreground">
           登录后还要完成邮箱验证(L1)才能出价。
         </p>
-      </SolidCard>
+      </WebSurface>
     )
   }
 
   if ((user.trustLevel ?? 0) < 1) {
     return (
-      <SolidCard variant="risk" className="mt-4 p-4">
+      <WebSurface variant="risk" className="mt-4 p-4">
         <div className="flex items-start gap-2">
           <ShieldCheck className="mt-0.5 size-4 text-primary" />
           <div>
@@ -333,7 +333,7 @@ function AuctionBidFormInner({ auctionId }: { auctionId: string }) {
             </p>
           </div>
         </div>
-      </SolidCard>
+      </WebSurface>
     )
   }
 
@@ -408,7 +408,7 @@ function AuctionBidFormInner({ auctionId }: { auctionId: string }) {
         <p className="text-[11px] text-muted-foreground">
           提交即同意 M2 全捐约定。
         </p>
-        <SolidButton
+        <WebButton
           type="button"
           size="sm"
           onClick={submit}
@@ -423,7 +423,7 @@ function AuctionBidFormInner({ auctionId }: { auctionId: string }) {
           ) : (
             "提交出价"
           )}
-        </SolidButton>
+        </WebButton>
       </div>
       {feedback ? (
         <p

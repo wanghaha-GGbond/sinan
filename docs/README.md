@@ -17,6 +17,7 @@
 | 09 | [09-metrics.md](09-metrics.md) | 北极星、守门指标、漏斗、各功能验收线 | 所有人 |
 | — | [DEV_PLAN.md](DEV_PLAN.md) | Sprint 0-10 执行级任务拆解（07 的细化） | 开发 |
 | — | [china-production-runbook.md](china-production-runbook.md) | 中国大陆 Web + iOS 生产部署、备案与回滚手册 | 开发 / 运维 / 发布负责人 |
+| — | [vercel-neon-staging-runbook.md](vercel-neon-staging-runbook.md) | Vercel Preview + Neon staging 内测部署与邀请码测试 | 开发 / 测试 / 发布负责人 |
 
 ## 文档约定
 

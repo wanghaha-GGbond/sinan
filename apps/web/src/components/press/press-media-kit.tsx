@@ -1,4 +1,4 @@
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebSurface } from "@/components/ui/web-surface"
 import { TagPill } from "@/components/ui/tag-pill"
 
 /**
@@ -165,10 +165,10 @@ function Block({
   children: React.ReactNode
 }) {
   return (
-    <SolidCard variant={tone} className="p-5">
+    <WebSurface variant={tone} className="p-5">
       <h3 className="text-sm font-semibold text-foreground">{title}</h3>
       <div className="mt-3">{children}</div>
-    </SolidCard>
+    </WebSurface>
   )
 }
 

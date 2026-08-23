@@ -3,8 +3,8 @@
 import { useState } from "react"
 import { Building2, CheckCircle2, Mail, ShieldCheck } from "lucide-react"
 
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
 
 type Step = "idle" | "email" | "code" | "verified"
 
@@ -55,7 +55,7 @@ export function VerifyIdentity({ companyName }: { companyName: string }) {
   // ── Success ────────────────────────────────────────────────────────────
   if (step === "verified") {
     return (
-      <SolidCard variant="emerald" className="p-6 text-center">
+      <WebSurface variant="emerald" className="p-6 text-center">
         <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-muted">
           <CheckCircle2 className="size-7 text-secondary-foreground" />
         </div>
@@ -65,14 +65,14 @@ export function VerifyIdentity({ companyName }: { companyName: string }) {
           <br />
           验证信息不会公开，仅用于提升评价可信度
         </p>
-      </SolidCard>
+      </WebSurface>
     )
   }
 
   // ── Collapsed: "提升可信度" card ──────────────────────────────────────
   if (step === "idle") {
     return (
-      <SolidCard variant="subtle" className="p-5">
+      <WebSurface variant="subtle" className="p-5">
         <div className="flex items-start gap-4">
           <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-risk-surface">
             <ShieldCheck className="size-5 text-risk" />
@@ -83,7 +83,7 @@ export function VerifyIdentity({ companyName }: { companyName: string }) {
               用公司邮箱验证身份，评价将带上「已验证员工」标记。
               验证记录仅存服务端，绝不公开。不验证也不影响评价发布。
             </p>
-            <SolidButton
+            <WebButton
               variant="secondary"
               size="sm"
               onClick={() => setStep("email")}
@@ -91,17 +91,17 @@ export function VerifyIdentity({ companyName }: { companyName: string }) {
             >
               <Building2 className="size-3.5" />
               验证身份
-            </SolidButton>
+            </WebButton>
           </div>
         </div>
-      </SolidCard>
+      </WebSurface>
     )
   }
 
   // ── Email input ───────────────────────────────────────────────────────
   if (step === "email") {
     return (
-      <SolidCard variant="subtle" className="p-5">
+      <WebSurface variant="subtle" className="p-5">
         <div className="flex items-center gap-2 mb-4">
           <Mail className="size-5 text-primary" />
           <h3 className="text-sm font-semibold text-foreground">验证公司邮箱</h3>
@@ -119,14 +119,14 @@ export function VerifyIdentity({ companyName }: { companyName: string }) {
             placeholder={`name@${companyDomain}`}
             className="flex-1 rounded-xl border border-border bg-card px-3 py-2 text-sm outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           />
-          <SolidButton
+          <WebButton
             variant="primary"
             size="sm"
             onClick={sendCode}
             disabled={sending || !email.trim()}
           >
             {sending ? "发送中..." : "发送验证码"}
-          </SolidButton>
+          </WebButton>
         </div>
 
         {error && <p className="mt-2 text-xs text-destructive-bright">{error}</p>}
@@ -137,13 +137,13 @@ export function VerifyIdentity({ companyName }: { companyName: string }) {
         >
           取消
         </button>
-      </SolidCard>
+      </WebSurface>
     )
   }
 
   // ── Code input ────────────────────────────────────────────────────────
   return (
-    <SolidCard variant="subtle" className="p-5">
+    <WebSurface variant="subtle" className="p-5">
       <div className="flex items-center gap-2 mb-4">
         <Mail className="size-5 text-primary" />
         <h3 className="text-sm font-semibold text-foreground">输入验证码</h3>
@@ -162,14 +162,14 @@ export function VerifyIdentity({ companyName }: { companyName: string }) {
           maxLength={6}
           className="w-32 rounded-xl border border-border bg-card px-3 py-2 text-center text-lg tracking-[0.3em] outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         />
-        <SolidButton
+        <WebButton
           variant="primary"
           size="sm"
           onClick={verifyCode}
           disabled={verifying || code.length < 6}
         >
           {verifying ? "验证中..." : "确认验证"}
-        </SolidButton>
+        </WebButton>
       </div>
 
       {error && <p className="mt-2 text-xs text-destructive-bright">{error}</p>}
@@ -180,6 +180,6 @@ export function VerifyIdentity({ companyName }: { companyName: string }) {
       >
         ← 重新输入邮箱
       </button>
-    </SolidCard>
+    </WebSurface>
   )
 }

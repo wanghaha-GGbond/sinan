@@ -4,8 +4,8 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
 import { TagPill } from "@/components/ui/tag-pill"
 
 /**
@@ -48,7 +48,7 @@ export function PressShareCardGenerator() {
   }
 
   return (
-    <SolidCard variant="elevated" className="p-5">
+    <WebSurface variant="elevated" className="p-5">
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="text-lg font-semibold text-foreground">情绪指数分享卡</h2>
         <TagPill tone="match">1200×630 PNG</TagPill>
@@ -101,9 +101,9 @@ export function PressShareCardGenerator() {
             />
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <SolidButton type="button" size="sm" onClick={copy} data-testid="press-copy-image-url">
+            <WebButton type="button" size="sm" onClick={copy} data-testid="press-copy-image-url">
               {copied === "ok" ? "已复制 URL" : copied === "fail" ? "复制失败" : "复制图片 URL"}
-            </SolidButton>
+            </WebButton>
             <a
               href={imageUrl}
               download="sinan-share.png"
@@ -135,7 +135,7 @@ export function PressShareCardGenerator() {
           />
         </div>
       </div>
-    </SolidCard>
+    </WebSurface>
   )
 }
 

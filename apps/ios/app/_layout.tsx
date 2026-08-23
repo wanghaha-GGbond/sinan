@@ -24,6 +24,7 @@ export default function RootLayout() {
   const launchScopeOnly = process.env.EXPO_PUBLIC_LAUNCH_SCOPE_ONLY === "true"
   const topLevel = segments[0]
   const companyChild = topLevel === "company" ? segments[2] : undefined
+  const companyReviewIndex = companyChild === "reviews" && !segments[3]
   const deferredRoute = launchScopeOnly && (
     [
       "rankings",
@@ -33,10 +34,9 @@ export default function RootLayout() {
       "benefits",
       "community",
       "company-portal",
-      "review",
     ].includes(topLevel ?? "") ||
     companyChild === "ratings" ||
-    companyChild === "reviews"
+    companyReviewIndex
   )
 
   useEffect(() => {
@@ -109,6 +109,7 @@ export default function RootLayout() {
         <Tabs.Screen name="submit" options={{ href: null }} />
         <Tabs.Screen name="login" options={{ href: null }} />
         <Tabs.Screen name="register" options={{ href: null }} />
+        <Tabs.Screen name="support" options={{ href: null }} />
         <Tabs.Screen name="salaries" options={{ href: null }} />
         <Tabs.Screen name="interviews" options={{ href: null }} />
         <Tabs.Screen name="jobs" options={{ href: null }} />

@@ -44,5 +44,6 @@ export function mapPublicReview(item: ReviewListItem): Review {
       : "身份未核验",
     verified: Boolean(item.publicAuthor?.verifiedForCompany),
     isUsefulByCurrentUser: item.isUsefulByCurrentUser,
+    questionnaire: item.dimensionScores,
   }
 }

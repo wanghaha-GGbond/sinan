@@ -3,8 +3,8 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Loader2, ShieldCheck } from "lucide-react"
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
 import { useAuth } from "@/lib/auth-context"
 
 export function AuctionBidFormInline({
@@ -26,26 +26,26 @@ export function AuctionBidFormInline({
 
   if (!user) {
     return (
-      <SolidCard variant="subtle" className="p-5">
+      <WebSurface variant="subtle" className="p-5">
         <p className="text-sm font-semibold text-foreground">出价前请先登录</p>
         <p className="mt-1 text-xs text-muted-foreground">
           登录后还需完成企业邮箱认证（L1）才能出价。
         </p>
         <div className="mt-4 flex gap-2">
-          <SolidButton asChild variant="primary" size="sm">
+          <WebButton asChild variant="primary" size="sm">
             <Link href="/login">登录</Link>
-          </SolidButton>
-          <SolidButton asChild variant="secondary" size="sm">
+          </WebButton>
+          <WebButton asChild variant="secondary" size="sm">
             <Link href="/register">注册</Link>
-          </SolidButton>
+          </WebButton>
         </div>
-      </SolidCard>
+      </WebSurface>
     )
   }
 
   if ((user.trustLevel ?? 0) < 1) {
     return (
-      <SolidCard variant="subtle" className="p-5">
+      <WebSurface variant="subtle" className="p-5">
         <div className="flex items-start gap-3">
           <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary" />
           <div>
@@ -53,20 +53,20 @@ export function AuctionBidFormInline({
             <p className="mt-1 text-xs text-muted-foreground">
               司南是打工人社区——拍卖的嘉宾和竞拍者都需要先完成最基本的身份验证。
             </p>
-            <SolidButton asChild variant="secondary" size="sm" className="mt-3">
+            <WebButton asChild variant="secondary" size="sm" className="mt-3">
               <Link href="/company-verification">去认证</Link>
-            </SolidButton>
+            </WebButton>
           </div>
         </div>
-      </SolidCard>
+      </WebSurface>
     )
   }
 
   if (ended) {
     return (
-      <SolidCard variant="subtle" className="p-5">
+      <WebSurface variant="subtle" className="p-5">
         <p className="text-sm text-muted-foreground">该专场已截拍，出价通道关闭。</p>
-      </SolidCard>
+      </WebSurface>
     )
   }
 
@@ -100,7 +100,7 @@ export function AuctionBidFormInline({
   }
 
   return (
-    <SolidCard variant="elevated" className="p-6">
+    <WebSurface variant="elevated" className="p-6">
       <h2 className="text-base font-semibold">我要出价（盲拍）</h2>
       <p className="mt-1 text-xs text-muted-foreground">
         截拍后嘉宾会从全部候选里用心动权选一个人，不一定选最高价。「为什么是我」是关键。
@@ -145,7 +145,7 @@ export function AuctionBidFormInline({
         <p className="text-[11px] text-muted-foreground">
           提交即同意 M2 全捐约定。平台不抽佣，成交金额全额捐基金会。
         </p>
-        <SolidButton
+        <WebButton
           type="button"
           variant="primary"
           size="sm"
@@ -161,7 +161,7 @@ export function AuctionBidFormInline({
           ) : (
             "提交出价"
           )}
-        </SolidButton>
+        </WebButton>
       </div>
 
       {feedback ? (
@@ -174,6 +174,6 @@ export function AuctionBidFormInline({
           {feedback.message}
         </p>
       ) : null}
-    </SolidCard>
+    </WebSurface>
   )
 }

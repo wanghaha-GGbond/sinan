@@ -7,7 +7,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Avenir Next", Avenir, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   --font-heading: var(--font-sans);
 
@@ -42,11 +42,11 @@
   /* Layout width scale (Impeccable §Layout: semantic max-widths).
      Replaces 9 different inline max-w-[NNNpx] values with 5 named
      tokens. Use them instead of arbitrary pixels. */
-  --container-page: 920px;
-  --container-section: 640px;
+  --container-page: 1240px;
+  --container-section: 760px;
   --container-card: 420px;
   --container-form: 400px;
-  --container-hero: 1080px;
+  --container-hero: 1180px;
 
   /* Motion: ease-out-expo for the brand feel. Pages and
      transitions use this; small UI hovers use the snappier
@@ -143,19 +143,19 @@
      are reserved for the few cases (lock-in product brand
      identity, code comments) where readability beats
      perceptual uniformity. Visual values are 1:1. */
-  --background: oklch(0.992 0.008 156);  /* white mint #f8fffb */
+  --background: oklch(0.985 0.004 95);
   --foreground: oklch(0.21 0.02 264);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.21 0.02 264);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.21 0.02 264);
-  --primary: oklch(0.74 0.15 156);                  /* brand emerald-500 */
+  --primary: oklch(0.58 0.12 158);
   --primary-foreground: oklch(1 0 0);
-  --primary-hover: oklch(0.59 0.12 158);            /* emerald-600 */
-  --primary-deep: oklch(0.42 0.10 158);             /* emerald-700 */
-  --primary-tint: oklch(0.98 0.01 154);            /* emerald-50 */
-  --primary-surface-border: oklch(0.90 0.05 158);   /* emerald-200 */
-  --direction: oklch(0.74 0.15 156);
+  --primary-hover: oklch(0.52 0.12 158);
+  --primary-deep: oklch(0.39 0.10 158);
+  --primary-tint: oklch(0.965 0.018 158);
+  --primary-surface-border: oklch(0.86 0.045 158);
+  --direction: oklch(0.58 0.12 158);
   --direction-foreground: oklch(1 0 0);
   --risk: oklch(0.62 0.16 56);                      /* amber-700 */
   --risk-foreground: oklch(0.42 0.12 56);           /* amber-800 */
@@ -164,18 +164,18 @@
   --risk-border: oklch(0.89 0.08 72);              /* amber-200 */
   --signal: oklch(0.78 0.13 184);                   /* teal-400 */
   --signal-foreground: oklch(1 0 0);
-  --secondary: oklch(1 0 0);
+  --secondary: oklch(0.998 0 0);
   --secondary-foreground: oklch(0.39 0.08 158);    /* emerald-800 */
-  --muted: oklch(0.975 0.018 156);                  /* pale mint section surface */
-  --muted-hover: oklch(0.95 0.035 156);
+  --muted: oklch(0.965 0.006 95);
+  --muted-hover: oklch(0.94 0.008 95);
   --muted-foreground: oklch(0.55 0.012 264);     /* gray-500 with the faintest green undertone */
   --accent: oklch(0.98 0.01 154);
   --accent-foreground: oklch(0.39 0.08 158);
   --destructive: oklch(0.42 0.12 56);
   --destructive-bright: oklch(0.55 0.22 25);      /* red-600 */
-  --border: oklch(0.89 0.018 156);                /* hairline border, green-tinted */
-  --input: oklch(0.89 0.018 156);
-  --ring: oklch(0.74 0.15 156);
+  --border: oklch(0.88 0.008 95);
+  --input: oklch(0.84 0.008 95);
+  --ring: oklch(0.58 0.12 158);
 
   /* Twitter-style palette used by components/review/* for the
      comment / reply surface. Impeccable §Color: 'use OKLCH
@@ -275,6 +275,8 @@
   h2,
   h3 {
     letter-spacing: 0;
+    word-break: normal;
+    overflow-wrap: break-word;
   }
 
   /* ─── SOTA CJK typography ───────────────────────────────────────
@@ -417,53 +419,204 @@
 }
 
 @layer components {
+  .web-nav {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky);
+    border-bottom: 1px solid color-mix(in oklch, var(--border) 80%, transparent);
+    background: color-mix(in oklch, var(--background) 88%, transparent);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+
+  .web-nav-inner {
+    display: flex;
+    width: 100%;
+    max-width: 1400px;
+    min-height: 5.25rem;
+    margin: 0 auto;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 0 1rem;
+  }
+
+  .web-brand {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--foreground);
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .web-brand-mark {
+    display: inline-flex;
+    width: 1.75rem;
+    height: 1.75rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--primary-surface-border);
+    border-radius: 999px;
+    color: var(--primary-deep);
+  }
+
+  .web-nav-search {
+    display: inline-flex;
+    min-width: 15rem;
+    max-width: 26rem;
+    margin-left: 5.25rem;
+    flex: 1;
+    align-items: center;
+    gap: 0.55rem;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    background: color-mix(in oklch, var(--card) 94%, transparent);
+    color: var(--muted-foreground);
+    padding: 0.58rem 0.75rem;
+    font-size: 0.8125rem;
+    transition: border-color 150ms ease, background 150ms ease;
+  }
+
+  .web-nav-search:hover {
+    border-color: var(--primary-surface-border);
+    background: var(--card);
+  }
+
+  .web-nav-search kbd {
+    margin-left: auto;
+    border: 1px solid var(--border);
+    border-radius: 0.35rem;
+    padding: 0.05rem 0.35rem;
+    color: var(--muted-foreground);
+    font-size: 0.7rem;
+  }
+
+  .web-nav-links {
+    display: flex;
+    align-items: stretch;
+    gap: 3.875rem;
+    margin-left: 2rem;
+    white-space: nowrap;
+  }
+
+  .web-nav-links a {
+    display: inline-flex;
+    min-height: 4rem;
+    align-items: center;
+    border-bottom: 2px solid transparent;
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .web-nav-links a:hover,
+  .web-nav-links a.is-active {
+    border-bottom-color: var(--primary);
+    color: var(--foreground);
+  }
+
+  .web-nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-left: auto;
+  }
+
+  .web-mobile-menu {
+    display: none !important;
+  }
+
+  .web-surface {
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+  }
+
+  .web-surface-base {
+    background: var(--card);
+  }
+
+  .web-surface-default,
+  .web-surface-subtle {
+    background: var(--card);
+  }
+
+  .web-surface-raised {
+    background: var(--card);
+    box-shadow: 0 4px 16px color-mix(in oklch, var(--foreground) 4%, transparent);
+  }
+
+  .web-surface-elevated {
+    background: var(--card);
+    box-shadow: 0 4px 16px color-mix(in oklch, var(--foreground) 4%, transparent);
+  }
+
+  .web-surface-overlay {
+    background: color-mix(in oklch, var(--card) 90%, transparent);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+
+  .web-surface-tint {
+    border-color: var(--primary-surface-border);
+    background: var(--primary-tint);
+  }
+
+  .web-surface-emerald {
+    border-color: var(--primary-surface-border);
+    background: var(--primary-tint);
+  }
+
+  .web-surface-risk {
+    border-color: var(--risk-border);
+    background: var(--risk-surface);
+  }
+
   .glass-panel {
-    background: rgba(248, 255, 251, 0.9);
+    background: color-mix(in oklch, var(--card) 90%, transparent);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(189, 237, 221, 0.55);
-    box-shadow: 0 8px 24px rgba(17, 24, 39, 0.05);
+    border: 1px solid color-mix(in oklch, var(--border) 80%, transparent);
+    box-shadow: 0 8px 24px color-mix(in oklch, var(--foreground) 4%, transparent);
   }
 
   .glass-strong {
-    background: rgba(255, 255, 255, 0.82);
+    background: color-mix(in oklch, var(--card) 90%, transparent);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.65);
-    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.1);
+    border: 1px solid color-mix(in oklch, var(--border) 80%, transparent);
+    box-shadow: 0 16px 40px color-mix(in oklch, var(--foreground) 6%, transparent);
   }
 
   .glass-emerald {
-    background: rgba(223, 248, 236, 0.9);
+    background: color-mix(in oklch, var(--primary-tint) 90%, transparent);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
-    border: 1px solid rgba(189, 237, 221, 0.85);
-    box-shadow: 0 8px 20px rgba(14, 143, 95, 0.08);
+    border: 1px solid var(--primary-surface-border);
+    box-shadow: 0 8px 20px color-mix(in oklch, var(--primary) 8%, transparent);
   }
 
   .solid-card {
     background: var(--card);
-    border-radius: 28px;
-    box-shadow:
-      0 8px 0 color-mix(in oklch, var(--foreground) 4.5%, transparent),
-      0 18px 36px color-mix(in oklch, var(--foreground) 6%, transparent);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: none;
   }
 
   .solid-card-subtle {
     background: var(--card);
-    border-radius: 26px;
-    box-shadow:
-      0 6px 0 color-mix(in oklch, var(--foreground) 3.5%, transparent),
-      0 16px 32px color-mix(in oklch, var(--foreground) 5%, transparent);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: none;
   }
 
   .btn-primary-modern {
-    border-radius: 18px;
+    border-radius: 10px;
     background: #19c37d;
     color: #fff;
     font-weight: 600;
-    box-shadow: 0 5px 0 #0e8f5f;
-    transition: all 0.15s ease-out;
+    transition: background 0.15s ease-out;
   }
 
   .btn-primary-modern:hover {
@@ -471,21 +624,80 @@
   }
 
   .btn-primary-modern:active {
-    transform: translateY(3px);
-    box-shadow: 0 2px 0 #0e8f5f;
+    transform: none;
   }
 
   .btn-secondary-solid {
-    border-radius: 18px;
+    border-radius: 10px;
     background: #effbf5;
     color: #1f2937;
-    box-shadow: 0 4px 0 #ccebdd;
-    transition: all 0.15s ease-out;
+    transition: background 0.15s ease-out;
   }
 
   .btn-secondary-solid:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 #ccebdd;
+    transform: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .web-nav-inner {
+    min-height: 3.5rem;
+    gap: 0.5rem;
+    padding-inline: 0.875rem;
+  }
+
+  .web-nav-search {
+    min-width: 0;
+    flex: 0 0 auto;
+    margin-left: 0;
+    border-color: transparent;
+    background: transparent;
+    padding: 0.5rem;
+  }
+
+  .web-nav-search span,
+  .web-nav-search kbd,
+  .web-nav-links {
+    display: none;
+  }
+
+  .web-nav-search:hover {
+    background: var(--muted);
+  }
+
+  .web-mobile-menu {
+    display: inline-flex !important;
+  }
+
+  .web-nav-inner > .web-nav-actions {
+    gap: 0;
+  }
+}
+
+@media (max-width: 1023px) {
+  .web-nav-inner {
+    gap: 0.75rem;
+    padding-inline: 0.875rem;
+  }
+
+  .web-nav-search {
+    min-width: 0;
+    max-width: none;
+    margin-left: 0;
+  }
+
+  .web-nav-search span,
+  .web-nav-search kbd,
+  .web-nav-links {
+    display: none;
+  }
+
+  .web-mobile-menu {
+    display: inline-flex !important;
+  }
+
+  .web-nav-inner > .web-nav-actions {
+    gap: 0;
   }
 }
 

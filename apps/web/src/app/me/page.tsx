@@ -20,9 +20,9 @@ import {
   Check,
 } from "lucide-react"
 
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
-import { SolidEmptyState } from "@/components/ui/solid-empty-state"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
+import { WebEmptyState } from "@/components/ui/web-empty-state"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/lib/auth-context"
@@ -191,7 +191,7 @@ export default function MePage() {
   if (!authLoading && !authUser) {
     return (
       <section className="mx-auto flex w-full max-w-5xl flex-col items-center px-4 py-20">
-        <SolidCard variant="elevated" className="w-full max-w-card p-10 text-center">
+        <WebSurface variant="elevated" className="w-full max-w-card p-10 text-center">
           <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-2xl bg-muted">
             <Navigation className="size-8 text-muted-foreground" />
           </div>
@@ -201,13 +201,13 @@ export default function MePage() {
             <br />
             匿名保护,不向公司开放身份
           </p>
-          <SolidButton asChild variant="primary" size="lg" className="mt-6 w-full">
+          <WebButton asChild variant="primary" size="lg" className="mt-6 w-full">
             <Link href="/login?next=%2Fme">
               <LogIn className="size-4" />
               登录 / 注册
             </Link>
-          </SolidButton>
-        </SolidCard>
+          </WebButton>
+        </WebSurface>
       </section>
     )
   }
@@ -410,10 +410,10 @@ function MeContent({
             指路人
             <ChevronRight className="size-3.5" />
           </div>
-          <SolidButton type="button" variant="ghost" size="sm" onClick={() => void logout()} aria-label="退出登录">
+          <WebButton type="button" variant="ghost" size="sm" onClick={() => void logout()} aria-label="退出登录">
             <LogOut className="size-4" aria-hidden="true" />
             <span className="hidden sm:inline">退出</span>
-          </SolidButton>
+          </WebButton>
         </div>
       </div>
 
@@ -435,17 +435,17 @@ function MeContent({
             </p>
           </div>
           <div className="flex shrink-0 flex-wrap gap-2">
-            <SolidButton asChild>
+            <WebButton asChild>
               <Link href="/submit/review">写第一条评价</Link>
-            </SolidButton>
-            <SolidButton asChild variant="secondary">
+            </WebButton>
+            <WebButton asChild variant="secondary">
               <Link href="/search">先看看公司</Link>
-            </SolidButton>
+            </WebButton>
           </div>
         </section>
       ) : (
       <div className="grid gap-4 md:grid-cols-3">
-        <SolidCard variant="default" className="p-5">
+        <WebSurface variant="default" className="p-5">
           <div className="mb-3 flex items-center gap-2">
             <div className="flex size-9 items-center justify-center rounded-xl bg-muted">
               <Navigation className="size-4 text-secondary-foreground" />
@@ -457,9 +457,9 @@ function MeContent({
           </p>
           <p className="mt-1 text-xs text-muted-foreground">距离下一阶段还差 {levelGap}</p>
           <Progress value={levelProgress} className="mt-3 h-1.5" />
-        </SolidCard>
+        </WebSurface>
 
-        <SolidCard variant="default" className="p-5">
+        <WebSurface variant="default" className="p-5">
           <div className="mb-3 flex items-center gap-2">
             <div className="flex size-9 items-center justify-center rounded-xl bg-risk-surface">
               <Flame className="size-4 text-risk" />
@@ -470,9 +470,9 @@ function MeContent({
             {stats.streakDays} 天
           </p>
           <p className="mt-1 text-xs text-muted-foreground">今天再看 1 条评价即可保持</p>
-        </SolidCard>
+        </WebSurface>
 
-        <SolidCard variant="default" className="p-5">
+        <WebSurface variant="default" className="p-5">
           <div className="mb-3 flex items-center gap-2">
             <div className="flex size-9 items-center justify-center rounded-xl bg-foreground">
               <Award className="size-4 text-white" />
@@ -481,7 +481,7 @@ function MeContent({
           </div>
           <p className="text-3xl font-semibold text-foreground">L{trustLevel}</p>
           <p className="mt-1 text-xs text-muted-foreground">已帮助 {stats.helpedCount} 位后来者</p>
-        </SolidCard>
+        </WebSurface>
       </div>
       )}
 
@@ -503,9 +503,9 @@ function MeContent({
             <p className="mt-1 text-xs text-muted-foreground">
               完成企业邮箱认证，解锁身份卡与邀请名额
             </p>
-            <SolidButton asChild variant="secondary" size="sm" className="mt-4">
+            <WebButton asChild variant="secondary" size="sm" className="mt-4">
               <Link href="/company-verification">立即认证</Link>
-            </SolidButton>
+            </WebButton>
           </div>
         ) : (
           <div className="space-y-2">
@@ -627,9 +627,9 @@ function MeContent({
                 </p>
               </div>
               {!task.completed && task.href ? (
-                <SolidButton asChild variant="secondary" size="sm">
+                <WebButton asChild variant="secondary" size="sm">
                   <Link href={task.href}>去完成</Link>
-                </SolidButton>
+                </WebButton>
               ) : null}
             </div>
           ))}
@@ -648,13 +648,13 @@ function MeContent({
           </Link>
         </div>
         {myReviews.length === 0 ? (
-          <SolidEmptyState
+          <WebEmptyState
             title="还没有评价"
             description="分享你熟悉的那家公司,帮助更多后来者看清方向。"
             action={
-              <SolidButton asChild variant="primary" size="sm">
+              <WebButton asChild variant="primary" size="sm">
                 <Link href="/submit/review">写第一条评价</Link>
-              </SolidButton>
+              </WebButton>
             }
           />
         ) : (
@@ -707,13 +707,13 @@ function MeContent({
         {favoritesOpen ? (
           <div id="me-my-favorites" className="mt-4">
             {favoriteSet.size === 0 && hydrated ? (
-              <SolidEmptyState
+              <WebEmptyState
                 title="还没有收藏公司"
                 description="在任意公司详情页点 ☆,这里会汇总你关注的公司方向变化。"
                 action={
-                  <SolidButton asChild variant="secondary" size="sm">
+                  <WebButton asChild variant="secondary" size="sm">
                     <Link href="/search">去发现公司</Link>
-                  </SolidButton>
+                  </WebButton>
                 }
               />
             ) : (
@@ -923,9 +923,9 @@ function ProfileEditor({
             />
           </label>
           <div className="flex items-center gap-3 sm:col-span-2">
-            <SolidButton type="submit" disabled={saving}>
+            <WebButton type="submit" disabled={saving}>
               {saving ? "保存中..." : "保存资料"}
-            </SolidButton>
+            </WebButton>
             {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
           </div>
         </form>

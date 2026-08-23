@@ -7,8 +7,8 @@ import { motion, useReducedMotion } from "framer-motion"
 import { searchCompanies } from "@/lib/api/companies"
 import type { CompanyListItem } from "@/lib/api/types"
 import { ErrorState } from "@/components/common/error-state"
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
 import { ScoreChip } from "@/components/ui/score-chip"
 import { TagPill } from "@/components/ui/tag-pill"
 
@@ -108,7 +108,7 @@ export default function RankingsPage() {
 
       <div className="flex flex-wrap gap-2" role="tablist" aria-label="公司发现排序方式">
         {tabs.map((tab) => (
-          <SolidButton
+          <WebButton
             key={tab.key}
             type="button"
             size="sm"
@@ -118,7 +118,7 @@ export default function RankingsPage() {
             onClick={() => setActiveTab(tab.key)}
           >
             {tab.label}
-          </SolidButton>
+          </WebButton>
         ))}
       </div>
 
@@ -185,7 +185,7 @@ function RankingsList({
             custom={Math.min(index, 5)}
             transition={{ delay: reduced ? 0 : Math.min(index, 5) * 0.05 }}
           >
-            <SolidCard
+            <WebSurface
               variant={index === 0 ? "elevated" : "subtle"}
               className="p-4"
               data-testid={`rankings-card-${company.id}`}
@@ -216,12 +216,12 @@ function RankingsList({
                 </div>
                 <div className="flex items-center gap-3 sm:justify-end">
                   <ScoreChip score={score} compact />
-                  <SolidButton asChild variant="primary" size="sm">
+                  <WebButton asChild variant="primary" size="sm">
                     <Link href={`/company/${company.id}`}>看这家公司</Link>
-                  </SolidButton>
+                  </WebButton>
                 </div>
               </div>
-            </SolidCard>
+            </WebSurface>
           </motion.div>
         )
       })}

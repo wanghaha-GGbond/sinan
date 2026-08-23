@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { Check, Loader2, X } from "lucide-react"
 
-import { SolidButton } from "@/components/ui/solid-button"
+import { WebButton } from "@/components/ui/web-button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 type QueueReview = {
@@ -81,7 +81,7 @@ export function ReviewModerationQueue() {
                   <SelectTrigger><SelectValue placeholder="拒绝原因" /></SelectTrigger>
                   <SelectContent>{reasons.map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent>
                 </Select>
-                <div className="grid grid-cols-2 gap-2"><SolidButton variant="secondary" onClick={() => void moderate(review, "reject")}><X className="size-4" />拒绝</SolidButton><SolidButton onClick={() => void moderate(review, "approve")}><Check className="size-4" />通过</SolidButton></div>
+                <div className="grid grid-cols-2 gap-2"><WebButton variant="secondary" onClick={() => void moderate(review, "reject")}><X className="size-4" />拒绝</WebButton><WebButton onClick={() => void moderate(review, "approve")}><Check className="size-4" />通过</WebButton></div>
               </div>
             </article>
           ))}

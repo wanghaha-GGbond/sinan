@@ -12,8 +12,8 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
-import { SolidCard } from "@/components/ui/solid-card"
-import { SolidButton } from "@/components/ui/solid-button"
+import { WebSurface } from "@/components/ui/web-surface"
+import { WebButton } from "@/components/ui/web-button"
 import { useAuth } from "@/lib/auth-context"
 
 type CircleItem = {
@@ -55,9 +55,9 @@ export default function CirclesListPage() {
       </div>
 
       {error && (
-        <SolidCard variant="subtle" className="p-4 text-sm text-muted-foreground">
+        <WebSurface variant="subtle" className="p-4 text-sm text-muted-foreground">
           {error}
-        </SolidCard>
+        </WebSurface>
       )}
 
       {!circles && !error && (
@@ -69,15 +69,15 @@ export default function CirclesListPage() {
       )}
 
       {circles && circles.length === 0 && (
-        <SolidCard variant="subtle" className="p-6 text-center text-sm text-muted-foreground">
+        <WebSurface variant="subtle" className="p-6 text-center text-sm text-muted-foreground">
           圈层即将开放，运营在筹备首批名单。
-        </SolidCard>
+        </WebSurface>
       )}
 
       {circles?.map((c) => {
         const joined = c.myMembership?.status === "active"
         return (
-          <SolidCard
+          <WebSurface
             key={c.id}
             variant="default"
             className={`p-5 ${joined ? "border-t-2 border-t-primary" : ""}`}
@@ -107,30 +107,30 @@ export default function CirclesListPage() {
                 <span className="flex-1 text-xs text-muted-foreground">需 1 名成员背书</span>
               )}
               {joined ? (
-                <SolidButton
+                <WebButton
                   size="sm"
                   variant="secondary"
                   className="ml-auto"
                   onClick={() => router.push(`/circles/${c.id}`)}
                 >
                   进入圈子
-                </SolidButton>
+                </WebButton>
               ) : user ? (
-                <SolidButton
+                <WebButton
                   size="sm"
                   variant="dark"
                   className="ml-auto"
                   onClick={() => router.push(`/circles/${c.id}`)}
                 >
                   申请入圈
-                </SolidButton>
+                </WebButton>
               ) : (
                 <Link href="/login" className="ml-auto">
-                  <SolidButton size="sm" variant="dark">登录后申请</SolidButton>
+                  <WebButton size="sm" variant="dark">登录后申请</WebButton>
                 </Link>
               )}
             </div>
-          </SolidCard>
+          </WebSurface>
         )
       })}
     </section>

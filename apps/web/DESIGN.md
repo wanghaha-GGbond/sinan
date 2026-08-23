@@ -2,6 +2,21 @@
 
 > Living document. Updates ship with code in the same commit.
 
+## Current Web baseline (2026-08)
+
+桌面 Web 与移动 Web 统一采用轻量网页体系；原生 iOS 保留 Solid 立体风格。
+当前网页视觉基线借鉴 Glassdoor 的公司/评价信息架构与 Apple 的视觉纪律：
+白色或中性内容表面、1px 边框、12px 常规圆角、克制的司南绿、系统字体栈，以及只用于导航和浮层的玻璃材质。
+
+- `WebButton`: `primary | secondary | quiet | danger`，移动端最小 44px 点击区。
+- `WebSurface`: `base | raised | overlay | tint | risk`。
+- `WebEmptyState`: 统一空数据、无结果和无权限状态。
+- `WebNav`、`WebSearchField`、`FilterChip`、`TrustBadge`、`ScoreBadge` 是网页优先组件。
+- `SolidButton`、`SolidCard`、`SolidTopbar` 仅作为迁移兼容层；新 Web 业务页面禁止新增引用，原生 App 不受影响。
+- 公司页以评价为首屏内容，右侧集中评分分布、可信说明与公司 MBTI（CBTI）证据。
+
+历史 Solid C 端章节保留用于回溯，不再代表当前 Web 规范。
+
 ---
 
 ## Brief inference
@@ -99,9 +114,9 @@ body {
 
 | Token | Value | Use |
 |---|---|---|
-| `--container-page` | 920px | most page-level main width |
-| `--container-hero` | 1080px | company-portal banner / footer |
-| `--container-section` | 640px | 404, error, narrow pages |
+| `--container-page` | 1240px | most page-level main width |
+| `--container-hero` | 1180px | home and company header |
+| `--container-section` | 760px | reading and form pages |
 | `--container-form` | 400px | login, register |
 | `--container-card` | 420px | cheatsheet, error-state card |
 | `--container-prose` | 75ch | long-form body content |
@@ -154,16 +169,21 @@ Tailwind variant gates hover-lift on the button base.
 
 | Component | Source | Notes |
 |---|---|---|
-| `SolidCard` | `components/ui/solid-card.tsx` | 4 variants: default, subtle, elevated, emerald, risk |
-| `SolidButton` | `components/ui/solid-button.tsx` | 5 variants, has @container base for content-aware layouts |
-| `SolidTopbar` | `components/ui/solid-topbar.tsx` | 3 variants: home, default, compact |
-| `SolidEmptyState` | `components/ui/solid-empty-state.tsx` | shared empty state |
+| `WebSurface` | `components/ui/web-surface.tsx` | base, raised, overlay, tint, risk |
+| `WebButton` | `components/ui/web-button.tsx` | primary, secondary, quiet, danger |
+| `WebNav` | `components/ui/web-nav.tsx` | sticky desktop nav + compact mobile header |
+| `WebSearchField` | `components/ui/web-search-field.tsx` | search-first input with keyboard submit |
+| `WebEmptyState` | `components/ui/web-empty-state.tsx` | flat empty state surface |
+| `SolidCard` | `components/ui/solid-card.tsx` | deprecated Web compatibility wrapper; native App only |
+| `SolidButton` | `components/ui/solid-button.tsx` | deprecated Web compatibility wrapper; native App only |
+| `SolidTopbar` | `components/ui/solid-topbar.tsx` | deprecated Web compatibility wrapper; native App only |
+| `SolidEmptyState` | `components/ui/solid-empty-state.tsx` | deprecated compatibility wrapper |
 | `ErrorState` | `components/common/error-state.tsx` | error with retry |
 | `MetricPill` | `components/ui/metric-pill.tsx` | data metric chip |
 | `ScoreChip` | `components/ui/score-chip.tsx` | direction score |
 | `TagPill` | `components/ui/tag-pill.tsx` | tone-aware pill |
 | `KeyboardShortcuts` | `components/layout/keyboard-shortcuts.tsx` | `?` opens, `/` focuses search |
-| `FirstRunHint` | `components/layout/first-run-hint.tsx` | 8s auto-dismiss banner, once per browser |
+| `FirstRunHint` | `components/layout/first-run-hint.tsx` | deprecated; not mounted in Web layout |
 
 ---
 

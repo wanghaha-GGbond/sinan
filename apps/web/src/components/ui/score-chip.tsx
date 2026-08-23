@@ -61,13 +61,13 @@ export function ScoreChip({
     <div
       {...props}
       className={cn(
-        "rounded-full bg-foreground text-background shadow-[0_4px_0_rgba(17,24,39,0.22)]",
+        "rounded-lg border border-primary-surface-border bg-primary-tint text-primary-deep",
         compact ? "px-2.5 py-1 text-xs font-semibold" : "px-3 py-2",
         className
       )}
       data-testid="score-chip"
     >
-      <p className={cn("text-slate-300", compact ? "text-[10px]" : "text-[11px]")}>{label}</p>
+      <p className={cn("text-primary-deep/70", compact ? "text-[10px]" : "text-[11px]")}>{label}</p>
       <p className={cn("font-semibold tabular-nums", compact ? "text-sm" : "text-lg")}>
         {rendered.toFixed(1)}
       </p>

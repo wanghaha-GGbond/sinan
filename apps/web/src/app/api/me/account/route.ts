@@ -15,6 +15,7 @@ import { gratitude, highlights, skillEndorsements, skills } from "@/db/schema/p1
 import { promiseRecords } from "@/db/schema/promise-records"
 import { reviewDiscussions } from "@/db/schema/review-discussions"
 import { reviewReports } from "@/db/schema/review-reports"
+import { reviewAuthorBlocks } from "@/db/schema/review-author-blocks"
 import { reviewUsefulVotes } from "@/db/schema/review-useful-votes"
 import { reviews } from "@/db/schema/reviews"
 import {
@@ -78,6 +79,7 @@ export async function DELETE(request: NextRequest) {
         .from(reviewUsefulVotes)
         .where(eq(reviewUsefulVotes.userId, authUser.userId))
       await tx.delete(reviewUsefulVotes).where(eq(reviewUsefulVotes.userId, authUser.userId))
+      await tx.delete(reviewAuthorBlocks).where(eq(reviewAuthorBlocks.blockerUserId, authUser.userId))
       for (const reviewId of new Set(reviewVoteRows.map((row) => row.reviewId))) {
         const [{ activeVotes }] = await tx
           .select({ activeVotes: count() })

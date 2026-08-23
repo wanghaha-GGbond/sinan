@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Sparkles } from "lucide-react"
-import { SolidCard } from "@/components/ui/solid-card"
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidEmptyState } from "@/components/ui/solid-empty-state"
+import { WebSurface } from "@/components/ui/web-surface"
+import { WebButton } from "@/components/ui/web-button"
+import { WebEmptyState } from "@/components/ui/web-empty-state"
 
 type HighlightItem = {
   id: string
@@ -43,9 +43,9 @@ export default function HighlightsPage() {
             那些我们见证过的职场 moment — 审核通过后展示，匿名优先。
           </p>
         </div>
-        <SolidButton asChild variant="secondary" size="sm">
+        <WebButton asChild variant="secondary" size="sm">
           <Link href="/me/highlights">写我的高光</Link>
-        </SolidButton>
+        </WebButton>
       </header>
 
       {loading ? (
@@ -55,20 +55,20 @@ export default function HighlightsPage() {
           ))}
         </div>
       ) : items?.length === 0 ? (
-        <SolidEmptyState
+        <WebEmptyState
           title="高光馆尚无收录"
           description="成为第一批分享真实职场时刻的人。审核通过后将在这里展示。"
           action={
-            <SolidButton asChild variant="primary" size="sm">
+            <WebButton asChild variant="primary" size="sm">
               <Link href="/me/highlights">提交高光</Link>
-            </SolidButton>
+            </WebButton>
           }
         />
       ) : (
         <ul className="space-y-4">
           {items?.map((item) => (
             <li key={item.id}>
-              <SolidCard variant="elevated" className="p-6">
+              <WebSurface variant="elevated" className="p-6">
                 <p className="text-base leading-7 text-foreground">{item.content}</p>
                 <p className="mt-3 text-xs text-muted-foreground">
                   L{item.trustLevel ?? 0}
@@ -76,7 +76,7 @@ export default function HighlightsPage() {
                   {" · "}
                   {new Date(item.createdAt).toLocaleDateString("zh-CN")}
                 </p>
-              </SolidCard>
+              </WebSurface>
             </li>
           ))}
         </ul>

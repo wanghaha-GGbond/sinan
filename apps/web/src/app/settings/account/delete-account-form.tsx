@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 
-import { SolidButton } from "@/components/ui/solid-button"
+import { WebButton } from "@/components/ui/web-button"
 import { Input } from "@/components/ui/input"
 
 const CONFIRMATION = "DELETE"
@@ -57,13 +57,13 @@ export function DeleteAccountForm() {
           {error}
         </p>
       ) : null}
-      <SolidButton
+      <WebButton
         variant="dark"
         onClick={deleteAccount}
         disabled={confirmation !== CONFIRMATION || submitting}
       >
         {submitting ? "正在注销…" : "永久注销账号"}
-      </SolidButton>
+      </WebButton>
     </div>
   )
 }

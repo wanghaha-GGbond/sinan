@@ -5,9 +5,9 @@ import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 
 import { FilterBar } from "@/components/common/filter-bar"
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
-import { SolidEmptyState } from "@/components/ui/solid-empty-state"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
+import { WebEmptyState } from "@/components/ui/web-empty-state"
 import { getCommunityInsights } from "@/lib/glassdoor-insights"
 import { companies, reviewDiscussions } from "@/lib/mock-data"
 
@@ -109,12 +109,12 @@ export default function CommunityPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <SolidButton asChild variant="primary" size="sm">
+            <WebButton asChild variant="primary" size="sm">
               <Link href={`/company/${selectedCompany.id}`}>查看公司</Link>
-            </SolidButton>
-            <SolidButton asChild variant="secondary" size="sm">
+            </WebButton>
+            <WebButton asChild variant="secondary" size="sm">
               <Link href="/community">查看全部讨论</Link>
-            </SolidButton>
+            </WebButton>
           </div>
         </div>
       ) : null}
@@ -139,7 +139,7 @@ export default function CommunityPage() {
       />
 
       {filtered.length === 0 ? (
-        <SolidEmptyState
+        <WebEmptyState
           title={selectedCompany ? "这家公司还没有公开讨论" : "没有匹配的社区讨论"}
           description={
             selectedCompany
@@ -147,17 +147,17 @@ export default function CommunityPage() {
               : "换一个行业或城市,或者发起新评价。司南的追问空间依赖你。"
           }
           action={
-            <SolidButton asChild variant="primary" size="sm">
+            <WebButton asChild variant="primary" size="sm">
               <Link href={selectedCompany ? `/company/${selectedCompany.id}` : "/submit/review"}>
                 {selectedCompany ? "查看公司评价" : "发起新评价"}
               </Link>
-            </SolidButton>
+            </WebButton>
           }
         />
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           {filtered.map((item) => (
-            <SolidCard
+            <WebSurface
               key={item.discussionId}
               id={`discussion-${item.discussionId}`}
               variant="default"
@@ -191,7 +191,7 @@ export default function CommunityPage() {
                 </div>
                 <span className="text-[11px] text-muted-foreground">{item.authorLabel}</span>
               </div>
-            </SolidCard>
+            </WebSurface>
           ))}
         </div>
       )}

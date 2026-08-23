@@ -4,7 +4,11 @@ import { companies } from "@/db/schema/companies"
 import { reviews } from "@/db/schema/reviews"
 import { toPublicReviewView } from "@/lib/server/review-view"
 import { getAuthUserFromRequest } from "@/lib/server/auth"
-import { getPublicReviewMetadata } from "@/lib/server/public-review-query"
+import {
+  getBlockedReviewAuthorKeys,
+  getPublicReviewMetadata,
+  isReviewAuthorBlocked,
+} from "@/lib/server/public-review-query"
 
 type SortKey = "latest" | "useful"
 
@@ -26,12 +30,24 @@ function decodeCursor(sort: SortKey, raw: string): { usefulCount: number; create
     const payload = Buffer.from(raw, "base64url").toString("utf8")
     if (sort === "latest") {
       const [ts, id] = payload.split("|")
-      if (!ts || !id || Number.isNaN(Number(ts))) return null
-      return { usefulCount: 0, createdAt: new Date(Number(ts)), id }
+      if (!ts || !id || !/^[0-9a-f-]{36}$/i.test(id)) return null
+      const timestamp = Number(ts)
+      const createdAt = new Date(timestamp)
+      if (!Number.isFinite(timestamp) || Number.isNaN(createdAt.getTime())) return null
+      return { usefulCount: 0, createdAt, id }
     } else {
       const [uc, ts, id] = payload.split("|")
-      if (!uc || !ts || !id || Number.isNaN(Number(uc)) || Number.isNaN(Number(ts))) return null
-      return { usefulCount: Number(uc), createdAt: new Date(Number(ts)), id }
+      if (!uc || !ts || !id || !/^[0-9a-f-]{36}$/i.test(id)) return null
+      const usefulCount = Number(uc)
+      const timestamp = Number(ts)
+      const createdAt = new Date(timestamp)
+      if (
+        !Number.isFinite(usefulCount) ||
+        usefulCount < 0 ||
+        !Number.isFinite(timestamp) ||
+        Number.isNaN(createdAt.getTime())
+      ) return null
+      return { usefulCount, createdAt, id }
     }
   } catch {
     return null
@@ -45,8 +61,16 @@ export async function GET(
   const { id: companyId } = await params
   const { searchParams } = new URL(request.url)
   const sort = (searchParams.get("sort") ?? "useful") as SortKey
-  const limit = Math.min(Number(searchParams.get("limit") ?? "20"), 50)
+  const requestedLimit = Number(searchParams.get("limit") ?? "20")
+  const limit = Math.trunc(requestedLimit)
   const rawCursor = searchParams.get("cursor") ?? null
+
+  if (sort !== "latest" && sort !== "useful") {
+    return NextResponse.json({ error: "Invalid review sort" }, { status: 400 })
+  }
+  if (!Number.isFinite(requestedLimit) || limit < 1 || limit > 50) {
+    return NextResponse.json({ error: "limit must be between 1 and 50" }, { status: 400 })
+  }
 
   try {
     const { db } = await import("@/db/client")
@@ -86,6 +110,9 @@ export async function GET(
     // order would skip or duplicate rows that share a
     // usefulCount.
     const decoded = rawCursor ? decodeCursor(sort, rawCursor) : null
+    if (rawCursor && !decoded) {
+      return NextResponse.json({ error: "Invalid cursor" }, { status: 400 })
+    }
     if (decoded) {
       if (sort === "latest") {
         // rows where (createdAt, id) < (cursor.createdAt, cursor.id)
@@ -134,12 +161,14 @@ export async function GET(
 
     const hasMore = rows.length > limit
     const resultRows = hasMore ? rows.slice(0, limit) : rows
-    const last = resultRows[resultRows.length - 1]
     const authUser = await getAuthUserFromRequest(request)
-    const metadata = await getPublicReviewMetadata(resultRows, authUser?.userId)
+    const blockedAuthors = await getBlockedReviewAuthorKeys(authUser?.userId)
+    const visibleRows = resultRows.filter((row) => !isReviewAuthorBlocked(row, blockedAuthors))
+    const last = resultRows[resultRows.length - 1]
+    const metadata = await getPublicReviewMetadata(visibleRows, authUser?.userId)
 
     return NextResponse.json({
-      reviews: resultRows.map((row) =>
+      reviews: visibleRows.map((row) =>
         toPublicReviewView(row, metadata.get(row.id))
       ),
       nextCursor: hasMore && last

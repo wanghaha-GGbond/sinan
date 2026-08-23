@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 
-import { SolidButton } from "@/components/ui/solid-button"
+import { WebButton } from "@/components/ui/web-button"
 import { Textarea } from "@/components/ui/textarea"
 import { validateDiscussionContent } from "@/lib/content-guard"
 import { clearDiscussionDraft, readDiscussionDraft, saveDiscussionDraft } from "@/lib/discussion-draft-storage"
@@ -101,11 +101,11 @@ export function ReviewDiscussionComposer({
         </p>
         <div className="flex items-center gap-2">
           {onCancel && (
-            <SolidButton onClick={onCancel} size="sm" variant="ghost" type="button">
+            <WebButton onClick={onCancel} size="sm" variant="ghost" type="button">
               取消
-            </SolidButton>
+            </WebButton>
           )}
-          <SolidButton
+          <WebButton
             data-testid="discussion-submit-button"
             onClick={submit}
             type="button"
@@ -113,7 +113,7 @@ export function ReviewDiscussionComposer({
             disabled={!content.trim()}
           >
             发布
-          </SolidButton>
+          </WebButton>
         </div>
       </div>
 

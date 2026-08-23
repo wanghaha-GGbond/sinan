@@ -7,7 +7,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebSurface } from "@/components/ui/web-surface"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/lib/auth-context"
 
@@ -60,23 +60,23 @@ export default function RequestsOutgoingPage() {
       </header>
 
       {error && (
-        <SolidCard variant="elevated" className="p-4 text-sm text-destructive">
+        <WebSurface variant="elevated" className="p-4 text-sm text-destructive">
           {error}
-        </SolidCard>
+        </WebSurface>
       )}
 
       {outgoing === null ? (
-        <SolidCard variant="elevated" className="h-20 animate-pulse" />
+        <WebSurface variant="elevated" className="h-20 animate-pulse" />
       ) : outgoing.length === 0 ? (
-        <SolidCard
+        <WebSurface
           variant="elevated"
           className="p-6 text-center text-sm text-muted-foreground"
         >
           你还没有发起过私信请求
-        </SolidCard>
+        </WebSurface>
       ) : (
         outgoing.map((r) => (
-          <SolidCard key={r.id} variant="elevated" className="p-4">
+          <WebSurface key={r.id} variant="elevated" className="p-4">
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -113,7 +113,7 @@ export default function RequestsOutgoingPage() {
                 </p>
               )}
             </div>
-          </SolidCard>
+          </WebSurface>
         ))
       )}
     </section>

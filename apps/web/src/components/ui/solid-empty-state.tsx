@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 
-import { SolidButton } from "@/components/ui/solid-button"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
 
 export function SolidEmptyState({
   title = "这里还没有内容。",
@@ -17,18 +18,24 @@ export function SolidEmptyState({
   action?: ReactNode
   framed?: boolean
 }) {
-  return (
-    <div className={framed ? "rounded-2xl border border-border/60 bg-card p-5 text-center" : "py-8 text-center"}>
+  const content = (
+    <>
       <h3 className="text-base font-semibold text-foreground">{title}</h3>
       <p className="mt-2 text-sm text-muted-foreground">{description}</p>
       {ctaLabel ? (
         <div className="mt-4 flex justify-center">
-          <SolidButton type="button" variant="secondary" onClick={onCtaClick}>
+          <WebButton type="button" variant="secondary" onClick={onCtaClick}>
             {ctaLabel}
-          </SolidButton>
+          </WebButton>
         </div>
       ) : null}
       {action ? <div className="mt-4 flex justify-center">{action}</div> : null}
-    </div>
+    </>
+  )
+
+  return framed ? (
+    <WebSurface tone="base" className="p-5 text-center">{content}</WebSurface>
+  ) : (
+    <div className="py-8 text-center">{content}</div>
   )
 }

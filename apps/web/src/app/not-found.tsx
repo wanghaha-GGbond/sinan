@@ -1,8 +1,8 @@
 import Link from "next/link"
 import { BookOpen, Compass, Home, Search, PenLine, ArrowRight } from "lucide-react"
 
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
 
 export default function NotFound() {
   return (
@@ -17,7 +17,7 @@ export default function NotFound() {
         <span>4</span>
       </div>
 
-      <SolidCard variant="elevated" className="w-full p-8 text-center sm:p-10">
+      <WebSurface variant="elevated" className="w-full p-8 text-center sm:p-10">
         <p className="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
           Page not found
         </p>
@@ -28,20 +28,20 @@ export default function NotFound() {
           你访问的页面可能已下架、被合并,或者从未存在过。先回到推荐流,或者搜一家公司。
         </p>
         <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-          <SolidButton asChild variant="primary" size="lg">
+          <WebButton asChild variant="primary" size="lg">
             <Link href="/">
               <Home className="size-4" />
               回到推荐流
             </Link>
-          </SolidButton>
-          <SolidButton asChild variant="secondary" size="lg">
+          </WebButton>
+          <WebButton asChild variant="secondary" size="lg">
             <Link href="/search">
               <Search className="size-4" />
               搜索公司
             </Link>
-          </SolidButton>
+          </WebButton>
         </div>
-      </SolidCard>
+      </WebSurface>
 
       <p className="mt-6 text-xs text-muted-foreground">
         另一个常见入口:

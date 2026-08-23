@@ -31,7 +31,7 @@ const MAX_LIMIT = 100
 export async function GET(request: NextRequest) {
   let moderator
   try {
-    moderator = await requireModerator()
+    moderator = await requireModerator(request)
   } catch (response) {
     if (response instanceof Response) return response
     throw response
@@ -46,6 +46,10 @@ export async function GET(request: NextRequest) {
     MAX_LIMIT
   )
   const cursor = searchParams.get("cursor") ?? undefined
+
+  if (!Number.isFinite(limit) || limit < 1) {
+    return NextResponse.json({ error: "limit must be between 1 and 100" }, { status: 400 })
+  }
 
   const status: ReportStatus = ((): ReportStatus => {
     if (

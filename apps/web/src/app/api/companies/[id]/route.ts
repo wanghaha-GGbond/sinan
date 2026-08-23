@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
-import { and, eq, isNull, sql } from "drizzle-orm"
+import { and, eq, inArray, isNull, sql } from "drizzle-orm"
 import { companies } from "@/db/schema/companies"
 import { reviews } from "@/db/schema/reviews"
 import { toPublicCompanyView } from "@/lib/server/company-view"
+import { inferPublicCBTI } from "@/lib/server/company-cbti"
+import { getMockCompany, mockCompanyToPublicView } from "@/lib/server/public-company-data"
 
 export async function GET(
   request: NextRequest,
@@ -11,6 +13,12 @@ export async function GET(
   const { id: companyId } = await params
 
   try {
+    if (!process.env.DATABASE_URL) {
+      const mockCompany = getMockCompany(companyId)
+      if (!mockCompany) return NextResponse.json({ error: "Company not found" }, { status: 404 })
+      return NextResponse.json({ company: mockCompanyToPublicView(mockCompany) })
+    }
+
     const { db } = await import("@/db/client")
 
     // 1. Find company — must be visible (not deleted, reviewable)
@@ -31,17 +39,22 @@ export async function GET(
     }
 
     // 2. Load visible review count + aggregate scores from reviews table
-      const reviewAggregates = await db
+    const reviewAggregates = await db
       .select({
         avgDirection: sql<number>`round(avg(${reviews.directionScore})::numeric, 1)`,
         recommendCount: sql<number>`count(*) filter (where ${reviews.recommendToJoin} = true)`,
         totalCount: sql<number>`count(*)`,
+        score0to2: sql<number>`count(*) filter (where ${reviews.directionScore} < 2)`,
+        score2to4: sql<number>`count(*) filter (where ${reviews.directionScore} >= 2 and ${reviews.directionScore} < 4)`,
+        score4to6: sql<number>`count(*) filter (where ${reviews.directionScore} >= 4 and ${reviews.directionScore} < 6)`,
+        score6to8: sql<number>`count(*) filter (where ${reviews.directionScore} >= 6 and ${reviews.directionScore} < 8)`,
+        score8to10: sql<number>`count(*) filter (where ${reviews.directionScore} >= 8)`,
       })
       .from(reviews)
       .where(
         and(
           eq(reviews.companyId, companyId),
-          eq(reviews.status, "visible"),
+          inArray(reviews.status, ["visible", "limited_visible"]),
           isNull(reviews.deletedAt)
         )
       )
@@ -56,6 +69,17 @@ export async function GET(
       reviewCount > 0 && agg?.recommendCount != null
         ? Math.round((Number(agg.recommendCount) / reviewCount) * 100)
         : 0
+
+    const signalRows = await db
+      .select({ directionScore: reviews.directionScore, questionnaire: reviews.questionnaire })
+      .from(reviews)
+      .where(
+        and(
+          eq(reviews.companyId, companyId),
+          inArray(reviews.status, ["visible", "limited_visible"]),
+          isNull(reviews.deletedAt)
+        )
+      )
 
     // 3. Build public company view via existing helper
     const base = toPublicCompanyView(companyRow)
@@ -85,6 +109,14 @@ export async function GET(
         description: base.description,
         claimedStatus: base.claimedStatus,
         reviewStatus: base.reviewStatus,
+        scoreDistribution: [
+          { score: "0-2", count: Number(agg?.score0to2 ?? 0) },
+          { score: "2-4", count: Number(agg?.score2to4 ?? 0) },
+          { score: "4-6", count: Number(agg?.score4to6 ?? 0) },
+          { score: "6-8", count: Number(agg?.score6to8 ?? 0) },
+          { score: "8-10", count: Number(agg?.score8to10 ?? 0) },
+        ],
+        cbti: inferPublicCBTI(signalRows),
       },
     })
   } catch (error) {

@@ -86,3 +86,7 @@ __pycache__/
 
 # Local DreamCanvas UI exports
 /*.dc.html
+
+# Local design QA captures (keep out of release commits)
+/design-qa*.png
+/design-qa.md

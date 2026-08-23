@@ -15,7 +15,7 @@ export function SolidSearchInput({
   onQuickSearch?: () => void
 }) {
   return (
-    <div className="solid-card-subtle p-3">
+    <div className="web-surface web-surface-base p-3">
       <div className="flex items-center gap-2 rounded-2xl bg-white px-3 py-2">
         <Search className="size-4 text-muted-foreground" />
         <Input

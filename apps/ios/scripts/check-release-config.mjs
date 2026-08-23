@@ -11,6 +11,7 @@ const submit = easConfig.submit?.production?.ios ?? {}
 const apiUrl = process.env.EXPO_PUBLIC_API_URL?.trim()
 const launchScopeOnly = process.env.EXPO_PUBLIC_LAUNCH_SCOPE_ONLY
 const appFilingNumber = process.env.EXPO_PUBLIC_APP_FILING_NUMBER?.trim()
+const supportEmail = (process.env.EXPO_PUBLIC_SUPPORT_EMAIL?.trim() || "support@sinanapp.cn")
 
 const errors = []
 const warnings = []
@@ -31,6 +32,12 @@ requireValue(ios.buildNumber, "app.json: expo.ios.buildNumber is required")
 if (ios.bundleIdentifier !== "com.sinan.app") {
   errors.push("app.json: bundleIdentifier must remain com.sinan.app for this release")
 }
+if (ios.supportsTablet !== false) {
+  errors.push("app.json: supportsTablet must be false for the iPhone-only release")
+}
+if (ios.deploymentTarget !== "16.4") {
+  errors.push("app.json: ios.deploymentTarget must remain 16.4 for the Expo 57 release")
+}
 if (ios.config?.usesNonExemptEncryption !== false) {
   errors.push("app.json: usesNonExemptEncryption must explicitly be false")
 }
@@ -39,6 +46,9 @@ if (ios.privacyManifests?.NSPrivacyTracking !== false) {
 }
 if (production.autoIncrement !== true) {
   errors.push("eas.json: production.autoIncrement must be true")
+}
+if (easConfig.cli?.appVersionSource !== "local") {
+  errors.push("eas.json: cli.appVersionSource must be local so app.json is the sole version source")
 }
 
 if (!apiUrl) {
@@ -63,8 +73,11 @@ if (launchScopeOnly !== "true") {
 }
 if (!appFilingNumber) {
   errors.push("EXPO_PUBLIC_APP_FILING_NUMBER is required before TestFlight/App Store release")
-} else if (!ciMode && appFilingNumber.includes("PENDING")) {
+} else if (!ciMode && /(PENDING|YOUR_ISSUED|CHANGE_ME)/i.test(appFilingNumber)) {
   errors.push("EXPO_PUBLIC_APP_FILING_NUMBER must contain the issued APP filing number")
+}
+if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(supportEmail)) {
+  errors.push("EXPO_PUBLIC_SUPPORT_EMAIL must be a valid public support email")
 }
 if (easConfig.build?.preview?.env?.EXPO_PUBLIC_API_URL !== "https://staging.sinanapp.cn") {
   errors.push("eas.json: preview API must use https://staging.sinanapp.cn")

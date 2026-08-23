@@ -86,6 +86,7 @@ export default function MeScreen() {
           <Text style={S.title}>法律与隐私</Text>
           <Text style={S.body}>查看完整政策，了解匿名边界、数据用途和内容审核规则。</Text>
           <View style={S.actions}><SolidButton title="隐私政策" variant="ghost" onPress={() => void Linking.openURL(getWebUrl("/legal/privacy"))} /><SolidButton title="用户协议" variant="ghost" onPress={() => void Linking.openURL(getWebUrl("/legal/terms"))} /></View>
+          <View style={S.actions}><Link href="/support" asChild><SolidButton title="帮助与内容安全" variant="secondary" /></Link></View>
         </SolidCard>
         <SolidCard variant="subtle" style={S.card}>
           <Text style={S.title}>关于司南</Text>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { BadgeCheck, Check, Loader2, RefreshCw, X } from "lucide-react"
 
-import { SolidButton } from "@/components/ui/solid-button"
+import { WebButton } from "@/components/ui/web-button"
 import { Textarea } from "@/components/ui/textarea"
 
 type Status = "submitted" | "reviewing" | "approved" | "rejected" | "revoked"
@@ -126,7 +126,7 @@ export function VerificationQueue() {
             公司认证队列
           </h1>
         </div>
-        <SolidButton
+        <WebButton
           type="button"
           variant="secondary"
           size="sm"
@@ -136,7 +136,7 @@ export function VerificationQueue() {
         >
           <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
           刷新
-        </SolidButton>
+        </WebButton>
       </header>
 
       <div className="mt-5 flex gap-2 overflow-x-auto" role="tablist">
@@ -239,7 +239,7 @@ export function VerificationQueue() {
                       maxLength={500}
                     />
                     <div className="grid grid-cols-2 gap-2">
-                      <SolidButton
+                      <WebButton
                         type="button"
                         variant="secondary"
                         disabled={actingId === verification.id}
@@ -247,8 +247,8 @@ export function VerificationQueue() {
                       >
                         <X className="size-4" />
                         拒绝
-                      </SolidButton>
-                      <SolidButton
+                      </WebButton>
+                      <WebButton
                         type="button"
                         variant="primary"
                         disabled={actingId === verification.id}
@@ -256,7 +256,7 @@ export function VerificationQueue() {
                       >
                         <Check className="size-4" />
                         通过
-                      </SolidButton>
+                      </WebButton>
                     </div>
                   </div>
                 ) : null}

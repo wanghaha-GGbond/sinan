@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
 import { TagPill } from "@/components/ui/tag-pill"
 
 /**
@@ -40,7 +40,7 @@ export function PressInviteLinkGenerator() {
   }
 
   return (
-    <SolidCard variant="elevated" className="p-5">
+    <WebSurface variant="elevated" className="p-5">
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="text-lg font-semibold text-foreground">邀请链接生成器</h2>
         <TagPill tone="match">K 因子入口</TagPill>
@@ -97,7 +97,7 @@ export function PressInviteLinkGenerator() {
         达到 L2 时返还 1 枚(上限 6)。M2 期间不开放自由发码,只走
         运营定向邀约。运营在 admin 控制台直接发码。
       </p>
-    </SolidCard>
+    </WebSurface>
   )
 }
 
@@ -122,7 +122,7 @@ function UrlPreview({
         {url}
       </code>
       <div className="mt-2">
-        <SolidButton
+        <WebButton
           type="button"
           size="sm"
           variant="secondary"
@@ -130,7 +130,7 @@ function UrlPreview({
           data-testid="press-copy-invite-url"
         >
           {copied === "ok" ? "已复制" : copied === "fail" ? "复制失败" : "复制链接"}
-        </SolidButton>
+        </WebButton>
       </div>
     </div>
   )

@@ -5,9 +5,9 @@ import { useEffect, useState } from "react"
 import { Search, TrendingUp, ArrowRight } from "lucide-react"
 
 import { CompanyCard } from "@/components/company/company-card"
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidEmptyState } from "@/components/ui/solid-empty-state"
-import { SolidSearchInput } from "@/components/ui/solid-search-input"
+import { WebButton } from "@/components/ui/web-button"
+import { WebEmptyState } from "@/components/ui/web-empty-state"
+import { WebSearchField } from "@/components/ui/web-search-field"
 import { searchCompanies } from "@/lib/api/companies"
 import type { CompanyListItem } from "@/lib/api/types"
 const popularSearches = ["字节跳动", "腾讯", "阿里巴巴", "小红书", "美团", "华为"]
@@ -48,20 +48,25 @@ export default function SearchPage() {
     return () => { cancelled = true }
   }, [debouncedQuery])
 
+  function submitSearch() {
+    setDebouncedQuery(query)
+  }
+
   return (
-    <section className="mx-auto flex w-full max-w-page flex-col gap-6 px-4 py-6 sm:px-6">
+    <section className="mx-auto flex w-full max-w-page flex-col gap-7 px-4 py-8 sm:px-6 lg:py-10">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">搜索公司</h1>
-        <p className="mt-2 text-sm text-muted-foreground">知道公司名时再搜，推荐流仍是主入口。</p>
+        <p className="text-sm font-semibold text-primary-deep">找公司</p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">先找到你真正想了解的公司。</h1>
+        <p className="mt-3 text-sm text-muted-foreground">搜索公司名、行业或岗位，先看评分，再读真实经历。</p>
       </div>
 
-      <div className="space-y-3">
-        <SolidSearchInput value={query} onChange={setQuery} />
+      <div className="max-w-4xl space-y-3">
+        <WebSearchField value={query} onChange={setQuery} onSubmit={submitSearch} />
         <div className="flex flex-wrap gap-2">
           {popularSearches.map((item) => (
-            <SolidButton key={item} type="button" variant="secondary" size="sm" onClick={() => setQuery(item)}>
+            <WebButton key={item} type="button" variant="secondary" size="sm" onClick={() => { setQuery(item); setDebouncedQuery(item) }}>
               {item}
-            </SolidButton>
+            </WebButton>
           ))}
         </div>
       </div>
@@ -83,9 +88,9 @@ export default function SearchPage() {
       )}
 
       <div>
-        <SolidButton asChild variant="ghost" size="sm">
+        <WebButton asChild variant="quiet" size="sm">
           <Link href="/">返回推荐流</Link>
-        </SolidButton>
+        </WebButton>
       </div>
     </section>
   )
@@ -94,13 +99,13 @@ export default function SearchPage() {
 function SmartEmptyState({ query, onSubmit }: { query: string; onSubmit: (text: string) => void }) {
   return (
     <div>
-      <SolidEmptyState
+      <WebEmptyState
         title="没有找到这家公司"
         description="你可以提交公司注册信息，审核通过后开放评价。"
         action={
-          <SolidButton asChild variant="primary">
+          <WebButton asChild variant="primary">
             <Link href={`/submit/review?mode=add-company&name=${encodeURIComponent(query)}`}>添加公司</Link>
-          </SolidButton>
+          </WebButton>
         }
       />
       <div className="mt-6 space-y-4 text-left">
@@ -128,13 +133,9 @@ function SmartEmptyState({ query, onSubmit }: { query: string; onSubmit: (text: 
             <TrendingUp className="size-3" />
             看本周榜单
           </p>
-          <Link
-            href="/rankings"
-            className="mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-full bg-foreground px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-foreground/90"
-          >
-            打开排行榜
-            <ArrowRight className="size-3.5" />
-          </Link>
+          <WebButton asChild variant="secondary" size="sm" className="mt-2">
+            <Link href="/rankings">打开排行榜<ArrowRight className="size-3.5" /></Link>
+          </WebButton>
         </div>
       </div>
     </div>

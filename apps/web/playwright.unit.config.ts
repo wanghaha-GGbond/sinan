@@ -7,6 +7,7 @@ export default defineConfig({
     "anonymity.spec.ts",
     "auction-engine.spec.ts",
     "circles.spec.ts",
+    "company-cbti.spec.ts",
     "dev-auth.spec.ts",
     "dm-engine.spec.ts",
     "error-reporting.spec.ts",

@@ -2,7 +2,7 @@
 
 import { Filter, X } from "lucide-react"
 
-import { SolidButton } from "@/components/ui/solid-button"
+import { WebButton } from "@/components/ui/web-button"
 
 export type SortOption<T extends string> = { value: T; label: string }
 
@@ -78,7 +78,7 @@ export function FilterBar<TIndustry extends string, TCity extends string, TSort 
           匹配 <strong className="text-foreground">{resultCount}</strong> 条
         </span>
         {hasFilter && onReset ? (
-          <SolidButton
+          <WebButton
             type="button"
             variant="ghost"
             size="sm"
@@ -87,7 +87,7 @@ export function FilterBar<TIndustry extends string, TCity extends string, TSort 
           >
             <X className="size-3.5" />
             重置
-          </SolidButton>
+          </WebButton>
         ) : null}
       </div>
     </div>

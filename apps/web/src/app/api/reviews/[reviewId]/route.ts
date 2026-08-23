@@ -3,7 +3,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthUserFromRequest } from "@/lib/server/auth"
 import {
   findPublicReview,
+  getBlockedReviewAuthorKeys,
   getPublicReviewMetadata,
+  isReviewAuthorBlocked,
 } from "@/lib/server/public-review-query"
 import { toPublicReviewView } from "@/lib/server/review-view"
 
@@ -20,6 +22,10 @@ export async function GET(
     }
 
     const authUser = await getAuthUserFromRequest(request)
+    const blockedAuthors = await getBlockedReviewAuthorKeys(authUser?.userId)
+    if (isReviewAuthorBlocked(review, blockedAuthors)) {
+      return NextResponse.json({ error: "Review not found" }, { status: 404 })
+    }
     const metadata = await getPublicReviewMetadata(
       [review],
       authUser?.userId

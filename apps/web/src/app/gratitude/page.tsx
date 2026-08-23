@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { Heart, Loader2, Send } from "lucide-react"
-import { SolidCard } from "@/components/ui/solid-card"
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidEmptyState } from "@/components/ui/solid-empty-state"
+import { WebSurface } from "@/components/ui/web-surface"
+import { WebButton } from "@/components/ui/web-button"
+import { WebEmptyState } from "@/components/ui/web-empty-state"
 import { useAuth } from "@/lib/auth-context"
 
 type GratitudeItem = {
@@ -61,7 +61,7 @@ function SendGratitudeForm({ onSent, onClose }: { onSent: () => void; onClose: (
   }
 
   return (
-    <SolidCard variant="elevated" className="p-6">
+    <WebSurface variant="elevated" className="p-6">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-base font-bold text-foreground">写一封感谢信</h2>
         <button onClick={onClose} className="text-xs text-muted-foreground hover:text-foreground">取消</button>
@@ -105,11 +105,11 @@ function SendGratitudeForm({ onSent, onClose }: { onSent: () => void; onClose: (
         {message ? (
           <p className={`text-xs ${message.ok ? "text-primary" : "text-destructive"}`}>{message.text}</p>
         ) : null}
-        <SolidButton type="submit" variant="primary" disabled={submitting} className="w-full">
+        <WebButton type="submit" variant="primary" disabled={submitting} className="w-full">
           {submitting ? <><Loader2 className="size-4 animate-spin" />发送中…</> : <><Send className="size-4" />发送感谢信</>}
-        </SolidButton>
+        </WebButton>
       </form>
-    </SolidCard>
+    </WebSurface>
   )
 }
 
@@ -141,9 +141,9 @@ export default function GratitudePage() {
           <p className="mt-0.5 text-sm text-muted-foreground">匿名模式下只显示段位，不暴露身份。</p>
         </div>
         {user && (
-          <SolidButton size="sm" variant="primary" onClick={() => setShowForm(true)}>
+          <WebButton size="sm" variant="primary" onClick={() => setShowForm(true)}>
             写信
-          </SolidButton>
+          </WebButton>
         )}
       </div>
 
@@ -158,7 +158,7 @@ export default function GratitudePage() {
           {[1, 2, 3].map((i) => <div key={i} className="h-28 animate-pulse rounded-[28px] bg-muted" />)}
         </div>
       ) : items?.length === 0 ? (
-        <SolidEmptyState
+        <WebEmptyState
           title="还没有感谢信"
           description="成为第一个写感谢信的人。"
         />
@@ -172,7 +172,7 @@ export default function GratitudePage() {
             const timeLabel = new Date(item.createdAt).toLocaleDateString("zh-CN")
 
             return (
-              <SolidCard key={item.id} variant="default" className="p-5">
+              <WebSurface key={item.id} variant="default" className="p-5">
                 {/* From + time */}
                 <div className="mb-3 flex items-center justify-between">
                   <span className="text-xs font-medium text-muted-foreground">{fromLabel}</span>
@@ -192,7 +192,7 @@ export default function GratitudePage() {
                     <span className="text-xs">—</span>
                   </div>
                 </div>
-              </SolidCard>
+              </WebSurface>
             )
           })}
         </div>

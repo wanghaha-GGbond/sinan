@@ -5,8 +5,8 @@ import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Compass, Mail, Phone, Shield, Loader2, Ticket } from "lucide-react"
 
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
 import { useAuth } from "@/lib/auth-context"
 import { getSafeNextPath, withNext } from "@/lib/navigation"
 
@@ -137,7 +137,7 @@ export default function RegisterPage() {
 
   return (
     <div className="flex min-h-[80vh] items-center justify-center px-4">
-      <SolidCard variant="elevated" className="w-full max-w-form p-8">
+      <WebSurface variant="elevated" className="w-full max-w-form p-8">
         {/* Brand */}
         <div className="mb-8 flex flex-col items-center gap-3">
           <div className="flex size-14 items-center justify-center rounded-2xl bg-secondary shadow-[0_4px_0_rgba(14,143,95,0.12)]">
@@ -330,7 +330,7 @@ export default function RegisterPage() {
             </p>
           </div>
 
-          <SolidButton
+          <WebButton
             type="submit"
             variant="primary"
             size="lg"
@@ -345,7 +345,7 @@ export default function RegisterPage() {
             ) : (
               "注册"
             )}
-          </SolidButton>
+          </WebButton>
         </form>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
@@ -354,7 +354,7 @@ export default function RegisterPage() {
             登录
           </Link>
         </p>
-      </SolidCard>
+      </WebSurface>
     </div>
   )
 }

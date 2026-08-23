@@ -16,8 +16,8 @@
  */
 import Link from "next/link"
 
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
 import { AuctionList, AuctionBidForm } from "@/components/auction/auction-list"
 
 export const dynamic = "force-dynamic"
@@ -49,7 +49,7 @@ export default function AuctionPage() {
         <AuctionList />
 
         <aside className="lg:sticky lg:top-20 lg:self-start">
-          <SolidCard variant="subtle" className="p-5">
+          <WebSurface variant="subtle" className="p-5">
             <h2 className="text-sm font-bold text-foreground">拍卖怎么玩</h2>
             <ol className="mt-3 space-y-3 text-sm text-muted-foreground">
               <li><span className="font-semibold text-foreground">1. 看专场。</span> 每场 72 小时，嘉宾自选场景，系统给出指导价区间。</li>
@@ -62,11 +62,11 @@ export default function AuctionPage() {
               <p className="mt-1">嘉宾所在公司的评价内容，不因参与拍卖获得任何特殊处理。这是邀请话术里写明的红线。</p>
             </div>
             <div className="mt-4">
-              <SolidButton asChild variant="secondary" size="sm">
+              <WebButton asChild variant="secondary" size="sm">
                 <Link href="/">回到推荐</Link>
-              </SolidButton>
+              </WebButton>
             </div>
-          </SolidCard>
+          </WebSurface>
         </aside>
       </div>
 

@@ -2,8 +2,22 @@ import * as SecureStore from "expo-secure-store"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { Platform } from "react-native"
 
-const API_URL = (process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000").replace(/\/$/, "")
+const API_URL = (
+  process.env.EXPO_PUBLIC_API_URL?.trim() ||
+  (process.env.NODE_ENV === "production" ? "https://sinanapp.cn" : "http://localhost:3000")
+).replace(/\/$/, "")
 const TOKEN_KEY = "sinan.auth.token"
+const FINGERPRINT_KEY = "sinan.reporter.fingerprint"
+
+export class ApiError extends Error {
+  status: number
+
+  constructor(message: string, status: number) {
+    super(message)
+    this.name = "ApiError"
+    this.status = status
+  }
+}
 
 export type SessionUser = {
   id: string
@@ -32,9 +46,22 @@ export type ReviewListItem = {
   companyId: string
   title: string
   content: string | null
+  summary?: string | null
   directionScore: string
   authorLabel: string
   authorRole: string
+  employmentStatus?: string | null
+  jobTitle?: string | null
+  city?: string | null
+  tags?: string[] | null
+  questionnaire?: Record<string, unknown> | null
+  ratingDimensions?: {
+    pay_worth: number
+    growth: number
+    leader: number
+    overtime_truth: number
+    promise_delivery: number
+  } | null
   usefulCount: number
   isUsefulByCurrentUser?: boolean
   discussionCount: number
@@ -96,20 +123,43 @@ async function deleteToken() {
   else await SecureStore.deleteItemAsync(TOKEN_KEY)
 }
 
+async function getFingerprint() {
+  const existing = Platform.OS === "web"
+    ? await AsyncStorage.getItem(FINGERPRINT_KEY)
+    : await SecureStore.getItemAsync(FINGERPRINT_KEY)
+  if (existing) return existing
+  const bytes = new Uint8Array(16)
+  if (globalThis.crypto?.getRandomValues) {
+    globalThis.crypto.getRandomValues(bytes)
+  } else {
+    // This is only a deduplication hint, never an authentication factor. The
+    // server still applies IP limits and stores only a keyed digest.
+    for (let index = 0; index < bytes.length; index += 1) {
+      bytes[index] = Math.floor(Math.random() * 256)
+    }
+  }
+  const fingerprint = `ios-${Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("")}`
+  if (Platform.OS === "web") await AsyncStorage.setItem(FINGERPRINT_KEY, fingerprint)
+  else await SecureStore.setItemAsync(FINGERPRINT_KEY, fingerprint)
+  return fingerprint
+}
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const token = await getToken()
+  const fingerprint = path.includes("/reports") ? await getFingerprint() : null
   const response = await fetch(`${API_URL}${path}`, {
     ...init,
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json",
       "X-Sinan-Client": "ios",
+      ...(fingerprint ? { "X-Sinan-Fingerprint": fingerprint } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...init.headers,
     },
   })
   const data = await response.json().catch(() => ({}))
-  if (!response.ok) throw new Error(data.error ?? `请求失败 (${response.status})`)
+  if (!response.ok) throw new ApiError(data.error ?? `请求失败 (${response.status})`, response.status)
   return data as T
 }
 
@@ -188,6 +238,37 @@ export async function setReviewUseful(reviewId: string, useful: boolean) {
   })
 }
 
+export async function submitReviewReport(input: {
+  reviewId: string
+  reason: string
+  note?: string
+}) {
+  return request<{
+    id: string
+    status: string
+    reason: string
+    createdAt: string
+    alreadyReported?: boolean
+  }>(`/api/reviews/${encodeURIComponent(input.reviewId)}/reports`, {
+    method: "POST",
+    body: JSON.stringify({ reason: input.reason, note: input.note }),
+  })
+}
+
+export async function blockReviewAuthor(reviewId: string) {
+  return request<{ blocked: true; created: boolean; blockId: string | null }>(
+    `/api/reviews/${encodeURIComponent(reviewId)}/block-author`,
+    { method: "POST" },
+  )
+}
+
+export async function unblockReviewAuthor(reviewId: string) {
+  return request<{ blocked: false; removed: boolean }>(
+    `/api/reviews/${encodeURIComponent(reviewId)}/block-author`,
+    { method: "DELETE" },
+  )
+}
+
 export async function getResearchReports() {
   return request<{
     generatedAt: string
@@ -207,6 +288,10 @@ export async function submitReview(input: {
   content: string
   directionScore: number
   jobTitle: string
+  city?: string
+  employmentStatus?: string
+  recommendToJoin?: boolean
+  questionnaire?: Record<string, unknown>
   ratingDimensions: {
     pay_worth: number
     growth: number

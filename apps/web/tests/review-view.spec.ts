@@ -70,3 +70,23 @@ test("limited review returns masked content", () => {
   )
   expect(view.content).toBe("[信息已隐藏]")
 })
+
+test("limited review never falls back to raw content when the mask is missing", () => {
+  const view = toPublicReviewView(
+    reviewRow({ status: "limited_visible", maskedContent: null })
+  )
+  expect(view.content).toBeNull()
+})
+
+test("public questionnaire output drops unknown legacy fields", () => {
+  const view = toPublicReviewView(
+    reviewRow({
+      questionnaire: {
+        salaryScore: 8,
+        hiddenPrivateNote: "do not expose",
+        tags: ["成长快", 42],
+      },
+    })
+  )
+  expect(view.questionnaire).toEqual({ salaryScore: 8, tags: ["成长快"] })
+})

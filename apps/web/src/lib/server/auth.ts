@@ -122,8 +122,9 @@ export async function signToken(user: AuthUser): Promise<string> {
 export async function verifyToken(token: string): Promise<AuthUser | null> {
   try {
     const { payload } = await jwtVerify(token, getSecretKey())
+    if (typeof payload.sub !== "string" || payload.sub.length === 0) return null
     return {
-      userId: payload.sub as string,
+      userId: payload.sub,
       role: (payload.role as string) ?? "user",
     }
   } catch {
@@ -170,11 +171,14 @@ async function validateActiveAuthUser(user: AuthUser | null): Promise<AuthUser |
     const { db } = await import("@/db/client")
     const { users } = await import("@/db/schema/users")
     const [active] = await db
-      .select({ id: users.id })
+      .select({ id: users.id, role: users.role })
       .from(users)
       .where(and(eq(users.id, user.userId), eq(users.status, "active"), isNull(users.deletedAt)))
       .limit(1)
-    return active ? user : null
+    // Roles are intentionally read from the database on every request. A JWT
+    // can remain valid for 30 days, but a role change must take effect
+    // immediately (especially moderator/admin demotions).
+    return active ? { ...user, role: active.role } : null
   } catch {
     return null
   }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { and, eq, inArray, isNull, desc, gte, sql } from "drizzle-orm"
+import { and, eq, inArray, isNull, desc, gte, lt, or, sql } from "drizzle-orm"
+import { z } from "zod"
 import { companies } from "@/db/schema/companies"
 import { reviews } from "@/db/schema/reviews"
 import { toPublicReviewView } from "@/lib/server/review-view"
@@ -8,9 +9,68 @@ import { getOrCreateAnonymousProfile } from "@/lib/server/anonymous-profile"
 import { hasSensitive, hasAttackWord } from "@/lib/content-guard"
 import { departments } from "@/db/schema/departments"
 import { reviewRatingDimensionsSchema } from "@/lib/review-ratings"
-import { getPublicReviewMetadata } from "@/lib/server/public-review-query"
+import { extractPublicDimensionScores } from "@/lib/review-questionnaire"
+import { getRateLimitKey } from "@/lib/server/rate-limit"
+import { checkPersistentRateLimit } from "@/lib/server/persistent-rate-limit"
+import {
+  getBlockedReviewAuthorKeys,
+  getPublicReviewMetadata,
+  isReviewAuthorBlocked,
+} from "@/lib/server/public-review-query"
 
 type SortMode = "latest" | "highest_score" | "most_helpful"
+
+type ReviewCursor = {
+  score: number
+  usefulCount: number
+  createdAt: Date
+  id: string
+}
+
+function encodeReviewCursor(
+  sort: SortMode,
+  row: { directionScore: unknown; usefulCount: number; createdAt: Date; id: string },
+): string {
+  const score = Number(row.directionScore)
+  const payload = sort === "latest"
+    ? `${row.createdAt.getTime()}|${row.id}`
+    : sort === "highest_score"
+      ? `${score}|${row.createdAt.getTime()}|${row.id}`
+      : `${row.usefulCount}|${row.createdAt.getTime()}|${row.id}`
+  return Buffer.from(payload, "utf8").toString("base64url")
+}
+
+function decodeReviewCursor(sort: SortMode, raw: string): ReviewCursor | null {
+  try {
+    const payload = Buffer.from(raw, "base64url").toString("utf8")
+    const parts = payload.split("|")
+    const id = parts.at(-1)
+    if (!id || !/^[0-9a-f-]{36}$/i.test(id)) return null
+
+    if (sort === "latest") {
+      if (parts.length !== 2) return null
+      const timestamp = Number(parts[0])
+      const createdAt = new Date(timestamp)
+      if (!Number.isFinite(timestamp) || Number.isNaN(createdAt.getTime())) return null
+      return { score: 0, usefulCount: 0, createdAt, id }
+    }
+
+    if (parts.length !== 3) return null
+    const primary = Number(parts[0])
+    const timestamp = Number(parts[1])
+    const createdAt = new Date(timestamp)
+    if (
+      !Number.isFinite(primary) ||
+      !Number.isFinite(timestamp) ||
+      Number.isNaN(createdAt.getTime())
+    ) return null
+    return sort === "highest_score"
+      ? { score: primary, usefulCount: 0, createdAt, id }
+      : { score: 0, usefulCount: primary, createdAt, id }
+  } catch {
+    return null
+  }
+}
 
 const VALID_ROLES = [
   "job_seeker",
@@ -32,6 +92,52 @@ const ROLE_LABELS: Record<string, string> = {
   anonymous: "匿名评价者",
 }
 
+const score10 = z.number().finite().min(0).max(10)
+const questionnaireSchema = z.object({
+  tags: z.array(z.string().trim().min(1).max(40)).max(8).optional(),
+  salaryRange: z.string().trim().max(120).nullable().optional(),
+  interviewDifficulty: score10.optional(),
+  interviewExperienceScore: score10.optional(),
+  salaryScore: score10.optional(),
+  growthScore: score10.optional(),
+  workLifeBalanceScore: score10.optional(),
+  managementClarityScore: score10.optional(),
+  collaborationScore: score10.optional(),
+  stabilityScore: score10.optional(),
+  integrityScore: score10.optional(),
+  canteenScore: score10.optional(),
+  officeEnvironmentScore: score10.optional(),
+  restroomScore: score10.optional(),
+  afternoonTeaScore: score10.optional(),
+  workstationComfortScore: score10.optional(),
+  commuteConvenienceScore: score10.optional(),
+  officeEquipmentScore: score10.optional(),
+  overallOfficeExperienceScore: score10.optional(),
+  companyPace: z.enum(["very_fast", "fast", "stable", "very_stable"]).optional(),
+  managementStyle: z.enum(["flexible", "balanced_process", "process_clear", "process_heavy"]).optional(),
+  growthExperience: z.enum(["very_fast", "team_dependent", "average", "limited"]).optional(),
+  collaborationStyle: z.enum(["cross_team", "within_team", "individual", "high_friction"]).optional(),
+  overtimeLevel: z.enum(["very_high", "high", "normal", "low"]).optional(),
+  promiseKeeping: z.enum(["mostly_kept", "partially_kept", "often_changed", "unknown"]).optional(),
+}).strict()
+
+const reviewSubmissionSchema = z.object({
+  companyId: z.string().trim().min(1).max(120),
+  authorRole: z.enum(VALID_ROLES).default("anonymous"),
+  title: z.string().trim().min(2).max(80),
+  content: z.string().trim().min(20).max(3000),
+  directionScore: score10,
+  departmentId: z.string().trim().min(1).max(120).nullable().optional(),
+  recommendToJoin: z.boolean().nullable().optional(),
+  employmentStatus: z.string().trim().max(40).nullable().optional(),
+  jobTitle: z.string().trim().max(120).nullable().optional(),
+  city: z.string().trim().max(120).nullable().optional(),
+  departmentHint: z.string().trim().max(120).nullable().optional(),
+  questionnaire: questionnaireSchema.nullable().optional(),
+  ratingDimensions: reviewRatingDimensionsSchema,
+  officeExperienceScore: score10.nullable().optional(),
+}).strict()
+
 export async function POST(request: NextRequest) {
   const authUser = await getAuthUserFromRequest(request)
   if (!authUser) {
@@ -41,56 +147,85 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  let body: Record<string, unknown>
+  const [userLimit, ipLimit] = await Promise.all([
+    checkPersistentRateLimit(
+      `review-submit:user:${authUser.userId}`,
+      { maxRequests: 5, windowSeconds: 24 * 60 * 60 },
+    ),
+    checkPersistentRateLimit(
+      `review-submit:ip:${getRateLimitKey(request, "/api/reviews")}`,
+      { maxRequests: 20, windowSeconds: 24 * 60 * 60 },
+    ),
+  ])
+  if (!userLimit.allowed || !ipLimit.allowed) {
+    return NextResponse.json(
+      {
+        error: "评价提交过于频繁，请稍后再试",
+        retryAfter: Math.max(
+          userLimit.allowed ? 0 : userLimit.retryAfter,
+          ipLimit.allowed ? 0 : ipLimit.retryAfter,
+        ),
+      },
+      { status: 429 },
+    )
+  }
+
+  const contentLength = Number(request.headers.get("content-length") ?? "")
+  if (Number.isFinite(contentLength) && contentLength > 128 * 1024) {
+    return NextResponse.json({ error: "评价请求过大" }, { status: 413 })
+  }
+
+  let body: unknown
   try {
     body = await request.json()
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
   }
 
-  const companyId = String(body.companyId ?? "").trim()
-  const authorRole = String(body.authorRole ?? "anonymous").trim()
-  const title = String(body.title ?? "").trim()
-  const content = String(body.content ?? "").trim()
-  const directionScore = Number(body.directionScore)
-  const departmentId = body.departmentId ? String(body.departmentId) : null
-  const ratings = reviewRatingDimensionsSchema.safeParse(body.ratingDimensions)
-
-  if (!companyId) {
-    return NextResponse.json({ error: "companyId is required" }, { status: 400 })
-  }
-
-  if (!VALID_ROLES.includes(authorRole as (typeof VALID_ROLES)[number])) {
+  const parsed = reviewSubmissionSchema.safeParse(body)
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: `Invalid authorRole. Must be one of: ${VALID_ROLES.join(", ")}` },
+      { error: parsed.error.issues[0]?.message ?? "评价参数不正确" },
       { status: 400 }
     )
   }
 
-  if (title.length < 2 || title.length > 80) {
-    return NextResponse.json({ error: "Title must be 2–80 characters" }, { status: 400 })
-  }
-
-  if (content.length < 20 || content.length > 3000) {
-    return NextResponse.json({ error: "Content must be 20–3000 characters" }, { status: 400 })
-  }
-
-  if (isNaN(directionScore) || directionScore < 0 || directionScore > 10) {
-    return NextResponse.json({ error: "directionScore must be 0–10" }, { status: 400 })
-  }
-  if (!ratings.success) {
+  const data = parsed.data
+  const derivedRecommendToJoin = data.directionScore >= 7
+  if (
+    data.recommendToJoin != null &&
+    data.recommendToJoin !== derivedRecommendToJoin
+  ) {
     return NextResponse.json(
-      { error: "请完成薪酬、成长、领导、加班和承诺兑现五项评分" },
-      { status: 400 }
+      { error: "recommendToJoin must match directionScore" },
+      { status: 400 },
     )
   }
 
-  if (hasSensitive(title) || hasAttackWord(title)) {
+  if (hasSensitive(data.title) || hasAttackWord(data.title)) {
     return NextResponse.json({ error: "Title contains inappropriate content" }, { status: 400 })
   }
 
-  if (hasSensitive(content) || hasAttackWord(content)) {
+  if (hasSensitive(data.content) || hasAttackWord(data.content)) {
     return NextResponse.json({ error: "Content contains inappropriate information" }, { status: 400 })
+  }
+
+  const publicMetadata = [
+    data.employmentStatus,
+    data.jobTitle,
+    data.city,
+    data.departmentHint,
+  ].filter((value): value is string => Boolean(value))
+  const questionnaireText = data.questionnaire ? JSON.stringify(data.questionnaire) : ""
+  if (
+    publicMetadata.some((value) => hasSensitive(value) || hasAttackWord(value)) ||
+    hasSensitive(questionnaireText) ||
+    hasAttackWord(questionnaireText)
+  ) {
+    return NextResponse.json(
+      { error: "评价附加信息包含不适合公开展示的内容" },
+      { status: 400 },
+    )
   }
 
   try {
@@ -117,7 +252,7 @@ export async function POST(request: NextRequest) {
     const [company] = await db
       .select({ id: companies.id, reviewStatus: companies.reviewStatus })
       .from(companies)
-      .where(and(eq(companies.id, companyId), isNull(companies.deletedAt)))
+      .where(and(eq(companies.id, data.companyId), isNull(companies.deletedAt)))
       .limit(1)
 
     if (!company) {
@@ -131,14 +266,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (departmentId) {
+    if (data.departmentId) {
       const [department] = await db
         .select({ id: departments.id })
         .from(departments)
         .where(
           and(
-            eq(departments.id, departmentId),
-            eq(departments.companyId, companyId),
+            eq(departments.id, data.departmentId),
+            eq(departments.companyId, data.companyId),
             eq(departments.status, "active")
           )
         )
@@ -152,37 +287,37 @@ export async function POST(request: NextRequest) {
     try {
       anonProfile = await getOrCreateAnonymousProfile({
         userId: authUser.userId,
-        scope: { scopeType: "company", scopeId: companyId },
-        role: authorRole,
+        scope: { scopeType: "company", scopeId: data.companyId },
+        role: data.authorRole,
       })
     } catch {
       // Non-fatal: the review remains linked to the private account id while
       // public serializers continue to expose only the anonymous role label.
     }
 
-    const authorLabel = ROLE_LABELS[authorRole] ?? "匿名评价者"
+    const authorLabel = ROLE_LABELS[data.authorRole] ?? "匿名评价者"
 
     const [row] = await db
       .insert(reviews)
       .values({
-        companyId,
-        departmentId,
+        companyId: data.companyId,
+        departmentId: data.departmentId ?? null,
         authorUserId: authUser.userId,
         anonymousProfileId: anonProfile?.id ?? null,
-        authorRole: authorRole as (typeof VALID_ROLES)[number],
+        authorRole: data.authorRole,
         authorLabel,
-        title,
-        content,
-        directionScore: String(directionScore),
-        recommendToJoin: body.recommendToJoin != null ? Boolean(body.recommendToJoin) : undefined,
-        employmentStatus: body.employmentStatus ? String(body.employmentStatus) : undefined,
-        jobTitle: body.jobTitle ? String(body.jobTitle) : undefined,
-        city: body.city ? String(body.city) : undefined,
-        departmentHint: body.departmentHint ? String(body.departmentHint) : undefined,
-        questionnaire: body.questionnaire ?? undefined,
-        ratingDimensions: ratings.data,
-        officeExperienceScore: body.officeExperienceScore != null
-          ? String(body.officeExperienceScore)
+        title: data.title,
+        content: data.content,
+        directionScore: String(data.directionScore),
+        recommendToJoin: derivedRecommendToJoin,
+        employmentStatus: data.employmentStatus ?? undefined,
+        jobTitle: data.jobTitle ?? undefined,
+        city: data.city ?? undefined,
+        departmentHint: data.departmentHint ?? undefined,
+        questionnaire: data.questionnaire ?? undefined,
+        ratingDimensions: data.ratingDimensions,
+        officeExperienceScore: data.officeExperienceScore != null
+          ? String(data.officeExperienceScore)
           : undefined,
         status: "pending_review",
       })
@@ -208,8 +343,6 @@ export async function GET(request: NextRequest) {
   const limit = Math.min(Number(searchParams.get("limit") ?? 20), 50)
   const rawCursor = searchParams.get("cursor") ?? undefined
 
-  const cursor = rawCursor ? decodeURIComponent(rawCursor) : undefined
-
   if (sort !== "latest" && sort !== "highest_score" && sort !== "most_helpful") {
     return NextResponse.json(
       { error: "Invalid sort. Must be one of: latest, highest_score, most_helpful" },
@@ -217,8 +350,13 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  if (limit < 1) {
-    return NextResponse.json({ error: "limit must be at least 1" }, { status: 400 })
+  if (!Number.isFinite(limit) || limit < 1) {
+    return NextResponse.json({ error: "limit must be between 1 and 50" }, { status: 400 })
+  }
+
+  const cursor = rawCursor ? decodeReviewCursor(sort, rawCursor) : null
+  if (rawCursor && !cursor) {
+    return NextResponse.json({ error: "Invalid cursor" }, { status: 400 })
   }
 
   try {
@@ -234,42 +372,81 @@ export async function GET(request: NextRequest) {
       conditions.push(eq(reviews.companyId, companyId))
     }
 
-    // Sort expression
+    // The cursor and order use the same complete tuple for every sort mode.
     const orderBy =
       sort === "highest_score"
-        ? desc(reviews.directionScore)
+        ? [desc(reviews.directionScore), desc(reviews.createdAt), desc(reviews.id)]
         : sort === "most_helpful"
-          ? desc(reviews.usefulCount)
-          : desc(reviews.createdAt)
+          ? [desc(reviews.usefulCount), desc(reviews.createdAt), desc(reviews.id)]
+          : [desc(reviews.createdAt), desc(reviews.id)]
 
-    // Cursor condition: only used when cursor is provided
-    // We order by (createdAt DESC, id DESC) so cursor provides the id of the last seen row
-    const fetchConditions = cursor
-      ? and(...conditions, sql`(${reviews.createdAt}, ${reviews.id}) < (SELECT created_at, id FROM reviews WHERE id = ${cursor})`)
-      : and(...conditions)
+    if (cursor) {
+      if (sort === "latest") {
+        conditions.push(
+          or(
+            lt(reviews.createdAt, cursor.createdAt),
+            and(
+              eq(reviews.createdAt, cursor.createdAt),
+              lt(reviews.id, cursor.id),
+            ),
+          )!,
+        )
+      } else if (sort === "highest_score") {
+        conditions.push(
+          or(
+            lt(reviews.directionScore, String(cursor.score)),
+            and(
+              eq(reviews.directionScore, String(cursor.score)),
+              lt(reviews.createdAt, cursor.createdAt),
+            ),
+            and(
+              eq(reviews.directionScore, String(cursor.score)),
+              eq(reviews.createdAt, cursor.createdAt),
+              lt(reviews.id, cursor.id),
+            ),
+          )!,
+        )
+      } else {
+        conditions.push(
+          or(
+            lt(reviews.usefulCount, cursor.usefulCount),
+            and(
+              eq(reviews.usefulCount, cursor.usefulCount),
+              lt(reviews.createdAt, cursor.createdAt),
+            ),
+            and(
+              eq(reviews.usefulCount, cursor.usefulCount),
+              eq(reviews.createdAt, cursor.createdAt),
+              lt(reviews.id, cursor.id),
+            ),
+          )!,
+        )
+      }
+    }
 
     // Fetch limit + 1 to determine hasMore
     const rows = await db
       .select()
       .from(reviews)
-      .where(fetchConditions)
-      .orderBy(orderBy, desc(reviews.id))
+      .where(and(...conditions))
+      .orderBy(...orderBy)
       .limit(limit + 1)
 
     const hasMore = rows.length > limit
     const resultRows = hasMore ? rows.slice(0, limit) : rows
 
-    const nextCursor = hasMore && resultRows.length > 0 ? resultRows[resultRows.length - 1]!.id : null
+    const nextCursor = hasMore && resultRows.length > 0
+      ? encodeReviewCursor(sort, resultRows[resultRows.length - 1]!)
+      : null
 
     const authUser = await getAuthUserFromRequest(request)
-    const metadata = await getPublicReviewMetadata(resultRows, authUser?.userId)
-    const reviewsList = resultRows.map((row) => {
+    const blockedAuthors = await getBlockedReviewAuthorKeys(authUser?.userId)
+    const visibleRows = resultRows.filter((row) => !isReviewAuthorBlocked(row, blockedAuthors))
+    const metadata = await getPublicReviewMetadata(visibleRows, authUser?.userId)
+    const reviewsList = visibleRows.map((row) => {
       const view = toPublicReviewView(row, metadata.get(row.id))
       // Extract tags from questionnaire if present
-      const tags: string[] | null =
-        row.questionnaire && typeof row.questionnaire === "object" && !Array.isArray(row.questionnaire)
-          ? ((row.questionnaire as Record<string, unknown>).tags as string[] | undefined) ?? null
-          : null
+      const tags: string[] | null = view.tags.length > 0 ? view.tags : null
 
       return {
         id: view.id,
@@ -287,6 +464,7 @@ export async function GET(request: NextRequest) {
         usefulCount: view.usefulCount,
         isUsefulByCurrentUser: view.isUsefulByCurrentUser,
         discussionCount: view.discussionCount,
+        dimensionScores: extractPublicDimensionScores(row.questionnaire),
         publicAuthor: view.publicAuthor,
         status: view.status,
         createdAt: view.createdAt,

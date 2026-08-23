@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react"
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from "react-native"
+import { Alert, View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from "react-native"
 import { CheckCircle2, Flag, X } from "lucide-react-native"
 
 import { COLORS, RADIUS } from "../theme"
+import { ApiError, submitReviewReport } from "../lib/api"
 import {
   REPORT_REASONS,
   getReportForReviewAsync,
@@ -10,13 +11,22 @@ import {
   type ReportReasonId,
 } from "../lib/storage"
 
-export function MobileReportButton({ reviewId }: { reviewId: string }) {
+export function MobileReportButton({
+  reviewId,
+  mode = "local",
+  onAuthRequired,
+}: {
+  reviewId: string
+  mode?: "local" | "remote"
+  onAuthRequired?: () => void
+}) {
   const [open, setOpen] = useState(false)
   const [reason, setReason] = useState<ReportReasonId | "">("")
   const [note, setNote] = useState("")
   const [submittedReason, setSubmittedReason] = useState<ReportReasonId | null>(null)
 
   useEffect(() => {
+    if (mode === "remote") return
     let cancelled = false
     getReportForReviewAsync(reviewId).then((existing) => {
       if (!cancelled && existing) setSubmittedReason(existing.reason)
@@ -24,7 +34,7 @@ export function MobileReportButton({ reviewId }: { reviewId: string }) {
     return () => {
       cancelled = true
     }
-  }, [reviewId])
+  }, [mode, reviewId])
 
   if (submittedReason && !open) {
     const label = REPORT_REASONS.find((r) => r.id === submittedReason)?.label ?? "已举报"
@@ -57,11 +67,25 @@ export function MobileReportButton({ reviewId }: { reviewId: string }) {
 
   async function handleSubmit() {
     if (!reason) return
-    await submitReportAsync({ reviewId, reason: reason as ReportReasonId, note })
-    setSubmittedReason(reason as ReportReasonId)
-    setOpen(false)
-    setReason("")
-    setNote("")
+    try {
+      if (mode === "remote") {
+        await submitReviewReport({ reviewId, reason, note })
+      } else {
+        await submitReportAsync({ reviewId, reason: reason as ReportReasonId, note })
+      }
+      setSubmittedReason(reason as ReportReasonId)
+      setOpen(false)
+      setReason("")
+      setNote("")
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        onAuthRequired?.()
+        setOpen(false)
+        return
+      }
+      Alert.alert("举报未提交", "当前网络或服务不可用，请稍后重试。")
+      setOpen(false)
+    }
   }
 
   return (
@@ -130,6 +154,7 @@ export function MobileReportButton({ reviewId }: { reviewId: string }) {
 
 const S = StyleSheet.create({
   trigger: {
+    minHeight: 44,
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
@@ -140,6 +165,7 @@ const S = StyleSheet.create({
   },
   triggerText: { fontSize: 12, fontWeight: "800", color: COLORS.riskForeground },
   submitted: {
+    minHeight: 44,
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
@@ -190,12 +216,14 @@ const S = StyleSheet.create({
   },
   formActions: { flexDirection: "row", justifyContent: "flex-end", gap: 8 },
   btnGhost: {
+    minHeight: 44,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: RADIUS.md,
   },
   btnGhostText: { fontSize: 13, fontWeight: "700", color: COLORS.muted },
   btnPrimary: {
+    minHeight: 44,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: RADIUS.md,

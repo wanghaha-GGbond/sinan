@@ -3,8 +3,8 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2, Heart, Trophy } from "lucide-react"
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
 import { formatPrice } from "@/lib/server/auction-view"
 
 // ---------------------------------------------------------------------------
@@ -41,7 +41,7 @@ export function SettleDefaultButton({ auctionId }: { auctionId: string }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <SolidButton
+      <WebButton
         type="button"
         variant="primary"
         size="sm"
@@ -50,7 +50,7 @@ export function SettleDefaultButton({ auctionId }: { auctionId: string }) {
       >
         {busy ? <Loader2 className="size-4 animate-spin" /> : <Trophy className="size-4" />}
         默认最高价成交
-      </SolidButton>
+      </WebButton>
       {feedback ? (
         <p className={`text-xs ${feedback.ok ? "text-primary" : "text-destructive"}`}>
           {feedback.message}
@@ -97,7 +97,7 @@ export function HeartPickButton({
   }
 
   return (
-    <SolidButton
+    <WebButton
       type="button"
       variant="secondary"
       size="sm"
@@ -114,7 +114,7 @@ export function HeartPickButton({
           心动
         </>
       )}
-    </SolidButton>
+    </WebButton>
   )
 }
 
@@ -153,7 +153,7 @@ export function WithdrawBidButton({
   }
 
   return (
-    <SolidButton
+    <WebButton
       type="button"
       variant="secondary"
       size="sm"
@@ -161,7 +161,7 @@ export function WithdrawBidButton({
       disabled={busy || done}
     >
       {done ? "已撤回" : busy ? <Loader2 className="size-4 animate-spin" /> : "撤回出价"}
-    </SolidButton>
+    </WebButton>
   )
 }
 
@@ -188,7 +188,7 @@ export function ClosedManageClient({
 }) {
   return (
     <>
-      <SolidCard variant="elevated" className="p-6">
+      <WebSurface variant="elevated" className="p-6">
         <h2 className="text-base font-semibold">选标</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           截拍后 72 小时内行使心动权，或选择默认最高价成交。
@@ -196,9 +196,9 @@ export function ClosedManageClient({
         <div className="mt-4">
           <SettleDefaultButton auctionId={auctionId} />
         </div>
-      </SolidCard>
+      </WebSurface>
 
-      <SolidCard variant="subtle" className="p-6">
+      <WebSurface variant="subtle" className="p-6">
         <h3 className="text-base font-semibold">
           候选出价（共 {bids.length} 条）
         </h3>
@@ -233,7 +233,7 @@ export function ClosedManageClient({
             </li>
           ) : null}
         </ul>
-      </SolidCard>
+      </WebSurface>
     </>
   )
 }

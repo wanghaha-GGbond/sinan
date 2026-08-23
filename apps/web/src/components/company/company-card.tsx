@@ -3,8 +3,8 @@ import { ArrowRight, MapPin } from "lucide-react"
 
 import { MetricPill } from "@/components/ui/metric-pill"
 import { ScoreChip } from "@/components/ui/score-chip"
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
 import { TagPill } from "@/components/ui/tag-pill"
 import type { CompanyListItem } from "@/lib/api/types"
 import type { Company } from "@/lib/types"
@@ -16,7 +16,7 @@ export function CompanyCard({ company }: { company: CompanyCardCompany }) {
   const salaryRange = (company as CompanyListItem).salaryRange ?? (company as Company).salaryRange
 
   return (
-    <SolidCard variant="subtle" className="p-4">
+    <WebSurface tone="base" className="p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="truncate text-lg font-semibold text-foreground">{displayName}</h3>
@@ -55,19 +55,21 @@ export function CompanyCard({ company }: { company: CompanyCardCompany }) {
       </div>
 
       <p className="mt-3 text-sm text-muted-foreground">{(company.reviewCount ?? 0).toLocaleString()} 条真实体验</p>
-      {"vibeTag" in company && company.vibeTag ? (
+      {"cbti" in company && company.cbti ? (
+        <p className="mt-2 text-xs text-muted-foreground">公司 MBTI：{company.cbti.title}</p>
+      ) : "vibeTag" in company && company.vibeTag ? (
         <p className="mt-2 text-xs text-muted-foreground">
           公司体感：{company.vibeTag.name}
         </p>
       ) : null}
       <div className="mt-3">
-        <SolidButton asChild variant="primary" size="sm">
+        <WebButton asChild variant="primary" size="sm">
           <Link href={`/company/${company.id}`} className="inline-flex items-center gap-1">
             看这家公司
             <ArrowRight className="size-4" />
           </Link>
-        </SolidButton>
+        </WebButton>
       </div>
-    </SolidCard>
+    </WebSurface>
   )
 }

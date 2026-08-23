@@ -1,5 +1,5 @@
-// 司南色彩系统 — 完全对齐 apps/web 的 Solid C 端风格
-// Web 端参考: apps/web/src/app/globals.css
+// 司南原生 App 色彩系统 — 保留 Solid 立体触感。
+// Web 端使用独立的扁平/轻玻璃视觉系统，不在此处复用。
 
 export const COLORS = {
   // 品牌色
@@ -42,7 +42,7 @@ export const COLORS = {
   primaryLight: "#E4F9EF",
 } as const
 
-// 对齐 Web: rounded-2xl(16px) card, rounded-[18px] button, rounded-3xl(24px) hero
+// Native App surface radii: cards are tactile, buttons remain easy to hit.
 export const RADIUS = {
   sm: 8,
   md: 12,
@@ -62,7 +62,7 @@ export const PRODUCT = {
   newcomerName: "后来者",
 } as const
 
-// 3D 按钮阴影 (iOS 用 elevation + shadowColor 模拟)
+// Solid App 立体按钮阴影 (iOS 用 elevation + shadowColor 模拟)
 export const SHADOWS = {
   buttonPrimary: {
     shadowColor: "#0E8F5F",

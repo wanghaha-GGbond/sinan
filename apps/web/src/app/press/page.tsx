@@ -20,8 +20,8 @@ import { Suspense } from "react"
 
 import Link from "next/link"
 
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
 import { TagPill } from "@/components/ui/tag-pill"
 import { PressShareCardGenerator } from "@/components/press/press-share-card-generator"
 import { PressInviteLinkGenerator } from "@/components/press/press-invite-link-generator"
@@ -67,7 +67,7 @@ export default function PressPage() {
       <PressMediaKit />
 
       {/* Contact */}
-      <SolidCard variant="subtle" className="p-5">
+      <WebSurface variant="subtle" className="p-5">
         <h2 className="text-base font-semibold text-foreground">编辑联系</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           司南的对外口径 / 数据引用 / 拍摄 / 联合活动,请通过
@@ -85,11 +85,11 @@ export default function PressPage() {
           列出来,比记者帮你查更高效)。
         </p>
         <div className="mt-4">
-          <SolidButton asChild variant="secondary" size="sm">
+          <WebButton asChild variant="secondary" size="sm">
             <Link href="/">回到推荐</Link>
-          </SolidButton>
+          </WebButton>
         </div>
-      </SolidCard>
+      </WebSurface>
     </section>
   )
 }

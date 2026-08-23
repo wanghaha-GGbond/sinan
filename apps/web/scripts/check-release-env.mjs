@@ -5,7 +5,6 @@ const required = [
   "MAIL_FROM_DOMAIN",
   "APP_RELEASE",
   "NEXT_PUBLIC_APP_URL",
-  "NEXT_PUBLIC_ICP_FILING_NUMBER",
   "SUPPORT_EMAIL",
 ]
 
@@ -52,6 +51,9 @@ if (process.env.LAUNCH_SCOPE_ONLY !== "true") {
 }
 if (process.env.NEXT_PUBLIC_APP_ENV !== "production" && process.env.NEXT_PUBLIC_APP_ENV !== "staging") {
   errors.push("NEXT_PUBLIC_APP_ENV must be staging or production")
+}
+if (process.env.NEXT_PUBLIC_APP_ENV === "production" && !process.env.NEXT_PUBLIC_ICP_FILING_NUMBER?.trim()) {
+  errors.push("NEXT_PUBLIC_ICP_FILING_NUMBER is required in production")
 }
 if (process.env.AUTH_SECRET && process.env.AUTH_SECRET.length < 32) {
   errors.push("AUTH_SECRET must contain at least 32 characters")

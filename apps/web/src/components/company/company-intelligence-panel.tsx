@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { BadgeCheck, BriefcaseBusiness, Gift, ReceiptText, Sparkles, UsersRound } from "lucide-react"
 
-import { SolidButton } from "@/components/ui/solid-button"
+import { WebButton } from "@/components/ui/web-button"
 import { TagPill } from "@/components/ui/tag-pill"
 import { getCompanySnapshot } from "@/lib/glassdoor-insights"
 import type { Company } from "@/lib/types"
@@ -56,9 +56,9 @@ export function CompanyIntelligencePanel({ company }: { company: Company }) {
             方向分保留匿名保护，把薪资、岗位体感、办公体验、认证状态和同行讨论集中到一个决策面板。
           </p>
         </div>
-        <SolidButton asChild variant="primary" size="sm">
+        <WebButton asChild variant="primary" size="sm">
           <Link href="/submit/review">补一条你的</Link>
-        </SolidButton>
+        </WebButton>
       </div>
 
       <div className="mt-5 grid gap-px overflow-hidden rounded-2xl border border-border bg-border md:grid-cols-5">

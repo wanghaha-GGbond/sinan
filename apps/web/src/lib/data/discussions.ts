@@ -134,7 +134,7 @@ export async function submitReviewDiscussionData(
         message: data.message ?? "内容已提交",
       }
     } catch {
-      // Fall through to mock fallback
+      return { ok: false, error: "网络连接失败，内容尚未提交，请重试" }
     }
   }
 
@@ -202,7 +202,7 @@ export async function toggleReviewDiscussionUsefulData(
         isUsefulByCurrentUser: data.isUsefulByCurrentUser as boolean,
       }
     } catch {
-      // Fall through to mock fallback
+      return { ok: false, error: "网络连接失败，请稍后重试" }
     }
   }
 
@@ -261,7 +261,7 @@ export async function deleteReviewDiscussionData(
 
       return { ok: true, discussion: data.discussion }
     } catch {
-      // Fall through to mock fallback
+      return { ok: false, error: "网络连接失败，请稍后重试" }
     }
   }
 

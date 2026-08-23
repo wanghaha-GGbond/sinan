@@ -10,8 +10,8 @@ import {
   type QuestionnaireSession,
   type QuestionnaireSessionAnswer,
 } from "@/lib/questionnaire/question-bank"
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
 
 export function FullscreenQuestionnaire({
   open,
@@ -77,10 +77,10 @@ export function FullscreenQuestionnaire({
     <div className="fixed inset-0 z-fullscreen bg-background" data-testid="fullscreen-questionnaire">
       <div className="mx-auto flex h-full w-full max-w-3xl flex-col px-4 py-4 sm:px-6">
         <div className="mb-4 flex items-center justify-between gap-3">
-          <SolidButton variant="ghost" size="sm" onClick={onClose}>
+          <WebButton variant="ghost" size="sm" onClick={onClose}>
             <X className="size-4" />
             关闭
-          </SolidButton>
+          </WebButton>
           <p className="text-sm text-muted-foreground" data-testid="questionnaire-status-pill">
             {Math.min(currentIndex + 1, total)} / {total}
           </p>
@@ -95,7 +95,7 @@ export function FullscreenQuestionnaire({
         </div>
 
         {done ? (
-          <SolidCard variant="emerald" className="my-auto p-8 text-center" data-testid="questionnaire-complete-card">
+          <WebSurface variant="emerald" className="my-auto p-8 text-center" data-testid="questionnaire-complete-card">
             <h2 className="text-2xl font-semibold text-secondary-foreground">办公体验已记录</h2>
             <p className="mt-2 text-sm text-secondary-foreground">你补充的结构化信息，会帮助后来者更快判断这家公司。</p>
             <p className="mt-4 flex flex-wrap gap-x-2.5 gap-y-1 text-lg font-semibold text-primary-deep">
@@ -103,11 +103,11 @@ export function FullscreenQuestionnaire({
               <span>办公体验贡献 +1</span>
             </p>
             <div className="mt-6 flex items-center justify-center gap-3">
-              <SolidButton variant="secondary" data-testid="questionnaire-complete-return-button" onClick={onClose}>
+              <WebButton variant="secondary" data-testid="questionnaire-complete-return-button" onClick={onClose}>
                 回到评价
-              </SolidButton>
+              </WebButton>
             </div>
-          </SolidCard>
+          </WebSurface>
         ) : currentQuestion ? (
           <motion.div
             key={currentQuestion.id}
@@ -116,7 +116,7 @@ export function FullscreenQuestionnaire({
             transition={{ duration: 0.22 }}
             className="my-auto"
           >
-            <SolidCard variant="default" className="p-6 sm:p-8" data-testid="question-card">
+            <WebSurface variant="default" className="p-6 sm:p-8" data-testid="question-card">
               <p className="text-sm text-muted-foreground">补充办公体验问卷</p>
               <h2 className="mt-2 text-xl font-semibold text-foreground sm:text-2xl">{currentQuestion.title}</h2>
               {currentQuestion.description ? (
@@ -126,7 +126,7 @@ export function FullscreenQuestionnaire({
                 {currentQuestion.type === "score_1_10" ? (
                   <div className="grid grid-cols-5 gap-2 sm:grid-cols-10">
                     {scoreOptions.map((value) => (
-                      <SolidButton
+                      <WebButton
                         key={value}
                         data-testid="questionnaire-option-button"
                         variant="secondary"
@@ -135,13 +135,13 @@ export function FullscreenQuestionnaire({
                         onClick={() => commitAnswer(value, "已记录，这是一条很有用的信号。")}
                       >
                         {value}
-                      </SolidButton>
+                      </WebButton>
                     ))}
                   </div>
                 ) : (
                   <div className="grid gap-2">
                     {currentQuestion.options?.map((option) => (
-                      <SolidButton
+                      <WebButton
                         key={String(option.value)}
                         data-testid="questionnaire-option-button"
                         variant="secondary"
@@ -149,7 +149,7 @@ export function FullscreenQuestionnaire({
                         onClick={() => commitAnswer(option.value, option.feedback)}
                       >
                         {option.label}
-                      </SolidButton>
+                      </WebButton>
                     ))}
                   </div>
                 )}
@@ -157,11 +157,11 @@ export function FullscreenQuestionnaire({
               {feedback ? <p className="mt-4 text-sm font-medium text-primary-deep">{feedback}</p> : null}
               <div className="mt-6 flex items-center justify-between">
                 <p className="text-xs text-muted-foreground">回答会自动保存，可随时退出。</p>
-                <SolidButton variant="ghost" size="sm" data-testid="skip-question-button" onClick={skipQuestion}>
+                <WebButton variant="ghost" size="sm" data-testid="skip-question-button" onClick={skipQuestion}>
                   跳过本题
-                </SolidButton>
+                </WebButton>
               </div>
-            </SolidCard>
+            </WebSurface>
           </motion.div>
         ) : null}
       </div>
