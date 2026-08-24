@@ -72,3 +72,9 @@ jobs:
           printf '%s' "$ready_response" | jq '{status, configuration, database}'
           printf '%s' "$ready_response" | jq -e \
             '.status == "ready" and .configuration == "valid" and .database == "reachable"'
+
+      - name: Point stable internal-test URL to verified Preview
+        run: |
+          npx --yes vercel@latest alias set \
+            "${{ steps.deploy.outputs.url }}" \
+            sinan-staging.vercel.app
