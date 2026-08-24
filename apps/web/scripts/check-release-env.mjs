@@ -26,8 +26,16 @@ if (process.env.NEXT_PUBLIC_APP_ENV === "production" && process.env.DATABASE_ADA
 if (process.env.DATABASE_DRIVER) {
   errors.push("DATABASE_DRIVER is deprecated; use DATABASE_ADAPTER")
 }
-if (!new Set(["aliyun-direct-mail", "resend"]).has(process.env.MAIL_PROVIDER)) {
-  errors.push("MAIL_PROVIDER must be aliyun-direct-mail or resend")
+const allowedMailProviders =
+  process.env.NEXT_PUBLIC_APP_ENV === "staging"
+    ? new Set(["aliyun-direct-mail", "resend", "disabled"])
+    : new Set(["aliyun-direct-mail", "resend"])
+if (!allowedMailProviders.has(process.env.MAIL_PROVIDER)) {
+  errors.push(
+    process.env.NEXT_PUBLIC_APP_ENV === "staging"
+      ? "MAIL_PROVIDER must be aliyun-direct-mail, resend, or disabled in staging"
+      : "MAIL_PROVIDER must be aliyun-direct-mail or resend"
+  )
 }
 if (process.env.MAIL_PROVIDER === "aliyun-direct-mail") {
   for (const name of ["ALIYUN_DM_ACCOUNT_NAME", "ALIYUN_DM_REGION"]) {

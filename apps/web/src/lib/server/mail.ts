@@ -89,6 +89,11 @@ export async function sendMail(msg: MailMessage): Promise<void> {
     await sendViaResend(msg)
     return
   }
+  if (provider === "disabled" && process.env.NEXT_PUBLIC_APP_ENV === "staging") {
+    // Internal staging can exercise all non-email flows without storing a
+    // provider credential. Never log the recipient, verification code, or body.
+    throw new Error("Mail delivery is disabled in staging")
+  }
 
   throw new Error(`Unknown MAIL_PROVIDER: ${provider}`)
 }

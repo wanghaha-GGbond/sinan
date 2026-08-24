@@ -40,11 +40,16 @@ NEXT_PUBLIC_APP_URL=https://<stable-staging-url>
 NEXT_PUBLIC_ICP_FILING_NUMBER=<real filing number when required>
 SUPPORT_EMAIL=<staging support mailbox>
 
-MAIL_PROVIDER=resend
-RESEND_API_KEY=<staging-only key>
+# 仅测试非邮件流程时可使用 disabled；测试企业邮箱验证码前改为 resend
+MAIL_PROVIDER=disabled
+# RESEND_API_KEY=<staging-only key>
 MAIL_FROM_DOMAIN=<verified sender domain>
 ERROR_REPORTING_MODE=stdout
 ```
+
+`MAIL_PROVIDER=disabled` 仅允许用于 `staging`。此时注册、登录、公司、评价等
+非邮件流程可测试，企业邮箱验证码接口会安全返回不可用，且不会把邮箱或验证码
+写入日志。Production 仍强制要求 Resend 或阿里云邮件推送。
 
 如果使用阿里云 DirectMail，可以把邮件变量替换为 `ALIYUN_DM_ACCOUNT_NAME` 和 `ALIYUN_DM_REGION`。不要把任何 token、数据库连接串或密钥提交到 Git。
 

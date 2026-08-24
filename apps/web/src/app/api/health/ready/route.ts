@@ -16,6 +16,12 @@ const requiredRuntimeVariables = [
 ] as const
 
 function hasValidMailConfiguration() {
+  if (
+    process.env.NEXT_PUBLIC_APP_ENV === "staging" &&
+    process.env.MAIL_PROVIDER === "disabled"
+  ) {
+    return true
+  }
   if (process.env.MAIL_PROVIDER === "aliyun-direct-mail") {
     return Boolean(
       process.env.ALIYUN_DM_ACCOUNT_NAME?.trim() &&
