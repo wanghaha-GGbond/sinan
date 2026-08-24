@@ -59,3 +59,26 @@ jobs:
             "${{ steps.deploy.outputs.url }}" \
             --token "$VERCEL_TOKEN" \
             --wait
+
+      - name: Verify live and ready health checks
+        run: |
+          live_response=$(npx --yes vercel@latest curl /api/health/live \
+            --deployment "${{ steps.deploy.outputs.url }}" \
+            --token "$VERCEL_TOKEN" \
+            -- \
+            --fail \
+            --silent \
+            --show-error \
+            --max-time 30)
+          printf '%s' "$live_response" | jq -e '.status == "ok"'
+
+          ready_response=$(npx --yes vercel@latest curl /api/health/ready \
+            --deployment "${{ steps.deploy.outputs.url }}" \
+            --token "$VERCEL_TOKEN" \
+            -- \
+            --fail \
+            --silent \
+            --show-error \
+            --max-time 30)
+          printf '%s' "$ready_response" | jq -e \
+            '.status == "ready" and .configuration == "valid" and .database == "reachable"'
