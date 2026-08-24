@@ -64,9 +64,11 @@ jobs:
         run: |
           live_response=$(timeout 45s npx --yes vercel@latest curl /api/health/live \
             --deployment "${{ steps.deploy.outputs.url }}")
+          printf '%s' "$live_response" | jq '{status, service}'
           printf '%s' "$live_response" | jq -e '.status == "ok"'
 
           ready_response=$(timeout 45s npx --yes vercel@latest curl /api/health/ready \
             --deployment "${{ steps.deploy.outputs.url }}")
+          printf '%s' "$ready_response" | jq '{status, configuration, database}'
           printf '%s' "$ready_response" | jq -e \
             '.status == "ready" and .configuration == "valid" and .database == "reachable"'
