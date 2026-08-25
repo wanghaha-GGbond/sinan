@@ -9,8 +9,9 @@ import { WebNav, type WebNavLink } from "@/components/ui/web-nav"
 import { useAuth } from "@/lib/auth-context"
 
 const primaryLinks = [
-  { href: "/search", label: "找公司" },
+  { href: "/companies", label: "公司" },
   { href: "/research", label: "研究" },
+  { href: "/pulse", label: "Pulse" },
   { href: "/submit/review", label: "写评价" },
   { href: "/me", label: "我的" },
 ]
@@ -19,7 +20,9 @@ function linksFor(pathname: string): WebNavLink[] {
   return primaryLinks.map((link) => ({
     ...link,
     active:
-      link.href === "/me"
+      link.href === "/companies"
+        ? pathname.startsWith("/companies") || pathname.startsWith("/company/") || pathname.startsWith("/search")
+        : link.href === "/me"
         ? pathname.startsWith("/me") || pathname.startsWith("/settings")
         : link.href === "/submit/review"
           ? pathname.startsWith("/submit")
