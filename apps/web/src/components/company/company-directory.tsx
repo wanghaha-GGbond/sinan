@@ -45,9 +45,9 @@ export function CompanyDirectory() {
           .some((value) => String(value).toLowerCase().includes(keyword))
       })
       .sort((a, b) => {
-        if (sort === "score") return b.directionScore - a.directionScore
-        if (sort === "recommendation") return b.recommendationRate - a.recommendationRate
-        return b.reviewCount - a.reviewCount
+        if (sort === "score") return (b.directionScore ?? 0) - (a.directionScore ?? 0)
+        if (sort === "recommendation") return (b.recommendationRate ?? 0) - (a.recommendationRate ?? 0)
+        return (b.reviewCount ?? 0) - (a.reviewCount ?? 0)
       })
   }, [city, companies, query, sort])
 
