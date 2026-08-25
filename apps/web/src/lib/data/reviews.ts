@@ -100,13 +100,13 @@ export type SubmitReviewInput = {
   city?: string
   departmentHint?: string
   departmentId?: string
-  ratingDimensions: {
+  ratingDimensions?: Partial<{
     pay_worth: number
     growth: number
     leader: number
     overtime_truth: number
     promise_delivery: number
-  }
+  }>
   questionnaire?: Record<string, unknown>
   officeExperienceScore?: number
 }

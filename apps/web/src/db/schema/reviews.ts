@@ -17,11 +17,11 @@ import { anonymousProfiles } from "./anonymous-profiles"
 import { departments } from "./departments"
 
 export type ReviewRatingDimensions = {
-  pay_worth: number
-  growth: number
-  leader: number
-  overtime_truth: number
-  promise_delivery: number
+  pay_worth?: number
+  growth?: number
+  leader?: number
+  overtime_truth?: number
+  promise_delivery?: number
 }
 
 export const reviews = pgTable(

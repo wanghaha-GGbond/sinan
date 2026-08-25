@@ -8,18 +8,22 @@ test("首页显示司南品牌和搜索入口，且不出现工友", async ({ pa
   await expect(page.getByText("工友")).toHaveCount(0)
 })
 
-test("首页推荐卡显示公司体感标签并可进入公司页", async ({ page }) => {
+test("首页公司广场显示多家公司并可进入公司页", async ({ page }) => {
   await page.goto("/")
-  await expect(page.getByTestId("recommend-direction-score").first()).toBeVisible()
-  await expect(page.getByTestId("recommend-vibe-tag").first()).toBeVisible()
-  await expect(page.getByText("公司体感：仓鼠笼公司")).toBeVisible()
-  await expect(page.getByTestId("recommend-office-experience").first()).toBeVisible()
-  await expect(page.getByText("C-BTI：")).toHaveCount(0)
-  await expect(page.getByText("适合：")).toHaveCount(0)
-  await expect(page.getByText("慎重：")).toHaveCount(0)
-  await expect(page.getByText("匿名评价者 · L")).toHaveCount(0)
+  await expect(page.getByRole("heading", { name: "先看公司，再决定下一站" })).toBeVisible()
+  await expect(page.getByTestId("recommend-company-card")).toHaveCount(6)
+  await expect(page.getByText("COMPANY PULSE")).toBeVisible()
   await page.getByText("看这家公司").first().click()
   await expect(page).toHaveURL(/\/company\//)
+})
+
+test("Company Pulse 展示周报、每日问题和 30 人隐私阈值", async ({ page }) => {
+  await page.goto("/pulse")
+  await expect(page.getByTestId("pulse-share-card")).toBeVisible()
+  await expect(page.getByText("本周工时")).toBeVisible()
+  await expect(page.getByText("今天工作得怎么样？")).toBeVisible()
+  await expect(page.getByText("42 人匿名样本")).toBeVisible()
+  await expect(page.getByText(/达到 30 人后才生成公司曲线/)).toBeVisible()
 })
 
 test("/search 正常渲染，卡片可进入公司页，且不出现工友", async ({ page }) => {
@@ -150,7 +154,7 @@ async function fillAndSubmitReview(page: Page, opts?: { skipQuestionnaire?: bool
   await expect(page.getByTestId("submit-review-success")).toBeVisible()
 }
 
-test("发布评价支持提交未收录公司注册信息并进入待审核状态", async ({ page }) => {
+test("发布评价支持轻量提交未收录公司并进入待审核状态", async ({ page }) => {
   await page.goto("/submit/review")
   const companyName = "司南自动化测试公司甲"
   await page.getByTestId("company-search-input").fill(companyName)
@@ -159,14 +163,11 @@ test("发布评价支持提交未收录公司注册信息并进入待审核状�
   await expect(page.getByTestId("no-company-result-card")).toBeVisible()
   await page.getByTestId("add-company-button").click()
   await expect(page.getByText("添加未收录公司")).toBeVisible()
-  await expect(page.getByText("统一社会信用代码 *")).toBeVisible()
-  await expect(page.getByText("注册地址 *")).toBeVisible()
-  await expect(page.getByText("法定代表人 *")).toBeVisible()
-  await expect(page.getByText("注册城市 *")).toBeVisible()
+  await expect(page.getByText("统一社会信用代码 *")).toHaveCount(0)
+  await expect(page.getByText("注册地址 *")).toHaveCount(0)
+  await expect(page.getByText("法定代表人 *")).toHaveCount(0)
+  await expect(page.getByText("主要城市 *")).toBeVisible()
   await expect(page.getByText("所属行业 *")).toBeVisible()
-  await page.getByTestId("new-company-credit-code-input").fill("91310000TEST000001")
-  await page.getByTestId("new-company-address-input").fill("上海市浦东新区测试路 1 号")
-  await page.getByTestId("new-company-legal-representative-input").fill("测试代表")
   await page.getByTestId("new-company-city-input").fill("上海")
   await page.getByTestId("new-company-industry-input").fill("AI")
   await page.getByTestId("save-company-and-continue-button").click()
@@ -179,25 +180,19 @@ test("发布评价支持提交未收录公司注册信息并进入待审核状�
   await expect(page.getByText("企业认领")).toHaveCount(0)
 })
 
-test("添加公司模式只展示注册信息流程并校验统一社会信用代码", async ({ page }) => {
+test("添加公司模式只要求公司名称、城市和行业", async ({ page }) => {
   await page.goto("/submit/review?mode=add-company&name=司南测试公司")
   await expect(page.getByText("补充办公体验问卷")).toHaveCount(0)
   await expect(page.getByTestId("submit-review-button")).toHaveCount(0)
   await expect(page.getByTestId("new-company-name-input")).toHaveValue("司南测试公司")
-  await page.getByTestId("new-company-credit-code-input").fill("123")
-  await page.getByTestId("new-company-address-input").fill("上海市浦东新区测试路 2 号")
-  await page.getByTestId("new-company-legal-representative-input").fill("测试代表")
   await page.getByTestId("new-company-city-input").fill("上海")
   await page.getByTestId("new-company-industry-input").fill("AI")
   await page.getByTestId("save-company-and-continue-button").click()
-  await expect(page.getByRole("main").getByText("请输入 18 位统一社会信用代码。")).toBeVisible()
+  await expect(page.getByTestId("company-pending-review-card")).toBeVisible()
 })
 
 test("添加公司会拦截攻击性公司名和敏感内容", async ({ page }) => {
   await page.goto("/submit/review?mode=add-company&name=垃圾公司")
-  await page.getByTestId("new-company-credit-code-input").fill("91310000TEST000002")
-  await page.getByTestId("new-company-address-input").fill("上海市浦东新区测试路 3 号")
-  await page.getByTestId("new-company-legal-representative-input").fill("测试代表")
   await page.getByTestId("new-company-city-input").fill("上海")
   await page.getByTestId("new-company-industry-input").fill("AI")
   await page.getByTestId("save-company-and-continue-button").click()
@@ -211,6 +206,7 @@ test("添加公司时提示疑似重复公司并可选择已有公司", async ({
   await page.getByTestId("similar-company-warning").getByRole("button", { name: "选择这家公司" }).first().click()
   await expect(page).toHaveURL("/submit/review")
   await expect(page.getByTestId("selected-company-pill")).toContainText("北辰智造科技")
+  await page.getByLabel("岗位 *").fill("产品经理")
   await expect(page.getByTestId("company-step-next-button")).toBeEnabled()
 })
 

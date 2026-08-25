@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm, useWatch } from "react-hook-form"
-import { CheckCircle2, Gift, Loader2, ShieldCheck, History, X } from "lucide-react"
+import { Building2, CheckCircle2, Gift, History, Loader2, MapPin, ShieldCheck, X } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import { submitReviewData } from "@/lib/data/reviews"
@@ -11,7 +11,6 @@ import { z } from "zod"
 
 import { FullscreenQuestionnaire } from "@/components/questionnaire/fullscreen-questionnaire"
 import { RatingSlider } from "@/components/rating/rating-slider"
-import { VerifyIdentity } from "@/components/review/verify-identity"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -25,7 +24,7 @@ import { searchCompanies, getCompany } from "@/lib/api/companies"
 import type { Company, CompanyListItem } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
-const relations = ["在职员工", "离职员工", "面试者", "实习生", "外包 / 派遣"] as const
+const relations = ["在职员工", "离职员工"] as const
 const paceValues = ["very_fast", "fast", "stable", "very_stable"] as const
 const managementValues = ["flexible", "balanced_process", "process_clear", "process_heavy"] as const
 const growthValues = ["very_fast", "team_dependent", "average", "limited"] as const
@@ -38,18 +37,19 @@ const reviewSchema = z.object({
   companyName: z.string().min(2, "请填写公司名称"),
   relation: z.enum(relations),
   role: z.string().min(2, "请填写岗位"),
+  baseCity: z.string().min(2, "请填写工作 Base"),
   departmentId: z.string().optional(),
   departmentHint: z.string().max(60, "部门名称不能超过 60 字").optional(),
   title: z.string().min(6, "标题至少 6 个字"),
   content: z.string().min(30, "评价至少 30 个字，避免过短结论"),
   salaryRange: z.string().optional(),
   directionScore: z.number().min(0).max(10),
-  payWorth: z.number().int().min(1).max(5),
-  growthRating: z.number().int().min(1).max(5),
-  leaderRating: z.number().int().min(1).max(5),
-  overtimeTruth: z.number().int().min(1).max(5),
-  promiseDelivery: z.number().int().min(1).max(5),
-  interviewDifficulty: z.number().min(0).max(10),
+  payWorth: z.number().int().min(1).max(5).optional(),
+  growthRating: z.number().int().min(1).max(5).optional(),
+  leaderRating: z.number().int().min(1).max(5).optional(),
+  overtimeTruth: z.number().int().min(1).max(5).optional(),
+  promiseDelivery: z.number().int().min(1).max(5).optional(),
+  interviewDifficulty: z.number().min(0).max(10).optional(),
   salaryScore: z.number().min(1).max(10).optional(),
   growthScore: z.number().min(1).max(10).optional(),
   workLifeBalanceScore: z.number().min(1).max(10).optional(),
@@ -78,9 +78,9 @@ const reviewSchema = z.object({
 type ReviewForm = z.infer<typeof reviewSchema>
 
 const steps = [
-  { title: "选择公司", description: "先选择公司，找不到可以直接新增" },
-  { title: "方向评分", description: "给后来者一个 0-10 的方向判断" },
-  { title: "真实体验", description: "写事实、写风险、先做匿名安全检查" },
+  { title: "确认工作经历", description: "选择公司、岗位、在职状态和工作 Base" },
+  { title: "快速测评", description: "只给一个 0-10 的方向判断" },
+  { title: "补充经历", description: "用一段真实经历解释你的判断" },
 ]
 
 type NewCompanyDraft = {
@@ -260,7 +260,6 @@ export default function SubmitReviewPage() {
   const [searchResults, setSearchResults] = useState<CompanyListItem[]>([])
   const [searchLoading, setSearchLoading] = useState(false)
   const [searchError, setSearchError] = useState<string | null>(null)
-  const [departments, setDepartments] = useState<Array<{ id: string; name: string }>>([])
   const {
     control,
     register,
@@ -272,20 +271,15 @@ export default function SubmitReviewPage() {
     defaultValues: {
       companyId: "",
       companyName: "",
-      relation: "离职员工",
+      relation: "在职员工",
       role: "",
+      baseCity: "",
       departmentId: "",
       departmentHint: "",
       title: "",
       content: "",
       salaryRange: "",
       directionScore: 7,
-      payWorth: 3,
-      growthRating: 3,
-      leaderRating: 3,
-      overtimeTruth: 3,
-      promiseDelivery: 3,
-      interviewDifficulty: 5,
       safetyChecked: false,
     },
   })
@@ -297,23 +291,7 @@ export default function SubmitReviewPage() {
   const onboardingMode = searchParams.get("onboarding") === "1"
   const addCompanyName = searchParams.get("name") ?? ""
   const preselectCompanyId = searchParams.get("companyId") ?? ""
-  const selectedCompanyId = companySelection.selectedCompany?.id
 
-  useEffect(() => {
-    if (!selectedCompanyId) return
-    let active = true
-    fetch(`/api/companies/${selectedCompanyId}/departments`)
-      .then((response) => response.json())
-      .then((result: { departments?: Array<{ id: string; name: string }> }) => {
-        if (active) setDepartments(result.departments ?? [])
-      })
-      .catch(() => {
-        if (active) setDepartments([])
-      })
-    return () => {
-      active = false
-    }
-  }, [selectedCompanyId])
   const allCompanies = useMemo(() => [...searchResults, ...companySelection.addedCompanies], [searchResults, companySelection.addedCompanies])
   const normalizedCompanyQuery = companySelection.query.trim().toLowerCase()
   const matchedCompanies = useMemo(() => {
@@ -355,7 +333,12 @@ export default function SubmitReviewPage() {
   const selectedCompanyReviewable =
     companySelection.selectedCompany?.reviewStatus === "reviewable" ||
     Boolean((companySelection.selectedCompany as Company | null)?.createdByUser)
-  const canContinueCompanyStep = companySelection.selectedCompany !== null && selectedCompanyReviewable
+  const canContinueCompanyStep =
+    companySelection.selectedCompany !== null &&
+    selectedCompanyReviewable &&
+    Boolean(watched.role?.trim()) &&
+    Boolean(watched.baseCity?.trim()) &&
+    Boolean(watched.relation)
 
   // ─── Draft auto-save (SOTA form craft) ──────────────────────────
   // Users in 2026 expect: if I close the tab, the next visit
@@ -500,11 +483,12 @@ export default function SubmitReviewPage() {
       .then((res) => {
         if (res.error || !res.data?.company) return
         dispatchCompanySelection({ type: "SELECT_EXISTING_COMPANY", company: res.data.company })
+        setValue("baseCity", res.data.company.city, { shouldDirty: false })
       })
       .catch(() => {
         // silently ignore
       })
-  }, [preselectCompanyId, addCompanyMode, companySelection.selectedCompany])
+  }, [preselectCompanyId, addCompanyMode, companySelection.selectedCompany, setValue])
 
   function nextStep() {
     if (step === 0) {
@@ -549,16 +533,17 @@ export default function SubmitReviewPage() {
         content: values.content,
         directionScore: values.directionScore,
         recommendToJoin: values.directionScore >= 7,
+        employmentStatus: values.relation,
         jobTitle: values.role,
         departmentId: values.departmentId || undefined,
         departmentHint: values.departmentId ? undefined : values.departmentHint,
-        city: companySelection.selectedCompany.city,
+        city: values.baseCity,
         ratingDimensions: {
-          pay_worth: values.payWorth,
-          growth: values.growthRating,
-          leader: values.leaderRating,
-          overtime_truth: values.overtimeTruth,
-          promise_delivery: values.promiseDelivery,
+          ...(values.payWorth ? { pay_worth: values.payWorth } : {}),
+          ...(values.growthRating ? { growth: values.growthRating } : {}),
+          ...(values.leaderRating ? { leader: values.leaderRating } : {}),
+          ...(values.overtimeTruth ? { overtime_truth: values.overtimeTruth } : {}),
+          ...(values.promiseDelivery ? { promise_delivery: values.promiseDelivery } : {}),
         },
         officeExperienceScore: values.overallOfficeExperienceScore,
         questionnaire: {
@@ -600,6 +585,7 @@ export default function SubmitReviewPage() {
   function selectCompany(company: Company | CompanyListItem) {
     setValue("companyId", company.id, { shouldDirty: true })
     setValue("companyName", company.name, { shouldDirty: true, shouldValidate: true })
+    setValue("baseCity", company.city, { shouldDirty: true, shouldValidate: true })
     dispatchCompanySelection({ type: "SELECT_EXISTING_COMPANY", company })
   }
 
@@ -730,8 +716,12 @@ export default function SubmitReviewPage() {
           </CardContent>
         </Card>
 
-        <div className="mt-6">
-          <VerifyIdentity companyName={companySelection.selectedCompany?.name ?? ""} />
+        <div className="mt-6 flex items-start gap-3 rounded-xl border border-primary-surface-border bg-primary-tint p-4 text-sm text-foreground">
+          <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary-deep" />
+          <div>
+            <p className="font-semibold">无需上传社保、工号或雇佣证明</p>
+            <p className="mt-1 text-muted-foreground">平台通过内容审核和异常行为识别保护样本质量，你的工作信息仅用于匿名聚合。</p>
+          </div>
         </div>
       </section>
     )
@@ -877,12 +867,13 @@ export default function SubmitReviewPage() {
                     {shouldShowNoResult ? <SolidCardNoResult query={companySelection.query} onAdd={openAddCompany} dataTestId="no-company-result-card" /> : null}
                     {companySelection.selectedCompany ? (
                       <div data-testid="selected-company-pill" className="flex flex-wrap items-center gap-x-2.5 gap-y-1 rounded-xl bg-muted p-3 text-sm text-foreground">
+                        <Building2 className="size-4 text-primary" />
                         <span>{companySelection.selectedCompany.name}</span>
                         <span>{companySelection.selectedCompany.city}</span>
                         <span>{companySelection.selectedCompany.industry}</span>
                         {companySelection.selectedCompany.reviewStatus === "pending_review" ? (
                           <span className="text-xs text-muted-foreground">当前状态：待审核</span>
-                        ) : null}
+                        ) : <span className="text-xs font-medium text-primary-deep">已收录，可直接测评</span>}
                       </div>
                     ) : null}
                   </div>
@@ -906,12 +897,27 @@ export default function SubmitReviewPage() {
                     />
                     {errors.role ? <p className="text-sm text-destructive">{errors.role.message}</p> : null}
                   </div> : null}
+                  {!addCompanyMode ? <div className="flex flex-col gap-2">
+                    <Label htmlFor="baseCity" className="inline-flex items-center gap-1.5">
+                      <MapPin className="size-3.5 text-primary" />
+                      工作 Base *
+                    </Label>
+                    <Input
+                      id="baseCity"
+                      data-testid="review-base-input"
+                      placeholder="例如：上海 / 远程"
+                      {...register("baseCity")}
+                      aria-invalid={Boolean(errors.baseCity)}
+                      className="rounded-[18px] border-border/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]"
+                    />
+                    {errors.baseCity ? <p className="text-sm text-destructive">{errors.baseCity.message}</p> : null}
+                  </div> : null}
                   {companySelection.mode === "adding" ? (
                     <Card className="md:col-span-2 solid-card-subtle border border-border/60">
                       <CardHeader>
                         <CardTitle>添加未收录公司</CardTitle>
                         <CardDescription>
-                          请补充公司的基础注册信息。提交后可以直接写评价，公司资料与评价会分别审核。
+                          只需提供能帮助我们识别公司的三项信息，工商资料由平台后续补全。
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="grid gap-3 md:grid-cols-2">
@@ -921,53 +927,14 @@ export default function SubmitReviewPage() {
                           <FieldError message={companySubmissionErrors.companyName} />
                         </label>
                         <label className="grid gap-1 text-sm font-medium text-foreground">
-                          统一社会信用代码 *
-                          <Input data-testid="new-company-credit-code-input" value={companySelection.newCompanyDraft.unifiedSocialCreditCode} onChange={(event) => updateNewCompanyDraft({ unifiedSocialCreditCode: event.target.value })} placeholder="例如：91310000XXXXXXXXXX" className="rounded-[18px] border-border/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
-                          <FieldError message={companySubmissionErrors.unifiedSocialCreditCode} />
-                        </label>
-                        <label className="grid gap-1 text-sm font-medium text-foreground">
-                          注册地址 *
-                          <Input data-testid="new-company-address-input" value={companySelection.newCompanyDraft.registeredAddress} onChange={(event) => updateNewCompanyDraft({ registeredAddress: event.target.value })} placeholder="公司注册登记地址" className="rounded-[18px] border-border/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
-                          <FieldError message={companySubmissionErrors.registeredAddress} />
-                        </label>
-                        <label className="grid gap-1 text-sm font-medium text-foreground">
-                          法定代表人 *
-                          <Input data-testid="new-company-legal-representative-input" value={companySelection.newCompanyDraft.legalRepresentative} onChange={(event) => updateNewCompanyDraft({ legalRepresentative: event.target.value })} placeholder="法定代表人姓名" className="rounded-[18px] border-border/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
-                          <FieldError message={companySubmissionErrors.legalRepresentative} />
-                        </label>
-                        <label className="grid gap-1 text-sm font-medium text-foreground">
-                          注册城市 *
-                          <Input data-testid="new-company-city-input" value={companySelection.newCompanyDraft.city} onChange={(event) => updateNewCompanyDraft({ city: event.target.value })} placeholder="注册城市" className="rounded-[18px] border-border/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
+                          主要城市 *
+                          <Input data-testid="new-company-city-input" value={companySelection.newCompanyDraft.city} onChange={(event) => updateNewCompanyDraft({ city: event.target.value })} placeholder="例如：上海" className="rounded-[18px] border-border/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
                           <FieldError message={companySubmissionErrors.city} />
                         </label>
                         <label className="grid gap-1 text-sm font-medium text-foreground">
                           所属行业 *
                           <Input data-testid="new-company-industry-input" value={companySelection.newCompanyDraft.industry} onChange={(event) => updateNewCompanyDraft({ industry: event.target.value })} placeholder="所属行业" className="rounded-[18px] border-border/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
                           <FieldError message={companySubmissionErrors.industry} />
-                        </label>
-                        <label className="grid gap-1 text-sm font-medium text-foreground">
-                          公司简称
-                          <Input data-testid="new-company-short-name-input" value={companySelection.newCompanyDraft.shortName ?? ""} onChange={(event) => updateNewCompanyDraft({ shortName: event.target.value })} placeholder="可选" className="rounded-[18px] border-border/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
-                        </label>
-                        <label className="grid gap-1 text-sm font-medium text-foreground">
-                          公司规模
-                          <Input data-testid="new-company-size-input" value={companySelection.newCompanyDraft.size ?? ""} onChange={(event) => updateNewCompanyDraft({ size: event.target.value })} placeholder="可选" className="rounded-[18px] border-border/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
-                        </label>
-                        <label className="grid gap-1 text-sm font-medium text-foreground">
-                          融资阶段
-                          <Input data-testid="new-company-financing-input" value={companySelection.newCompanyDraft.financingStage ?? ""} onChange={(event) => updateNewCompanyDraft({ financingStage: event.target.value })} placeholder="可选" className="rounded-[18px] border-border/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
-                        </label>
-                        <label className="grid gap-1 text-sm font-medium text-foreground">
-                          经营状态
-                          <Input data-testid="new-company-business-status-input" value={companySelection.newCompanyDraft.businessStatus ?? ""} onChange={(event) => updateNewCompanyDraft({ businessStatus: event.target.value })} placeholder="可选，例如：存续" className="rounded-[18px] border-border/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
-                        </label>
-                        <label className="grid gap-1 text-sm font-medium text-foreground">
-                          成立时间
-                          <Input data-testid="new-company-founded-date-input" value={companySelection.newCompanyDraft.foundedDate ?? ""} onChange={(event) => updateNewCompanyDraft({ foundedDate: event.target.value })} placeholder="可选，例如：2020-01-01" className="rounded-[18px] border-border/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
-                        </label>
-                        <label className="grid gap-1 text-sm font-medium text-foreground md:col-span-2">
-                          官网
-                          <Input data-testid="new-company-website-input" value={companySelection.newCompanyDraft.website ?? ""} onChange={(event) => updateNewCompanyDraft({ website: event.target.value })} placeholder="可选" className="rounded-[18px] border-border/60 bg-white shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
                         </label>
                         <label className="grid gap-1 text-sm font-medium text-foreground md:col-span-2">
                           备注
@@ -1061,7 +1028,7 @@ export default function SubmitReviewPage() {
                   ) : null}
                   {companySelection.feedback ? <p className="md:col-span-2 text-sm font-medium text-primary-deep">{companySelection.feedback}</p> : null}
                   {!addCompanyMode ? <div className="flex flex-col gap-2 md:col-span-2">
-                    <Label>身份关系 *</Label>
+                    <Label>这段经历属于 *</Label>
                     <Controller
                       control={control}
                       name="relation"
@@ -1075,7 +1042,7 @@ export default function SubmitReviewPage() {
                               size="sm"
                               onClick={() => field.onChange(relation)}
                             >
-                              {relation}
+                              {relation === "在职员工" ? "现公司" : "前公司"}
                             </SolidButton>
                           ))}
                         </div>
@@ -1093,83 +1060,15 @@ export default function SubmitReviewPage() {
                     render={({ field }) => (
                       <RatingSlider
                         label="方向分"
-                        description="结合成长、管理、负荷、薪资兑现与尊重边界给出综合判断。"
+                        description="凭整体经历给出一个直觉分即可，细分项以后可选补充。"
                         value={field.value}
                         onChange={field.onChange}
                       />
                     )}
                   />
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="flex flex-col gap-2">
-                      <Label htmlFor="departmentId">部门</Label>
-                      <select
-                        id="departmentId"
-                        {...register("departmentId")}
-                        className="h-11 w-full border border-input bg-card px-3 text-sm outline-none focus-visible:border-ring"
-                      >
-                        <option value="">找不到 / 暂不公开</option>
-                        {departments.map((department) => (
-                          <option key={department.id} value={department.id}>
-                            {department.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <Label htmlFor="departmentHint">部门申报</Label>
-                      <Input
-                        id="departmentHint"
-                        placeholder="例如：商业化平台"
-                        {...register("departmentHint")}
-                      />
-                    </div>
-                  </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    {([
-                      ["payWorth", "薪酬值得"],
-                      ["growthRating", "成长空间"],
-                      ["leaderRating", "直属领导"],
-                      ["overtimeTruth", "加班真实度"],
-                      ["promiseDelivery", "承诺兑现"],
-                    ] as const).map(([name, label]) => (
-                      <Controller
-                        key={name}
-                        control={control}
-                        name={name}
-                        render={({ field }) => (
-                          <label className="flex flex-col gap-2 text-sm font-medium text-foreground">
-                            {label}
-                            <select
-                              value={field.value}
-                              onChange={(event) => field.onChange(Number(event.target.value))}
-                              className="h-11 border border-input bg-card px-3 text-sm outline-none focus-visible:border-ring"
-                            >
-                              {[1, 2, 3, 4, 5].map((score) => (
-                                <option key={score} value={score}>
-                                  {score} / 5
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-                        )}
-                      />
-                    ))}
-                  </div>
-                  <Controller
-                    control={control}
-                    name="interviewDifficulty"
-                    render={({ field }) => (
-                      <RatingSlider
-                        label="面试难度"
-                        description="0 代表轻松，10 代表高强度或流程复杂。"
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
-                    )}
-                  />
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="salaryRange">薪资区间，可跳过</Label>
-                    <Input id="salaryRange" placeholder="例如：25k-35k x 14" {...register("salaryRange")} />
+                  <div className="flex items-start gap-3 rounded-xl bg-muted p-4 text-sm text-muted-foreground">
+                    <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" />
+                    <p>这一页只有一个必答题。薪资、管理、加班等细分维度改为评价完成后的可选补充。</p>
                   </div>
                 </>
               ) : null}
