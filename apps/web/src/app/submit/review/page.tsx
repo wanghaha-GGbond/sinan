@@ -11,7 +11,6 @@ import { z } from "zod"
 
 import { FullscreenQuestionnaire } from "@/components/questionnaire/fullscreen-questionnaire"
 import { RatingSlider } from "@/components/rating/rating-slider"
-import { VerifyIdentity } from "@/components/review/verify-identity"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -762,8 +761,14 @@ function SubmitReviewForm() {
           </CardContent>
         </Card>
 
-        <div className="mt-6">
-          <VerifyIdentity companyName={companySelection.selectedCompany?.name ?? ""} />
+        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-primary-surface-border bg-primary-tint p-4 text-sm text-foreground">
+          <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary-deep" />
+          <div>
+            <p className="font-semibold">无需上传社保、工号或雇佣证明</p>
+            <p className="mt-1 leading-6 text-muted-foreground">
+              身份验证不是发布评价的前提。评价仍会经过内容审核和匿名保护；企业邮箱验证接入真实服务后再单独开放。
+            </p>
+          </div>
         </div>
       </section>
     )
