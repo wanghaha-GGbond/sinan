@@ -4,22 +4,22 @@
  * All discussion data reads/writes go through this module. Pages should import
  * from here instead of directly from `@/lib/mock-data`.
  *
- * When NEXT_PUBLIC_API_ENABLED is "true", functions call the real API.
- * Otherwise they fall back to the existing mock data — ensuring local
- * development and e2e tests continue to work without a database.
+ * When NEXT_PUBLIC_API_ENABLED is "true", functions call the real API and
+ * surface failures. Mock data is available only when the flag is explicitly
+ * disabled for local development.
  */
-import type { ReviewDiscussionItem } from "@/lib/types"
+import type { ReviewDiscussionItem } from "../types"
 import {
   reviewDiscussions as mockDiscussions,
   createLocalDiscussion,
   getReviewDiscussions as mockGetDiscussions,
-} from "@/lib/mock-data"
+} from "../mock-data"
 import {
   getPublicDiscussions,
   getAuthorStatusDiscussions,
   sortReviewDiscussions,
   type ReviewDiscussionSort,
-} from "@/lib/review-discussion-sort"
+} from "../review-discussion-sort"
 
 const API_ENABLED =
   typeof process !== "undefined" &&
@@ -66,11 +66,11 @@ export async function getReviewDiscussionsData(
         nextCursor: data.nextCursor ?? null,
       }
     } catch {
-      // Fall through to mock fallback
+      return { publicDiscussions: [], myDiscussions: [], nextCursor: null }
     }
   }
 
-  // Mock fallback: use existing mock-data + sort helpers
+  // Explicit local development mode: use mock-data + sort helpers.
   const all = mockGetDiscussions(reviewId)
   const publicItems = getPublicDiscussions(all)
   const myItems = getAuthorStatusDiscussions(all)
@@ -138,7 +138,7 @@ export async function submitReviewDiscussionData(
     }
   }
 
-  // Mock fallback: create a local discussion
+  // Explicit local development mode: create a local discussion.
   const authorRoleMap: Record<string, ReviewDiscussionItem["authorRole"]> = {
     question: "job_seeker",
     supplement: "former_employee",
@@ -206,7 +206,7 @@ export async function toggleReviewDiscussionUsefulData(
     }
   }
 
-  // Mock fallback: local +1 / -1 on the discussion
+  // Explicit local development mode: local +1 / -1 on the discussion.
   const item = mockDiscussions.find((d) => d.id === discussionId)
   if (!item) {
     return { ok: false, error: "Discussion not found" }
@@ -265,7 +265,7 @@ export async function deleteReviewDiscussionData(
     }
   }
 
-  // Mock fallback: soft-delete the discussion
+  // Explicit local development mode: soft-delete the discussion.
   const item = mockDiscussions.find((d) => d.id === discussionId)
   if (!item) {
     return { ok: false, error: "Discussion not found" }
@@ -327,11 +327,11 @@ export async function moderateReviewDiscussionData(
 
       return { ok: true, discussion: data.discussion as ReviewDiscussionItem }
     } catch {
-      // Fall through to mock fallback
+      return { ok: false, error: "网络连接失败，审核状态尚未更新，请重试" }
     }
   }
 
-  // Mock fallback: update the discussion status locally
+  // Explicit local development mode: update the discussion status locally.
   const item = mockDiscussions.find((d) => d.id === discussionId)
   if (!item) {
     return { ok: false, error: "Discussion not found" }

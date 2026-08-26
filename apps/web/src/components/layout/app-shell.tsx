@@ -7,6 +7,7 @@ import { LogOut } from "lucide-react"
 import { WebButton } from "@/components/ui/web-button"
 import { WebNav, type WebNavLink } from "@/components/ui/web-nav"
 import { useAuth } from "@/lib/auth-context"
+import { isPulseEnabled } from "@/lib/pulse-feature"
 
 const primaryLinks = [
   { href: "/companies", label: "公司" },
@@ -16,8 +17,13 @@ const primaryLinks = [
   { href: "/me", label: "我的" },
 ]
 
+const pulseEnabled = isPulseEnabled({
+  NEXT_PUBLIC_APP_ENV: process.env.NEXT_PUBLIC_APP_ENV,
+  NEXT_PUBLIC_PULSE_ENABLED: process.env.NEXT_PUBLIC_PULSE_ENABLED,
+})
+
 function linksFor(pathname: string): WebNavLink[] {
-  return primaryLinks.map((link) => ({
+  return primaryLinks.filter((link) => pulseEnabled || link.href !== "/pulse").map((link) => ({
     ...link,
     active:
       link.href === "/companies"

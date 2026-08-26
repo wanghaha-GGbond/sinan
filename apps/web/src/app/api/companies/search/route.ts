@@ -18,6 +18,13 @@ export async function GET(request: NextRequest) {
 
   try {
     if (!process.env.DATABASE_URL) {
+      if (process.env.NEXT_PUBLIC_APP_ENV === "production") {
+        return NextResponse.json(
+          { error: "Service unavailable" },
+          { status: 503 },
+        )
+      }
+
       const normalizedQuery = q.toLowerCase()
       const matchingCompanies = mockCompanies.filter((company) => {
         const matchesQuery = !normalizedQuery || [company.name, company.shortName, company.englishName, ...(company.alias ?? [])]

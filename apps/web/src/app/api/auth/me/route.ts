@@ -39,7 +39,12 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch {
-    // If DB is not available, still return the basic auth info
+    // A deployed request must not turn a database outage into a successful
+    // response containing a fabricated identity. Local development keeps the
+    // explicit dev identities usable while the database is being configured.
+    if (process.env.NEXT_PUBLIC_APP_ENV === "staging" || process.env.NEXT_PUBLIC_APP_ENV === "production") {
+      return NextResponse.json({ error: "Service unavailable" }, { status: 503 })
+    }
     return NextResponse.json({
       user: {
         id: user.userId,

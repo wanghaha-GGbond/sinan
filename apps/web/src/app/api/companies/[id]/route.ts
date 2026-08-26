@@ -14,6 +14,13 @@ export async function GET(
 
   try {
     if (!process.env.DATABASE_URL) {
+      if (process.env.NEXT_PUBLIC_APP_ENV === "production") {
+        return NextResponse.json(
+          { error: "Service unavailable" },
+          { status: 503 },
+        )
+      }
+
       const mockCompany = getMockCompany(companyId)
       if (!mockCompany) return NextResponse.json({ error: "Company not found" }, { status: 404 })
       return NextResponse.json({ company: mockCompanyToPublicView(mockCompany) })
@@ -92,6 +99,7 @@ export async function GET(
 
     return NextResponse.json({
       company: {
+        ...base,
         id: base.id,
         name: base.name,
         shortName: base.shortName,

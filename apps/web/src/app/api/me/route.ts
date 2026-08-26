@@ -415,7 +415,12 @@ export async function GET(request: NextRequest) {
       })),
     }
   } catch {
-    // DB unavailable — return safe defaults
+    // A deployed dashboard must not turn a database outage into a successful
+    // response containing fabricated account state. Local development can
+    // still render the static shell while the database is being configured.
+    if (process.env.NEXT_PUBLIC_APP_ENV === "staging" || process.env.NEXT_PUBLIC_APP_ENV === "production") {
+      return NextResponse.json({ error: "Service unavailable" }, { status: 503 })
+    }
     dbUser = null
     myReviews = []
     verifications = []

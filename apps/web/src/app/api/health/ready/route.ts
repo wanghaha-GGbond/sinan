@@ -40,6 +40,10 @@ function hasValidErrorReportingConfiguration() {
 
 function hasValidRuntimeConfiguration() {
   const appEnvironment = process.env.NEXT_PUBLIC_APP_ENV
+  const pulseReady =
+    appEnvironment === "production"
+      ? process.env.NEXT_PUBLIC_PULSE_ENABLED === "false"
+      : process.env.NEXT_PUBLIC_PULSE_ENABLED === "true"
   const filingReady =
     appEnvironment === "production"
       ? Boolean(process.env.NEXT_PUBLIC_ICP_FILING_NUMBER?.trim())
@@ -53,6 +57,7 @@ function hasValidRuntimeConfiguration() {
     (process.env.DATABASE_ADAPTER === "pg" || process.env.DATABASE_ADAPTER === "neon") &&
     hasValidMailConfiguration() &&
     hasValidErrorReportingConfiguration() &&
+    pulseReady &&
     (appEnvironment === "staging" || appEnvironment === "production") &&
     filingReady
   )

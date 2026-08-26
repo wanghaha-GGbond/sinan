@@ -12,6 +12,8 @@
  * of long-lived AccessKeys in the application environment.
  */
 
+import { isDevAuthEnabled } from "@/lib/server/dev-auth"
+
 export interface MailMessage {
   to: string
   subject: string
@@ -74,10 +76,13 @@ async function sendViaAliyunDirectMail(msg: MailMessage): Promise<void> {
 
 export async function sendMail(msg: MailMessage): Promise<void> {
   if (!process.env.DATABASE_URL) {
-    // Dev: just log, don't fail the flow
-    console.log("[mail:dev] would send to:", msg.to, "| subject:", msg.subject)
-    console.log("[mail:dev] body:", msg.text)
-    return
+    if (isDevAuthEnabled()) {
+      // Explicit local-only mode: just log, don't fail the flow.
+      console.log("[mail:dev] would send to:", msg.to, "| subject:", msg.subject)
+      console.log("[mail:dev] body:", msg.text)
+      return
+    }
+    throw new Error("DATABASE_URL is required before sending mail")
   }
 
   const provider = process.env.MAIL_PROVIDER ?? "aliyun-direct-mail"

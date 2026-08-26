@@ -128,7 +128,7 @@ function toReviewListItem(
 export async function getPublicCompanyDetail(
   companyId: string,
 ): Promise<CompanyListItem | null> {
-  if (!process.env.DATABASE_URL) {
+  if (!process.env.DATABASE_URL && process.env.NEXT_PUBLIC_APP_ENV !== "production") {
     const company = getMockCompany(companyId)
     return company ? mockCompanyToPublicView(company) : null
   }
@@ -208,7 +208,7 @@ export async function getPublicCompanyReviews(
   companyId: string,
   limit = 50,
 ): Promise<ReviewListItem[]> {
-  if (!process.env.DATABASE_URL) {
+  if (!process.env.DATABASE_URL && process.env.NEXT_PUBLIC_APP_ENV !== "production") {
     const company = getMockCompany(companyId)
     return company ? company.reviews.slice(0, Math.min(Math.max(limit, 1), 50)).map(mockReviewToListItem) : []
   }
@@ -241,7 +241,7 @@ export async function getPublicReviewDetail(
   companyId: string,
   reviewId: string
 ): Promise<ReviewListItem | null> {
-  if (!process.env.DATABASE_URL) {
+  if (!process.env.DATABASE_URL && process.env.NEXT_PUBLIC_APP_ENV !== "production") {
     const company = getMockCompany(companyId)
     const review = company?.reviews.find((item) => item.id === reviewId)
     return review ? mockReviewToListItem(review) : null

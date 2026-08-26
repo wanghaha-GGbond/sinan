@@ -66,6 +66,13 @@ test("邀请注册、评价审核公开和账号注销形成真实数据库闭�
   const userToken = registration.token as string
   expect(userToken).toBeTruthy()
 
+  const loginResponse = await request.post("/api/auth/login", {
+    headers: { "X-Sinan-Client": "ios" },
+    data: { email, password: "ReleaseTest123!" },
+  })
+  expect(loginResponse.status()).toBe(200)
+  expect((await loginResponse.json()).user.id).toBe(registeredUserId)
+
   const searchResponse = await request.get(
     `/api/companies/search?q=${encodeURIComponent(`Release Company`)}`,
   )
@@ -111,6 +118,16 @@ test("邀请注册、评价审核公开和账号注销形成真实数据库闭�
   expect(publicResponse.status()).toBe(200)
   const publicReviews = await publicResponse.json()
   expect(publicReviews.reviews.some((item: { id: string }) => item.id === reviewId)).toBe(true)
+
+  const usefulResponse = await request.post(`/api/reviews/${reviewId}/useful`, {
+    headers: { Authorization: `Bearer ${userToken}`, "X-Sinan-Client": "ios" },
+    data: { useful: true },
+  })
+  expect(usefulResponse.status()).toBe(200)
+  expect(await usefulResponse.json()).toMatchObject({
+    usefulCount: 1,
+    isUsefulByCurrentUser: true,
+  })
 
   const detailAfterReview = await request.get(`/api/companies/${companyId}`)
   expect(detailAfterReview.status()).toBe(200)

@@ -244,34 +244,26 @@ export default function MePage() {
     )
   }
 
-  // ── Error fallback ─────────────────────────────────────────────────────
+  // ── Deployed API failure ───────────────────────────────────────────────
   if (dashboardError && !dashboard) {
-    // Use static defaults so page still renders
-    const stats = DEFAULT_STATS
-    const dailyTasks = DEFAULT_TASKS
-    const badges = DEFAULT_BADGES
-    const myReviews: MyReview[] = []
-    const favoriteCompanies: FavoriteCompany[] = []
-
-    const displayName = authUser?.displayName ?? "指路人"
-    const trustLevel = authUser?.trustLevel ?? 0
-
-    const favoriteSet = new Set<string>(extraFavoriteIds)
-
     return (
-      <MeContent
-        displayName={displayName}
-        trustLevel={trustLevel}
-        stats={stats}
-        dailyTasks={dailyTasks}
-        myReviews={myReviews}
-        badges={badges}
-        favoriteCompanies={favoriteCompanies}
-        favoriteSet={favoriteSet}
-        hydrated={hydrated}
-      invites={{ total: 0, used: 0, unused: [] }}
-      identity={{ displayName, trustLevel }}
-      />
+      <section className="mx-auto flex w-full max-w-5xl flex-col items-center px-4 py-20">
+        <WebSurface variant="elevated" className="w-full max-w-card p-10 text-center">
+          <h2 className="text-lg font-semibold text-foreground">账户信息暂时无法加载</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            服务正在恢复中，当前没有展示任何临时或模拟账户数据。
+          </p>
+          <WebButton
+            type="button"
+            variant="primary"
+            size="lg"
+            className="mt-6 w-full"
+            onClick={() => window.location.reload()}
+          >
+            重试
+          </WebButton>
+        </WebSurface>
+      </section>
     )
   }
 

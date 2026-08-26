@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { isDeferredLaunchPath } from "@/lib/launch-scope"
+import { isPulseEnabled } from "@/lib/pulse-feature"
 
 const isProd = process.env.NODE_ENV === "production"
 
@@ -51,6 +52,25 @@ function withSecurityHeaders(response: NextResponse): NextResponse {
 }
 
 export function proxy(request: NextRequest) {
+  const isPulsePath =
+    request.nextUrl.pathname === "/pulse" ||
+    request.nextUrl.pathname.startsWith("/pulse/")
+
+  if (
+    isPulsePath &&
+    !isPulseEnabled({
+      NEXT_PUBLIC_APP_ENV: process.env.NEXT_PUBLIC_APP_ENV,
+      NEXT_PUBLIC_PULSE_ENABLED: process.env.NEXT_PUBLIC_PULSE_ENABLED,
+    })
+  ) {
+    return withSecurityHeaders(
+      NextResponse.rewrite(
+        new URL("/__sinan_launch_not_found__", request.url),
+        { status: 404 },
+      ),
+    )
+  }
+
   if (
     process.env.LAUNCH_SCOPE_ONLY === "true" &&
     isDeferredLaunchPath(request.nextUrl.pathname)
