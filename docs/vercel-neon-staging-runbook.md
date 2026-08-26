@@ -6,7 +6,7 @@
 
 - Vercel 项目：`web`，代码目录为 `apps/web`。
 - Preview 环境：使用独立 Neon staging 分支。
-- `NEXT_PUBLIC_APP_ENV=staging`、`NEXT_PUBLIC_API_ENABLED=true`、`LAUNCH_SCOPE_ONLY=true`。
+- `NEXT_PUBLIC_APP_ENV=staging`、`NEXT_PUBLIC_API_ENABLED=true`、`NEXT_PUBLIC_PULSE_ENABLED=true`、`LAUNCH_SCOPE_ONLY=true`。
 - 保持 `INVITE_REQUIRED=true`，测试人员通过一次性邀请码注册。
 - 禁止设置 `ALLOW_DEV_AUTH=true`，禁止连接生产数据库。
 
@@ -17,7 +17,7 @@
 1. Git 仓库连接到 `wanghaha-GGbond/sinan`。
 2. Root Directory 使用 `apps/web`（沿用已有项目链接）。
 3. Framework 选择 Next.js。
-4. Preview 部署来自 staging 分支或 Pull Request；不要使用 `vercel --prod` 做测试。
+4. Preview 由 `.github/workflows/preview-vercel.yml` 的 Pull Request 事件触发；`main` 更新稳定 staging 地址。不要使用 `vercel --prod` 做测试。
 5. 为 Preview 配置一个稳定的 `NEXT_PUBLIC_APP_URL`。如果暂时没有 DNS，可使用本次部署的 `*.vercel.app` 地址；正式测试建议绑定 `staging.sinanapp.cn`。
 
 ## Preview 环境变量
@@ -27,6 +27,7 @@
 ```text
 NEXT_PUBLIC_APP_ENV=staging
 NEXT_PUBLIC_API_ENABLED=true
+NEXT_PUBLIC_PULSE_ENABLED=true
 LAUNCH_SCOPE_ONLY=true
 INVITE_REQUIRED=true
 
@@ -62,6 +63,15 @@ ERROR_REPORTING_MODE=stdout
 
 当前应用没有公开的批量邀请码管理页；邀请码需要由 staging 运维脚本或受控 SQL 预置。每个邀请码只允许注册一次。
 
+## GitHub Environment 配置
+
+`staging` Environment 需要以下变量和密钥，工作流不会把它们写回仓库：
+
+- Variables：`VERCEL_ORG_ID`、`VERCEL_PROJECT_ID`、`NEON_PROJECT_ID`、`NEON_STAGING_BRANCH`。
+- Secrets：`VERCEL_TOKEN`、`NEON_API_KEY`、`NEON_STAGING_DATABASE_URL`、`AUTH_SECRET`、`CRON_SECRET`。
+
+Pull Request 会创建 `sinan-pr-<number>` Neon 分支，执行全部当前迁移及幂等验证，部署到独立 Vercel Preview，并运行真实数据库 release E2E。PR 关闭时工作流请求删除对应分支；分支本身也设置七天过期。
+
 ## 发布前检查
 
 ```bash
@@ -76,6 +86,7 @@ npm run build --workspace=@sinan/web
 
 - `/api/health/live` 返回 `200`。
 - `/api/health/ready` 返回 `200`，并显示数据库可连接。
+- `/pulse` 在 staging 可访问；生产环境必须返回 `404`。
 - 注册、登录、搜索公司、公司详情、写评价、举报、屏蔽和注销端到端可用。
 - 被暂缓的社区、圈层、私聊、拍卖等功能仍保持关闭。
 

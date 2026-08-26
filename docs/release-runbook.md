@@ -4,7 +4,7 @@
 
 1. 创建不可变的应用版本，记录 git commit SHA，并写入 `APP_RELEASE`。
 2. 执行 `npm run audit:release`，确认生产依赖不存在 high/critical 漏洞；Expo SDK 大版本升级须独立迁移和原生回归，不能在发布当天强制升级。
-3. 在 staging 配置 `DATABASE_URL`、`AUTH_SECRET`、`CRON_SECRET`、Resend、错误追踪、`NEXT_PUBLIC_APP_URL`、`SUPPORT_EMAIL`，并设置 `LAUNCH_SCOPE_ONLY=true`。
+3. 在 staging 配置 `DATABASE_URL`、`AUTH_SECRET`、`CRON_SECRET`、错误输出、`NEXT_PUBLIC_APP_URL`、`SUPPORT_EMAIL`，并设置 `MAIL_PROVIDER=disabled`、`NEXT_PUBLIC_PULSE_ENABLED=true`、`LAUNCH_SCOPE_ONLY=true`；邮件专项验收时再切换到独立测试邮件账号。大陆 production 使用阿里云 DirectMail。
 4. 执行 `npm run release:check-env --workspace=@sinan/web`。
 5. 按 [数据库演练手册](launch-database-runbook.md)完成迁移、重复迁移、核心集成测试和恢复分支演练。
 6. 验证 `/api/health/live` 返回 200；`/api/health/ready` 只有在完整运行配置有效且数据库可达时才返回 200。部署平台必须以 ready 而非 live 作为接流门禁。

@@ -17,7 +17,7 @@ npm run release:check-config:ci
 1. 在 `app.json` 写入 `expo.extra.eas.projectId`，并在 `eas.json` 的 `submit.production.ios.ascAppId` 写入 App Store Connect 数字 ID。
 2. 在 EAS 环境中设置 staging/production API、真实 APP/ICP 备案号和 `support@sinanapp.cn`。
 3. 为 `staging.sinanapp.cn`、`sinanapp.cn` 配置 DNS、HTTPS、数据库和鉴权；`/api/health/ready` 必须返回 `200`。
-4. 执行数据库迁移，包含 `0019_review_author_blocks.sql`，并确认举报队列可处理。
+4. 在 staging 按 `apps/web/src/db/migrations/` 事实源执行全部当前迁移，并确认举报队列可处理。
 5. 登录 Apple Developer/EAS 后执行：
 
 ```sh

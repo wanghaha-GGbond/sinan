@@ -19,7 +19,9 @@
 | S7-S8 | M1b | 违约库 + 情绪指数：promise_records(先审后发)、周 K 聚合、/press hub | ✅ |
 | S9-S10 | M2 | 引爆支撑：拍卖运营页、行情榜、邀请落地页、指标看板 | ✅ |
 
-已交付：41 页面、52 API 路由、54 组件、14 DB 迁移、23 schema 文件。TS 检查 + Metro 打包全过。
+已交付（v1.0 历史记录）：41 页面、52 API 路由、54 组件、14 DB 迁移、23 schema 文件。TS 检查 + Metro 打包全过。
+
+> 当前数据库发布不沿用上述历史数量；迁移范围以 `apps/web/src/db/migrations/` 为准，当前最新序号为 `0020`，由 CI 从空 PostgreSQL 16 全量执行并重复验证。
 
 ---
 

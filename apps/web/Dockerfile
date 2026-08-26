@@ -14,13 +14,43 @@ ARG NEXT_PUBLIC_APP_URL=https://sinanapp.cn
 ARG NEXT_PUBLIC_APP_ENV=production
 ARG NEXT_PUBLIC_API_ENABLED=true
 ARG LAUNCH_SCOPE_ONLY=true
+ARG NEXT_PUBLIC_PULSE_ENABLED=false
+ARG NEXT_PUBLIC_ICP_FILING_NUMBER=
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL \
     NEXT_PUBLIC_APP_ENV=$NEXT_PUBLIC_APP_ENV \
     NEXT_PUBLIC_API_ENABLED=$NEXT_PUBLIC_API_ENABLED \
-    LAUNCH_SCOPE_ONLY=$LAUNCH_SCOPE_ONLY
+    LAUNCH_SCOPE_ONLY=$LAUNCH_SCOPE_ONLY \
+    NEXT_PUBLIC_PULSE_ENABLED=$NEXT_PUBLIC_PULSE_ENABLED \
+    NEXT_PUBLIC_ICP_FILING_NUMBER=$NEXT_PUBLIC_ICP_FILING_NUMBER
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
 RUN npm run build --workspace=@sinan/web
+
+FROM node:22-bookworm-slim AS migrator-dependencies
+WORKDIR /app
+
+# The migrator does not need Expo, React Native, or the Next.js build toolchain.
+# Keep only workspace production dependencies and add the pinned Drizzle CLI.
+COPY package.json package-lock.json ./
+COPY apps/web/package.json apps/web/package.json
+COPY apps/ios/package.json apps/ios/package.json
+COPY packages/shared/package.json packages/shared/package.json
+RUN npm ci --omit=dev --ignore-scripts \
+  && npm install --no-save --omit=dev --ignore-scripts drizzle-kit@0.31.10
+
+FROM node:22-bookworm-slim AS migrator
+WORKDIR /app
+ENV NODE_ENV=production
+
+COPY --from=migrator-dependencies /app/node_modules ./node_modules
+COPY package.json package-lock.json ./
+COPY apps/web/package.json apps/web/package.json
+COPY apps/ios/package.json apps/ios/package.json
+COPY packages/shared/package.json packages/shared/package.json
+COPY apps/web/drizzle.config.ts apps/web/drizzle.config.ts
+COPY apps/web/src/db/migrations apps/web/src/db/migrations
+
+CMD ["npm", "run", "db:migrate", "--workspace=@sinan/web"]
 
 FROM node:22-bookworm-slim AS runner
 WORKDIR /app
