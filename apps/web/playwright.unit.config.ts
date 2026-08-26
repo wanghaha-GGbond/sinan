@@ -4,6 +4,7 @@ export default defineConfig({
   testDir: "./tests",
   testMatch: [
     "account-deletion.spec.ts",
+    "api-contract.spec.ts",
     "anonymity.spec.ts",
     "auction-engine.spec.ts",
     "circles.spec.ts",
@@ -14,6 +15,8 @@ export default defineConfig({
     "invites.spec.ts",
     "launch-scope.spec.ts",
     "launch-scope-response.spec.ts",
+    "pulse-feature.spec.ts",
+    "production-boundary.spec.ts",
     "navigation.spec.ts",
     "research-report.spec.ts",
     "review-moderation.spec.ts",

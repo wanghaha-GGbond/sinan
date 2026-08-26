@@ -40,7 +40,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Reject high or critical iOS production vulnerabilities
+        run: npm audit --workspace=@sinan/ios --omit=dev --audit-level=high
+      - run: npm run typecheck --workspace=@sinan/shared
       - run: npm run typecheck --workspace=@sinan/ios
       - run: npm run release:check-config:ci --workspace=@sinan/ios
       - run: npm run export:ios --workspace=@sinan/ios
-

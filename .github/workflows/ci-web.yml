@@ -38,6 +38,7 @@ jobs:
       - run: npm ci
       - name: Reject high or critical Web production vulnerabilities
         run: npm audit --workspace=@sinan/web --omit=dev --audit-level=high
+      - run: npm run typecheck --workspace=@sinan/shared
       - name: Validate release environment contract
         env:
           AUTH_SECRET: ci-only-auth-secret-12345678901234567890
@@ -54,6 +55,7 @@ jobs:
           NEXT_PUBLIC_ICP_FILING_NUMBER: 浙ICP备CI-PENDING号
           NEXT_PUBLIC_APP_ENV: staging
           NEXT_PUBLIC_API_ENABLED: "true"
+          NEXT_PUBLIC_PULSE_ENABLED: "true"
           SUPPORT_EMAIL: support@sinanapp.cn
           INVITE_REQUIRED: "true"
           LAUNCH_SCOPE_ONLY: "true"
@@ -96,7 +98,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run db:check --workspace=@sinan/web
-      - name: Apply all migrations 0000-0018
+      - name: Apply all current migrations
         run: npm run db:migrate --workspace=@sinan/web
       - name: Verify migration idempotency
         run: npm run db:migrate --workspace=@sinan/web

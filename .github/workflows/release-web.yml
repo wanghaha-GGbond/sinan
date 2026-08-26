@@ -7,8 +7,13 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: "Semantic image tag, for example web-v0.1.0-rc.1"
+        description: "Semantic release tag, for example web-v0.1.0-rc.1"
         required: true
+        type: string
+      source_ref:
+        description: "main or a commit/ref already contained in main"
+        required: true
+        default: main
         type: string
 
 permissions:
@@ -21,17 +26,62 @@ concurrency:
 
 jobs:
   release:
-    name: Build, scan, push and deploy immutable image
+    name: Build, scan, back up and deploy immutable images
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 55
     environment: production
     env:
       ALIYUN_REGION: cn-hangzhou
       ACR_REGISTRY: ${{ vars.ACR_REGISTRY }}
       ECS_INSTANCE_ID: ${{ vars.ECS_INSTANCE_ID }}
+      RDS_INSTANCE_ID: ${{ vars.RDS_INSTANCE_ID }}
+      KMS_SECRET_NAME: ${{ vars.KMS_SECRET_NAME }}
       IMAGE_REPOSITORY: ${{ vars.ACR_REGISTRY }}/sinan/web
+      MIGRATOR_IMAGE_REPOSITORY: ${{ vars.ACR_REGISTRY }}/sinan/web-migrator
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.source_ref || github.ref }}
+
+      - name: Resolve and validate immutable release
+        id: tags
+        env:
+          DISPATCH_TAG: ${{ inputs.release_tag }}
+        run: |
+          git fetch origin main --no-tags
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            semantic_tag="$DISPATCH_TAG"
+            source_sha=$(git rev-parse HEAD)
+          else
+            semantic_tag="$GITHUB_REF_NAME"
+            source_sha="$GITHUB_SHA"
+          fi
+          [[ "$semantic_tag" =~ ^web-v[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$ ]]
+          git merge-base --is-ancestor "$source_sha" origin/main
+          migration_version=$(find apps/web/src/db/migrations -maxdepth 1 -type f -name '*.sql' -exec basename {} \; | sort -V | tail -n 1 | cut -d_ -f1)
+          [[ "$migration_version" =~ ^[0-9]+$ ]]
+          echo "semantic=$semantic_tag" >> "$GITHUB_OUTPUT"
+          echo "sha=$source_sha" >> "$GITHUB_OUTPUT"
+          echo "migration=$migration_version" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Web release gate"
+            echo "- Tag: $semantic_tag"
+            echo "- Git SHA: $source_sha"
+            echo "- Current migration: $migration_version"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify Alibaba Cloud release variables
+        run: |
+          test -n "$ACR_REGISTRY"
+          test -n "$ECS_INSTANCE_ID"
+          test -n "$RDS_INSTANCE_ID"
+          test -n "$KMS_SECRET_NAME"
+          [[ "$KMS_SECRET_NAME" =~ ^[A-Za-z0-9._:/-]+$ ]]
+          test -n "${{ vars.ALIYUN_GITHUB_ROLE_ARN }}"
+          test -n "${{ vars.ALIYUN_GITHUB_OIDC_PROVIDER_ARN }}"
+          test -n "${{ vars.NEXT_PUBLIC_ICP_FILING_NUMBER }}"
+
       - uses: aliyun/configure-aliyun-credentials-action@v1
         with:
           role-to-assume: ${{ vars.ALIYUN_GITHUB_ROLE_ARN }}
@@ -39,32 +89,54 @@ jobs:
           role-session-name: sinan-web-${{ github.run_id }}
           audience: github-actions
 
-      - name: Resolve immutable and semantic tags
-        id: tags
-        env:
-          DISPATCH_TAG: ${{ inputs.release_tag }}
-        run: |
-          semantic_tag="${GITHUB_REF_TYPE:+$GITHUB_REF_NAME}"
-          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
-            semantic_tag="$DISPATCH_TAG"
-          fi
-          echo "semantic=$semantic_tag" >> "$GITHUB_OUTPUT"
-          echo "sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
 
-      - name: Build image
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Reject high or critical production vulnerabilities
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Build standalone Web image
         run: |
           docker build \
+            --target runner \
             --file apps/web/Dockerfile \
             --build-arg NEXT_PUBLIC_APP_URL=https://sinanapp.cn \
             --build-arg NEXT_PUBLIC_APP_ENV=production \
+            --build-arg NEXT_PUBLIC_API_ENABLED=true \
+            --build-arg NEXT_PUBLIC_PULSE_ENABLED=false \
+            --build-arg NEXT_PUBLIC_ICP_FILING_NUMBER="${{ vars.NEXT_PUBLIC_ICP_FILING_NUMBER }}" \
+            --build-arg LAUNCH_SCOPE_ONLY=true \
             --tag "$IMAGE_REPOSITORY:${{ steps.tags.outputs.sha }}" \
             --tag "$IMAGE_REPOSITORY:${{ steps.tags.outputs.semantic }}" \
             .
 
-      - name: Scan production image
+      - name: Build migration image
+        run: |
+          docker build \
+            --target migrator \
+            --file apps/web/Dockerfile \
+            --tag "$MIGRATOR_IMAGE_REPOSITORY:${{ steps.tags.outputs.sha }}" \
+            --tag "$MIGRATOR_IMAGE_REPOSITORY:${{ steps.tags.outputs.semantic }}" \
+            .
+
+      - name: Scan standalone Web image
         uses: aquasecurity/trivy-action@0.33.1
         with:
           image-ref: ${{ env.IMAGE_REPOSITORY }}:${{ steps.tags.outputs.sha }}
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          severity: HIGH,CRITICAL
+
+      - name: Scan migration image
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: ${{ env.MIGRATOR_IMAGE_REPOSITORY }}:${{ steps.tags.outputs.sha }}
           format: table
           exit-code: "1"
           ignore-unfixed: true
@@ -78,6 +150,41 @@ jobs:
           tar -xzf /tmp/aliyun-cli.tgz -C /tmp
           sudo install /tmp/aliyun /usr/local/bin/aliyun
 
+      - name: Create and verify RDS pre-release backup
+        id: backup
+        run: |
+          backup_json=$(aliyun rds CreateBackup \
+            --RegionId "$ALIYUN_REGION" \
+            --DBInstanceId "$RDS_INSTANCE_ID" \
+            --BackupMethod Physical \
+            --ClientToken "sinan-${GITHUB_RUN_ID}")
+          backup_job_id=$(jq -r '.BackupJobId // empty' <<<"$backup_json")
+          test -n "$backup_job_id"
+          backup_status=""
+          backup_id=""
+          for attempt in {1..60}; do
+            tasks_json=$(aliyun rds DescribeBackupTasks \
+              --RegionId "$ALIYUN_REGION" \
+              --DBInstanceId "$RDS_INSTANCE_ID" \
+              --BackupJobId "$backup_job_id")
+            backup_status=$(jq -r '(.Items.BackupJob // []) | if type == "array" then .[0] else . end | (.BackupStatus // .BackupProgressStatus // empty)' <<<"$tasks_json")
+            backup_id=$(jq -r '(.Items.BackupJob // []) | if type == "array" then .[0] else . end | (.BackupId // empty)' <<<"$tasks_json")
+            case "$backup_status" in
+              Finished) break ;;
+              Failed) echo "RDS backup failed" >&2; exit 1 ;;
+            esac
+            sleep 10
+          done
+          [[ "$backup_status" == "Finished" ]]
+          echo "backup_job_id=$backup_job_id" >> "$GITHUB_OUTPUT"
+          echo "backup_id=$backup_id" >> "$GITHUB_OUTPUT"
+          {
+            echo "### RDS pre-release backup"
+            echo "- Backup job: $backup_job_id"
+            if [[ -n "$backup_id" ]]; then echo "- Backup set: $backup_id"; fi
+            echo "- Status: Finished"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Log in to ACR with temporary RAM credentials
         run: |
           auth_json=$(aliyun cr GetAuthorizationToken --RegionId "$ALIYUN_REGION")
@@ -86,22 +193,29 @@ jobs:
           echo "::add-mask::$token"
           printf '%s' "$token" | docker login "$ACR_REGISTRY" --username "$username" --password-stdin
 
-      - name: Push immutable and semantic tags
+      - name: Push immutable and semantic images
         run: |
-          docker push "$IMAGE_REPOSITORY:${{ steps.tags.outputs.sha }}"
-          docker push "$IMAGE_REPOSITORY:${{ steps.tags.outputs.semantic }}"
+          for image in \
+            "$IMAGE_REPOSITORY:${{ steps.tags.outputs.sha }}" \
+            "$IMAGE_REPOSITORY:${{ steps.tags.outputs.semantic }}" \
+            "$MIGRATOR_IMAGE_REPOSITORY:${{ steps.tags.outputs.sha }}" \
+            "$MIGRATOR_IMAGE_REPOSITORY:${{ steps.tags.outputs.semantic }}"; do
+            docker push "$image"
+          done
 
       - name: Deploy through ECS Cloud Assistant
         run: |
           deploy_payload=$(base64 -w0 deploy/scripts/deploy-web.sh)
           remote_payload=$(base64 -w0 deploy/scripts/remote-deploy-web.sh)
+          secrets_payload=$(base64 -w0 deploy/scripts/sync-web-secrets.sh)
           command=$(printf '%s\n' \
             'set -euo pipefail' \
             'install -d -m 0750 /opt/sinan' \
             "printf '%s' '$deploy_payload' | base64 -d > /opt/sinan/deploy-web.sh" \
             "printf '%s' '$remote_payload' | base64 -d > /opt/sinan/remote-deploy-web.sh" \
-            'chmod 0750 /opt/sinan/deploy-web.sh /opt/sinan/remote-deploy-web.sh' \
-            "ALIYUN_REGION='$ALIYUN_REGION' /opt/sinan/remote-deploy-web.sh '$IMAGE_REPOSITORY:${{ steps.tags.outputs.sha }}'")
+            "printf '%s' '$secrets_payload' | base64 -d > /opt/sinan/sync-web-secrets.sh" \
+            'chmod 0750 /opt/sinan/deploy-web.sh /opt/sinan/remote-deploy-web.sh /opt/sinan/sync-web-secrets.sh' \
+            "ALIYUN_REGION='$ALIYUN_REGION' KMS_SECRET_NAME='$KMS_SECRET_NAME' MIGRATION_VERSION='${{ steps.tags.outputs.migration }}' /opt/sinan/remote-deploy-web.sh '$IMAGE_REPOSITORY:${{ steps.tags.outputs.sha }}' '$MIGRATOR_IMAGE_REPOSITORY:${{ steps.tags.outputs.sha }}'")
           command_content=$(printf '%s' "$command" | base64 -w0)
           response=$(aliyun ecs RunCommand \
             --RegionId "$ALIYUN_REGION" \
@@ -109,16 +223,20 @@ jobs:
             --ContentEncoding Base64 \
             --CommandContent "$command_content" \
             --InstanceId.1 "$ECS_INSTANCE_ID" \
-            --Timeout 900)
-          invoke_id=$(jq -r '.InvokeId' <<<"$response")
-          for attempt in {1..90}; do
+            --Timeout 1200)
+          invoke_id=$(jq -r '.InvokeId // empty' <<<"$response")
+          test -n "$invoke_id"
+          for attempt in {1..120}; do
             result=$(aliyun ecs DescribeInvocationResults \
               --RegionId "$ALIYUN_REGION" \
               --InvokeId "$invoke_id" \
               --InstanceId "$ECS_INSTANCE_ID")
             status=$(jq -r '.. | objects | .InvocationStatus? // empty' <<<"$result" | head -1)
             case "$status" in
-              Finished) exit 0 ;;
+              Finished)
+                echo "ECS deployment finished"
+                exit 0
+                ;;
               Failed|Stopped|Stopping)
                 jq -r '.. | objects | .Output? // empty' <<<"$result" | base64 -d || true
                 exit 1
@@ -128,4 +246,3 @@ jobs:
           done
           echo "Cloud Assistant deployment timed out" >&2
           exit 1
-

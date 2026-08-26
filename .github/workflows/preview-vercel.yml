@@ -1,9 +1,12 @@
 name: Deploy Web Preview to Vercel
 
 on:
+  # Keep this workflow active for every PR so the branch-protection check is
+  # never left pending when a documentation-only change is opened.
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
   push:
-    branches:
-      - codex/release-20260815
+    branches: [main]
     paths:
       - "apps/web/**"
       - "packages/shared/**"
@@ -16,19 +19,27 @@ permissions:
   contents: read
 
 concurrency:
-  group: sinan-vercel-preview-${{ github.ref }}
+  group: sinan-vercel-preview-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref }}
   cancel-in-progress: true
 
+env:
+  VERCEL_CLI_VERSION: 59.5.0
+
 jobs:
-  deploy:
+  preview:
     name: Deploy isolated staging preview
+    if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     environment: staging
     env:
       VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+      NEON_PARENT_BRANCH: ${{ vars.NEON_STAGING_BRANCH }}
+      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
     steps:
       - uses: actions/checkout@v6
 
@@ -37,44 +48,303 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Verify deployment credentials
+      - name: Verify staging deployment credentials
         run: |
           test -n "$VERCEL_ORG_ID"
           test -n "$VERCEL_PROJECT_ID"
           test -n "$VERCEL_TOKEN"
+          test -n "$NEON_PROJECT_ID"
+          test -n "$NEON_PARENT_BRANCH"
+          test -n "$AUTH_SECRET"
+          test -n "$CRON_SECRET"
 
-      - name: Deploy Preview
-        id: deploy
+      - name: Link Vercel project
         run: |
-          preview_url=$(npx --yes vercel@latest deploy \
+          npx --yes vercel@"$VERCEL_CLI_VERSION" link \
             --yes \
-            --token "$VERCEL_TOKEN")
+            --project "$VERCEL_PROJECT_ID" \
+            --scope "$VERCEL_ORG_ID" \
+            --token "$VERCEL_TOKEN"
+
+      - name: Calculate preview branch expiration
+        id: expiration
+        run: echo "expires_at=$(date -u --date '+7 days' +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_OUTPUT"
+
+      - name: Create isolated Neon branch
+        id: create-neon-branch
+        uses: neondatabase/create-branch-action@fb620d43d4c565abaf088b848a4e28e5c4ea4d9c
+        with:
+          project_id: ${{ env.NEON_PROJECT_ID }}
+          branch_name: sinan-pr-${{ github.event.pull_request.number }}
+          parent_branch: ${{ env.NEON_PARENT_BRANCH }}
+          database: neondb
+          role: neondb_owner
+          expires_at: ${{ steps.expiration.outputs.expires_at }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply all current migrations and verify idempotency
+        env:
+          DATABASE_URL: ${{ steps.create-neon-branch.outputs.db_url_pooled }}
+          DATABASE_ADAPTER: neon
+        run: |
+          npm run db:check --workspace=@sinan/web
+          npm run db:migrate --workspace=@sinan/web
+          npm run db:migrate --workspace=@sinan/web
+
+      - name: Validate staging environment contract
+        env:
+          DATABASE_URL: ${{ steps.create-neon-branch.outputs.db_url_pooled }}
+          DATABASE_ADAPTER: neon
+          APP_RELEASE: ${{ github.sha }}
+          NEXT_PUBLIC_APP_URL: https://sinan-staging.vercel.app
+          NEXT_PUBLIC_ICP_FILING_NUMBER: 浙ICP备STAGING-PENDING号
+          NEXT_PUBLIC_APP_ENV: staging
+          NEXT_PUBLIC_API_ENABLED: "true"
+          NEXT_PUBLIC_PULSE_ENABLED: "true"
+          SUPPORT_EMAIL: support@sinanapp.cn
+          MAIL_PROVIDER: disabled
+          MAIL_FROM_DOMAIN: sinanapp.cn
+          ERROR_REPORTING_MODE: stdout
+          INVITE_REQUIRED: "true"
+          LAUNCH_SCOPE_ONLY: "true"
+        run: npm run release:check-env --workspace=@sinan/web
+
+      - name: Deploy Vercel Preview
+        id: deploy
+        env:
+          DATABASE_URL: ${{ steps.create-neon-branch.outputs.db_url_pooled }}
+        run: |
+          deploy_output=$(npx --yes vercel@"$VERCEL_CLI_VERSION" deploy . \
+            --yes \
+            --project "$VERCEL_PROJECT_ID" \
+            --scope "$VERCEL_ORG_ID" \
+            --token "$VERCEL_TOKEN" \
+            --build-env NEXT_PUBLIC_APP_URL=https://sinan-staging.vercel.app \
+            --build-env NEXT_PUBLIC_APP_ENV=staging \
+            --build-env NEXT_PUBLIC_API_ENABLED=true \
+            --build-env NEXT_PUBLIC_PULSE_ENABLED=true \
+            --build-env NEXT_PUBLIC_ICP_FILING_NUMBER=浙ICP备STAGING-PENDING号 \
+            --build-env LAUNCH_SCOPE_ONLY=true \
+            --env NEXT_PUBLIC_APP_URL=https://sinan-staging.vercel.app \
+            --env NEXT_PUBLIC_APP_ENV=staging \
+            --env NEXT_PUBLIC_API_ENABLED=true \
+            --env NEXT_PUBLIC_PULSE_ENABLED=true \
+            --env LAUNCH_SCOPE_ONLY=true \
+            --env INVITE_REQUIRED=true \
+            --env DATABASE_ADAPTER=neon \
+            --env DATABASE_URL="$DATABASE_URL" \
+            --env AUTH_SECRET="$AUTH_SECRET" \
+            --env CRON_SECRET="$CRON_SECRET" \
+            --env APP_RELEASE="${GITHUB_SHA}" \
+            --env MAIL_PROVIDER=disabled \
+            --env MAIL_FROM_DOMAIN=sinanapp.cn \
+            --env ERROR_REPORTING_MODE=stdout \
+            --env SUPPORT_EMAIL=support@sinanapp.cn \
+            --env NEXT_PUBLIC_ICP_FILING_NUMBER=浙ICP备STAGING-PENDING号)
+          preview_url=$(printf '%s\n' "$deploy_output" | tail -n 1 | tr -d '\r')
+          [[ "$preview_url" == https://* ]]
           echo "url=$preview_url" >> "$GITHUB_OUTPUT"
-          echo "### Vercel Preview" >> "$GITHUB_STEP_SUMMARY"
-          echo "$preview_url" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "### Vercel Preview"
+            echo "- URL: $preview_url"
+            echo "- Neon branch: sinan-pr-${{ github.event.pull_request.number }}"
+            echo "- Git SHA: $GITHUB_SHA"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Inspect deployment
         run: |
-          npx --yes vercel@latest inspect \
+          npx --yes vercel@"$VERCEL_CLI_VERSION" inspect \
             "${{ steps.deploy.outputs.url }}" \
+            --scope "$VERCEL_ORG_ID" \
             --token "$VERCEL_TOKEN" \
             --wait
 
-      - name: Verify live and ready health checks
+      - name: Verify Preview health and public pages
+        env:
+          PREVIEW_URL: ${{ steps.deploy.outputs.url }}
         run: |
-          live_response=$(timeout 45s npx --yes vercel@latest curl /api/health/live \
-            --deployment "${{ steps.deploy.outputs.url }}")
-          printf '%s' "$live_response" | jq '{status, service}'
-          printf '%s' "$live_response" | jq -e '.status == "ok"'
+          curl --fail --silent --show-error --retry 10 --retry-delay 2 "$PREVIEW_URL/api/health/live" | jq -e '.status == "ok"'
+          curl --fail --silent --show-error --retry 10 --retry-delay 2 "$PREVIEW_URL/api/health/ready" | jq -e '.status == "ready" and .configuration == "valid" and .database == "reachable"'
+          curl --fail --silent --show-error "$PREVIEW_URL/" >/dev/null
+          curl --fail --silent --show-error "$PREVIEW_URL/legal/privacy" >/dev/null
+          curl --fail --silent --show-error "$PREVIEW_URL/pulse" >/dev/null
 
-          ready_response=$(timeout 45s npx --yes vercel@latest curl /api/health/ready \
-            --deployment "${{ steps.deploy.outputs.url }}")
-          printf '%s' "$ready_response" | jq '{status, configuration, database}'
-          printf '%s' "$ready_response" | jq -e \
-            '.status == "ready" and .configuration == "valid" and .database == "reachable"'
-
-      - name: Point stable internal-test URL to verified Preview
+      - name: Run release E2E against the isolated Preview
+        env:
+          DATABASE_URL: ${{ steps.create-neon-branch.outputs.db_url_pooled }}
+          DATABASE_ADAPTER: neon
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          INVITE_REQUIRED: "true"
+          NEXT_PUBLIC_APP_ENV: staging
+          NEXT_PUBLIC_API_ENABLED: "true"
+          LAUNCH_SCOPE_ONLY: "true"
+          RELEASE_BASE_URL: ${{ steps.deploy.outputs.url }}
         run: |
-          npx --yes vercel@latest alias set \
+          npx playwright install --with-deps chromium
+          npm run test:e2e:release --workspace=@sinan/web
+
+  staging:
+    name: Deploy stable staging to Vercel
+    if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    environment: staging
+    env:
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      DATABASE_URL: ${{ secrets.NEON_STAGING_DATABASE_URL }}
+      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Verify staging deployment credentials
+        run: |
+          test -n "$VERCEL_ORG_ID"
+          test -n "$VERCEL_PROJECT_ID"
+          test -n "$VERCEL_TOKEN"
+          test -n "$DATABASE_URL"
+          test -n "$AUTH_SECRET"
+          test -n "$CRON_SECRET"
+
+      - name: Link Vercel project
+        run: |
+          npx --yes vercel@"$VERCEL_CLI_VERSION" link \
+            --yes \
+            --project "$VERCEL_PROJECT_ID" \
+            --scope "$VERCEL_ORG_ID" \
+            --token "$VERCEL_TOKEN"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply all current migrations and verify idempotency
+        env:
+          DATABASE_ADAPTER: neon
+        run: |
+          npm run db:check --workspace=@sinan/web
+          npm run db:migrate --workspace=@sinan/web
+          npm run db:migrate --workspace=@sinan/web
+
+      - name: Validate staging environment contract
+        env:
+          DATABASE_ADAPTER: neon
+          APP_RELEASE: ${{ github.sha }}
+          NEXT_PUBLIC_APP_URL: https://sinan-staging.vercel.app
+          NEXT_PUBLIC_ICP_FILING_NUMBER: 浙ICP备STAGING-PENDING号
+          NEXT_PUBLIC_APP_ENV: staging
+          NEXT_PUBLIC_API_ENABLED: "true"
+          NEXT_PUBLIC_PULSE_ENABLED: "true"
+          SUPPORT_EMAIL: support@sinanapp.cn
+          MAIL_PROVIDER: disabled
+          MAIL_FROM_DOMAIN: sinanapp.cn
+          ERROR_REPORTING_MODE: stdout
+          INVITE_REQUIRED: "true"
+          LAUNCH_SCOPE_ONLY: "true"
+        run: npm run release:check-env --workspace=@sinan/web
+
+      - name: Deploy stable staging
+        id: deploy
+        run: |
+          deploy_output=$(npx --yes vercel@"$VERCEL_CLI_VERSION" deploy . \
+            --yes \
+            --project "$VERCEL_PROJECT_ID" \
+            --scope "$VERCEL_ORG_ID" \
+            --token "$VERCEL_TOKEN" \
+            --build-env NEXT_PUBLIC_APP_URL=https://sinan-staging.vercel.app \
+            --build-env NEXT_PUBLIC_APP_ENV=staging \
+            --build-env NEXT_PUBLIC_API_ENABLED=true \
+            --build-env NEXT_PUBLIC_PULSE_ENABLED=true \
+            --build-env NEXT_PUBLIC_ICP_FILING_NUMBER=浙ICP备STAGING-PENDING号 \
+            --build-env LAUNCH_SCOPE_ONLY=true \
+            --env NEXT_PUBLIC_APP_URL=https://sinan-staging.vercel.app \
+            --env NEXT_PUBLIC_APP_ENV=staging \
+            --env NEXT_PUBLIC_API_ENABLED=true \
+            --env NEXT_PUBLIC_PULSE_ENABLED=true \
+            --env LAUNCH_SCOPE_ONLY=true \
+            --env INVITE_REQUIRED=true \
+            --env DATABASE_ADAPTER=neon \
+            --env DATABASE_URL="$DATABASE_URL" \
+            --env AUTH_SECRET="$AUTH_SECRET" \
+            --env CRON_SECRET="$CRON_SECRET" \
+            --env APP_RELEASE="${GITHUB_SHA}" \
+            --env MAIL_PROVIDER=disabled \
+            --env MAIL_FROM_DOMAIN=sinanapp.cn \
+            --env ERROR_REPORTING_MODE=stdout \
+            --env SUPPORT_EMAIL=support@sinanapp.cn \
+            --env NEXT_PUBLIC_ICP_FILING_NUMBER=浙ICP备STAGING-PENDING号)
+          staging_url=$(printf '%s\n' "$deploy_output" | tail -n 1 | tr -d '\r')
+          [[ "$staging_url" == https://* ]]
+          echo "url=$staging_url" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Stable staging deployment"
+            echo "- Candidate URL: $staging_url"
+            echo "- Target alias: https://sinan-staging.vercel.app"
+            echo "- Git SHA: $GITHUB_SHA"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Inspect deployment
+        run: |
+          npx --yes vercel@"$VERCEL_CLI_VERSION" inspect \
             "${{ steps.deploy.outputs.url }}" \
-            sinan-staging.vercel.app
+            --scope "$VERCEL_ORG_ID" \
+            --token "$VERCEL_TOKEN" \
+            --wait
+
+      - name: Verify stable staging health and core pages
+        env:
+          STAGING_URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          curl --fail --silent --show-error --retry 10 --retry-delay 2 "$STAGING_URL/api/health/live" | jq -e '.status == "ok"'
+          curl --fail --silent --show-error --retry 10 --retry-delay 2 "$STAGING_URL/api/health/ready" | jq -e '.status == "ready" and .configuration == "valid" and .database == "reachable"'
+          curl --fail --silent --show-error "$STAGING_URL/" >/dev/null
+          curl --fail --silent --show-error "$STAGING_URL/legal/privacy" >/dev/null
+          curl --fail --silent --show-error "$STAGING_URL/pulse" >/dev/null
+
+      - name: Run release E2E against stable staging candidate
+        env:
+          DATABASE_ADAPTER: neon
+          INVITE_REQUIRED: "true"
+          NEXT_PUBLIC_APP_ENV: staging
+          NEXT_PUBLIC_API_ENABLED: "true"
+          LAUNCH_SCOPE_ONLY: "true"
+          RELEASE_BASE_URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:e2e:release --workspace=@sinan/web
+
+      - name: Point stable staging alias to verified candidate
+        run: |
+          npx --yes vercel@"$VERCEL_CLI_VERSION" alias set \
+            "${{ steps.deploy.outputs.url }}" \
+            sinan-staging.vercel.app \
+            --scope "$VERCEL_ORG_ID" \
+            --token "$VERCEL_TOKEN"
+
+  cleanup:
+    name: Delete isolated Neon preview branch
+    if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: staging
+    steps:
+      - name: Delete Neon branch
+        continue-on-error: true
+        uses: neondatabase/delete-branch-action@4468d825d5a88ef4012f1705a82f02ec3072f776
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch: sinan-pr-${{ github.event.pull_request.number }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+
+      - name: Record cleanup
+        run: |
+          echo "Neon branch cleanup requested for sinan-pr-${{ github.event.pull_request.number }}" >> "$GITHUB_STEP_SUMMARY"
