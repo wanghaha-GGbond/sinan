@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og"
 
-export const runtime = "edge"
+export const runtime = "nodejs"
 
 export async function GET(request: Request) {
   const params = new URL(request.url).searchParams

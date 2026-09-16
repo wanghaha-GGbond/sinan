@@ -90,3 +90,9 @@ __pycache__/
 # Local design QA captures (keep out of release commits)
 /design-qa*.png
 /design-qa.md
+
+# cloudflare workers build output (opennextjs adapter)
+/apps/web/.open-next/
+/apps/web/.wrangler/
+**/.dev.vars
+**/.dev.vars.*
