@@ -25,7 +25,7 @@ export default function HomeScreen() {
 
   return (
     <View style={S.container}>
-      <SolidTopbar title="司南 推荐" subtitle="邀请制 Beta" right={<HomeHeaderActions />} />
+      <SolidTopbar title="在场 推荐" subtitle="邀请制 Beta" right={<HomeHeaderActions />} />
       <IntelNav />
       <ScrollView contentContainerStyle={S.content}>
         <SolidCard variant="elevated" style={S.hero}>

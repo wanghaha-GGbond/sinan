@@ -10,7 +10,7 @@ export default function HomePage() {
     <section className="mx-auto w-full max-w-page px-4 py-8 sm:px-6 lg:py-12" data-testid="home-recommend-feed">
       <WebSurface tone="base" className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-end">
         <div>
-          <p className="text-sm font-semibold text-primary-deep">司南 · 职场决策工具</p>
+          <p className="text-sm font-semibold text-primary-deep">在场 · 职场决策工具</p>
           <h1 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight text-foreground sm:text-5xl">入职前，先把这家公司看清楚。</h1>
           <p className="mt-4 max-w-xl text-base leading-7 text-muted-foreground">真实公司、匿名评价与可追溯研报，帮助你在投递、面试和入职前做出更有依据的判断。</p>
           <div className="mt-6 flex flex-wrap gap-2">

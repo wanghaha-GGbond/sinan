@@ -144,7 +144,7 @@ export default function CommunityPage() {
           description={
             selectedCompany
               ? "可以先查看公司评价，再围绕具体经历发起追问。"
-              : "换一个行业或城市,或者发起新评价。司南的追问空间依赖你。"
+              : "换一个行业或城市,或者发起新评价。在场的追问空间依赖你。"
           }
           action={
             <WebButton asChild variant="primary" size="sm">

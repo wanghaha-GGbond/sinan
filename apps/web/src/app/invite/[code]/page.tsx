@@ -73,7 +73,7 @@ export default function InviteLandingPage() {
         <div className="flex flex-col items-center gap-3">
           <p className="text-sm text-muted-foreground">
             <span className="font-semibold text-foreground">{invite?.inviter?.displayName ?? "一位认证成员"}</span>
-            {" 邀请你加入司南"}
+            {" 邀请你加入在场"}
           </p>
           <IdentityCard data={cardData} />
           <p className="text-xs text-muted-foreground">点击卡片查看声誉背面</p>
@@ -82,7 +82,7 @@ export default function InviteLandingPage() {
 
       {!cardData && !loading && (
         <div className="text-center">
-          <p className="text-lg font-semibold text-foreground">受邀加入司南</p>
+          <p className="text-lg font-semibold text-foreground">受邀加入在场</p>
           <p className="mt-2 text-sm text-muted-foreground">高端职场真实评价社区</p>
         </div>
       )}

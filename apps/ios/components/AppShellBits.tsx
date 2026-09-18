@@ -35,7 +35,7 @@ export function IntelNav() {
 export function AppFooter() {
   return (
     <View style={S.footer}>
-      <Text style={S.footerText}>司南：入职前，先看清方向。</Text>
+      <Text style={S.footerText}>在场：入职前，先看清方向。</Text>
       <Text style={S.footerText}>匿名保护优先，不向公司开放用户身份。</Text>
       <TouchableOpacity onPress={() => router.push("/support")} accessibilityRole="link">
         <Text style={S.footerLink}>帮助与内容安全</Text>

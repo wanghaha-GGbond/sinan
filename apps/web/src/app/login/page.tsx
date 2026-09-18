@@ -107,7 +107,7 @@ export default function LoginPage() {
           <div className="flex size-14 items-center justify-center rounded-2xl bg-secondary shadow-[0_4px_0_rgba(14,143,95,0.12)]">
             <Compass className="size-7 text-secondary-foreground" />
           </div>
-          <h1 className="text-xl font-semibold text-foreground">登录司南</h1>
+          <h1 className="text-xl font-semibold text-foreground">登录在场</h1>
           <p className="text-sm text-muted-foreground">入职前，先看清方向</p>
         </div>
 

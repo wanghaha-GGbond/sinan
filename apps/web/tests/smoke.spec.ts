@@ -24,12 +24,12 @@ test("研报 HTML 列表与详情可访问", async ({ page }) => {
 
 test("合规页面与账号数据入口可访问", async ({ page }) => {
   await page.goto("/legal/privacy")
-  await expect(page.getByRole("heading", { name: "司南隐私政策" })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "在场隐私政策" })).toBeVisible()
   await page.goto("/legal/terms")
-  await expect(page.getByRole("heading", { name: "司南用户协议" })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "在场用户协议" })).toBeVisible()
   await page.goto("/settings/account")
   await expect(page).toHaveURL(/\/login\?next=%2Fsettings%2Faccount$/)
-  await expect(page.getByRole("heading", { name: "登录司南" })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "登录在场" })).toBeVisible()
 })
 
 test("无数据库时真实数据入口明确降级而非展示 mock", async ({ page }) => {
@@ -79,7 +79,7 @@ test("健康检查区分存活与可接流状态", async ({ request }) => {
 test("受保护页面先登录并保留原目的地", async ({ page }) => {
   await page.goto("/submit/review?companyId=company-1")
   await expect(page).toHaveURL(/\/login\?next=%2Fsubmit%2Freview%3FcompanyId%3Dcompany-1$/)
-  await expect(page.getByRole("heading", { name: "登录司南" })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "登录在场" })).toBeVisible()
   await expect(page.getByRole("link", { name: "注册" })).toHaveAttribute(
     "href",
     "/register?next=%2Fsubmit%2Freview%3FcompanyId%3Dcompany-1",
@@ -101,7 +101,7 @@ test("登录表单首次提交就阻止无效输入", async ({ page }) => {
 
 test("登录后回到原页面并可从个人中心退出", async ({ page }) => {
   await page.goto("/login?next=%2Fme")
-  await page.getByLabel("邮箱", { exact: true }).fill("test@sinan.app")
+  await page.getByLabel("邮箱", { exact: true }).fill("test@sinanapp.cn")
   await page.getByLabel("密码", { exact: true }).fill("test1234")
   await page.getByRole("button", { name: "登录", exact: true }).click()
   await expect(page).toHaveURL("/me")
@@ -130,8 +130,8 @@ test("Web 可安装为独立 App", async ({ request }) => {
   const response = await request.get("/manifest.webmanifest")
   expect(response.status()).toBe(200)
   expect(await response.json()).toMatchObject({
-    name: "司南 · 职场方向助手",
-    short_name: "司南",
+    name: "在场 · 职场方向助手",
+    short_name: "在场",
     start_url: "/",
     display: "standalone",
     background_color: "#F8FFFB",
@@ -143,5 +143,5 @@ test("延期页面保留 App 恢复入口且仍返回 404", async ({ request }) 
   const response = await request.get("/auction")
   expect(response.status()).toBe(404)
   expect(response.headers()["content-type"]).toContain("text/html")
-  expect(await response.text()).toContain("这条路还没画在司南上")
+  expect(await response.text()).toContain("这条路还没画在在场上")
 })

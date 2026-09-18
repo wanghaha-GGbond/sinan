@@ -286,7 +286,7 @@ function SubmitFormScreen() {
             你的评价会在审核后展示。正式版本会先完成匿名保护和真实性校验,再进入公开样本。
           </Text>
           <View style={S.rewardGrid}>
-            {["方向值 +20", "连续点灯 +1", "司南徽章进度 +1"].map((item) => (
+            {["方向值 +20", "连续点灯 +1", "在场徽章进度 +1"].map((item) => (
               <View key={item} style={S.rewardPill}>
                 <Text style={S.rewardText}>{item}</Text>
               </View>
@@ -828,7 +828,7 @@ function ReviewStep(props: {
       </View>
 
       <Text style={[S.label, S.safetyHead]}>匿名安全检查</Text>
-      <Text style={S.helperText}>逐条确认。司南会先做匿名保护 + 真实性校验,再公开。</Text>
+      <Text style={S.helperText}>逐条确认。在场会先做匿名保护 + 真实性校验,再公开。</Text>
       <View style={S.safetyList}>
         {SAFETY_ITEMS.map((item, index) => {
           const checked = props.safetyItems[index]

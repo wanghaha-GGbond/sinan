@@ -1,6 +1,6 @@
-# 司南（Sinan）
+# 在场
 
-司南是一个邀请制的匿名职场信息产品，采用 Web + iOS monorepo。
+在场是一个邀请制的匿名职场信息产品，采用 Web + iOS monorepo。
 
 ## 目录
 

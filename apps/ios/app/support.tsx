@@ -16,7 +16,7 @@ export default function SupportScreen() {
       <SolidTopbar back title="帮助与内容安全" subtitle="举报、隐私与账号支持" />
       <ScrollView contentContainerStyle={S.content}>
         <SolidCard variant="elevated" style={S.card}>
-          <Text style={S.eyebrow}>司南支持中心</Text>
+          <Text style={S.eyebrow}>在场支持中心</Text>
           <Text style={S.title}>遇到问题，直接联系我们</Text>
           <Text style={S.body}>账号、内容、隐私或举报问题，都可以联系支持团队。请不要发送密码或工作凭证原件。</Text>
           <SolidButton title="发送支持邮件" onPress={() => void Linking.openURL(`mailto:${SUPPORT_EMAIL}`)} style={S.primary} />

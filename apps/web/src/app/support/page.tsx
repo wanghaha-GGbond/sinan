@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 
-export const metadata: Metadata = { title: "帮助与内容安全 | 司南" }
+export const metadata: Metadata = { title: "帮助与内容安全 | 在场" }
 
 export default function SupportPage() {
   const supportEmail = process.env.SUPPORT_EMAIL?.trim() || "support@sinanapp.cn"
@@ -8,7 +8,7 @@ export default function SupportPage() {
   return (
     <article className="mx-auto max-w-3xl space-y-8 px-4 py-10 leading-7 sm:px-6">
       <header>
-        <p className="text-sm font-semibold text-emerald-700">司南支持中心</p>
+        <p className="text-sm font-semibold text-emerald-700">在场支持中心</p>
         <h1 className="mt-2 text-3xl font-bold">帮助与内容安全</h1>
         <p className="mt-2 text-muted-foreground">我们优先处理隐私泄露、身份暴露和人身攻击等高风险内容。</p>
       </header>

@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
   // Explicit local-only preview mode. Missing production configuration must
   // fail closed instead of exposing hard-coded development identities.
   if (isDevAuthEnabled()) {
-    const developerEmail = "developer@sinan.app"
+    const developerEmail = "developer@sinanapp.cn"
     const isDeveloperAccount =
       email === developerEmail && password === "sinan-dev-2026"
 
@@ -55,13 +55,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         user: {
           id: "dev-admin-001",
-          displayName: "司南开发者",
+          displayName: "在场开发者",
           role: "admin",
         }, ...(nativeClient ? { token } : {}),
       })
     }
 
-    const testEmail = "test@sinan.app"
+    const testEmail = "test@sinanapp.cn"
     const testPhone = "13800138000"
     const isTestAccount =
       (email === testEmail || phone === testPhone) && password === "test1234"

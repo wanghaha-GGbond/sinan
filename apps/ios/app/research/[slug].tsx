@@ -17,7 +17,7 @@ export default function ResearchDetailScreen() {
     return () => { active = false }
   }, [slug])
 
-  return <View style={S.container}><SolidTopbar back title="司南研报" subtitle="证据可回溯" />{!report && !error ? <ActivityIndicator style={S.loader} color={COLORS.primary} /> : <ScrollView contentContainerStyle={S.content}>{error ? <Text style={S.error}>{error}</Text> : null}{report ? <>
+  return <View style={S.container}><SolidTopbar back title="在场研报" subtitle="证据可回溯" />{!report && !error ? <ActivityIndicator style={S.loader} color={COLORS.primary} /> : <ScrollView contentContainerStyle={S.content}>{error ? <Text style={S.error}>{error}</Text> : null}{report ? <>
     <SolidCard variant="elevated" style={S.hero}><Text style={S.meta}>{report.card.city} · {report.card.industry} · {report.card.recommendationTier}</Text><Text style={S.title}>{report.card.name}研究报告</Text><Text style={S.lead}>{report.card.oneLine}</Text><Text style={S.bigScore}>{report.index.overallScore}<Text style={S.outOf}> / 100 · 可信度 {report.index.confidence}%</Text></Text></SolidCard>
     <Section title="五维研究指数">{Object.entries(report.index.components).map(([key, value]) => <View key={key} style={S.metric}><Text style={S.metricLabel}>{report.labels.components[key] ?? key}</Text><View style={S.track}><View style={[S.fill, { width: `${value.score}%` }]} /></View><Text style={S.metricScore}>{value.score}</Text><Text style={S.note}>可信度 {value.confidence}% · {value.evidenceCount} 条证据{value.limitations[0] ? ` · ${value.limitations[0]}` : ""}</Text></View>)}</Section>
     <Section title="值得关注的机会">{report.card.opportunityDetails.length ? report.card.opportunityDetails.map((item) => <Evidence key={item.signal} item={item} />) : <Text style={S.note}>当前缺少可用机会判断。</Text>}</Section>

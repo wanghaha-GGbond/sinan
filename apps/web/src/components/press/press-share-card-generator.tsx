@@ -106,7 +106,7 @@ export function PressShareCardGenerator() {
             </WebButton>
             <a
               href={imageUrl}
-              download="sinan-share.png"
+              download="zaichang-share.png"
               className="text-xs font-semibold text-primary-deep hover:underline"
             >
               下载 PNG
@@ -128,7 +128,7 @@ export function PressShareCardGenerator() {
           {/* eslint-disable-next-line @next/next/no-img-element -- OG image is dynamic; preview is not SSR-critical */}
           <img
             src={imageUrl}
-            alt="司南情绪指数分享卡预览"
+            alt="在场情绪指数分享卡预览"
             width={1200}
             height={630}
             className="block w-full"

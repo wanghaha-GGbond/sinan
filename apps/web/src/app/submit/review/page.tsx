@@ -753,7 +753,7 @@ function SubmitReviewForm() {
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-3">
-            {["方向值 +20", "连续点灯 +1", "司南徽章进度 +1"].map((item) => (
+            {["方向值 +20", "连续点灯 +1", "在场徽章进度 +1"].map((item) => (
               <div key={item} className="rounded-2xl bg-muted p-4 text-sm font-medium text-foreground">
                 {item}
               </div>
@@ -834,7 +834,7 @@ function SubmitReviewForm() {
                 : "提交公司注册信息，也可以紧接着写评价，两项内容会分别审核。"
               : onboardingMode
                 ? "公司信息已经保存。接下来写下真实经历，评价会与公司资料分别审核。"
-                : "三步完成匿名评价。司南鼓励描述事实、流程和决策信息，不鼓励攻击性表达。"}
+                : "三步完成匿名评价。在场鼓励描述事实、流程和决策信息，不鼓励攻击性表达。"}
           </p>
         </div>
 

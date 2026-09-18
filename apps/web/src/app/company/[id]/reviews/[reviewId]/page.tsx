@@ -124,7 +124,7 @@ export default async function ReviewDetailPage({
       </Card>
 
       <p className="text-xs text-[var(--tw-secondary)]">
-        匿名安全提示：请勿在评价中发布姓名、联系方式、精确组织信息。司南优先保护匿名与事实表达。
+        匿名安全提示：请勿在评价中发布姓名、联系方式、精确组织信息。在场优先保护匿名与事实表达。
       </p>
 
       <div className="glass-strong fixed inset-x-0 bottom-0 z-sticky border-t border-slate-200/70 p-3 sm:hidden">

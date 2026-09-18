@@ -329,7 +329,7 @@ function AuctionBidFormInner({ auctionId }: { auctionId: string }) {
           <div>
             <p className="text-sm font-semibold text-foreground">完成 L1 验证后即可出价</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              司南是打工人社区——拍卖的嘉宾和竞拍者都需要先做最基本的身份验证。
+              在场是打工人社区——拍卖的嘉宾和竞拍者都需要先做最基本的身份验证。
             </p>
           </div>
         </div>

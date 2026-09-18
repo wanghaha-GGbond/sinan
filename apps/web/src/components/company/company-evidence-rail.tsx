@@ -75,7 +75,7 @@ export function CompanyEvidenceRail({ company }: { company: CompanyListItem }) {
           <li className="flex gap-2"><CircleCheck className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />仅展示经过验证的在职或离职经验</li>
           <li className="flex gap-2"><CircleCheck className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />企业无法查看或删除匿名评价</li>
         </ul>
-        <p className="mt-3 text-xs font-medium text-primary-deep">了解司南的审核与隐私机制 →</p>
+        <p className="mt-3 text-xs font-medium text-primary-deep">了解在场的审核与隐私机制 →</p>
       </section>
     </aside>
   )

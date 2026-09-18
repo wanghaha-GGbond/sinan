@@ -29,7 +29,7 @@ export function ReportReviewButton({ reviewId, compact = false }: { reviewId: st
       <span
         className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1.5 text-xs font-medium text-secondary-foreground"
         data-testid={`report-submitted-${reviewId}`}
-        title="你已经举报过这条评价,司南会优先审核"
+        title="你已经举报过这条评价,在场会优先审核"
       >
         <CheckCircle2 className="size-3.5" />
         已举报:{label}
@@ -87,7 +87,7 @@ export function ReportReviewButton({ reviewId, compact = false }: { reviewId: st
         </button>
       </div>
       <p className="mb-3 text-xs text-muted-foreground">
-        司南优先保护匿名与事实表达。明确违规的内容会被下架,公司方无法干预。
+        在场优先保护匿名与事实表达。明确违规的内容会被下架,公司方无法干预。
       </p>
       <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="举报原因">
         {REPORT_REASONS.map((option) => {

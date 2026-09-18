@@ -22,7 +22,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const result = getResearchCompany(slug)
-  return result ? { title: `${result.card.name}研究报告 | 司南`, description: result.card.oneLine } : {}
+  return result ? { title: `${result.card.name}研究报告 | 在场`, description: result.card.oneLine } : {}
 }
 
 export default async function CompanyResearchPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -44,7 +44,7 @@ export default async function CompanyResearchPage({ params }: { params: Promise<
               <p className="mt-4 max-w-prose-sm text-base leading-relaxed text-muted-foreground">{card.oneLine}</p>
             </div>
             <div className="flex items-end gap-3 rounded-3xl bg-foreground p-5 text-white">
-              <div><span className="text-xs text-white/60">司南总指数</span><strong className="block font-mono text-4xl">{index.overallScore ?? "待补证据"}</strong></div>
+              <div><span className="text-xs text-white/60">在场总指数</span><strong className="block font-mono text-4xl">{index.overallScore ?? "待补证据"}</strong></div>
               <span className="pb-1 text-xs text-white/60">/ 100<br />可信度 {index.confidence}%</span>
             </div>
           </div>

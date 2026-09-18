@@ -575,7 +575,7 @@ export const badgeCatalog: MobileBadgeProgress[] = [
     progress: 3,
     target: 5,
   },
-  { id: "veteran", name: "司南老用户", description: "注册满 1 年", unlocked: false, progress: 0, target: 1 },
+  { id: "veteran", name: "在场老用户", description: "注册满 1 年", unlocked: false, progress: 0, target: 1 },
 ]
 
 /** Reviews authored by the current (mock) user — shown in /me. */

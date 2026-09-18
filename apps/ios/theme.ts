@@ -1,4 +1,4 @@
-// 司南原生 App 色彩系统 — 保留 Solid 立体触感。
+// 在场原生 App 色彩系统 — 保留 Solid 立体触感。
 // Web 端使用独立的扁平/轻玻璃视觉系统，不在此处复用。
 
 export const COLORS = {
@@ -57,7 +57,7 @@ export const PRODUCT = {
   valueName: "方向值",
   streakName: "连续点灯",
   levelName: "指路等级",
-  badgeName: "司南徽章",
+  badgeName: "在场徽章",
   reviewerName: "过来人",
   newcomerName: "后来者",
 } as const

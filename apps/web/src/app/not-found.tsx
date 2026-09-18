@@ -22,7 +22,7 @@ export default function NotFound() {
           Page not found
         </p>
         <h1 className="mt-3 text-2xl font-semibold text-foreground sm:text-3xl">
-          这条路还没画在司南上
+          这条路还没画在在场上
         </h1>
         <p className="mx-auto mt-3 max-w-[44ch] text-sm leading-6 text-muted-foreground">
           你访问的页面可能已下架、被合并,或者从未存在过。先回到推荐流,或者搜一家公司。

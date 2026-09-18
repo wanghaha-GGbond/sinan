@@ -43,7 +43,7 @@ export default function CompanyScreen() {
 
   return (
     <View style={S.container}>
-      <SolidTopbar title="司南" subtitle="公司详情" back />
+      <SolidTopbar title="在场" subtitle="公司详情" back />
       <IntelNav />
       {loading ? <ActivityIndicator style={S.loader} color={COLORS.primary} /> : (
         <ScrollView contentContainerStyle={S.content}>

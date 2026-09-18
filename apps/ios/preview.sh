@@ -1,5 +1,5 @@
 #!/bin/bash
-# 司南 iOS 开发预览 — 一键验证 + 启动
+# 在场 iOS 本地预览 — 一键验证 + 启动
 # 用法:
 #   ./preview.sh          默认 Web 预览（优先）
 #   ./preview.sh web      Web 浏览器预览

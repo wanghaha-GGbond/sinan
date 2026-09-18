@@ -79,7 +79,7 @@ export function CompanyPulseDashboard() {
   }
 
   async function shareWeeklyPulse() {
-    const text = "我正在体验司南 Company Pulse：每天用两个问题记录工作状态。"
+    const text = "我正在体验在场 Company Pulse：每天用两个问题记录工作状态。"
     try {
       if (navigator.share) {
         await navigator.share({ title: "Company Pulse 周报", text })

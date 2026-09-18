@@ -13,8 +13,8 @@ import {
 import { getPublishedResearchSnapshot } from "@/lib/server/published-research"
 
 export const metadata: Metadata = {
-  title: "公司研究 | 司南",
-  description: "司南头部互联网与金融公司研究：职业机会、成长动能、工作体验与证据边界。",
+  title: "公司研究 | 在场",
+  description: "在场头部互联网与金融公司研究：职业机会、成长动能、工作体验与证据边界。",
 }
 
 export const dynamic = "force-dynamic"
@@ -31,7 +31,7 @@ export default async function ResearchPage() {
         <div className="mx-auto grid w-full max-w-hero gap-8 px-4 py-12 sm:px-6 md:grid-cols-[1.35fr_.65fr] md:py-18">
           <div>
             <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary-surface-border bg-primary-tint px-3 py-1 text-xs font-bold text-primary-deep">
-              <BookOpen className="size-3.5" /> 司南研究 · {generatedAt}
+              <BookOpen className="size-3.5" /> 在场研究 · {generatedAt}
             </p>
             <h1 className="max-w-3xl text-4xl font-extrabold leading-tight tracking-tight text-foreground sm:text-5xl">
               入职之前，先看懂<br /><span className="text-primary-deep">公司真正的方向。</span>

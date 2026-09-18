@@ -54,11 +54,11 @@ export default function MeScreen() {
 
   return (
     <View style={S.container}>
-      <SolidTopbar title="司南 我的" subtitle="账号、隐私与数据" />
+      <SolidTopbar title="在场 我的" subtitle="账号、隐私与数据" />
       <ScrollView contentContainerStyle={S.content}>
         {loading ? <Text style={S.muted}>正在读取安全会话…</Text> : !user ? (
           <SolidCard variant="elevated" style={S.card}>
-            <Text style={S.title}>登录司南</Text>
+            <Text style={S.title}>登录在场</Text>
             <Text style={S.body}>登录后可提交匿名评价并管理账号数据。</Text>
             <View style={S.actions}><Link href="/login" asChild><SolidButton title="登录" /></Link><Link href="/register" asChild><SolidButton title="邀请码注册" variant="secondary" /></Link></View>
           </SolidCard>
@@ -89,7 +89,7 @@ export default function MeScreen() {
           <View style={S.actions}><Link href="/support" asChild><SolidButton title="帮助与内容安全" variant="secondary" /></Link></View>
         </SolidCard>
         <SolidCard variant="subtle" style={S.card}>
-          <Text style={S.title}>关于司南</Text>
+          <Text style={S.title}>关于在场</Text>
           <Text style={S.body}>版本 0.2.0 · com.sinan.app</Text>
           <Text style={S.body}>APP备案号：{appFilingNumber || "尚未配置"}</Text>
         </SolidCard>

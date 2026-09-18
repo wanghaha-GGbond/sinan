@@ -26,8 +26,8 @@ export function PressMediaKit() {
 
       <Block title="一句话定位" tone="elevated">
         <Quote>
-          司南是打工人评价公司的社区。我们是 ToC 产品——公司不会出现在
-          我们的用户列表里,也不会拿到任何评价数据。司南的价值在于:
+          在场是打工人评价公司的社区。我们是 ToC 产品——公司不会出现在
+          我们的用户列表里,也不会拿到任何评价数据。在场的价值在于:
           入职前看清方向,不被公司招股书式的话术骗。
         </Quote>
       </Block>
@@ -66,28 +66,28 @@ export function PressMediaKit() {
       <Block title="请勿引用" tone="risk">
         <ul className="space-y-2 text-sm text-foreground">
           <li>
-            <strong className="text-destructive">× “司南会推出薪资谈判工具&quot;</strong> —
+            <strong className="text-destructive">× “在场会推出薪资谈判工具&quot;</strong> —
             我们没规划这个。
           </li>
           <li>
-            <strong className="text-destructive">× “司南与某公司有官方合作&quot;</strong> —
+            <strong className="text-destructive">× “在场与某公司有官方合作&quot;</strong> —
             我们不与任何公司建立“官方合作”关系(per 01 §三 利益冲突
             原则)。
           </li>
           <li>
-            <strong className="text-destructive">× “司南的薪资数据来自 X 公司&quot;</strong> —
+            <strong className="text-destructive">× “在场的薪资数据来自 X 公司&quot;</strong> —
             全部数据来自已验证用户主动提交,无任何爬取 / 第三方采购。
             我们的薪资证明(L3)在 M3 之前不接;即便接,个税代扣 / PIPL
             评估是硬前置。
           </li>
           <li>
-            <strong className="text-destructive">× “司南会做匿名版 LinkedIn&quot;</strong> —
+            <strong className="text-destructive">× “在场会做匿名版 LinkedIn&quot;</strong> —
             我们不做招聘投递,不做职位匹配,不做“公司推荐的候选人”
             任何形态。
           </li>
           <li>
-            <strong className="text-destructive">× “司南不评价 CEO&quot;</strong> 或
-            <strong className="ml-1 text-destructive">“司南不评价具体团队&quot;</strong> —
+            <strong className="text-destructive">× “在场不评价 CEO&quot;</strong> 或
+            <strong className="ml-1 text-destructive">“在场不评价具体团队&quot;</strong> —
             我们对评价内容的人身攻击 / 隐私泄露 / 谣言 / 网暴有审核,
             但不预设“不能评价谁”。这是审核 SOP 的事,不是平台政策。
           </li>
@@ -101,7 +101,7 @@ export function PressMediaKit() {
         />
         <Copyable
           label="产品长描述 (press kit 标准 200 字)"
-          text="司南(Sinan)是一个匿名公司评价社区,2026 年 M2 阶段。所有评价基于验证身份(L1+) 发布,k-匿名展示,5 维评分结构化,90 天情绪指数由每日 SQL 聚合。司南不与任何公司建立官方合作,公司不会出现在用户列表里,也不会拿到评价数据。"
+          text="在场(Zaichang)是一个匿名公司评价社区,2026 年 M2 阶段。所有评价基于验证身份(L1+) 发布,k-匿名展示,5 维评分结构化,90 天情绪指数由每日 SQL 聚合。在场不与任何公司建立官方合作,公司不会出现在用户列表里,也不会拿到评价数据。"
         />
         <Copyable
           label="一句话投资人 pitch"
@@ -109,7 +109,7 @@ export function PressMediaKit() {
         />
         <Copyable
           label="一句话用户 pitch"
-          text="入职前,先看清方向。司南是打工人评价公司的社区,所有人都是 L1+ 验证身份,公司看不到评价,部门级评分 + 90 天情绪指数。"
+          text="入职前,先看清方向。在场是打工人评价公司的社区,所有人都是 L1+ 验证身份,公司看不到评价,部门级评分 + 90 天情绪指数。"
         />
       </Block>
 
@@ -121,16 +121,16 @@ export function PressMediaKit() {
           </li>
           <li>
             Logo 与字体包:M3 之后提供。在那之前,媒体稿请使用
-            <code className="mx-1 rounded bg-muted px-1.5 py-0.5 text-xs">“司南&quot;</code>
-            中文字符 / <code className="rounded bg-muted px-1.5 py-0.5 text-xs">sinan</code> 拉丁字符
+            <code className="mx-1 rounded bg-muted px-1.5 py-0.5 text-xs">“在场&quot;</code>
+            中文字符 / <code className="rounded bg-muted px-1.5 py-0.5 text-xs">zaichang</code> 拉丁字符
           </li>
           <li>
             产品截图:真实使用截图随邮件请求附带——
             <a
-              href="mailto:press@sinan.app?subject=截图请求"
+              href="mailto:press@sinanapp.cn?subject=截图请求"
               className="ml-1 text-primary-deep hover:underline"
             >
-              press@sinan.app
+              press@sinanapp.cn
             </a>
             ,24 小时内回
           </li>
@@ -141,10 +141,10 @@ export function PressMediaKit() {
         <p className="text-sm text-foreground">
           媒体朋友找我们,一律
           <a
-            href="mailto:press@sinan.app"
+            href="mailto:press@sinanapp.cn"
             className="mx-1 font-semibold text-primary-deep hover:underline"
           >
-            press@sinan.app
+            press@sinanapp.cn
           </a>
           ,我们 24 小时内回。涉及到具体公司评价案例的引用 / 公司方
           反应的,请在邮件里直接写明“我希望双方都发声”——我们

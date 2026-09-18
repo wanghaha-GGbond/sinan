@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils"
 export type WebNavLink = { href: string; label: string; active?: boolean }
 
 export function WebNav({
-  brand = "司南",
+  brand = "在场",
   links = [],
   searchHref = "/search",
   rightSlot,
@@ -31,7 +31,7 @@ export function WebNav({
   return (
     <header className={cn("web-nav", className)}>
       <div className="web-nav-inner">
-        <Link href="/" className="web-brand" aria-label="返回司南首页">
+        <Link href="/" className="web-brand" aria-label="返回在场首页">
           <span className="web-brand-mark" aria-hidden="true"><Leaf className="size-[1.15rem]" strokeWidth={2.2} /></span>
           <span>{brand}</span>
         </Link>

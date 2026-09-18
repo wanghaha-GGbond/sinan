@@ -195,7 +195,7 @@ export default function MePage() {
           <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-2xl bg-muted">
             <Navigation className="size-8 text-muted-foreground" />
           </div>
-          <h2 className="text-lg font-semibold text-foreground">登录司南</h2>
+          <h2 className="text-lg font-semibold text-foreground">登录在场</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             登录后查看方向值、连续点灯和指路等级
             <br />
@@ -751,7 +751,7 @@ function MeContent({
           aria-controls="me-badges-list"
           data-testid="me-toggle-badges"
         >
-          <h2 className="text-base font-semibold text-foreground">司南徽章</h2>
+          <h2 className="text-base font-semibold text-foreground">在场徽章</h2>
           <span className="flex items-center gap-2 text-xs text-muted-foreground" data-testid="me-badges-progress">
             {badges.filter((b) => b.unlocked).length} / {badges.length} 已解锁
             <ChevronRight

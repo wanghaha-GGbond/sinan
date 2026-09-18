@@ -1,6 +1,6 @@
 # Security policy
 
-司南当前是邀请制 Beta。请不要在公开 issue、PR 或聊天中提交密码、数据库连接串、API token、邮箱验证码或用户数据。
+在场当前是邀请制 Beta。请不要在公开 issue、PR 或聊天中提交密码、数据库连接串、API token、邮箱验证码或用户数据。
 
 ## 报告漏洞
 

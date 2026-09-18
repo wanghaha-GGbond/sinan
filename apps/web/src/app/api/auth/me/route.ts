@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
         id: user.userId,
         displayName:
           user.userId === "dev-admin-001"
-            ? "司南开发者"
+            ? "在场开发者"
             : user.userId === "dev-user-001"
               ? "指路人#042"
               : undefined,

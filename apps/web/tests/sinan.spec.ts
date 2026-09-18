@@ -1,9 +1,9 @@
 import type { Page } from "@playwright/test"
 import { expect, test } from "@playwright/test"
 
-test("首页显示司南品牌和搜索入口，且不出现工友", async ({ page }) => {
+test("首页显示在场品牌和搜索入口，且不出现工友", async ({ page }) => {
   await page.goto("/")
-  await expect(page.getByRole("heading", { name: "司南 推荐" })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "在场 推荐" })).toBeVisible()
   await expect(page.getByTestId("home-search-link")).toBeVisible()
   await expect(page.getByText("工友")).toHaveCount(0)
 })

@@ -101,7 +101,7 @@ export function MobileReportButton({
         </TouchableOpacity>
       </View>
       <Text style={S.formHint}>
-        司南优先保护匿名与事实表达。明确违规的内容会被下架。
+        在场优先保护匿名与事实表达。明确违规的内容会被下架。
       </Text>
       <ScrollView
         horizontal

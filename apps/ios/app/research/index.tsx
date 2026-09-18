@@ -24,7 +24,7 @@ export default function ResearchScreen() {
 
   return (
     <View style={S.container}>
-      <SolidTopbar title="司南研报" subtitle="公开证据 · 谨慎结论" />
+      <SolidTopbar title="在场研报" subtitle="公开证据 · 谨慎结论" />
       {loading ? <ActivityIndicator style={S.loader} color={COLORS.primary} /> : (
         <FlatList
           data={reports}

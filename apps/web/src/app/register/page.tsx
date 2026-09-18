@@ -143,7 +143,7 @@ export default function RegisterPage() {
           <div className="flex size-14 items-center justify-center rounded-2xl bg-secondary shadow-[0_4px_0_rgba(14,143,95,0.12)]">
             <Compass className="size-7 text-secondary-foreground" />
           </div>
-          <h1 className="text-xl font-semibold text-foreground">注册司南</h1>
+          <h1 className="text-xl font-semibold text-foreground">注册在场</h1>
           <p className="text-sm text-muted-foreground">成为指路人，分享真实体验</p>
         </div>
 
@@ -326,7 +326,7 @@ export default function RegisterPage() {
           <div className="flex items-start gap-2 rounded-2xl bg-muted p-3">
             <Shield className="mt-0.5 size-4 shrink-0 text-primary" />
             <p className="text-xs text-muted-foreground leading-relaxed">
-              注册即表示同意司南的匿名保护规则。你的身份信息不会向公司方公开。
+              注册即表示同意在场的匿名保护规则。你的身份信息不会向公司方公开。
             </p>
           </div>
 

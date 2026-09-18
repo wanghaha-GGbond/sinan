@@ -4,7 +4,7 @@ export const runtime = "nodejs"
 
 export async function GET(request: Request) {
   const params = new URL(request.url).searchParams
-  const company = params.get("company")?.slice(0, 50) || "司南公司"
+  const company = params.get("company")?.slice(0, 50) || "在场公司"
   const score = Math.max(0, Math.min(100, Number(params.get("score") ?? 72)))
   const trend = params.get("trend") === "down" ? "下降" : "上升"
   // M2 T5.2: when an invite code is attached, the share card becomes a
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
       >
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <div style={{ fontSize: 26, color: "#60d394" }}>司南 · 职场情绪指数</div>
+            <div style={{ fontSize: 26, color: "#60d394" }}>在场 · 职场情绪指数</div>
             <div style={{ marginTop: 24, fontSize: 58, fontWeight: 700 }}>{company}</div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
@@ -60,11 +60,11 @@ export async function GET(request: Request) {
             {inviteCode ? (
               <span style={{ marginTop: 8, color: "#f7faf8", fontSize: 26, fontWeight: 600 }}>
                 {inviterName ? `${inviterName} 邀请你:` : "邀请你:"}
-                <span style={{ marginLeft: 14, color: "#60d394" }}>sinan.app/invite/{inviteCode}</span>
+                <span style={{ marginLeft: 14, color: "#60d394" }}>sinanapp.cn/invite/{inviteCode}</span>
               </span>
             ) : null}
           </span>
-          <span>sinan</span>
+          <span>zaichang</span>
         </div>
       </div>
     ),

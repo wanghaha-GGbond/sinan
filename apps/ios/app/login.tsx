@@ -57,7 +57,7 @@ export default function LoginScreen() {
           <View style={S.brandMark}>
             <Text style={S.brandText}>司</Text>
           </View>
-          <Text style={S.title}>登录司南</Text>
+          <Text style={S.title}>登录在场</Text>
           <Text style={S.subtitle}>入职前，先看清方向</Text>
         </View>
 

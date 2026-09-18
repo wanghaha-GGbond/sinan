@@ -66,7 +66,7 @@ export default function BenefitsPage() {
             </div>
             <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground">把福利从口号拆成真实体验</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              聚合办公环境、通勤、食堂、下午茶、工位和设备等匿名样本,保留司南的「公司体感」表达。
+              聚合办公环境、通勤、食堂、下午茶、工位和设备等匿名样本,保留在场的「公司体感」表达。
             </p>
           </div>
           <WebButton asChild variant="dark">

@@ -197,7 +197,7 @@ export default function ReviewScreen() {
           </SolidCard>
         ) : null}
 
-        <Text style={S.safety}>匿名安全提示:请勿在评价中发布姓名、联系方式、精确组织信息。司南优先保护匿名与事实表达。</Text>
+        <Text style={S.safety}>匿名安全提示:请勿在评价中发布姓名、联系方式、精确组织信息。在场优先保护匿名与事实表达。</Text>
         <AppFooter />
         <View style={{ height: 86 }} />
       </ScrollView>

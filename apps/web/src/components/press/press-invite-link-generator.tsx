@@ -23,7 +23,7 @@ export function PressInviteLinkGenerator() {
   const [code, setCode] = useState(SAMPLE_CODES[0])
   const [copied, setCopied] = useState<"idle" | "ok" | "fail">("idle")
 
-  const origin = typeof window !== "undefined" ? window.location.origin : "https://sinan.app"
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://sinanapp.cn"
   const inviteUrl = `${origin}/invite/${code}`
   const registerUrl = `${origin}/register?invite=${code}`
 

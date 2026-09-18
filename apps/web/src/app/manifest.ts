@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next"
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "司南 · 职场方向助手",
-    short_name: "司南",
+    name: "在场 · 职场方向助手",
+    short_name: "在场",
     description: "匿名公司方向评分、真实评价与可追溯公司研报。",
     start_url: "/",
     scope: "/",

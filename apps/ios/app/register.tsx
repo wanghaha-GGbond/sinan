@@ -68,7 +68,7 @@ export default function RegisterScreen() {
           <View style={S.brandMark}>
             <Text style={S.brandText}>司</Text>
           </View>
-          <Text style={S.title}>注册司南</Text>
+          <Text style={S.title}>注册在场</Text>
           <Text style={S.subtitle}>成为指路人，分享真实体验</Text>
         </View>
 
