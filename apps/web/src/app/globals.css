@@ -524,10 +524,6 @@
     margin-left: auto;
   }
 
-  .web-mobile-menu {
-    display: none !important;
-  }
-
   .web-surface {
     border: 1px solid var(--border);
     border-radius: 0.75rem;
@@ -665,10 +661,6 @@
     background: var(--muted);
   }
 
-  .web-mobile-menu {
-    display: inline-flex !important;
-  }
-
   .web-nav-inner > .web-nav-actions {
     gap: 0;
   }
@@ -690,10 +682,6 @@
   .web-nav-search kbd,
   .web-nav-links {
     display: none;
-  }
-
-  .web-mobile-menu {
-    display: inline-flex !important;
   }
 
   .web-nav-inner > .web-nav-actions {

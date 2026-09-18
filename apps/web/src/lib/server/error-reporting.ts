@@ -1,5 +1,5 @@
 export type ServerErrorEvent = {
-  service: "sinan-web"
+  service: "zaichang"
   environment: string
   release: string
   occurredAt: string
@@ -22,7 +22,7 @@ export function createServerErrorEvent(input: {
   now?: Date
 }): ServerErrorEvent {
   return {
-    service: "sinan-web",
+    service: "zaichang",
     environment: process.env.NEXT_PUBLIC_APP_ENV ?? process.env.NODE_ENV ?? "unknown",
     release: process.env.APP_RELEASE ?? process.env.VERCEL_GIT_COMMIT_SHA ?? "unknown",
     occurredAt: (input.now ?? new Date()).toISOString(),

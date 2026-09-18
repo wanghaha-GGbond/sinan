@@ -7,8 +7,8 @@ Web 页面和 `/api/*` 一起部署到 Cloudflare Workers，数据库使用独�
 ## 授权与配置
 
 在仓库根目录执行 `npm exec --workspace=@sinan/web -- wrangler login`，完成浏览器授权。
-通过 `wrangler whoami` 确认账号。真实地址为 `https://sinan-web.<账号子域>.workers.dev`；
-不能使用不含账号子域的 `https://sinan-web.workers.dev`。
+通过 `wrangler whoami` 确认账号。体验环境地址为 `https://zaichang.<账号子域>.workers.dev`；
+正式访问地址使用 `https://sinanapp.cn`，不把 workers.dev 地址作为对外品牌入口。
 
 在 `apps/web` 下使用 `npx wrangler secret put NAME` 分别设置：
 

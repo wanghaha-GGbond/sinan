@@ -4,7 +4,13 @@ import Link from "next/link"
 import { Bell, Leaf, Menu, Search } from "lucide-react"
 import type { ReactNode } from "react"
 
-import { WebButton } from "@/components/ui/web-button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { WebButton, webButtonVariants } from "@/components/ui/web-button"
 import { cn } from "@/lib/utils"
 
 export type WebNavLink = { href: string; label: string; active?: boolean }
@@ -49,9 +55,36 @@ export function WebNav({
             <span className="absolute right-2.5 top-2 size-1.5 rounded-full bg-primary" aria-hidden="true" />
           </WebButton>
           {rightSlot}
-          <WebButton variant="quiet" size="icon" className="web-mobile-menu" aria-label="打开菜单">
-            <Menu className="size-4" aria-hidden="true" />
-          </WebButton>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className={cn(
+                webButtonVariants({ variant: "quiet", size: "icon" }),
+                // Responsive utilities replace the old .web-mobile-menu CSS:
+                // that rule needed !important to beat these same utilities on
+                // desktop, which in turn made the button invisible on mobile.
+                "hidden max-md:inline-flex",
+              )}
+              aria-label="打开菜单"
+            >
+              <Menu className="size-4" aria-hidden="true" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-40">
+              {links.map((link) => (
+                <DropdownMenuItem key={link.href}>
+                  <Link
+                    href={link.href}
+                    aria-current={link.active ? "page" : undefined}
+                    className={cn(
+                      "flex w-full items-center rounded-md px-2.5 py-2 text-sm",
+                      link.active ? "font-semibold text-primary-deep" : "text-foreground",
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

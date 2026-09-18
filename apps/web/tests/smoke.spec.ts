@@ -2,9 +2,11 @@ import { expect, test } from "@playwright/test"
 
 test("首发首页与核心导航可访问", async ({ page }) => {
   await page.goto("/")
-  await expect(page.getByRole("heading", { name: "入职前，先看清方向" })).toBeVisible()
-  await expect(page.getByRole("link", { name: "搜索公司" })).toBeVisible()
-  await expect(page.getByRole("link", { name: "浏览研报" })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "入职前，先把这家公司看清楚。" })).toBeVisible()
+  // 顶部导航搜索入口与 Hero 的「搜索公司」按钮重名，限定 Hero 区域内断言。
+  const hero = page.locator("main").first()
+  await expect(hero.getByRole("link", { name: "搜索公司", exact: true }).first()).toBeVisible()
+  await expect(hero.getByRole("link", { name: "浏览研究" })).toBeVisible()
   await expect(page.getByRole("link", { name: "隐私政策" })).toBeVisible()
   await expect(page.getByRole("link", { name: "用户协议" })).toBeVisible()
 })
@@ -63,7 +65,7 @@ test("匿名评价要求邀请制账号登录", async ({ request }) => {
 test("健康检查区分存活与可接流状态", async ({ request }) => {
   const live = await request.get("/api/health/live")
   expect(live.status()).toBe(200)
-  expect(await live.json()).toMatchObject({ status: "ok", service: "sinan-web" })
+  expect(await live.json()).toMatchObject({ status: "ok", service: "zaichang" })
 
   const ready = await request.get("/api/health/ready")
   expect(ready.status()).toBe(503)
@@ -110,21 +112,18 @@ test("登录后回到原页面并可从个人中心退出", async ({ page }) => 
   await expect(page.getByRole("link", { name: "登录" })).toBeVisible()
 })
 
-test("移动端主导航形成完整 App 闭环", async ({ page }, testInfo) => {
+test("移动端通过菜单按钮访问主导航", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile-chrome")
 
   await page.goto("/")
-  const appNav = page.getByRole("navigation", { name: "App 主导航" })
-  await expect(appNav).toBeVisible()
-  await expect(appNav.getByRole("link", { name: "推荐" })).toHaveAttribute("aria-current", "page")
+  const menuButton = page.getByRole("button", { name: "打开菜单" })
+  await expect(menuButton).toBeVisible()
 
-  await appNav.getByRole("link", { name: "搜索" }).click()
-  await expect(page).toHaveURL("/search")
-  await expect(page.getByRole("navigation", { name: "App 主导航" }).getByRole("link", { name: "搜索" })).toHaveAttribute("aria-current", "page")
-
-  await page.getByRole("navigation", { name: "App 主导航" }).getByRole("link", { name: "研报" }).click()
-  await expect(page).toHaveURL("/research")
-  await expect(page.getByRole("navigation", { name: "App 主导航" }).getByRole("link", { name: "研报" })).toHaveAttribute("aria-current", "page")
+  await menuButton.click()
+  const menu = page.getByRole("menu")
+  await expect(menu).toBeVisible()
+  await menu.getByRole("menuitem").filter({ hasText: "公司" }).click()
+  await expect(page).toHaveURL("/companies")
 })
 
 test("Web 可安装为独立 App", async ({ request }) => {

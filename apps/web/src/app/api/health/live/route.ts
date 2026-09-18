@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic"
 
 export function GET() {
   return NextResponse.json(
-    { status: "ok", service: "sinan-web" },
+    { status: "ok", service: "zaichang" },
     { headers: { "Cache-Control": "no-store" } }
   )
 }

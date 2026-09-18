@@ -11,7 +11,7 @@ test("server error events exclude query strings and request secrets", () => {
   })
 
   expect(event).toMatchObject({
-    service: "sinan-web",
+    service: "zaichang",
     occurredAt: "2026-07-04T00:00:00.000Z",
     message: "database unavailable",
     digest: "abc123",

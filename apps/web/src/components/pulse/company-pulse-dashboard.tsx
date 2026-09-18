@@ -67,9 +67,15 @@ export function CompanyPulseDashboard() {
 
   function saveCheckIn() {
     const payload = { date: new Date().toISOString().slice(0, 10), energy, pressure, pulse: dailyPulse }
-    window.localStorage.setItem("sinan:company-pulse:today", JSON.stringify(payload))
     setCheckedIn(true)
-    toast.success("今天的 Pulse 已记录")
+    try {
+      window.localStorage.setItem("sinan:company-pulse:today", JSON.stringify(payload))
+      toast.success("今天的 Pulse 已记录")
+    } catch {
+      // Blocked storage (private mode, embedded webview) must not kill the
+      // interaction itself — the values stay valid for this visit only.
+      toast.info("浏览器存储不可用，本次记录不会保存到明天")
+    }
   }
 
   async function shareWeeklyPulse() {

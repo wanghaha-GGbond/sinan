@@ -10,7 +10,6 @@ import { WebEmptyState } from "@/components/ui/web-empty-state"
 import { WebSearchField } from "@/components/ui/web-search-field"
 import { searchCompanies } from "@/lib/api/companies"
 import type { CompanyListItem } from "@/lib/api/types"
-const popularSearches = ["字节跳动", "腾讯", "阿里巴巴", "小红书", "美团", "华为"]
 
 export default function SearchPage() {
   const [query, setQuery] = useState("")
@@ -18,6 +17,21 @@ export default function SearchPage() {
   const [results, setResults] = useState<CompanyListItem[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Suggestion chips must come from the live catalog: hardcoded popular names
+  // led every click to the empty state while the company set was small.
+  const [suggestions, setSuggestions] = useState<string[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    searchCompanies({}).then((res) => {
+      if (cancelled || res.error) return
+      const names = (res.data?.companies ?? [])
+        .map((company) => company.shortName || company.name)
+        .filter((name): name is string => Boolean(name))
+      setSuggestions(names.slice(0, 6))
+    })
+    return () => { cancelled = true }
+  }, [])
 
   // debounce
   useEffect(() => {
@@ -62,13 +76,15 @@ export default function SearchPage() {
 
       <div className="max-w-4xl space-y-3">
         <WebSearchField value={query} onChange={setQuery} onSubmit={submitSearch} />
-        <div className="flex flex-wrap gap-2">
-          {popularSearches.map((item) => (
-            <WebButton key={item} type="button" variant="secondary" size="sm" onClick={() => { setQuery(item); setDebouncedQuery(item) }}>
-              {item}
-            </WebButton>
-          ))}
-        </div>
+        {suggestions.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {suggestions.map((item) => (
+              <WebButton key={item} type="button" variant="secondary" size="sm" onClick={() => { setQuery(item); setDebouncedQuery(item) }}>
+                {item}
+              </WebButton>
+            ))}
+          </div>
+        )}
       </div>
 
       {loading && <p className="text-sm text-muted-foreground">搜索中...</p>}
@@ -76,6 +92,7 @@ export default function SearchPage() {
       {!loading && !error && results.length === 0 && debouncedQuery.trim() ? (
         <SmartEmptyState
           query={debouncedQuery.trim()}
+          suggestions={suggestions.filter((term) => term !== debouncedQuery.trim())}
           onSubmit={setQuery}
         />
       ) : null}
@@ -96,7 +113,7 @@ export default function SearchPage() {
   )
 }
 
-function SmartEmptyState({ query, onSubmit }: { query: string; onSubmit: (text: string) => void }) {
+function SmartEmptyState({ query, suggestions, onSubmit }: { query: string; suggestions: string[]; onSubmit: (text: string) => void }) {
   return (
     <div>
       <WebEmptyState
@@ -109,24 +126,26 @@ function SmartEmptyState({ query, onSubmit }: { query: string; onSubmit: (text: 
         }
       />
       <div className="mt-6 space-y-4 text-left">
-        <div>
-          <p className="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-            <Search className="size-3" />
-            换个关键词试试
-          </p>
-          <div className="mt-2.5 flex flex-wrap gap-2">
-            {popularSearches.slice(0, 6).map((term) => (
-              <button
-                key={term}
-                type="button"
-                onClick={() => onSubmit(term)}
-                className="min-h-11 rounded-full bg-muted px-3.5 py-1.5 text-sm text-foreground transition hover:bg-muted-hover"
-              >
-                {term}
-              </button>
-            ))}
+        {suggestions.length > 0 && (
+          <div>
+            <p className="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              <Search className="size-3" />
+              换个关键词试试
+            </p>
+            <div className="mt-2.5 flex flex-wrap gap-2">
+              {suggestions.slice(0, 6).map((term) => (
+                <button
+                  key={term}
+                  type="button"
+                  onClick={() => onSubmit(term)}
+                  className="min-h-11 rounded-full bg-muted px-3.5 py-1.5 text-sm text-foreground transition hover:bg-muted-hover"
+                >
+                  {term}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         <div>
           <p className="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">

@@ -10,16 +10,18 @@
 //   - NEXT_PUBLIC_APP_URL 必须在构建和部署时设为账号的真实 Worker URL。
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "sinan-web",
+  "name": "zaichang",
   "main": ".open-next/worker.js",
-  "compatibility_date": "2026-08-01",
+  "compatibility_date": "2026-09-18",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
   "observability": {
-    "enabled": true
+    "enabled": true,
+    "logs": { "enabled": true, "head_sampling_rate": 1 },
+    "traces": { "enabled": true, "head_sampling_rate": 0.01 }
   },
   // 非敏感运行时默认值；生产语义切换时同步更新这里与 secrets。
   "vars": {
