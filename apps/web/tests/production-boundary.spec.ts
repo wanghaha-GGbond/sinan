@@ -1,8 +1,50 @@
 import { expect, test } from "@playwright/test"
 import { NextRequest } from "next/server"
+import { spawnSync } from "node:child_process"
+import path from "node:path"
 
 import { GET as searchCompanies } from "../src/app/api/companies/search/route"
 import { proxy } from "../src/proxy"
+
+function checkRelease(overrides: Record<string, string>) {
+  return spawnSync(process.execPath, [path.join(process.cwd(), "scripts/check-release-env.mjs")], {
+    encoding: "utf8",
+    env: {
+      NODE_ENV: "test",
+      AUTH_SECRET: "test-only-not-a-secret".repeat(3),
+      DATABASE_URL: "postgresql://test:test@example.invalid/test",
+      CRON_SECRET: "test-only-not-a-secret",
+      MAIL_FROM_DOMAIN: "example.invalid",
+      MAIL_PROVIDER: "resend",
+      RESEND_API_KEY: "test-only-not-a-secret",
+      APP_RELEASE: "test-release",
+      NEXT_PUBLIC_APP_URL: "https://example.invalid",
+      SUPPORT_EMAIL: "support@example.invalid",
+      INVITE_REQUIRED: "true",
+      DATABASE_ADAPTER: "neon",
+      ERROR_REPORTING_MODE: "stdout",
+      NEXT_PUBLIC_APP_ENV: "production",
+      NEXT_PUBLIC_API_ENABLED: "true",
+      NEXT_PUBLIC_PULSE_ENABLED: "false",
+      LAUNCH_SCOPE_ONLY: "true",
+      ...overrides,
+    },
+  })
+}
+
+test("global production accepts Neon without mainland filing but retains required services", () => {
+  expect(checkRelease({ DEPLOYMENT_REGION: "global" }).status).toBe(0)
+  expect(checkRelease({ DEPLOYMENT_REGION: "global", DATABASE_URL: "" }).status).toBe(1)
+  expect(checkRelease({ DEPLOYMENT_REGION: "global", MAIL_PROVIDER: "disabled" }).status).toBe(1)
+})
+
+test("mainland defaults retain filing and pg requirements; invalid regions fail closed", () => {
+  const mainland = checkRelease({})
+  expect(mainland.status).toBe(1)
+  expect(mainland.stderr).toContain("NEXT_PUBLIC_ICP_FILING_NUMBER")
+  expect(mainland.stderr).toContain("DATABASE_ADAPTER must be pg")
+  expect(checkRelease({ DEPLOYMENT_REGION: "unknown" }).status).toBe(1)
+})
 
 test("production company search fails closed when the database is missing", async () => {
   const previousEnvironment = process.env.NEXT_PUBLIC_APP_ENV

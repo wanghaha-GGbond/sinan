@@ -1,4 +1,4 @@
-// 司南 Web · Cloudflare Workers 全球边缘部署配置
+// 在场 Web · Cloudflare Workers 海外 Beta 部署配置
 //
 // 部署模型（见 docs/cloudflare-runbook.md）：
 //   - 数据库走 Neon（DATABASE_ADAPTER=neon，WebSocket 驱动，Workers 原生兼容），
@@ -11,6 +11,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "zaichang",
+  "workers_dev": true,
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-09-18",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
@@ -25,6 +26,8 @@
   },
   // 非敏感运行时默认值；生产语义切换时同步更新这里与 secrets。
   "vars": {
+    "DEPLOYMENT_REGION": "global",
+    "NEXT_PUBLIC_APP_URL": "https://zaichang.zaichang.workers.dev",
     "DATABASE_ADAPTER": "neon",
     "NEXT_PUBLIC_APP_ENV": "staging",
     "NEXT_PUBLIC_API_ENABLED": "true",

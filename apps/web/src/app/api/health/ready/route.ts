@@ -44,8 +44,9 @@ function hasValidRuntimeConfiguration() {
     appEnvironment === "production"
       ? process.env.NEXT_PUBLIC_PULSE_ENABLED === "false"
       : process.env.NEXT_PUBLIC_PULSE_ENABLED === "true"
+  const region = process.env.DEPLOYMENT_REGION ?? "mainland"
   const filingReady =
-    appEnvironment === "production"
+    appEnvironment === "production" && region === "mainland"
       ? Boolean(process.env.NEXT_PUBLIC_ICP_FILING_NUMBER?.trim())
       : true
 
@@ -58,6 +59,7 @@ function hasValidRuntimeConfiguration() {
     hasValidMailConfiguration() &&
     hasValidErrorReportingConfiguration() &&
     pulseReady &&
+    (region === "global" || region === "mainland") &&
     (appEnvironment === "staging" || appEnvironment === "production") &&
     filingReady
   )

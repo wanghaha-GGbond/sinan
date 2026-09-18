@@ -10,6 +10,10 @@ const required = [
 
 const missing = required.filter((name) => !process.env[name]?.trim())
 const errors = []
+const deploymentRegion = process.env.DEPLOYMENT_REGION ?? "mainland"
+if (!new Set(["global", "mainland"]).has(deploymentRegion)) {
+  errors.push("DEPLOYMENT_REGION must be global or mainland")
+}
 
 if (missing.length) errors.push(`Missing: ${missing.join(", ")}`)
 if (process.env.INVITE_REQUIRED !== "true") {
@@ -20,7 +24,7 @@ if (!process.env.DATABASE_ADAPTER) {
 } else if (!new Set(["pg", "neon"]).has(process.env.DATABASE_ADAPTER)) {
   errors.push("DATABASE_ADAPTER must be pg or neon")
 }
-if (process.env.NEXT_PUBLIC_APP_ENV === "production" && process.env.DATABASE_ADAPTER !== "pg") {
+if (process.env.NEXT_PUBLIC_APP_ENV === "production" && deploymentRegion === "mainland" && process.env.DATABASE_ADAPTER !== "pg") {
   errors.push("DATABASE_ADAPTER must be pg for mainland production")
 }
 if (process.env.DATABASE_DRIVER) {
@@ -66,7 +70,7 @@ if (process.env.LAUNCH_SCOPE_ONLY !== "true") {
 if (process.env.NEXT_PUBLIC_APP_ENV !== "production" && process.env.NEXT_PUBLIC_APP_ENV !== "staging") {
   errors.push("NEXT_PUBLIC_APP_ENV must be staging or production")
 }
-if (process.env.NEXT_PUBLIC_APP_ENV === "production" && !process.env.NEXT_PUBLIC_ICP_FILING_NUMBER?.trim()) {
+if (process.env.NEXT_PUBLIC_APP_ENV === "production" && deploymentRegion === "mainland" && !process.env.NEXT_PUBLIC_ICP_FILING_NUMBER?.trim()) {
   errors.push("NEXT_PUBLIC_ICP_FILING_NUMBER is required in production")
 }
 if (process.env.AUTH_SECRET && process.env.AUTH_SECRET.length < 32) {

@@ -1,18 +1,18 @@
-# Cloudflare Web 体验环境
+# 在场 Cloudflare 海外 Beta
 
-Web 页面和 `/api/*` 一起部署到 Cloudflare Workers，数据库使用独立 Neon staging。
-保留 monorepo；本次不改变 iOS 发布或大陆阿里云 production 的规则。
+Web 页面和 `/api/*` 一起部署到 Cloudflare Workers。海外 Beta 使用 Neon 项目 `sinan-preview` 的 `main` 分支；`staging` 分支继续隔离测试数据。
+保留 monorepo；iOS 独立发布。`DEPLOYMENT_REGION=global` 明确表示海外部署，不套用大陆备案门禁；大陆部署继续使用默认 `mainland` 并保留备案检查。
 当前为 staging：邀请制、Pulse 标记体验版、邮件发送关闭。
 
 ## 授权与配置
 
 在仓库根目录执行 `npm exec --workspace=@sinan/web -- wrangler login`，完成浏览器授权。
-通过 `wrangler whoami` 确认账号。体验环境地址为 `https://zaichang.<账号子域>.workers.dev`；
-正式访问地址使用 `https://sinanapp.cn`，不把 workers.dev 地址作为对外品牌入口。
+通过 `wrangler whoami` 确认账号。当前可用地址为 `https://zaichang.zaichang.workers.dev`。
+尚未购买品牌域名，不要配置或宣传 `sinanapp.cn` 为已拥有的入口；自定义域名待用户选购后绑定。
 
 在 `apps/web` 下使用 `npx wrangler secret put NAME` 分别设置：
 
-- `DATABASE_URL`：Neon staging 连接串，不能使用生产数据库。
+- `DATABASE_URL`：本次海外 Beta 的 Neon `main` 连接串。PR Preview 必须使用隔离测试分支，不能接入这个含真实账号的数据库。
 - `AUTH_SECRET`：至少 32 字符的独立随机密钥。
 - `CRON_SECRET`：独立随机密钥。
 
@@ -22,7 +22,7 @@ GitHub Environment 中已有的 secret 不能通过 GitHub API 读回。
 
 ## 构建与部署
 
-1. 在独立 Neon staging 上执行全部当前迁移，并重复执行验证幂等。
+1. 修改既有数据库前保存恢复分支。在隔离测试分支验证全部当前迁移后，再升级 Beta 数据库并重复执行验证幂等。
 2. 设置 `NEXT_PUBLIC_APP_URL` 为真实 HTTPS Worker 地址。
 3. 执行 `npm run build:cf --workspace=@sinan/web`。此命令将 API、staging、Pulse 和首发范围开关同时写入客户端构建；仅配置运行时 vars 不足以改变客户端包。
 4. 在 `apps/web` 执行 `npx opennextjs-cloudflare deploy --var NEXT_PUBLIC_APP_URL:$NEXT_PUBLIC_APP_URL --var APP_RELEASE:$(git rev-parse HEAD)`。
