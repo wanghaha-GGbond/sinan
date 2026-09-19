@@ -108,7 +108,6 @@ export default function LoginPage() {
             <Compass className="size-7 text-secondary-foreground" />
           </div>
           <h1 className="text-xl font-semibold text-foreground">登录在场</h1>
-          <p className="text-sm text-muted-foreground">入职前，先看清方向</p>
         </div>
 
         {/* Toggle email / phone */}

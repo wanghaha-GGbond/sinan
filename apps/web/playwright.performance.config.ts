@@ -4,7 +4,7 @@ import { defineConfig, devices } from "@playwright/test"
 // are intercepted; the server uses an empty DB URL so no live data is touched.
 export default defineConfig({
   testDir: "./tests",
-  testMatch: "navigation-performance.spec.ts",
+  testMatch: ["navigation-performance.spec.ts", "copy-interactions.spec.ts"],
   workers: 1,
   timeout: 30_000,
   reporter: "line",

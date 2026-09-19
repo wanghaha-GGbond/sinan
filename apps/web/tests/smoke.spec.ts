@@ -2,23 +2,22 @@ import { expect, test } from "@playwright/test"
 
 test("首发首页与核心导航可访问", async ({ page }) => {
   await page.goto("/")
-  await expect(page.getByRole("heading", { name: "入职前，先把这家公司看清楚。" })).toBeVisible()
-  // 顶部导航搜索入口与 Hero 的「搜索公司」按钮重名，限定 Hero 区域内断言。
+  await expect(page.getByRole("heading", { name: "找公司", exact: true })).toBeVisible()
   const hero = page.locator("main").first()
-  await expect(hero.getByRole("link", { name: "搜索公司", exact: true }).first()).toBeVisible()
-  await expect(hero.getByRole("link", { name: "浏览研究" })).toBeVisible()
+  await expect(hero.getByRole("search").getByRole("button", { name: "搜索", exact: true })).toBeVisible()
+  await expect(hero.getByRole("link", { name: "公司研究" })).toBeVisible()
   await expect(page.getByRole("link", { name: "隐私政策" })).toBeVisible()
   await expect(page.getByRole("link", { name: "用户协议" })).toBeVisible()
 })
 
 test("研报 HTML 列表与详情可访问", async ({ page }) => {
   await page.goto("/research")
-  await expect(page.getByRole("heading", { name: /公司真正的方向/ })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "公司研究", exact: true })).toBeVisible()
   const report = page.locator('a[href^="/research/"]').first()
   await expect(report).toBeVisible()
   await report.click()
   await expect(page).toHaveURL(/\/research\//)
-  await expect(page.getByText("五维研究指数")).toBeVisible()
+  await expect(page.getByRole("heading", { name: "研究指数", exact: true })).toBeVisible()
   await expect(page.getByText("阅读边界")).toBeVisible()
 })
 
@@ -38,7 +37,7 @@ test("无数据库时真实数据入口明确降级而非展示 mock", async ({ 
   await expect(page.getByText("北辰智造科技")).toHaveCount(0)
 
   await page.goto("/company/northstar-tech")
-  await expect(page.getByText("公司数据暂时不可用。请稍后重试，评价不会回退到演示数据。")).toBeVisible()
+  await expect(page.getByText("公司信息加载失败")).toBeVisible()
   await expect(page.getByText("北辰智造科技")).toHaveCount(0)
 })
 

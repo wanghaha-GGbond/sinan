@@ -1,9 +1,10 @@
 "use client"
 
+import Link from "next/link"
 import { useEffect, useMemo, useReducer, useRef, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm, useWatch } from "react-hook-form"
-import { CheckCircle2, Gift, Loader2, ShieldCheck, History, X } from "lucide-react"
+import { CheckCircle2, Loader2, ShieldCheck, History, X } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import { submitReviewData } from "@/lib/data/reviews"
@@ -79,9 +80,9 @@ const reviewSchema = z.object({
 type ReviewForm = z.infer<typeof reviewSchema>
 
 const steps = [
-  { title: "选择公司", description: "先选择公司，找不到可以直接新增" },
-  { title: "方向评分", description: "给后来者一个 0-10 的方向判断" },
-  { title: "真实体验", description: "写事实、写风险、先做匿名安全检查" },
+  { title: "选择公司" },
+  { title: "评分" },
+  { title: "评价内容" },
 ]
 
 type NewCompanyDraft = {
@@ -745,31 +746,19 @@ function SubmitReviewForm() {
         <Card className="web-surface web-surface-base border border-border/60" data-testid="submit-review-success">
           <CardHeader>
             <div className="mb-3 flex size-12 items-center justify-center rounded-xl bg-secondary text-secondary-foreground">
-              <Gift />
+              <CheckCircle2 />
             </div>
-            <CardTitle className="text-2xl">评价已进入匿名预览</CardTitle>
+            <CardTitle className="text-2xl">评价已提交</CardTitle>
             <CardDescription>
-              你的评价会在审核后展示。正式版本会先完成匿名保护和真实性校验，再进入公开样本。
+              审核通过后公开展示。
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-3">
-            {["方向值 +20", "连续点灯 +1", "在场徽章进度 +1"].map((item) => (
-              <div key={item} className="rounded-2xl bg-muted p-4 text-sm font-medium text-foreground">
-                {item}
-              </div>
-            ))}
+          <CardContent className="flex flex-wrap gap-3">
+            <WebButton asChild><Link href="/me">我的评价</Link></WebButton>
+            <WebButton asChild variant="secondary"><Link href="/companies">浏览公司</Link></WebButton>
           </CardContent>
         </Card>
 
-        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-primary-surface-border bg-primary-tint p-4 text-sm text-foreground">
-          <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary-deep" />
-          <div>
-            <p className="font-semibold">无需上传社保、工号或雇佣证明</p>
-            <p className="mt-1 leading-6 text-muted-foreground">
-              身份验证不是发布评价的前提。评价仍会经过内容审核和匿名保护；企业邮箱验证接入真实服务后再单独开放。
-            </p>
-          </div>
-        </div>
       </section>
     )
   }
@@ -815,7 +804,7 @@ function SubmitReviewForm() {
         <div>
           <div className="flex items-center justify-between gap-3">
             <h1 className="text-3xl font-semibold tracking-tight">
-              {addCompanyMode ? (onboardingMode ? "先添加你熟悉的公司" : "添加未收录公司") : "发布评价"}
+              {addCompanyMode ? "添加公司" : "写评价"}
             </h1>
             {draftSavedAt ? (
               <span
@@ -827,15 +816,6 @@ function SubmitReviewForm() {
               </span>
             ) : null}
           </div>
-          <p className="mt-3 max-w-2xl text-muted-foreground">
-            {addCompanyMode
-              ? onboardingMode
-                ? "这是注册后的第一步。公司已收录时可直接选择；未收录时补充基础信息，然后继续写评价。"
-                : "提交公司注册信息，也可以紧接着写评价，两项内容会分别审核。"
-              : onboardingMode
-                ? "公司信息已经保存。接下来写下真实经历，评价会与公司资料分别审核。"
-                : "三步完成匿名评价。在场鼓励描述事实、流程和决策信息，不鼓励攻击性表达。"}
-          </p>
         </div>
 
         {!addCompanyMode ? (
@@ -853,7 +833,6 @@ function SubmitReviewForm() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <CardTitle>{steps[step].title}</CardTitle>
-                <CardDescription>{steps[step].description}</CardDescription>
               </div>
               <span className="text-sm text-muted-foreground">
                 第 {step + 1} 步 / 共 {steps.length} 步
@@ -1335,7 +1314,6 @@ function SubmitReviewForm() {
         {!addCompanyMode ? <Card className="border border-border/60" data-testid="optional-questionnaire">
           <CardHeader>
             <CardTitle>补充办公体验</CardTitle>
-            <CardDescription>完成主要评价后，可再用约 30 秒补充办公体验。</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap items-center gap-3">
             <WebButton asChild size="sm" data-testid="start-questionnaire-button">
@@ -1361,7 +1339,6 @@ function SubmitReviewForm() {
         <Card>
           <CardHeader>
             <CardTitle>发布状态</CardTitle>
-            <CardDescription>每一步只收集必要信息，避免超长问卷。</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <div className="bg-muted p-4">

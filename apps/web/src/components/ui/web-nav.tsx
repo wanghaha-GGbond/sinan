@@ -36,9 +36,9 @@ export function WebNav({
           <span>{brand}</span>
         </Link>
 
-        <Link href={searchHref} className="web-nav-search" aria-label="搜索公司、职位、话题">
+        <Link href={searchHref} className="web-nav-search" aria-label="搜索公司">
           <Search className="size-4" aria-hidden="true" />
-          <span>搜索公司、职位、话题</span>
+          <span>搜索公司</span>
         </Link>
 
         <nav className="web-nav-links" aria-label="主导航">

@@ -75,7 +75,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <main>{children}</main>
       <footer className="border-t border-border">
         <div className="mx-auto flex w-full max-w-page flex-col gap-3 px-4 py-7 text-sm text-muted-foreground sm:px-6 md:flex-row md:items-center md:justify-between">
-          <p>在场：入职前，先看清方向。</p>
+          <p>在场</p>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
             <Link href="/legal/privacy" className="hover:text-foreground">隐私政策</Link>
             <Link href="/legal/terms" className="hover:text-foreground">用户协议</Link>
@@ -83,7 +83,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {icpFilingNumber ? (
               <a href="https://beian.miit.gov.cn/" target="_blank" rel="noreferrer" className="hover:text-foreground">{icpFilingNumber}</a>
             ) : null}
-            <span className="text-muted-foreground/80">匿名保护优先，公司只能回应公开内容。</span>
           </div>
         </div>
       </footer>

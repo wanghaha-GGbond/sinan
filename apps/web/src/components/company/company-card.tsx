@@ -54,7 +54,6 @@ export function CompanyCard({ company }: { company: CompanyCardCompany }) {
         ))}
       </div>
 
-      <p className="mt-3 text-sm text-muted-foreground">{(company.reviewCount ?? 0).toLocaleString()} 条真实体验</p>
       {"cbti" in company && company.cbti ? (
         <p className="mt-2 text-xs text-muted-foreground">公司 MBTI：{company.cbti.title}</p>
       ) : "vibeTag" in company && company.vibeTag ? (

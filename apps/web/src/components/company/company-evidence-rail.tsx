@@ -1,4 +1,5 @@
-import { BrainCircuit, CircleCheck, Info, ShieldCheck } from "lucide-react"
+import Link from "next/link"
+import { BrainCircuit, Info, ShieldCheck } from "lucide-react"
 
 import type { CompanyListItem } from "@/lib/types"
 
@@ -53,7 +54,7 @@ export function CompanyEvidenceRail({ company }: { company: CompanyListItem }) {
           {company.cbti ? <span className="rounded-full border border-primary-surface-border bg-card px-2 py-0.5 text-xs font-semibold text-primary-deep">{company.cbti.code}</span> : null}
         </div>
         <p className="mt-3 text-base font-semibold text-primary-deep">{company.cbti?.title ?? "样本积累中"}</p>
-        <p className="mt-1 text-xs leading-5 text-muted-foreground">{company.cbti?.summary ?? "需要更多结构化匿名评价后，才能生成可靠的公司工作方式画像。"}</p>
+        {company.cbti?.summary ? <p className="mt-1 text-xs leading-5 text-muted-foreground">{company.cbti.summary}</p> : null}
         {company.cbti ? (
           <div className="mt-3 grid grid-cols-2 gap-2 border-t border-primary-surface-border/70 pt-3 text-xs text-muted-foreground">
             <span>节奏 · {company.cbti.axes.pace === "R" ? "快" : "稳"}</span>
@@ -67,15 +68,10 @@ export function CompanyEvidenceRail({ company }: { company: CompanyListItem }) {
       <section className="order-3 web-surface web-surface-base p-4">
         <div className="flex items-center gap-2">
           <ShieldCheck className="size-4 text-primary" aria-hidden="true" />
-          <h2 className="text-sm font-semibold text-foreground">关于匿名评价与隐私保护</h2>
+          <h2 className="text-sm font-semibold text-foreground">匿名评价</h2>
         </div>
-        <ul className="mt-3 grid gap-1.5 text-xs leading-5 text-muted-foreground">
-          <li className="flex gap-2"><CircleCheck className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />所有评价均为匿名发布，保护身份与隐私</li>
-          <li className="flex gap-2"><CircleCheck className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />人工审核与 AI 识别双重机制，过滤虚假内容</li>
-          <li className="flex gap-2"><CircleCheck className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />仅展示经过验证的在职或离职经验</li>
-          <li className="flex gap-2"><CircleCheck className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />企业无法查看或删除匿名评价</li>
-        </ul>
-        <p className="mt-3 text-xs font-medium text-primary-deep">了解在场的审核与隐私机制 →</p>
+        <p className="mt-2 text-xs text-muted-foreground">审核通过后公开展示。</p>
+        <Link href="/legal/privacy" className="mt-2 inline-flex min-h-11 items-center text-xs font-medium text-primary-deep hover:underline">隐私政策 →</Link>
       </section>
     </aside>
   )

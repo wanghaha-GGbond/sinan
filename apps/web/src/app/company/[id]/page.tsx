@@ -30,7 +30,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
       getDepartmentInsights(id),
     ])
   } catch {
-    return <ErrorState title="加载这家公司没成功" message="公司数据暂时不可用。请稍后重试，评价不会回退到演示数据。" />
+    return <ErrorState title="公司信息加载失败" message="请稍后重试。" />
   }
 
   if (!company) notFound()
@@ -42,7 +42,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
         <WebSurface tone="base" className="p-6" data-testid="company-pending-review-page">
           <p className="text-sm font-medium text-muted-foreground">{company.name}</p>
           <h1 className="mt-2 text-2xl font-semibold text-foreground">该公司信息待审核</h1>
-          <p className="mt-3 text-sm leading-6 text-muted-foreground">已有用户提交公司注册信息，审核通过后即可评价。审核前不展示方向分、公司体感和评论流。</p>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">审核通过后开放评价。</p>
           <div className="mt-5"><WebButton asChild variant="secondary"><Link href="/">返回推荐</Link></WebButton></div>
         </WebSurface>
       </section>
@@ -104,7 +104,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
 
       <div className="mt-4 grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
         <div className="min-w-0">
-          {mappedReviews.length === 0 ? <EmptyState /> : <div data-testid="company-review-feed" className="min-w-0"><CompanyReviewFeed companyId={company.id} reviews={mappedReviews} reviewCount={company.reviewCount ?? mappedReviews.length} previewLimit={1} /></div>}
+          {mappedReviews.length === 0 ? <EmptyState title="暂无评价" /> : <div data-testid="company-review-feed" className="min-w-0"><CompanyReviewFeed companyId={company.id} reviews={mappedReviews} reviewCount={company.reviewCount ?? mappedReviews.length} previewLimit={1} /></div>}
         </div>
         <CompanyEvidenceRail company={company} />
       </div>

@@ -144,7 +144,6 @@ export default function RegisterPage() {
             <Compass className="size-7 text-secondary-foreground" />
           </div>
           <h1 className="text-xl font-semibold text-foreground">注册在场</h1>
-          <p className="text-sm text-muted-foreground">成为指路人，分享真实体验</p>
         </div>
 
         {/* Toggle */}

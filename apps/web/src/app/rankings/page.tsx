@@ -48,13 +48,11 @@ export default function RankingsPage() {
     return list
   }, [companies, activeTab])
 
-  const activeDescription = tabs.find((tab) => tab.key === activeTab)?.description ?? ""
-
   if (loading) {
     return (
       <section className="mx-auto flex w-full max-w-page flex-col gap-6 px-4 py-6 sm:px-6">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">公司发现</h1>
+          <h1 className="text-2xl font-semibold text-foreground">排行榜</h1>
           <p className="mt-2 h-4 w-72 animate-pulse rounded-md bg-muted" />
         </div>
         <div className="flex flex-wrap gap-2">
@@ -74,8 +72,8 @@ export default function RankingsPage() {
   if (error && !companies.length) {
     return (
       <ErrorState
-        title="加载公司发现失败"
-        message={`${error}。刷新一下试试,或切到其他排序方式看看。`}
+        title="排行榜加载失败"
+        message="请重试。"
         onRetry={() => window.location.reload()}
         showHome
       />
@@ -85,8 +83,7 @@ export default function RankingsPage() {
   return (
     <section className="mx-auto flex w-full max-w-page flex-col gap-6 px-4 py-6 sm:px-6">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">公司发现</h1>
-        <p className="mt-2 text-sm text-muted-foreground">从不同角度看看最近被更多过来人关注的公司</p>
+        <h1 className="text-2xl font-semibold text-foreground">排行榜</h1>
       </div>
 
       <div className="flex flex-wrap gap-2" role="tablist" aria-label="公司发现排序方式">
@@ -104,10 +101,6 @@ export default function RankingsPage() {
           </WebButton>
         ))}
       </div>
-
-      <p className="text-xs text-muted-foreground" data-testid="rankings-active-description">
-        当前排序：{activeDescription}
-      </p>
 
       <RankingsList companies={sorted} activeTab={activeTab} />
     </section>

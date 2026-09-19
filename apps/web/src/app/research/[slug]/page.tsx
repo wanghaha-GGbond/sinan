@@ -53,13 +53,13 @@ export default async function CompanyResearchPage({ params }: { params: Promise<
 
       <main className="mx-auto grid w-full max-w-hero gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[1fr_19rem]">
         <div className="space-y-10">
-          <Section title="五维研究指数" eyebrow="Core indices">
+          <Section title="研究指数">
             <div className="grid gap-3 sm:grid-cols-2">
               {Object.entries(index.components).map(([key, detail]) => <ScoreCard key={key} label={componentLabels[key]} detail={detail} />)}
             </div>
           </Section>
 
-          <Section title="机会与风险判断" eyebrow="Analyst view">
+          <Section title="机会与风险">
             <div className="grid gap-4 md:grid-cols-2">
               <article className="rounded-3xl border border-primary-surface-border bg-primary-tint p-6">
                 <BriefcaseBusiness className="size-5 text-primary-deep" /><h3 className="mt-3 font-bold">值得关注的机会</h3>
@@ -72,7 +72,7 @@ export default async function CompanyResearchPage({ params }: { params: Promise<
             </div>
           </Section>
 
-          <Section title="职场体感指数" eyebrow="Workplace signals">
+          <Section title="工作体验">
             <p className="-mt-2 mb-4 text-sm text-muted-foreground">“加班浓度”和“裁员恐慌”越高风险越高，其余项目越高体验越好。</p>
             <div className="space-y-3 rounded-3xl border bg-card p-5">
               {Object.entries(index.funIndices).map(([key, detail]) => (
@@ -85,7 +85,7 @@ export default async function CompanyResearchPage({ params }: { params: Promise<
             </div>
           </Section>
 
-          <Section title="平台证据覆盖" eyebrow="Evidence map">
+          <Section title="资料来源">
             <div className="grid gap-3 sm:grid-cols-2">
               {Object.entries(card.platformSummary).map(([key, platform]) => (
                 <article key={key} className="rounded-2xl border bg-card p-5">
@@ -107,8 +107,8 @@ export default async function CompanyResearchPage({ params }: { params: Promise<
   )
 }
 
-function Section({ title, eyebrow, children }: { title: string; eyebrow: string; children: React.ReactNode }) {
-  return <section><p className="text-xs font-bold uppercase tracking-[0.18em] text-primary-deep">{eyebrow}</p><h2 className="mb-5 mt-1 text-2xl font-bold">{title}</h2>{children}</section>
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return <section><h2 className="mb-5 text-2xl font-bold">{title}</h2>{children}</section>
 }
 
 function ScoreCard({ label, detail }: { label: string; detail: ScoreDetail }) {

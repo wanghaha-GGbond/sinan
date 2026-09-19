@@ -196,11 +196,6 @@ export default function MePage() {
             <Navigation className="size-8 text-muted-foreground" />
           </div>
           <h2 className="text-lg font-semibold text-foreground">登录在场</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            登录后查看方向值、连续点灯和指路等级
-            <br />
-            匿名保护,不向公司开放身份
-          </p>
           <WebButton asChild variant="primary" size="lg" className="mt-6 w-full">
             <Link href="/login?next=%2Fme">
               <LogIn className="size-4" />
@@ -250,9 +245,6 @@ export default function MePage() {
       <section className="mx-auto flex w-full max-w-5xl flex-col items-center px-4 py-20">
         <WebSurface variant="elevated" className="w-full max-w-card p-10 text-center">
           <h2 className="text-lg font-semibold text-foreground">账户信息暂时无法加载</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            服务正在恢复中，当前没有展示任何临时或模拟账户数据。
-          </p>
           <WebButton
             type="button"
             variant="primary"
@@ -421,10 +413,7 @@ function MeContent({
       {isNewUser ? (
         <section className="flex flex-col gap-4 border-y border-border py-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="max-w-prose-sm">
-            <h2 className="text-xl font-semibold text-foreground">从一条真实经验开始</h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              写下你熟悉的公司，或先阅读一篇评价。完成第一次行动后，这里会展示方向值和社区贡献。
-            </p>
+            <h2 className="text-xl font-semibold text-foreground">我的评价</h2>
           </div>
           <div className="flex shrink-0 flex-wrap gap-2">
             <WebButton asChild>
@@ -642,7 +631,6 @@ function MeContent({
         {myReviews.length === 0 ? (
           <WebEmptyState
             title="还没有评价"
-            description="分享你熟悉的那家公司,帮助更多后来者看清方向。"
             action={
               <WebButton asChild variant="primary" size="sm">
                 <Link href="/submit/review">写第一条评价</Link>
@@ -701,7 +689,6 @@ function MeContent({
             {favoriteSet.size === 0 && hydrated ? (
               <WebEmptyState
                 title="还没有收藏公司"
-                description="在任意公司详情页点 ☆,这里会汇总你关注的公司方向变化。"
                 action={
                   <WebButton asChild variant="secondary" size="sm">
                     <Link href="/search">去发现公司</Link>

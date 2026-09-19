@@ -27,7 +27,7 @@ test("homepage, directory, and search reuse one catalog request on client naviga
   expect(catalogRequests).toBe(1)
 
   await page.getByRole("link", { name: "返回在场首页" }).click()
-  await page.locator("main").getByRole("link", { name: "搜索公司", exact: true }).first().click()
+  await page.getByRole("search").getByRole("button", { name: "搜索", exact: true }).click()
   await expect(page.getByRole("button", { name: "测试公司甲", exact: true })).toBeVisible()
   // An empty search must not show the entire catalog as search results.
   await expect(page.getByRole("heading", { name: "测试公司甲" })).toHaveCount(0)
@@ -45,7 +45,7 @@ test("slow searches keep previous cards visible and clearing removes the results
   })
   try {
     await page.goto("/search")
-    const input = page.getByPlaceholder("搜索公司、职位或话题")
+    const input = page.getByPlaceholder("搜索公司名称")
     await input.fill("第一次")
     await input.press("Enter")
     await expect(page.getByRole("heading", { name: "测试公司甲" })).toBeVisible()
