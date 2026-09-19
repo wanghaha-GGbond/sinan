@@ -9,6 +9,7 @@ export default defineConfig({
     "auction-engine.spec.ts",
     "circles.spec.ts",
     "company-cbti.spec.ts",
+    "company-search-cache.spec.ts",
     "dev-auth.spec.ts",
     "dm-engine.spec.ts",
     "error-reporting.spec.ts",

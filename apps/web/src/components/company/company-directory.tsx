@@ -38,7 +38,7 @@ export function CompanyDirectory() {
     return <div className="h-48 animate-pulse rounded-3xl bg-muted" aria-label="正在加载公司" />
   }
 
-  if (error) {
+  if (error && !companies.length) {
     return <p className="border-y border-border py-8 text-sm text-muted-foreground" role="status">公司数据暂时不可用，请稍后再试。</p>
   }
 

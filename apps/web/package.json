@@ -16,6 +16,7 @@
     "verify": "npm run lint && npm run typecheck && npm run test:unit && npm run build",
     "release:check-env": "node scripts/check-release-env.mjs",
     "test:e2e": "playwright test tests/smoke.spec.ts",
+    "test:performance": "playwright test --config=playwright.performance.config.ts",
     "test:e2e:legacy": "playwright test tests/sinan.spec.ts",
     "test:e2e:release": "node scripts/require-database-url.mjs && playwright test --config=playwright.release.config.ts",
     "test:visual": "playwright test tests/visual.spec.ts",

@@ -17,7 +17,7 @@ export function HomeCompanyFeed() {
     return <div className="h-40 animate-pulse rounded-3xl bg-muted" aria-label="正在加载公司" />
   }
 
-  if (error) {
+  if (error && !data) {
     return (
       <div role="status" className="flex flex-wrap items-center gap-3 rounded-2xl border p-5">
         <p className="text-sm text-muted-foreground">公司数据暂时不可用，请稍后再试</p>

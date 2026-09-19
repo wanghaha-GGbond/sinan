@@ -20,8 +20,8 @@ export default function SearchPage() {
   )
   const suggestions = useMemo(() => {
     const names = (catalogQuery.data ?? [])
-        .map((company) => company.shortName || company.name)
-        .filter((name): name is string => Boolean(name))
+      .map((company) => company.shortName || company.name)
+      .filter((name): name is string => Boolean(name))
     return names.slice(0, 6)
   }, [catalogQuery.data])
 
@@ -31,9 +31,10 @@ export default function SearchPage() {
     return () => clearTimeout(timer)
   }, [query])
 
-  const results = searchQuery.data ?? []
-  const loading = Boolean(debouncedQuery.trim()) && searchQuery.isFetching && !searchQuery.data
-  const error = searchQuery.error instanceof Error ? searchQuery.error.message : null
+  const hasQuery = Boolean(debouncedQuery.trim())
+  const results = hasQuery ? searchQuery.data ?? [] : []
+  const loading = hasQuery && searchQuery.isFetching
+  const error = hasQuery && searchQuery.error instanceof Error ? searchQuery.error.message : null
 
   function submitSearch() {
     setDebouncedQuery(query)
@@ -60,7 +61,7 @@ export default function SearchPage() {
         )}
       </div>
 
-      {loading && <p className="text-sm text-muted-foreground">搜索中...</p>}
+      {loading && <p role="status" className="text-sm text-muted-foreground">{results.length ? "正在更新搜索结果…" : "搜索中..."}</p>}
       {error && <p className="text-sm text-red-500">{error}</p>}
       {!loading && !error && results.length === 0 && debouncedQuery.trim() ? (
         <SmartEmptyState
@@ -69,8 +70,8 @@ export default function SearchPage() {
           onSubmit={setQuery}
         />
       ) : null}
-      {!loading && results.length > 0 && (
-        <div className="grid gap-4" style={{ gridTemplateColumns: "var(--container-card-grid)" }}>
+      {results.length > 0 && (
+        <div aria-busy={loading} className="grid gap-4" style={{ gridTemplateColumns: "var(--container-card-grid)" }}>
           {results.map((company) => (
             <CompanyCard key={company.id} company={company} />
           ))}

@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
             directionScore: reviewCount ? Number(aggregate?.avgDirection ?? 0) : 0,
             recommendationRate: reviewCount
               ? Math.round((Number(aggregate?.recommendCount ?? 0) / reviewCount) * 100)
-            : 0,
+              : 0,
             reviewCount,
             cbti: inferPublicCBTI(signalsByCompany.get(row.id) ?? []),
           }

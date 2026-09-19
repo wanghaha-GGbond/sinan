@@ -1,6 +1,6 @@
 "use client"
 
-import { useQuery, type QueryClient } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 
 import { searchCompanies } from "@/lib/api/companies"
 import type { CompanyListItem } from "@/lib/types"
@@ -30,9 +30,9 @@ async function fetchCompanySearch(params: CompanySearchParams): Promise<CompanyL
   return result.data?.companies ?? []
 }
 
-const companySearchOptions = (params: CompanySearchParams = {}) => ({
+export const companySearchOptions = (params: CompanySearchParams = {}) => ({
   queryKey: companySearchQueryKey(params),
-  queryFn: () => fetchCompanySearch(params),
+  queryFn: () => fetchCompanySearch(normalizeParams(params)),
   staleTime: 60_000,
   gcTime: 10 * 60_000,
   // Keep the previous result visible while a new search is in flight.
@@ -44,8 +44,4 @@ export function useCompanySearch(params: CompanySearchParams = {}, enabled = tru
     ...companySearchOptions(params),
     enabled,
   })
-}
-
-export function prefetchCompanySearch(queryClient: QueryClient, params: CompanySearchParams = {}) {
-  return queryClient.prefetchQuery(companySearchOptions(params))
 }

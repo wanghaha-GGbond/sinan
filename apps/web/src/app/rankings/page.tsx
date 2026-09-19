@@ -71,7 +71,7 @@ export default function RankingsPage() {
     )
   }
 
-  if (error) {
+  if (error && !companies.length) {
     return (
       <ErrorState
         title="加载公司发现失败"
