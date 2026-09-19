@@ -42,6 +42,9 @@ export type CompanyListItem = {
   riskLevel?: string
   riskTags?: string[]
   highlights?: string[]
+  scoreDistribution?: { score: string; count: number }[]
+  cbti?: CBTIProfile
+  vibeTag?: CompanyVibeTag
 }
 
 export type ApiResponse<T> = { data: T; loading: false; error: null } |
@@ -63,7 +66,15 @@ export type ReviewListItem = {
   authorRole: string
   authorLabel: string
   usefulCount: number
+  isUsefulByCurrentUser?: boolean
   discussionCount: number
+  dimensionScores?: Partial<Pick<ReviewQuestionnaire, "salaryScore" | "growthScore" | "workLifeBalanceScore" | "managementClarityScore" | "collaborationScore" | "stabilityScore" | "integrityScore">>
+  publicAuthor?: {
+    label: string
+    role: string
+    verificationLevel: "none" | "L1" | "L2"
+    verifiedForCompany: boolean
+  }
   status: string
   createdAt: string
   tags: string[] | null
@@ -90,6 +101,7 @@ export type Review = {
   createdAt: string
   verifiedHint: string
   verified?: boolean
+  isUsefulByCurrentUser?: boolean
   questionnaire?: ReviewQuestionnaire
 }
 
@@ -207,7 +219,7 @@ export type CBTIProfile = {
   summary: string
   axes: CBTIAxis
   confidence: number
-  generatedBy: "mock" | "ai"
+  generatedBy: "mock" | "ai" | "derived"
   updatedAt: string
 }
 

@@ -1,5 +1,7 @@
 import type { InferSelectModel } from "drizzle-orm"
 import type { reviews } from "@/db/schema/reviews"
+import { sanitizePublicQuestionnaire } from "@/lib/review-questionnaire"
+import { reviewRatingDimensionsSchema } from "@/lib/review-ratings"
 
 /**
  * PublicReviewView — the whitelisted set of fields safe to return
@@ -27,7 +29,15 @@ export type PublicReviewView = {
   ratingDimensions: unknown
   officeExperienceScore: string | null
   usefulCount: number
+  isUsefulByCurrentUser: boolean
   discussionCount: number
+  tags: string[]
+  publicAuthor: {
+    label: string
+    role: string
+    verificationLevel: "none" | "L1" | "L2"
+    verifiedForCompany: boolean
+  }
   status: string
   createdAt: string
   updatedAt: string
@@ -43,9 +53,27 @@ export type PublicReviewView = {
  * instead of the raw content field.
  */
 export function toPublicReviewView(
-  row: InferSelectModel<typeof reviews>
+  row: InferSelectModel<typeof reviews>,
+  metadata?: {
+    companyVerificationLevel?: number | null
+    isUsefulByCurrentUser?: boolean | null
+  }
 ): PublicReviewView {
   const isLimited = row.status === "limited_visible"
+  const rawVerificationLevel = Math.max(
+    0,
+    Number(metadata?.companyVerificationLevel ?? 0)
+  )
+  const verificationLevel = rawVerificationLevel >= 2
+    ? "L2"
+    : rawVerificationLevel >= 1
+      ? "L1"
+      : "none"
+  const questionnaire = sanitizePublicQuestionnaire(row.questionnaire)
+  const ratingDimensions = reviewRatingDimensionsSchema.safeParse(row.ratingDimensions)
+  const tags = Array.isArray(questionnaire?.tags)
+    ? questionnaire.tags.filter((tag): tag is string => typeof tag === "string").slice(0, 8)
+    : []
 
   return {
     id: row.id,
@@ -54,7 +82,9 @@ export function toPublicReviewView(
     authorRole: row.authorRole,
     authorLabel: row.authorLabel,
     title: row.title,
-    content: isLimited && row.maskedContent ? row.maskedContent : row.content,
+    // Limited visibility must fail closed. If moderation did not produce a
+    // mask, never fall back to the original potentially sensitive content.
+    content: isLimited ? row.maskedContent : row.content,
     summary: row.summary,
     directionScore: String(row.directionScore),
     recommendToJoin: row.recommendToJoin,
@@ -62,13 +92,21 @@ export function toPublicReviewView(
     jobTitle: row.jobTitle,
     city: row.city,
     departmentHint: row.departmentHint,
-    questionnaire: row.questionnaire,
-    ratingDimensions: row.ratingDimensions,
+    questionnaire,
+    ratingDimensions: ratingDimensions.success ? ratingDimensions.data : null,
     officeExperienceScore: row.officeExperienceScore
       ? String(row.officeExperienceScore)
       : null,
     usefulCount: row.usefulCount,
+    isUsefulByCurrentUser: Boolean(metadata?.isUsefulByCurrentUser),
     discussionCount: row.discussionCount,
+    tags,
+    publicAuthor: {
+      label: row.authorLabel,
+      role: row.authorRole,
+      verificationLevel,
+      verifiedForCompany: verificationLevel !== "none",
+    },
     status: row.status,
     createdAt:
       row.createdAt instanceof Date

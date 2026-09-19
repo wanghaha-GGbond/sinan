@@ -4,8 +4,8 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
 import { TagPill } from "@/components/ui/tag-pill"
 
 /**
@@ -48,7 +48,7 @@ export function PressShareCardGenerator() {
   }
 
   return (
-    <SolidCard variant="elevated" className="p-5">
+    <WebSurface variant="elevated" className="p-5">
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="text-lg font-semibold text-foreground">情绪指数分享卡</h2>
         <TagPill tone="match">1200×630 PNG</TagPill>
@@ -101,12 +101,12 @@ export function PressShareCardGenerator() {
             />
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <SolidButton type="button" size="sm" onClick={copy} data-testid="press-copy-image-url">
+            <WebButton type="button" size="sm" onClick={copy} data-testid="press-copy-image-url">
               {copied === "ok" ? "已复制 URL" : copied === "fail" ? "复制失败" : "复制图片 URL"}
-            </SolidButton>
+            </WebButton>
             <a
               href={imageUrl}
-              download="sinan-share.png"
+              download="zaichang-share.png"
               className="text-xs font-semibold text-primary-deep hover:underline"
             >
               下载 PNG
@@ -128,14 +128,14 @@ export function PressShareCardGenerator() {
           {/* eslint-disable-next-line @next/next/no-img-element -- OG image is dynamic; preview is not SSR-critical */}
           <img
             src={imageUrl}
-            alt="司南情绪指数分享卡预览"
+            alt="在场情绪指数分享卡预览"
             width={1200}
             height={630}
             className="block w-full"
           />
         </div>
       </div>
-    </SolidCard>
+    </WebSurface>
   )
 }
 

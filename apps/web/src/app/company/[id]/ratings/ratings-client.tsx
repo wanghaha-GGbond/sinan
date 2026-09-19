@@ -18,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { SolidButton } from "@/components/ui/solid-button"
+import { WebButton } from "@/components/ui/web-button"
 import { Textarea } from "@/components/ui/textarea"
 import { getCompany } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
@@ -59,7 +59,7 @@ export function RatingsClient({ id }: { id: string }) {
   return (
     <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
       <div className="min-w-0">
-        <div className="solid-card mb-5 border border-border/60 p-5">
+        <div className="web-surface web-surface-base mb-5 border border-border/60 p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
               <p className="text-sm text-muted-foreground">{company.name}</p>
@@ -108,7 +108,7 @@ export function RatingsClient({ id }: { id: string }) {
       </div>
 
       <aside className="grid gap-4 self-start lg:sticky lg:top-20">
-        <Card className="solid-card-subtle border border-border/60">
+        <Card className="web-surface web-surface-base border border-border/60">
           <CardHeader>
             <CardTitle>给这家公司打个方向分</CardTitle>
             <CardDescription>可选。提交后只在本地模拟成功状态。</CardDescription>
@@ -163,7 +163,7 @@ export function RatingsClient({ id }: { id: string }) {
                 </p>
               </div>
             </div>
-            <SolidButton
+            <WebButton
               data-testid="submit-rating"
               variant="primary"
               onClick={() => {
@@ -173,13 +173,13 @@ export function RatingsClient({ id }: { id: string }) {
               }}
             >
               提交方向分
-            </SolidButton>
-            <SolidButton asChild variant="secondary">
+            </WebButton>
+            <WebButton asChild variant="secondary">
               <Link href="/submit/review">
                 <PenLine />
                 写完整评价
               </Link>
-            </SolidButton>
+            </WebButton>
             {submitted ? (
               <div data-testid="rating-reward" className="glass-emerald rounded-[24px] p-3 text-sm">
                 <p className="font-medium text-primary-deep">你为后来者点亮了一次方向</p>
@@ -203,10 +203,10 @@ export function RatingsClient({ id }: { id: string }) {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <SolidButton onClick={() => setOpen(false)}>
+            <WebButton onClick={() => setOpen(false)}>
               <Compass />
               继续看真实评价
-            </SolidButton>
+            </WebButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

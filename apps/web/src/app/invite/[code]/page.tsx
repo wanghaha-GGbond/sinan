@@ -5,8 +5,8 @@ import { useParams } from "next/navigation"
 import Link from "next/link"
 import { ShieldCheck, Users, Star } from "lucide-react"
 import { IdentityCard, type IdentityCardData } from "@/components/identity/identity-card"
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
 
 type InviteData = {
   code: string
@@ -73,7 +73,7 @@ export default function InviteLandingPage() {
         <div className="flex flex-col items-center gap-3">
           <p className="text-sm text-muted-foreground">
             <span className="font-semibold text-foreground">{invite?.inviter?.displayName ?? "一位认证成员"}</span>
-            {" 邀请你加入司南"}
+            {" 邀请你加入在场"}
           </p>
           <IdentityCard data={cardData} />
           <p className="text-xs text-muted-foreground">点击卡片查看声誉背面</p>
@@ -82,22 +82,22 @@ export default function InviteLandingPage() {
 
       {!cardData && !loading && (
         <div className="text-center">
-          <p className="text-lg font-semibold text-foreground">受邀加入司南</p>
+          <p className="text-lg font-semibold text-foreground">受邀加入在场</p>
           <p className="mt-2 text-sm text-muted-foreground">高端职场真实评价社区</p>
         </div>
       )}
 
       {/* CTA */}
       {isExpired ? (
-        <SolidCard variant="default" className="w-full p-6 text-center">
+        <WebSurface variant="default" className="w-full p-6 text-center">
           <p className="text-sm font-semibold text-foreground">此邀请码已失效</p>
           <p className="mt-1 text-xs text-muted-foreground">请联系邀请人重新获取一个有效邀请码。</p>
-        </SolidCard>
+        </WebSurface>
       ) : (
         <div className="flex w-full flex-col gap-3">
-          <SolidButton asChild variant="primary" size="lg" className="w-full">
+          <WebButton asChild variant="primary" size="lg" className="w-full">
             <Link href={registerHref}>使用邀请码注册</Link>
-          </SolidButton>
+          </WebButton>
           <p className="text-center text-xs text-muted-foreground">
             已有账号？{" "}
             <Link href="/login" className="font-semibold text-primary hover:underline">
@@ -110,7 +110,7 @@ export default function InviteLandingPage() {
       {/* Value prop */}
       <div className="w-full space-y-3">
         {FEATURES.map(({ icon: Icon, title, desc }) => (
-          <SolidCard key={title} variant="default" className="flex items-start gap-4 p-4">
+          <WebSurface key={title} variant="default" className="flex items-start gap-4 p-4">
             <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted">
               <Icon className="size-4 text-primary" />
             </div>
@@ -118,7 +118,7 @@ export default function InviteLandingPage() {
               <p className="text-sm font-semibold text-foreground">{title}</p>
               <p className="mt-0.5 text-xs text-muted-foreground">{desc}</p>
             </div>
-          </SolidCard>
+          </WebSurface>
         ))}
       </div>
 
@@ -126,7 +126,7 @@ export default function InviteLandingPage() {
           without first registering themselves; the share card carries
           the invite watermark. */}
       {!isExpired && code ? (
-        <SolidCard variant="subtle" className="w-full p-4">
+        <WebSurface variant="subtle" className="w-full p-4">
           <p className="text-sm font-semibold text-foreground">把这个邀请转发给你也想拉来的人</p>
           <p className="mt-1 text-xs text-muted-foreground">
             分享卡上会自动带上 {invite?.inviter?.displayName ?? "邀请人"} 的邀请码,对方扫码就进你的引荐链。
@@ -139,7 +139,7 @@ export default function InviteLandingPage() {
               (复制链接发出去,对方点进来就是这张邀请卡)
             </span>
           </div>
-        </SolidCard>
+        </WebSurface>
       ) : null}
     </section>
   )

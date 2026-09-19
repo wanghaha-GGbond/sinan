@@ -48,7 +48,9 @@ export function toPublicReviewDiscussionView(
     type: row.type,
     authorRole: row.authorRole,
     authorLabel: row.authorLabel,
-    content: isLimited && row.maskedContent ? row.maskedContent : row.content,
+    // A limited discussion without a generated mask must not leak its raw
+    // content through the public serializer.
+    content: isLimited ? row.maskedContent : row.content,
     status: row.status,
     usefulCount: row.usefulCount,
     replyCount: row.replyCount,

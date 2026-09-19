@@ -4,12 +4,12 @@
  * All company data reads/writes go through this module. Pages should import
  * from here instead of directly from `@/lib/mock-data`.
  *
- * When NEXT_PUBLIC_API_ENABLED is "true", functions call the real API.
- * Otherwise they fall back to the existing mock data — ensuring local
- * development and e2e tests continue to work without a database.
+ * When NEXT_PUBLIC_API_ENABLED is "true", functions call the real API and
+ * surface failures. Mock data is available only when the flag is explicitly
+ * disabled for local development.
  */
-import type { Company } from "@/lib/types"
-import { companies as mockCompanies, searchCompanies as mockSearch } from "@/lib/mock-data"
+import type { Company } from "../types"
+import { companies as mockCompanies, searchCompanies as mockSearch } from "../mock-data"
 
 const API_ENABLED =
   typeof process !== "undefined" &&
@@ -42,7 +42,7 @@ export async function searchCompaniesData(
       const data = await res.json()
       return (data.companies ?? []) as Company[]
     } catch {
-      // Fall through to mock fallback on network error
+      return []
     }
   }
 
@@ -98,11 +98,11 @@ export async function submitCompanyCommunitySubmission(
 
       return { ok: true, company: data.company as Company }
     } catch {
-      // Fall through to mock fallback
+      return { ok: false, error: "网络连接失败，企业信息尚未提交，请重试" }
     }
   }
 
-  // Mock fallback: create a local company object
+  // Explicit local development mode: create a local company object.
   const mockCompany: Company = {
     id: `company-local-${Date.now()}`,
     name: input.shortName || input.registeredName,
@@ -137,7 +137,7 @@ export async function submitCompanyCommunitySubmission(
     createdByUser: true,
   }
 
-  // Add to mock companies list so it appears in search
+  // Add to local mock companies list so it appears in local search.
   mockCompanies.push(mockCompany)
 
   return { ok: true, company: mockCompany }

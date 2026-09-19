@@ -1,0 +1,39 @@
+{
+  "generatedAt": "2026-06-20",
+  "notes": "Copy this file to research-companies.json, then replace the sample company with Playwright MCP research results.",
+  "companies": [
+    {
+      "id": "20000000-0000-4000-8000-000000000001",
+      "name": "示例科技",
+      "registeredName": "示例科技有限公司",
+      "shortName": "示例科技",
+      "city": "上海",
+      "industry": "企业服务 / AI",
+      "size": "1000-3000 人",
+      "website": "https://example.com",
+      "emailDomains": ["example.com"],
+      "description": "基于 Boss 直聘、小红书、微博公开信息整理：岗位需求集中在 AI 应用和商业化增长，社交平台讨论主要围绕节奏、管理透明度和薪资兑现。",
+      "departments": ["研发与工程", "产品与设计", "商业化与运营"],
+      "sentiment": [
+        {
+          "date": "2026-06-01",
+          "score": 6.8,
+          "sampleCount": 18,
+          "components": {
+            "boss_zhipin": 7.1,
+            "xiaohongshu": 6.4,
+            "weibo": 6.7
+          }
+        }
+      ],
+      "events": [
+        {
+          "date": "2026-06-01",
+          "title": "Boss 直聘新增多个 AI 应用岗位",
+          "category": "招聘变化",
+          "sourceUrl": "https://example.com/research-note"
+        }
+      ]
+    }
+  ]
+}

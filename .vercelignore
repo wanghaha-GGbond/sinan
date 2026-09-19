@@ -1,0 +1,22 @@
+.git
+.github
+.vercel
+node_modules
+**/node_modules
+
+# Local build and test output
+apps/web/.next
+apps/web/.research-browser
+apps/web/playwright-report
+apps/web/test-results
+apps/web/tests
+apps/web/*.log
+
+# Research collection evidence is retained in Git/Neon, but is not needed by
+# the running Next.js application.
+apps/web/src/db/seeds/research-artifacts
+apps/web/src/db/seeds/research-store.sqlite
+
+# The preview project only deploys apps/web and packages/shared.
+apps/ios
+docs

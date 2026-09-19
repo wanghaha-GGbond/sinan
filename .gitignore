@@ -3,6 +3,7 @@
 # dependencies
 /node_modules
 /apps/*/node_modules
+/packages/*/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -43,6 +44,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!/apps/ios/.env.example
 
 # vercel
 .vercel
@@ -57,3 +59,40 @@ next-env.d.ts
 
 # opencode (local AI coding tool runtime)
 .opencode/
+
+# sinan research seed local outputs
+/apps/web/src/db/seeds/research-targets.json
+/apps/web/src/db/seeds/research-companies.json
+/apps/web/src/db/seeds/research-companies.generated.sql
+/apps/web/src/db/seeds/research-observations.json
+/apps/web/src/db/seeds/research-external-evidence.json
+/apps/web/src/db/seeds/research-store.sqlite
+/apps/web/src/db/seeds/research-store.sqlite-*
+/apps/web/src/db/seeds/research-artifacts/
+/apps/web/src/db/seeds/reports/
+!/apps/web/src/db/seeds/reports/
+/apps/web/src/db/seeds/reports/*
+!/apps/web/src/db/seeds/reports/company-insight-cards.json
+!/apps/web/src/db/seeds/reports/company-indices.json
+.research-browser/
+
+# Python cache files from research database tooling
+__pycache__/
+*.py[cod]
+
+# Local Codex/tooling work products
+/.tmp-skill-upgrade/
+/reports/model-review-*/
+
+# Local DreamCanvas UI exports
+/*.dc.html
+
+# Local design QA captures (keep out of release commits)
+/design-qa*.png
+/design-qa.md
+
+# cloudflare workers build output (opennextjs adapter)
+/apps/web/.open-next/
+/apps/web/.wrangler/
+**/.dev.vars
+**/.dev.vars.*

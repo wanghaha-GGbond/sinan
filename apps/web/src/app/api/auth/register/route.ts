@@ -3,12 +3,18 @@ import { and, eq, isNull, or } from "drizzle-orm"
 import { users } from "@/db/schema/users"
 import { hashPassword, setAuthCookie } from "@/lib/server/auth"
 import { checkRateLimit, getRateLimitKey } from "@/lib/server/rate-limit"
-import { findInvite, consumeInvite } from "@/lib/server/invites"
+import {
+  consumeInvite,
+  findInvite,
+  isInviteRequired,
+} from "@/lib/server/invites"
+import { isDevAuthEnabled } from "@/lib/server/dev-auth"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PHONE_RE = /^1[3-9]\d{9}$/
 
 export async function POST(request: NextRequest) {
+  const nativeClient = request.headers.get("x-sinan-client") === "ios"
   let body: Record<string, unknown>
   try {
     body = await request.json()
@@ -61,9 +67,7 @@ export async function POST(request: NextRequest) {
     ? email.split("@")[0]
     : `用户${phone?.slice(-4) ?? ""}`
 
-  const inviteFlag = process.env.INVITE_REQUIRED?.trim().toLowerCase()
-  const inviteRequired = inviteFlag === "1" || inviteFlag === "true"
-  if (inviteRequired && !inviteCode) {
+  if (isInviteRequired() && !inviteCode) {
     return NextResponse.json({ error: "Invite code required" }, { status: 403 })
   }
 
@@ -78,20 +82,25 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // Dev bypass: when no DATABASE_URL, accept a test registration
-  if (!process.env.DATABASE_URL) {
-    await setAuthCookie({ userId: "dev-user-001", role: "user" })
+  // Explicit local-only preview mode. Never infer a bypass merely because a
+  // deployed database variable is missing.
+  if (isDevAuthEnabled()) {
+    const token = await setAuthCookie({ userId: "dev-user-001", role: "user" })
     return NextResponse.json(
       {
         user: {
           id: "dev-user-001",
           displayName: email ? email.split("@")[0] : `用户${phone?.slice(-4) ?? ""}`,
           role: "user",
-        },
+        }, ...(nativeClient ? { token } : {}),
       },
       { status: 201 }
     )
 
+  }
+
+  if (!process.env.DATABASE_URL) {
+    return NextResponse.json({ error: "Service unavailable" }, { status: 503 })
   }
 
   // Validate invite code if provided (check before DB to avoid partial work)
@@ -156,7 +165,7 @@ export async function POST(request: NextRequest) {
       return newUser
     })
 
-    await setAuthCookie({ userId: user.id, role: user.role })
+    const token = await setAuthCookie({ userId: user.id, role: user.role })
 
     return NextResponse.json(
       {
@@ -164,7 +173,7 @@ export async function POST(request: NextRequest) {
           id: user.id,
           displayName: user.displayName,
           role: user.role,
-        },
+        }, ...(nativeClient ? { token } : {}),
       },
       { status: 201 }
     )

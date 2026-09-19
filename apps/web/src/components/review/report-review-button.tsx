@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react"
 import { CheckCircle2, Flag, X } from "lucide-react"
 
-import { SolidButton } from "@/components/ui/solid-button"
+import { WebButton } from "@/components/ui/web-button"
 import { Textarea } from "@/components/ui/textarea"
 import { REPORT_REASONS, getReportForReview, submitReport, type ReportReasonId } from "@/lib/api/reports"
 
-export function ReportReviewButton({ reviewId }: { reviewId: string }) {
+export function ReportReviewButton({ reviewId, compact = false }: { reviewId: string; compact?: boolean }) {
   const [open, setOpen] = useState(false)
   const [reason, setReason] = useState<ReportReasonId | "">("")
   const [note, setNote] = useState("")
@@ -29,7 +29,7 @@ export function ReportReviewButton({ reviewId }: { reviewId: string }) {
       <span
         className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1.5 text-xs font-medium text-secondary-foreground"
         data-testid={`report-submitted-${reviewId}`}
-        title="你已经举报过这条评价,司南会优先审核"
+        title="你已经举报过这条评价,在场会优先审核"
       >
         <CheckCircle2 className="size-3.5" />
         已举报:{label}
@@ -39,17 +39,17 @@ export function ReportReviewButton({ reviewId }: { reviewId: string }) {
 
   if (!open) {
     return (
-      <SolidButton
+      <WebButton
         type="button"
-        variant="risk"
+        variant="danger"
         size="sm"
-        className="rounded-full"
+        className="rounded-[9px]"
         data-testid={`report-button-${reviewId}`}
         onClick={() => setOpen(true)}
       >
         <Flag className="size-4" />
-        举报
-      </SolidButton>
+        {compact ? <span className="sr-only">举报</span> : "举报"}
+      </WebButton>
     )
   }
 
@@ -87,7 +87,7 @@ export function ReportReviewButton({ reviewId }: { reviewId: string }) {
         </button>
       </div>
       <p className="mb-3 text-xs text-muted-foreground">
-        司南优先保护匿名与事实表达。明确违规的内容会被下架,公司方无法干预。
+        在场优先保护匿名与事实表达。明确违规的内容会被下架,公司方无法干预。
       </p>
       <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="举报原因">
         {REPORT_REASONS.map((option) => {
@@ -125,10 +125,10 @@ export function ReportReviewButton({ reviewId }: { reviewId: string }) {
         onChange={(event) => setNote(event.target.value)}
       />
       <div className="mt-3 flex items-center justify-end gap-2">
-        <SolidButton type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>
+        <WebButton type="button" variant="quiet" size="sm" onClick={() => setOpen(false)}>
           取消
-        </SolidButton>
-        <SolidButton
+        </WebButton>
+        <WebButton
           type="button"
           variant="primary"
           size="sm"
@@ -137,7 +137,7 @@ export function ReportReviewButton({ reviewId }: { reviewId: string }) {
           data-testid={`report-submit-${reviewId}`}
         >
           提交举报
-        </SolidButton>
+        </WebButton>
       </div>
     </div>
   )

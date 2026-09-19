@@ -5,9 +5,9 @@ import { useParams } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Award, Mail } from "lucide-react"
 import { IdentityCard, type IdentityCardData } from "@/components/identity/identity-card"
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebSurface } from "@/components/ui/web-surface"
 import { useAuth } from "@/lib/auth-context"
-import { SolidButton } from "@/components/ui/solid-button"
+import { WebButton } from "@/components/ui/web-button"
 
 type ProfileData = {
   id: string
@@ -152,7 +152,7 @@ export default function PublicProfilePage() {
       <p className="text-center text-xs text-muted-foreground">点击卡片查看背面声誉数据</p>
 
       {/* Profile meta */}
-      <SolidCard variant="default" className="p-6">
+      <WebSurface variant="default" className="p-6">
         <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           <div>
             <dt className="text-xs text-muted-foreground">认证等级</dt>
@@ -200,11 +200,11 @@ export default function PublicProfilePage() {
             </div>
           )}
         </dl>
-      </SolidCard>
+      </WebSurface>
 
       {/* DM button — M3 */}
       {currentUser && currentUser.id !== profile.id && (
-        <SolidCard variant="default" className="p-6">
+        <WebSurface variant="default" className="p-6">
           <p className="text-sm font-semibold text-foreground">私信</p>
           {Math.abs((currentUser.trustLevel ?? 0) - profile.trustLevel) >= 2 ? (
             <div className="mt-3 flex flex-col gap-2">
@@ -224,31 +224,31 @@ export default function PublicProfilePage() {
                 <span className="text-xs text-muted-foreground">
                   {dmIntro.length}/140
                 </span>
-                <SolidButton
+                <WebButton
                   size="sm"
                   onClick={() => startDm(dmIntro)}
                   disabled={dmSending || dmIntro.trim().length === 0}
                 >
                   {dmSending ? "发送中…" : "发送请求"}
-                </SolidButton>
+                </WebButton>
               </div>
             </div>
           ) : (
             <div className="mt-3 flex items-center gap-2">
-              <SolidButton size="sm" onClick={() => startDm("")}>
+              <WebButton size="sm" onClick={() => startDm("")}>
                 <Mail className="mr-1 size-3" />
                 发起私信
-              </SolidButton>
+              </WebButton>
             </div>
           )}
           {dmError && (
             <p className="mt-2 text-sm text-muted-foreground">{dmError}</p>
           )}
-        </SolidCard>
+        </WebSurface>
       )}
 
       {/* Circle badges — M3 */}
-      <SolidCard variant="default" className="p-6">
+      <WebSurface variant="default" className="p-6">
         <p className="text-sm font-semibold text-foreground">所在圈层</p>
         {userCircles.length === 0 ? (
           <p className="mt-2 text-xs text-muted-foreground">
@@ -269,7 +269,7 @@ export default function PublicProfilePage() {
             ))}
           </div>
         )}
-      </SolidCard>
+      </WebSurface>
     </section>
   )
 }

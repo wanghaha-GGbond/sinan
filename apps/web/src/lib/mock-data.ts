@@ -1569,7 +1569,7 @@ export const badgeCatalog: BadgeProgress[] = [
     progress: 3,
     target: 5,
   },
-  { id: "veteran", name: "司南老用户", description: "注册满 1 年", unlocked: false, progress: 0, target: 1 },
+  { id: "veteran", name: "在场老用户", description: "注册满 1 年", unlocked: false, progress: 0, target: 1 },
 ]
 
 export const dailyTasks: DailyTask[] = [

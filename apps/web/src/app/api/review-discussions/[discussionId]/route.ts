@@ -14,7 +14,7 @@ export async function DELETE(
     // Require authentication
     let authUser
     try {
-      authUser = await requireAuthUser()
+      authUser = await requireAuthUser(request)
     } catch (e) {
       if (e instanceof Response) return e
       throw e

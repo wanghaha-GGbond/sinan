@@ -1,11 +1,11 @@
-// 司南色彩系统 — 完全对齐 apps/web 的 Solid C 端风格
-// Web 端参考: apps/web/src/app/globals.css
+// 在场原生 App 色彩系统 — 保留 Solid 立体触感。
+// Web 端使用独立的扁平/轻玻璃视觉系统，不在此处复用。
 
 export const COLORS = {
   // 品牌色
   primary: "#19C37D",
   primaryDark: "#0E8F5F",
-  primarySoft: "#DFF8EC",
+  primarySoft: "#E4F9EF",
   primaryForeground: "#07563A",
 
   // 中性色
@@ -16,14 +16,14 @@ export const COLORS = {
   mutedLight: "#9CA3AF",
 
   // 背景
-  bg: "#F7F8F2",
+  bg: "#F8FFFB",
   surface: "#FFFFFF",
-  surfaceMuted: "#F9FAF7",
-  surfaceHover: "#F1F5EF",
+  surfaceMuted: "#F4FCF8",
+  surfaceHover: "#EFFBF5",
 
   // 边框
-  border: "#E5E7DB",
-  borderSoft: "rgba(229,231,219,0.6)",
+  border: "#D6EEE2",
+  borderSoft: "rgba(214,238,226,0.65)",
 
   // 语义色
   risk: "#C76A15",
@@ -39,10 +39,10 @@ export const COLORS = {
   // 别名（兼容旧代码）
   card: "#FFFFFF",
   darkSecondary: "#374151",
-  primaryLight: "#DFF8EC",
+  primaryLight: "#E4F9EF",
 } as const
 
-// 对齐 Web: rounded-2xl(16px) card, rounded-[18px] button, rounded-3xl(24px) hero
+// Native App surface radii: cards are tactile, buttons remain easy to hit.
 export const RADIUS = {
   sm: 8,
   md: 12,
@@ -57,12 +57,12 @@ export const PRODUCT = {
   valueName: "方向值",
   streakName: "连续点灯",
   levelName: "指路等级",
-  badgeName: "司南徽章",
+  badgeName: "在场徽章",
   reviewerName: "过来人",
   newcomerName: "后来者",
 } as const
 
-// 3D 按钮阴影 (iOS 用 elevation + shadowColor 模拟)
+// Solid App 立体按钮阴影 (iOS 用 elevation + shadowColor 模拟)
 export const SHADOWS = {
   buttonPrimary: {
     shadowColor: "#0E8F5F",
@@ -72,7 +72,7 @@ export const SHADOWS = {
     elevation: 6,
   },
   buttonSecondary: {
-    shadowColor: "#D1D5C8",
+    shadowColor: "#CCEBDD",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1,
     shadowRadius: 0,

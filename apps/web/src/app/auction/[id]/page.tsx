@@ -10,8 +10,8 @@
  */
 import Link from "next/link"
 
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
 import { TagPill } from "@/components/ui/tag-pill"
 import { auctions } from "@/db/schema/auctions"
 import { eq, sql } from "drizzle-orm"
@@ -104,7 +104,7 @@ export default async function AuctionDetailPage({
   if (data.kind === "db_unavailable") {
     return (
       <section className="mx-auto flex w-full max-w-page flex-col gap-6 px-4 py-8 sm:px-6">
-        <SolidCard variant="elevated" className="p-6">
+        <WebSurface variant="elevated" className="p-6">
           <h1 className="text-2xl font-semibold">数据库暂时不可用</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             稍后再试。如果你是嘉宾且急着处理本专场,前往{" "}
@@ -114,11 +114,11 @@ export default async function AuctionDetailPage({
             。
           </p>
           <div className="mt-4">
-            <SolidButton asChild variant="secondary" size="sm">
+            <WebButton asChild variant="secondary" size="sm">
               <Link href="/auction">回专场列表</Link>
-            </SolidButton>
+            </WebButton>
           </div>
-        </SolidCard>
+        </WebSurface>
       </section>
     )
   }
@@ -126,17 +126,17 @@ export default async function AuctionDetailPage({
   if (data.kind === "not_found") {
     return (
       <section className="mx-auto flex w-full max-w-page flex-col gap-6 px-4 py-8 sm:px-6">
-        <SolidCard variant="elevated" className="p-6">
+        <WebSurface variant="elevated" className="p-6">
           <h1 className="text-2xl font-semibold">专场不存在</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             该专场可能已被取消或链接失效。
           </p>
           <div className="mt-4">
-            <SolidButton asChild variant="secondary" size="sm">
+            <WebButton asChild variant="secondary" size="sm">
               <Link href="/auction">回专场列表</Link>
-            </SolidButton>
+            </WebButton>
           </div>
-        </SolidCard>
+        </WebSurface>
       </section>
     )
   }
@@ -146,7 +146,7 @@ export default async function AuctionDetailPage({
 
   return (
     <section className="mx-auto flex w-full max-w-page flex-col gap-6 px-4 py-8 sm:px-6">
-      <SolidCard variant="elevated" className="p-6">
+      <WebSurface variant="elevated" className="p-6">
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center gap-2">
             <TagPill tone="match">嘉宾 · L{auction.hostTrustLevel}</TagPill>
@@ -194,9 +194,9 @@ export default async function AuctionDetailPage({
             </div>
           </div>
         </div>
-      </SolidCard>
+      </WebSurface>
 
-      <SolidCard variant="subtle" className="p-6">
+      <WebSurface variant="subtle" className="p-6">
         <h2 className="text-base font-semibold">参与情况</h2>
         <div className="mt-3 flex items-baseline gap-3">
           <span className="text-3xl font-bold text-foreground">{bidCount}</span>
@@ -215,7 +215,7 @@ export default async function AuctionDetailPage({
           盲拍出价,互相看不到金额和身份(08 §2 匿名规则)。
           出价人身份仅以段位形式在成交时公示。
         </p>
-      </SolidCard>
+      </WebSurface>
 
       {/* Inline bid form — only shown when live */}
       {auction.status === "live" && (
@@ -223,7 +223,7 @@ export default async function AuctionDetailPage({
       )}
 
       {isSettled ? (
-        <SolidCard variant="elevated" className="p-6">
+        <WebSurface variant="elevated" className="p-6">
           <div className="flex flex-col gap-2">
             <div className="text-xs uppercase tracking-wide text-muted-foreground">
               成交结果
@@ -249,7 +249,7 @@ export default async function AuctionDetailPage({
                 : "本场按平台规则抽佣,成交后进入履约流程。"}
             </p>
           </div>
-        </SolidCard>
+        </WebSurface>
       ) : null}
 
       <div className="flex items-center justify-between text-xs text-muted-foreground">

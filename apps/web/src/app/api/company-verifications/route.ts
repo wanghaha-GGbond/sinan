@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
-import { sql } from "drizzle-orm"
+import { and, eq, isNull } from "drizzle-orm"
 
 import { requireAuthUser } from "@/lib/server/auth"
+import { isDevAuthEnabled } from "@/lib/server/dev-auth"
 
 const PUBLIC_EMAIL_DOMAINS = new Set([
   "gmail.com",
@@ -24,10 +25,10 @@ const requestSchema = z.object({
   note: z.string().trim().max(500, "补充说明不能超过 500 字").optional(),
 })
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   let user
   try {
-    user = await requireAuthUser()
+    user = await requireAuthUser(request)
   } catch (error) {
     if (error instanceof Response) return error
     throw error
@@ -67,20 +68,13 @@ export async function POST(request: Request) {
       import("@/db/schema/companies"),
     ])
 
-    // Find or create company by name; fall back to slug lookup
-    let [company] = await db
+    // The submitted id is authoritative. Never resolve a verification to a
+    // same-named company chosen by a different record.
+    const [company] = await db
       .select({ id: companies.id, emailDomains: companies.emailDomains })
       .from(companies)
-      .where(sql`LOWER(${companies.name}) = LOWER(${data.companyName})`)
+      .where(and(eq(companies.id, data.companyId), isNull(companies.deletedAt)))
       .limit(1)
-
-    if (!company) {
-      [company] = await db
-        .select({ id: companies.id, emailDomains: companies.emailDomains })
-        .from(companies)
-        .where(sql`${companies.shortName} = ${data.companyId}`)
-        .limit(1)
-    }
 
     if (!company) {
       return NextResponse.json(
@@ -125,23 +119,26 @@ export async function POST(request: Request) {
       { status: 201 }
     )
   } catch (error) {
-    if (process.env.DATABASE_URL) {
-      console.error("POST /api/company-verifications failed:", error)
+    // A synthetic verification must never look successful outside the
+    // explicit local preview mode; otherwise a missing database can create
+    // trust claims that are not persisted or reviewable.
+    if (isDevAuthEnabled()) {
       return NextResponse.json(
-        { error: "认证申请暂时无法提交，请稍后重试" },
-        { status: 503 }
+        {
+          verification: {
+            id: `local-verification-${Date.now()}`,
+            status: "submitted",
+            createdAt: new Date().toISOString(),
+          },
+        },
+        { status: 201 },
       )
     }
 
+    console.error("POST /api/company-verifications failed:", error)
     return NextResponse.json(
-      {
-        verification: {
-          id: `local-verification-${Date.now()}`,
-          status: "submitted",
-          createdAt: new Date().toISOString(),
-        },
-      },
-      { status: 201 }
+      { error: "认证申请暂时无法提交，请稍后重试" },
+      { status: 503 },
     )
   }
 }

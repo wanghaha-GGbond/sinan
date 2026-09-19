@@ -7,8 +7,8 @@ import Link from "next/link"
 import { useEffect, useRef, useState, use } from "react"
 import { useRouter } from "next/navigation"
 
-import { SolidCard } from "@/components/ui/solid-card"
-import { SolidButton } from "@/components/ui/solid-button"
+import { WebSurface } from "@/components/ui/web-surface"
+import { WebButton } from "@/components/ui/web-button"
 import { useAuth } from "@/lib/auth-context"
 
 type Message = {
@@ -88,7 +88,7 @@ export default function ThreadPage({
         </Link>
       </div>
 
-      <SolidCard
+      <WebSurface
         variant="elevated"
         className="flex flex-1 flex-col gap-3 overflow-y-auto p-4"
       >
@@ -125,7 +125,7 @@ export default function ThreadPage({
           )
         })}
         <div ref={endRef} />
-      </SolidCard>
+      </WebSurface>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
@@ -138,9 +138,9 @@ export default function ThreadPage({
           onChange={(e) => setContent(e.target.value)}
           disabled={sending}
         />
-        <SolidButton onClick={send} disabled={!content.trim() || sending}>
+        <WebButton onClick={send} disabled={!content.trim() || sending}>
           {sending ? "发送中…" : "发送"}
-        </SolidButton>
+        </WebButton>
       </div>
     </section>
   )

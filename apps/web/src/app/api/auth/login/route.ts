@@ -3,8 +3,10 @@ import { and, eq, isNull, or } from "drizzle-orm"
 import { users } from "@/db/schema/users"
 import { verifyPassword, setAuthCookie } from "@/lib/server/auth"
 import { checkRateLimit, getRateLimitKey } from "@/lib/server/rate-limit"
+import { isDevAuthEnabled } from "@/lib/server/dev-auth"
 
 export async function POST(request: NextRequest) {
+  const nativeClient = request.headers.get("x-sinan-client") === "ios"
   let body: Record<string, unknown>
   try {
     body = await request.json()
@@ -41,36 +43,37 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // Dev bypass: when no DATABASE_URL, accept local-only preview accounts.
-  if (!process.env.DATABASE_URL) {
-    const developerEmail = "developer@sinan.app"
+  // Explicit local-only preview mode. Missing production configuration must
+  // fail closed instead of exposing hard-coded development identities.
+  if (isDevAuthEnabled()) {
+    const developerEmail = "developer@sinanapp.cn"
     const isDeveloperAccount =
       email === developerEmail && password === "sinan-dev-2026"
 
     if (isDeveloperAccount) {
-      await setAuthCookie({ userId: "dev-admin-001", role: "admin" })
+      const token = await setAuthCookie({ userId: "dev-admin-001", role: "admin" })
       return NextResponse.json({
         user: {
           id: "dev-admin-001",
-          displayName: "司南开发者",
+          displayName: "在场开发者",
           role: "admin",
-        },
+        }, ...(nativeClient ? { token } : {}),
       })
     }
 
-    const testEmail = "test@sinan.app"
+    const testEmail = "test@sinanapp.cn"
     const testPhone = "13800138000"
     const isTestAccount =
       (email === testEmail || phone === testPhone) && password === "test1234"
 
     if (isTestAccount) {
-      await setAuthCookie({ userId: "dev-user-001", role: "user" })
+      const token = await setAuthCookie({ userId: "dev-user-001", role: "user" })
       return NextResponse.json({
         user: {
           id: "dev-user-001",
           displayName: "指路人#042",
           role: "user",
-        },
+        }, ...(nativeClient ? { token } : {}),
       })
     }
 
@@ -78,6 +81,10 @@ export async function POST(request: NextRequest) {
       { error: "Invalid local development credentials" },
       { status: 503 }
     )
+  }
+
+  if (!process.env.DATABASE_URL) {
+    return NextResponse.json({ error: "Service unavailable" }, { status: 503 })
   }
 
   try {
@@ -120,14 +127,14 @@ export async function POST(request: NextRequest) {
       .set({ lastLoginAt: new Date() })
       .where(eq(users.id, user.id))
 
-    await setAuthCookie({ userId: user.id, role: user.role })
+    const token = await setAuthCookie({ userId: user.id, role: user.role })
 
     return NextResponse.json({
       user: {
         id: user.id,
         displayName: user.displayName,
         role: user.role,
-      },
+      }, ...(nativeClient ? { token } : {}),
     })
   } catch (error) {
     console.error("POST /api/auth/login failed:", error)

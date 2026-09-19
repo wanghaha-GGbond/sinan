@@ -1,14 +1,14 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { motion, useReducedMotion } from "framer-motion"
 
-import { searchCompanies } from "@/lib/api/companies"
-import type { CompanyListItem } from "@/lib/api/types"
+import { useCompanySearch } from "@/lib/queries/company-search"
+import type { CompanyListItem } from "@/lib/types"
 import { ErrorState } from "@/components/common/error-state"
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
 import { ScoreChip } from "@/components/ui/score-chip"
 import { TagPill } from "@/components/ui/tag-pill"
 
@@ -22,25 +22,8 @@ const tabs = [
 type RankTab = (typeof tabs)[number]["key"]
 
 export default function RankingsPage() {
-  const [companies, setCompanies] = useState<CompanyListItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<RankTab>("score")
-
-  useEffect(() => {
-    let cancelled = false
-    // initial state is loading=true, error=null — no need to setState synchronously here
-    searchCompanies({}).then((res) => {
-      if (cancelled) return
-      if (res.error) {
-        setError(res.error)
-      } else if (res.data) {
-        setCompanies(res.data.companies)
-      }
-      setLoading(false)
-    })
-    return () => { cancelled = true }
-  }, [])
+  const { data: companies = [], isPending: loading, error } = useCompanySearch()
 
   // glassdoor-insights functions expect Company type (with reviews/dimensions/etc).
   // CompanyListItem from the API has fewer fields, so these functions will return
@@ -65,13 +48,11 @@ export default function RankingsPage() {
     return list
   }, [companies, activeTab])
 
-  const activeDescription = tabs.find((tab) => tab.key === activeTab)?.description ?? ""
-
   if (loading) {
     return (
       <section className="mx-auto flex w-full max-w-page flex-col gap-6 px-4 py-6 sm:px-6">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">公司发现</h1>
+          <h1 className="text-2xl font-semibold text-foreground">排行榜</h1>
           <p className="mt-2 h-4 w-72 animate-pulse rounded-md bg-muted" />
         </div>
         <div className="flex flex-wrap gap-2">
@@ -88,11 +69,11 @@ export default function RankingsPage() {
     )
   }
 
-  if (error) {
+  if (error && !companies.length) {
     return (
       <ErrorState
-        title="加载公司发现失败"
-        message={`${error}。刷新一下试试,或切到其他排序方式看看。`}
+        title="排行榜加载失败"
+        message="请重试。"
         onRetry={() => window.location.reload()}
         showHome
       />
@@ -102,13 +83,12 @@ export default function RankingsPage() {
   return (
     <section className="mx-auto flex w-full max-w-page flex-col gap-6 px-4 py-6 sm:px-6">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">公司发现</h1>
-        <p className="mt-2 text-sm text-muted-foreground">从不同角度看看最近被更多过来人关注的公司</p>
+        <h1 className="text-2xl font-semibold text-foreground">排行榜</h1>
       </div>
 
       <div className="flex flex-wrap gap-2" role="tablist" aria-label="公司发现排序方式">
         {tabs.map((tab) => (
-          <SolidButton
+          <WebButton
             key={tab.key}
             type="button"
             size="sm"
@@ -118,13 +98,9 @@ export default function RankingsPage() {
             onClick={() => setActiveTab(tab.key)}
           >
             {tab.label}
-          </SolidButton>
+          </WebButton>
         ))}
       </div>
-
-      <p className="text-xs text-muted-foreground" data-testid="rankings-active-description">
-        当前排序：{activeDescription}
-      </p>
 
       <RankingsList companies={sorted} activeTab={activeTab} />
     </section>
@@ -185,7 +161,7 @@ function RankingsList({
             custom={Math.min(index, 5)}
             transition={{ delay: reduced ? 0 : Math.min(index, 5) * 0.05 }}
           >
-            <SolidCard
+            <WebSurface
               variant={index === 0 ? "elevated" : "subtle"}
               className="p-4"
               data-testid={`rankings-card-${company.id}`}
@@ -216,12 +192,12 @@ function RankingsList({
                 </div>
                 <div className="flex items-center gap-3 sm:justify-end">
                   <ScoreChip score={score} compact />
-                  <SolidButton asChild variant="primary" size="sm">
+                  <WebButton asChild variant="primary" size="sm">
                     <Link href={`/company/${company.id}`}>看这家公司</Link>
-                  </SolidButton>
+                  </WebButton>
                 </div>
               </div>
-            </SolidCard>
+            </WebSurface>
           </motion.div>
         )
       })}

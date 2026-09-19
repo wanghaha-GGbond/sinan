@@ -136,7 +136,7 @@ export default function CompanyPortalDetailScreen() {
             {company.industry} · {company.city} · {company.size}
           </Text>
           <Text style={S.headSub}>
-            这是你在司南上能看到的镜像。所有评价、评分、趋势由匿名打工人贡献,司南不向公司端开放用户身份。
+            这是你在在场上能看到的镜像。所有评价、评分、趋势由匿名打工人贡献,在场不向公司端开放用户身份。
           </Text>
         </View>
 
@@ -215,7 +215,7 @@ export default function CompanyPortalDetailScreen() {
               </View>
             )}
             <Text style={S.footnote}>
-              司南自动从公开评价中提取高频风险标签,公司端不能修改或删除。
+              在场自动从公开评价中提取高频风险标签,公司端不能修改或删除。
             </Text>
           </SolidCard>
 
@@ -289,7 +289,7 @@ export default function CompanyPortalDetailScreen() {
             <Text style={S.sectionMeta}>{corrections.length} 条提交</Text>
           </View>
           <Text style={S.footnote}>
-            这里是你提交过的工商信息修正申请。司南审核通过后会在公开页更新。
+            这里是你提交过的工商信息修正申请。在场审核通过后会在公开页更新。
           </Text>
           <CorrectionForm
             company={company}

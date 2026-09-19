@@ -1,27 +1,28 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import type { Metadata, Viewport } from "next";
 import { Toaster } from "@/components/ui/sonner";
 import { AppShell } from "@/components/layout/app-shell";
-import { FirstRunHint } from "@/components/layout/first-run-hint";
 import { KeyboardShortcuts } from "@/components/layout/keyboard-shortcuts";
 import { QueryProvider } from "@/providers/query-provider";
 import { AuthProvider } from "@/lib/auth-context";
 import { ThemeProvider, THEME_INIT_SCRIPT } from "@/lib/theme-context";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "司南 | 入职前，先看清方向",
+  title: "在场 | 入职前，先看清方向",
   description: "匿名公司方向评分、真实评价、薪资区间与企业认证平台。",
+  applicationName: "在场",
+  appleWebApp: {
+    capable: true,
+    title: "在场",
+    statusBarStyle: "default",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#F8FFFB" },
+    { media: "(prefers-color-scheme: dark)", color: "#111827" },
+  ],
 };
 
 export default function RootLayout({
@@ -33,7 +34,7 @@ export default function RootLayout({
     <html
       lang="zh-CN"
       data-scroll-behavior="smooth"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className="h-full antialiased"
       suppressHydrationWarning
     >
       <head>
@@ -48,7 +49,6 @@ export default function RootLayout({
           <ThemeProvider>
             <AuthProvider>
               <AppShell>{children}</AppShell>
-              <FirstRunHint />
               <KeyboardShortcuts />
               <Toaster />
             </AuthProvider>

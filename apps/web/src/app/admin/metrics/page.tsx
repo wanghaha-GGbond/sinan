@@ -10,7 +10,7 @@
  */
 import { redirect } from "next/navigation"
 
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebSurface } from "@/components/ui/web-surface"
 import { requireModerator } from "@/lib/server/auth"
 import {
   getMetricsSnapshot,
@@ -80,7 +80,7 @@ function NorthStarSection({
   dataSource: MetricsSnapshot["dataSource"]
 }) {
   return (
-    <SolidCard variant="elevated" className="p-5">
+    <WebSurface variant="elevated" className="p-5">
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         北极星
       </p>
@@ -104,7 +104,7 @@ function NorthStarSection({
           未配置数据库时不计算。配 DATABASE_URL 后,这一行会显示实际数值。
         </p>
       ) : null}
-    </SolidCard>
+    </WebSurface>
   )
 }
 
@@ -131,7 +131,7 @@ function GatekeeperSection({ value }: { value: Gatekeeper }) {
   ]
 
   return (
-    <SolidCard variant="elevated" className="p-5">
+    <WebSurface variant="elevated" className="p-5">
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         守门(破线 = 暂缓拉新)
       </p>
@@ -159,7 +159,7 @@ function GatekeeperSection({ value }: { value: Gatekeeper }) {
           )
         })}
       </div>
-    </SolidCard>
+    </WebSurface>
   )
 }
 
@@ -238,7 +238,7 @@ function FunnelCard({
   rates: { label: string; v: number | null; target?: number; format?: (v: number) => string }[]
 }) {
   return (
-    <SolidCard variant="subtle" className="p-5">
+    <WebSurface variant="subtle" className="p-5">
       <p className="text-xs text-muted-foreground">{subtitle}</p>
       <h2 className="text-base font-semibold text-foreground">{title}</h2>
       <ul className="mt-3 space-y-1.5 text-sm">
@@ -279,7 +279,7 @@ function FunnelCard({
           })}
         </ul>
       </div>
-    </SolidCard>
+    </WebSurface>
   )
 }
 
@@ -289,7 +289,7 @@ function FunnelCard({
 
 function M2ExitSection({ value }: { value: M2ExitKpi }) {
   return (
-    <SolidCard variant="elevated" className="p-5">
+    <WebSurface variant="elevated" className="p-5">
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         M2 出口(09 §4)
       </p>
@@ -339,7 +339,7 @@ function M2ExitSection({ value }: { value: M2ExitKpi }) {
           format={(v) => `${v} 次(真实破圈走运营录入)`}
         />
       </div>
-    </SolidCard>
+    </WebSurface>
   )
 }
 

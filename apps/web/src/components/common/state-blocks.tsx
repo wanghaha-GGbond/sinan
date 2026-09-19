@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/empty"
 import { Skeleton } from "@/components/ui/skeleton"
 
-export function LoadingState({ title = "正在读取方向样本" }: { title?: string }) {
+export function LoadingState({ title = "加载中…" }: { title?: string }) {
   return (
     <div className="grid gap-3">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -23,8 +23,8 @@ export function LoadingState({ title = "正在读取方向样本" }: { title?: s
 }
 
 export function EmptyState({
-  title = "还没有足够样本",
-  description = "你可以发布一条匿名体验，帮助后来者判断方向。",
+  title = "暂无内容",
+  description,
 }: {
   title?: string
   description?: string
@@ -36,7 +36,7 @@ export function EmptyState({
           <Inbox />
         </EmptyMedia>
         <EmptyTitle>{title}</EmptyTitle>
-        <EmptyDescription>{description}</EmptyDescription>
+        {description ? <EmptyDescription>{description}</EmptyDescription> : null}
       </EmptyHeader>
     </Empty>
   )

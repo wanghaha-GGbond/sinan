@@ -1,0 +1,48 @@
+name: iOS CI
+
+on:
+  pull_request:
+    paths:
+      - "apps/ios/**"
+      - "packages/shared/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/ci-ios.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/ios/**"
+      - "packages/shared/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/ci-ios.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: iOS typecheck, release config and production export
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      EXPO_PUBLIC_API_URL: https://sinanapp.cn
+      EXPO_PUBLIC_LAUNCH_SCOPE_ONLY: "true"
+      EXPO_PUBLIC_APP_FILING_NUMBER: CI-PENDING
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Reject high or critical iOS production vulnerabilities
+        run: npm audit --workspace=@sinan/ios --omit=dev --audit-level=high
+      - run: npm run typecheck --workspace=@sinan/shared
+      - run: npm run typecheck --workspace=@sinan/ios
+      - run: npm run release:check-config:ci --workspace=@sinan/ios
+      - run: npm run export:ios --workspace=@sinan/ios

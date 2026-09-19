@@ -14,8 +14,8 @@ import Link from "next/link"
 import { useEffect, useState, use } from "react"
 import { useRouter } from "next/navigation"
 
-import { SolidCard } from "@/components/ui/solid-card"
-import { SolidButton } from "@/components/ui/solid-button"
+import { WebSurface } from "@/components/ui/web-surface"
+import { WebButton } from "@/components/ui/web-button"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/lib/auth-context"
 
@@ -115,16 +115,16 @@ export default function CircleDetailPage({
   if (loading) {
     return (
       <section className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8">
-        <SolidCard variant="elevated" className="h-40 animate-pulse" />
+        <WebSurface variant="elevated" className="h-40 animate-pulse" />
       </section>
     )
   }
   if (!circle) {
     return (
       <section className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8">
-        <SolidCard variant="elevated" className="p-6 text-center text-sm text-muted-foreground">
+        <WebSurface variant="elevated" className="p-6 text-center text-sm text-muted-foreground">
           圈层不存在
-        </SolidCard>
+        </WebSurface>
       </section>
     )
   }
@@ -133,7 +133,7 @@ export default function CircleDetailPage({
 
   return (
     <section className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6">
-      <SolidCard variant="elevated" className="p-5">
+      <WebSurface variant="elevated" className="p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-foreground">
@@ -155,10 +155,10 @@ export default function CircleDetailPage({
             <Badge variant="default">你已加入</Badge>
           </div>
         )}
-      </SolidCard>
+      </WebSurface>
 
       {!joined && (
-        <SolidCard variant="elevated" className="p-5">
+        <WebSurface variant="elevated" className="p-5">
           <h2 className="text-base font-semibold text-foreground">申请入圈</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             找到圈内 1 名成员, 请 TA 在私信里给你 userId, 然后填写下方提交。
@@ -175,13 +175,13 @@ export default function CircleDetailPage({
               onChange={(e) => setEndorserId(e.target.value)}
               disabled={!user || submitting}
             />
-            <SolidButton
+            <WebButton
               onClick={handleJoin}
               disabled={!user || submitting}
               size="md"
             >
               {submitting ? "提交中…" : "提交背书申请"}
-            </SolidButton>
+            </WebButton>
           </div>
           {error && (
             <p className="mt-2 text-sm text-destructive">{error}</p>
@@ -197,7 +197,7 @@ export default function CircleDetailPage({
               {" "}后即可申请
             </p>
           )}
-        </SolidCard>
+        </WebSurface>
       )}
 
       <div className="flex flex-col gap-3">
@@ -205,12 +205,12 @@ export default function CircleDetailPage({
           圈内成员 (匿名)
         </h2>
         {members.length === 0 ? (
-          <SolidCard variant="elevated" className="p-6 text-center text-sm text-muted-foreground">
+          <WebSurface variant="elevated" className="p-6 text-center text-sm text-muted-foreground">
             还没有成员
-          </SolidCard>
+          </WebSurface>
         ) : (
           members.map((m) => (
-            <SolidCard key={m.id} variant="elevated" className="p-4">
+            <WebSurface key={m.id} variant="elevated" className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Badge variant="outline">{m.jobBandLabel}</Badge>
@@ -222,7 +222,7 @@ export default function CircleDetailPage({
                   加入于 {new Date(m.joinedAt).toLocaleDateString("zh-Hans-CN")}
                 </span>
               </div>
-            </SolidCard>
+            </WebSurface>
           ))
         )}
       </div>

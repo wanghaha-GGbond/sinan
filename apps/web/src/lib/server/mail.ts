@@ -6,10 +6,13 @@
  * not appear suspicious in a corporate mail gateway or leave a trail that
  * identifies the user as a member of a workplace-review platform.
  *
- * Backed by Resend (MAIL_PROVIDER=resend) or a no-op dev stub. Swap the
- * provider by implementing the sendMail interface below and routing via
- * MAIL_PROVIDER. The caller never touches provider specifics.
+ * Backed by Alibaba Cloud DirectMail, Resend, or a no-op dev stub. The caller
+ * never touches provider specifics. DirectMail uses the Alibaba Cloud default
+ * credential chain so ECS can authenticate with an attached RAM role instead
+ * of long-lived AccessKeys in the application environment.
  */
+
+import { isDevAuthEnabled } from "@/lib/server/dev-auth"
 
 export interface MailMessage {
   to: string
@@ -42,18 +45,59 @@ async function sendViaResend(msg: MailMessage): Promise<void> {
   }
 }
 
+async function sendViaAliyunDirectMail(msg: MailMessage): Promise<void> {
+  const [{ default: DmClient, SingleSendMailRequest }, { Config }, { default: Credential }] =
+    await Promise.all([
+      import("@alicloud/dm20151123"),
+      import("@alicloud/openapi-client"),
+      import("@alicloud/credentials"),
+    ])
+
+  const accountName = process.env.ALIYUN_DM_ACCOUNT_NAME
+  const region = process.env.ALIYUN_DM_REGION ?? "cn-hangzhou"
+  if (!accountName) throw new Error("ALIYUN_DM_ACCOUNT_NAME is not set")
+
+  const credential = new Credential()
+  const config = new Config({ credential })
+  config.endpoint = `dm.${region}.aliyuncs.com`
+
+  const client = new DmClient(config)
+  const request = new SingleSendMailRequest({
+    accountName,
+    addressType: 1,
+    replyToAddress: false,
+    toAddress: msg.to,
+    subject: msg.subject,
+    textBody: msg.text,
+  })
+
+  await client.singleSendMail(request)
+}
+
 export async function sendMail(msg: MailMessage): Promise<void> {
   if (!process.env.DATABASE_URL) {
-    // Dev: just log, don't fail the flow
-    console.log("[mail:dev] would send to:", msg.to, "| subject:", msg.subject)
-    console.log("[mail:dev] body:", msg.text)
-    return
+    if (isDevAuthEnabled()) {
+      // Explicit local-only mode: just log, don't fail the flow.
+      console.log("[mail:dev] would send to:", msg.to, "| subject:", msg.subject)
+      console.log("[mail:dev] body:", msg.text)
+      return
+    }
+    throw new Error("DATABASE_URL is required before sending mail")
   }
 
-  const provider = process.env.MAIL_PROVIDER ?? "resend"
+  const provider = process.env.MAIL_PROVIDER ?? "aliyun-direct-mail"
+  if (provider === "aliyun-direct-mail") {
+    await sendViaAliyunDirectMail(msg)
+    return
+  }
   if (provider === "resend") {
     await sendViaResend(msg)
     return
+  }
+  if (provider === "disabled" && process.env.NEXT_PUBLIC_APP_ENV === "staging") {
+    // Internal staging can exercise all non-email flows without storing a
+    // provider credential. Never log the recipient, verification code, or body.
+    throw new Error("Mail delivery is disabled in staging")
   }
 
   throw new Error(`Unknown MAIL_PROVIDER: ${provider}`)

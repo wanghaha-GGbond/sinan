@@ -67,7 +67,6 @@ export function isValidSkillPayload(payload: {
     payload.description.trim().length > 0 &&
     payload.description.trim().length <= SKILL_DESCRIPTION_MAX &&
     typeof payload.evidenceNote === "string" &&
-    payload.evidenceNote.trim().length > 0 &&
     payload.evidenceNote.trim().length <= SKILL_EVIDENCE_MAX
   )
 }

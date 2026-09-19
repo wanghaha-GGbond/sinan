@@ -2,8 +2,9 @@
 
 > 事实源：`apps/web/src/db/schema/`（drizzle）。迁移：`npm run db:generate`，文件落 `src/db/migrations/`。
 > 注意：text→uuid 这类列类型变更，drizzle 生成的 ALTER 缺 `USING` 子句，需手工补。
+> 当前发布事实：迁移目录中的全部 `.sql` 都属于当前范围，最新序号为 `0020`。本节的表格保留早期设计快照，不是生产迁移清单；部署和验收始终以迁移目录及 `drizzle-kit migrate` 为准。
 
-## 1. 现有 11 张表（截至 migration 0008）
+## 1. 核心模型历史快照（截至 migration 0008）
 
 | 表 | 用途 | 状态 |
 |---|---|---|

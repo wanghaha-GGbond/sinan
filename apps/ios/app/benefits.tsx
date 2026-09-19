@@ -61,7 +61,7 @@ export default function BenefitsScreen() {
           </View>
           <Text style={S.heading}>把福利从口号拆成真实体验</Text>
           <Text style={S.description}>
-            聚合办公环境、通勤、食堂、下午茶、工位和设备等匿名样本,保留司南的「公司体感」表达。
+            聚合办公环境、通勤、食堂、下午茶、工位和设备等匿名样本,保留在场的「公司体感」表达。
           </Text>
           <SolidButton
             title="补充办公体验"

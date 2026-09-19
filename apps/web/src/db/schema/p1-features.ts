@@ -107,7 +107,8 @@ export const skillEndorsements = pgTable(
 )
 
 // ----- 感谢信漂流 -----
-// 不要审核,但要封顶:每 12 小时周期内,fromUser 最多给 toUser 写 1 封。
+// 不要审核,但要封顶:每 12 小时周期内,fromUser 最多给同一收件人
+// 或漂流池写 1 封。toUserId 为 null 表示公开漂流信。
 
 export const gratitude = pgTable(
   "gratitude",
@@ -116,9 +117,7 @@ export const gratitude = pgTable(
     fromUserId: uuid("from_user_id")
       .notNull()
       .references(() => users.id),
-    toUserId: uuid("to_user_id")
-      .notNull()
-      .references(() => users.id),
+    toUserId: uuid("to_user_id").references(() => users.id),
     content: text("content").notNull(),
     isAnonymous: text("is_anonymous").default("false").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })

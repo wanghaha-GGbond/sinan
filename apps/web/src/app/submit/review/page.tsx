@@ -1,9 +1,10 @@
 "use client"
 
+import Link from "next/link"
 import { useEffect, useMemo, useReducer, useRef, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm, useWatch } from "react-hook-form"
-import { CheckCircle2, Gift, Loader2, ShieldCheck, History, X } from "lucide-react"
+import { CheckCircle2, Loader2, ShieldCheck, History, X } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import { submitReviewData } from "@/lib/data/reviews"
@@ -11,17 +12,18 @@ import { z } from "zod"
 
 import { FullscreenQuestionnaire } from "@/components/questionnaire/fullscreen-questionnaire"
 import { RatingSlider } from "@/components/rating/rating-slider"
-import { VerifyIdentity } from "@/components/review/verify-identity"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
-import { SolidButton } from "@/components/ui/solid-button"
+import { WebButton } from "@/components/ui/web-button"
 import { Textarea } from "@/components/ui/textarea"
 import { findSimilarCompanies } from "@/lib/company-dedupe"
 import { validateCompanySubmission } from "@/lib/content-guard"
 import { buildQuestionnaireSession } from "@/lib/questionnaire/question-bank"
 import { searchCompanies, getCompany } from "@/lib/api/companies"
+import { useAuth } from "@/lib/auth-context"
+import { withNext } from "@/lib/navigation"
 import type { Company, CompanyListItem } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -78,9 +80,9 @@ const reviewSchema = z.object({
 type ReviewForm = z.infer<typeof reviewSchema>
 
 const steps = [
-  { title: "选择公司", description: "先选择公司，找不到可以直接新增" },
-  { title: "方向评分", description: "给后来者一个 0-10 的方向判断" },
-  { title: "真实体验", description: "写事实、写风险、先做匿名安全检查" },
+  { title: "选择公司" },
+  { title: "评分" },
+  { title: "评价内容" },
 ]
 
 type NewCompanyDraft = {
@@ -211,18 +213,18 @@ function companySelectionReducer(state: CompanySelectionState, action: CompanySe
   }
 }
 
-function SolidCardNoResult({ query, onAdd, dataTestId }: { query: string; onAdd: () => void; dataTestId?: string }) {
+function WebCardNoResult({ query, onAdd, dataTestId }: { query: string; onAdd: () => void; dataTestId?: string }) {
   return (
-    <Card className="solid-card-subtle border border-border/60" data-testid={dataTestId}>
+    <Card className="web-surface web-surface-base border border-border/60" data-testid={dataTestId}>
       <CardHeader className="pb-2">
         <CardTitle className="text-base">还没有这家公司</CardTitle>
         <CardDescription>你可以提交公司注册信息，审核通过后开放评价。</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-wrap items-center gap-2">
         <p className="text-sm text-muted-foreground">当前输入：{query || "未命名公司"}</p>
-        <SolidButton type="button" size="sm" onClick={onAdd} data-testid="add-company-button">
+        <WebButton type="button" size="sm" onClick={onAdd} data-testid="add-company-button">
           添加未收录公司
-        </SolidButton>
+        </WebButton>
       </CardContent>
     </Card>
   )
@@ -233,6 +235,36 @@ function FieldError({ message }: { message?: string }) {
 }
 
 export default function SubmitReviewPage() {
+  const { user, loading } = useAuth()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const query = searchParams.toString()
+  const nextPath = `/submit/review${query ? `?${query}` : ""}`
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace(withNext("/login", nextPath))
+    }
+  }, [loading, nextPath, router, user])
+
+  if (loading || !user) {
+    return (
+      <section
+        className="mx-auto flex min-h-[60vh] w-full max-w-section items-center justify-center px-4 py-10"
+        data-testid="submit-auth-gate"
+      >
+        <div className="flex items-center gap-3 rounded-2xl border bg-card px-5 py-4 text-sm text-muted-foreground shadow-sm">
+          <Loader2 className="size-4 animate-spin text-primary" aria-hidden="true" />
+          {loading ? "正在确认登录状态…" : "正在前往登录…"}
+        </div>
+      </section>
+    )
+  }
+
+  return <SubmitReviewForm />
+}
+
+function SubmitReviewForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [step, setStep] = useState(0)
@@ -711,28 +743,22 @@ export default function SubmitReviewPage() {
   if (success) {
     return (
       <section className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
-        <Card className="solid-card border border-border/60" data-testid="submit-review-success">
+        <Card className="web-surface web-surface-base border border-border/60" data-testid="submit-review-success">
           <CardHeader>
             <div className="mb-3 flex size-12 items-center justify-center rounded-xl bg-secondary text-secondary-foreground">
-              <Gift />
+              <CheckCircle2 />
             </div>
-            <CardTitle className="text-2xl">评价已进入匿名预览</CardTitle>
+            <CardTitle className="text-2xl">评价已提交</CardTitle>
             <CardDescription>
-              你的评价会在审核后展示。正式版本会先完成匿名保护和真实性校验，再进入公开样本。
+              审核通过后公开展示。
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-3">
-            {["方向值 +20", "连续点灯 +1", "司南徽章进度 +1"].map((item) => (
-              <div key={item} className="rounded-2xl bg-muted p-4 text-sm font-medium text-foreground">
-                {item}
-              </div>
-            ))}
+          <CardContent className="flex flex-wrap gap-3">
+            <WebButton asChild><Link href="/me">我的评价</Link></WebButton>
+            <WebButton asChild variant="secondary"><Link href="/companies">浏览公司</Link></WebButton>
           </CardContent>
         </Card>
 
-        <div className="mt-6">
-          <VerifyIdentity companyName={companySelection.selectedCompany?.name ?? ""} />
-        </div>
       </section>
     )
   }
@@ -778,7 +804,7 @@ export default function SubmitReviewPage() {
         <div>
           <div className="flex items-center justify-between gap-3">
             <h1 className="text-3xl font-semibold tracking-tight">
-              {addCompanyMode ? (onboardingMode ? "先添加你熟悉的公司" : "添加未收录公司") : "发布评价"}
+              {addCompanyMode ? "添加公司" : "写评价"}
             </h1>
             {draftSavedAt ? (
               <span
@@ -790,15 +816,6 @@ export default function SubmitReviewPage() {
               </span>
             ) : null}
           </div>
-          <p className="mt-3 max-w-2xl text-muted-foreground">
-            {addCompanyMode
-              ? onboardingMode
-                ? "这是注册后的第一步。公司已收录时可直接选择；未收录时补充基础信息，然后继续写评价。"
-                : "提交公司注册信息，也可以紧接着写评价，两项内容会分别审核。"
-              : onboardingMode
-                ? "公司信息已经保存。接下来写下真实经历，评价会与公司资料分别审核。"
-                : "三步完成匿名评价。司南鼓励描述事实、流程和决策信息，不鼓励攻击性表达。"}
-          </p>
         </div>
 
         {!addCompanyMode ? (
@@ -811,12 +828,11 @@ export default function SubmitReviewPage() {
           </div>
         ) : null}
 
-        <Card className="solid-card border border-border/60">
+        <Card className="web-surface web-surface-base border border-border/60">
           <CardHeader>
             <div className="flex items-center justify-between gap-3">
               <div>
                 <CardTitle>{steps[step].title}</CardTitle>
-                <CardDescription>{steps[step].description}</CardDescription>
               </div>
               <span className="text-sm text-muted-foreground">
                 第 {step + 1} 步 / 共 {steps.length} 步
@@ -859,7 +875,7 @@ export default function SubmitReviewPage() {
                       ) : searchError ? (
                         <p className="text-sm text-destructive">搜索失败，请稍后重试</p>
                       ) : matchedCompanies.slice(0, 4).map((company) => (
-                        <SolidButton
+                        <WebButton
                           key={company.id}
                           data-testid="company-result-option"
                           type="button"
@@ -871,10 +887,10 @@ export default function SubmitReviewPage() {
                           <span>{company.name}</span>
                           <span>{company.industry}</span>
                           <span>{company.city}</span>
-                        </SolidButton>
+                        </WebButton>
                       ))}
                     </div>
-                    {shouldShowNoResult ? <SolidCardNoResult query={companySelection.query} onAdd={openAddCompany} dataTestId="no-company-result-card" /> : null}
+                    {shouldShowNoResult ? <WebCardNoResult query={companySelection.query} onAdd={openAddCompany} dataTestId="no-company-result-card" /> : null}
                     {companySelection.selectedCompany ? (
                       <div data-testid="selected-company-pill" className="flex flex-wrap items-center gap-x-2.5 gap-y-1 rounded-xl bg-muted p-3 text-sm text-foreground">
                         <span>{companySelection.selectedCompany.name}</span>
@@ -907,7 +923,7 @@ export default function SubmitReviewPage() {
                     {errors.role ? <p className="text-sm text-destructive">{errors.role.message}</p> : null}
                   </div> : null}
                   {companySelection.mode === "adding" ? (
-                    <Card className="md:col-span-2 solid-card-subtle border border-border/60">
+                    <Card className="md:col-span-2 web-surface web-surface-base border border-border/60">
                       <CardHeader>
                         <CardTitle>添加未收录公司</CardTitle>
                         <CardDescription>
@@ -989,7 +1005,7 @@ export default function SubmitReviewPage() {
                                       <span>{reasons.join(" / ")}</span>
                                     </p>
                                   </div>
-                                  <SolidButton
+                                  <WebButton
                                     type="button"
                                     variant="dark"
                                     size="sm"
@@ -999,13 +1015,13 @@ export default function SubmitReviewPage() {
                                     }}
                                   >
                                     选择这家公司
-                                  </SolidButton>
+                                  </WebButton>
                                 </div>
                               ))}
                             </div>
-                            <SolidButton type="button" variant="secondary" size="sm" className="mt-3" onClick={() => setAllowDuplicateSubmission(true)}>
+                            <WebButton type="button" variant="secondary" size="sm" className="mt-3" onClick={() => setAllowDuplicateSubmission(true)}>
                               仍然提交新公司
-                            </SolidButton>
+                            </WebButton>
                             {allowDuplicateSubmission ? <p className="mt-2 text-xs text-destructive">已确认继续提交新公司。</p> : null}
                           </div>
                         ) : null}
@@ -1014,29 +1030,29 @@ export default function SubmitReviewPage() {
                         </p>
                       </CardContent>
                       <CardFooter className="gap-2">
-                        <SolidButton
+                        <WebButton
                           type="button"
                           variant="primary"
                           onClick={() => saveCompanyAndContinue(true)}
                           data-testid="save-company-and-continue-button"
                         >
                           保存公司并写评价
-                        </SolidButton>
-                        <SolidButton
+                        </WebButton>
+                        <WebButton
                           type="button"
                           variant="secondary"
                           onClick={() => saveCompanyAndContinue(false)}
                         >
                           只提交公司
-                        </SolidButton>
-                        <SolidButton type="button" variant="ghost" onClick={() => dispatchCompanySelection({ type: "CANCEL_ADD_COMPANY" })}>
+                        </WebButton>
+                        <WebButton type="button" variant="ghost" onClick={() => dispatchCompanySelection({ type: "CANCEL_ADD_COMPANY" })}>
                           取消
-                        </SolidButton>
+                        </WebButton>
                       </CardFooter>
                     </Card>
                   ) : null}
                   {companySelection.selectedCompany?.reviewStatus === "pending_review" ? (
-                    <Card className="md:col-span-2 solid-card-subtle border border-border/60" data-testid="company-pending-review-card">
+                    <Card className="md:col-span-2 web-surface web-surface-base border border-border/60" data-testid="company-pending-review-card">
                       <CardHeader>
                         <CardTitle>公司信息已提交审核</CardTitle>
                         <CardDescription>公司资料正在等待审核</CardDescription>
@@ -1046,16 +1062,16 @@ export default function SubmitReviewPage() {
                         <p>你可以现在补充匿名评价。评价会单独进入审核，公司资料通过前不会公开展示。</p>
                       </CardContent>
                       <CardFooter className="gap-2">
-                        <SolidButton
+                        <WebButton
                           type="button"
                           variant="primary"
                           onClick={() => router.replace("/submit/review?onboarding=1", { scroll: false })}
                         >
                           继续写评价
-                        </SolidButton>
-                        <SolidButton type="button" variant="secondary" onClick={() => dispatchCompanySelection({ type: "CLEAR_SELECTION" })}>
+                        </WebButton>
+                        <WebButton type="button" variant="secondary" onClick={() => dispatchCompanySelection({ type: "CLEAR_SELECTION" })}>
                           继续了解其他公司
-                        </SolidButton>
+                        </WebButton>
                       </CardFooter>
                     </Card>
                   ) : null}
@@ -1068,7 +1084,7 @@ export default function SubmitReviewPage() {
                       render={({ field }) => (
                         <div className="flex flex-wrap gap-2">
                           {relations.map((relation) => (
-                            <SolidButton
+                            <WebButton
                               key={relation}
                               type="button"
                               variant={field.value === relation ? "dark" : "secondary"}
@@ -1076,7 +1092,7 @@ export default function SubmitReviewPage() {
                               onClick={() => field.onChange(relation)}
                             >
                               {relation}
-                            </SolidButton>
+                            </WebButton>
                           ))}
                         </div>
                       )}
@@ -1249,23 +1265,23 @@ export default function SubmitReviewPage() {
             </div>
           </CardContent>
           {!addCompanyMode ? <CardFooter className="flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <SolidButton
+            <WebButton
               type="button"
               variant="secondary"
               disabled={step === 0}
               onClick={() => setStep((current) => Math.max(current - 1, 0))}
             >
               上一步
-            </SolidButton>
+            </WebButton>
             {step < steps.length - 1 ? (
-              <SolidButton
+              <WebButton
                 type="button"
                 data-testid={step === 0 ? "company-step-next-button" : "review-next"}
                 onClick={nextStep}
                 disabled={step === 0 && !canContinueCompanyStep}
               >
                 下一步
-              </SolidButton>
+              </WebButton>
             ) : (
               <div className="flex w-full flex-col items-end gap-2">
                 {submitError ? (
@@ -1276,7 +1292,7 @@ export default function SubmitReviewPage() {
                     {submitError}
                   </p>
                 ) : null}
-                <SolidButton
+                <WebButton
                   data-testid="submit-review-button"
                   type="submit"
                   disabled={isSubmitting || submitting}
@@ -1289,7 +1305,7 @@ export default function SubmitReviewPage() {
                   ) : (
                     "发布匿名评价"
                   )}
-                </SolidButton>
+                </WebButton>
               </div>
             )}
           </CardFooter> : null}
@@ -1298,12 +1314,11 @@ export default function SubmitReviewPage() {
         {!addCompanyMode ? <Card className="border border-border/60" data-testid="optional-questionnaire">
           <CardHeader>
             <CardTitle>补充办公体验</CardTitle>
-            <CardDescription>完成主要评价后，可再用约 30 秒补充办公体验。</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap items-center gap-3">
-            <SolidButton asChild size="sm" data-testid="start-questionnaire-button">
+            <WebButton asChild size="sm" data-testid="start-questionnaire-button">
               <a href="/submit/review?questionnaire=1">补充问卷</a>
-            </SolidButton>
+            </WebButton>
             {questionnaireDone ? (
               <p className="flex flex-wrap gap-x-2.5 gap-y-1 text-sm font-medium text-primary-deep">
                 <span>已完成办公体验问卷</span>
@@ -1324,7 +1339,6 @@ export default function SubmitReviewPage() {
         <Card>
           <CardHeader>
             <CardTitle>发布状态</CardTitle>
-            <CardDescription>每一步只收集必要信息，避免超长问卷。</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <div className="bg-muted p-4">

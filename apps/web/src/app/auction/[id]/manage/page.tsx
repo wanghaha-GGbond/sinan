@@ -14,7 +14,7 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebSurface } from "@/components/ui/web-surface"
 import { TagPill } from "@/components/ui/tag-pill"
 import { auctionBids, auctions } from "@/db/schema/auctions"
 import { and, desc, eq } from "drizzle-orm"
@@ -104,19 +104,19 @@ export default async function AuctionManagePage({
   if (data.kind === "not_found") {
     return (
       <section className="mx-auto flex w-full max-w-page flex-col gap-6 px-4 py-8 sm:px-6">
-        <SolidCard variant="elevated" className="p-6">
+        <WebSurface variant="elevated" className="p-6">
           <h1 className="text-2xl font-semibold">专场不存在</h1>
-        </SolidCard>
+        </WebSurface>
       </section>
     )
   }
   if (data.kind === "db_unavailable") {
     return (
       <section className="mx-auto flex w-full max-w-page flex-col gap-6 px-4 py-8 sm:px-6">
-        <SolidCard variant="elevated" className="p-6">
+        <WebSurface variant="elevated" className="p-6">
           <h1 className="text-2xl font-semibold">数据库暂时不可用</h1>
           <p className="mt-2 text-sm text-muted-foreground">稍后再试。</p>
-        </SolidCard>
+        </WebSurface>
       </section>
     )
   }
@@ -133,7 +133,7 @@ export default async function AuctionManagePage({
 
   return (
     <section className="mx-auto flex w-full max-w-page flex-col gap-6 px-4 py-8 sm:px-6">
-      <SolidCard variant="elevated" className="p-6">
+      <WebSurface variant="elevated" className="p-6">
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -145,10 +145,10 @@ export default async function AuctionManagePage({
           </div>
           <TagPill tone="neutral">{auction.status}</TagPill>
         </div>
-      </SolidCard>
+      </WebSurface>
 
       {auction.status === "draft" ? (
-        <DraftManage auctionId={auction.id} />
+        <DraftManage />
       ) : auction.status === "live" ? (
         <LiveManage />
       ) : auction.status === "closed" ? (
@@ -168,9 +168,9 @@ export default async function AuctionManagePage({
   )
 }
 
-function DraftManage({ auctionId: _ }: { auctionId: string }) {
+function DraftManage() {
   return (
-    <SolidCard variant="subtle" className="p-6">
+    <WebSurface variant="subtle" className="p-6">
       <h2 className="text-base font-semibold">专场准备就绪</h2>
       <p className="mt-2 text-sm text-muted-foreground">
         draft 状态下由运营 moderator 触发开拍。开拍后即进入 72 小时盲拍竞拍。
@@ -178,25 +178,25 @@ function DraftManage({ auctionId: _ }: { auctionId: string }) {
       <p className="mt-2 text-xs text-muted-foreground">
         请联系运营人员开拍，嘉宾本人无权直接触发状态迁移。
       </p>
-    </SolidCard>
+    </WebSurface>
   )
 }
 
 function LiveManage() {
   return (
-    <SolidCard variant="subtle" className="p-6">
+    <WebSurface variant="subtle" className="p-6">
       <h2 className="text-base font-semibold">专场进行中</h2>
       <p className="mt-2 text-sm text-muted-foreground">
         当前正在盲拍,嘉宾暂不能干预。截拍后会回到本页选标。
       </p>
-    </SolidCard>
+    </WebSurface>
   )
 }
 
 
 function SettledManage({ auction }: { auction: ManageAuction }) {
   return (
-    <SolidCard variant="subtle" className="p-6">
+    <WebSurface variant="subtle" className="p-6">
       <h2 className="text-base font-semibold">已成交</h2>
       <p className="mt-2 text-sm text-muted-foreground">
         {auction.settlementMethod === "heart_pick"
@@ -204,17 +204,17 @@ function SettledManage({ auction }: { auction: ManageAuction }) {
           : "默认最高价成交"}
         ,成交金额 {formatPrice(auction.finalAmountCents ?? 0)}。
       </p>
-    </SolidCard>
+    </WebSurface>
   )
 }
 
 function CancelledManage() {
   return (
-    <SolidCard variant="subtle" className="p-6">
+    <WebSurface variant="subtle" className="p-6">
       <h2 className="text-base font-semibold">已取消</h2>
       <p className="mt-2 text-sm text-muted-foreground">
         本场已被运营取消,不再可成交。
       </p>
-    </SolidCard>
+    </WebSurface>
   )
 }

@@ -1,0 +1,42 @@
+// 在场 Web · Cloudflare Workers 海外 Beta 部署配置
+//
+// 部署模型（见 docs/cloudflare-runbook.md）：
+//   - 数据库走 Neon（DATABASE_ADAPTER=neon，WebSocket 驱动，Workers 原生兼容），
+//     与 Vercel staging 共用同一套 Neon 迁移基线。
+//   - 敏感变量（AUTH_SECRET / DATABASE_URL / CRON_SECRET 等）不写在文件里，
+//     用 `npx wrangler secret put <NAME>` 注入；vars 只放非敏感默认值。
+//   - 初期按 staging 语义发布（NEXT_PUBLIC_APP_ENV=staging、邮件 disabled、
+//     Pulse 开启）；当前大陆 production 发布规则仍使用阿里云。
+//   - NEXT_PUBLIC_APP_URL 必须在构建和部署时设为账号的真实 Worker URL。
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "zaichang",
+  "workers_dev": true,
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-09-18",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true,
+    "logs": { "enabled": true, "head_sampling_rate": 1 },
+    "traces": { "enabled": true, "head_sampling_rate": 0.01 }
+  },
+  // 非敏感运行时默认值；生产语义切换时同步更新这里与 secrets。
+  "vars": {
+    "DEPLOYMENT_REGION": "global",
+    "NEXT_PUBLIC_APP_URL": "https://zaichang.zaichang.workers.dev",
+    "DATABASE_ADAPTER": "neon",
+    "NEXT_PUBLIC_APP_ENV": "staging",
+    "NEXT_PUBLIC_API_ENABLED": "true",
+    "NEXT_PUBLIC_PULSE_ENABLED": "true",
+    "LAUNCH_SCOPE_ONLY": "true",
+    "INVITE_REQUIRED": "true",
+    "MAIL_PROVIDER": "disabled",
+    "ERROR_REPORTING_MODE": "stdout",
+    "MAIL_FROM_DOMAIN": "sinanapp.cn",
+    "SUPPORT_EMAIL": "support@sinanapp.cn"
+  }
+}

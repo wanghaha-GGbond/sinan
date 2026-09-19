@@ -25,7 +25,7 @@ export function CompanyIntelligencePanel({ company }: { company: MobileCompany }
           </View>
           <Text style={S.title}>像看公司说明书一样看清这家公司</Text>
           <Text style={S.desc}>
-            保留司南的方向分与匿名保护，同时把薪资、面试、机会和风险提示集中到一个可决策面板。
+            保留在场的方向分与匿名保护，同时把薪资、面试、机会和风险提示集中到一个可决策面板。
           </Text>
         </View>
         <SolidButton title="补充情报" size="sm" onPress={() => router.push("/submit")} />

@@ -1,5 +1,11 @@
 # Project Plan
 
+## Web UI 全站迁移（2026-08）
+
+网页端已切换到 Glassdoor 信息架构 + Apple 视觉纪律：轻玻璃导航、扁平按钮、中性内容表面、评价优先公司页和响应式移动顶栏。原生 App 继续使用 Solid 组件。
+
+迁移边界：`WebButton`、`WebSurface`、`WebNav`、`WebSearchField` 为新网页基础组件；`SolidButton`、`SolidCard`、`SolidTopbar` 仅保留为旧业务兼容层，后续页面不得新增引用。核心页面先完成首页、搜索、公司页、评价列表、评价详情和写评价，再按模板迁移账户、研究、社区与后台。
+
 ## MVP Scope
 
 Completed in the current frontend prototype:
@@ -95,14 +101,14 @@ Out of scope for this frontend MVP, but implied by `docs/api-contract.md`:
 - 发布评价 Step 1 支持“搜索已有公司 / 新增未收录公司”。
 - 新增公司仅走本地 mock 状态，默认 `pendingReview`、`unclaimed`。
 - 全屏问卷强调单题答题主路径，状态信息降级为顶部轻量进度。
-- 发布链路按钮统一迁移到 SolidButton 体系。
+- 发布链路按钮统一迁移到 WebButton 体系。
 
 ## P0 补丁范围（新增）
 
 - 新增未收录公司：补齐 `companyId` 绑定与默认状态字段（`unclaimed` / `pendingReview` / `user_added`）。
 - 问卷行为修正：最后一题支持“答完或跳过后进入完成页”，完成后回传 `ReviewQuestionnaire`。
 - 发布链路回归：补充“已有公司 / 新增公司 + 有问卷 / 无问卷”的端到端回归用例。
-- 关键按钮 solid 化：发布页、公司页、详情页、评分页主 CTA 持续替换为 `SolidButton`。
+- 关键按钮扁平化：发布页、公司页、详情页、评分页主 CTA 统一使用 `WebButton`。
 
 ## Round Update: 社区共建公司库 + 注册信息审核
 

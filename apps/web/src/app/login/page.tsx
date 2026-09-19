@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Compass, Mail, Phone, Loader2 } from "lucide-react"
 
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
 import { useAuth } from "@/lib/auth-context"
+import { getSafeNextPath, withNext } from "@/lib/navigation"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PHONE_RE = /^1[3-9]\d{9}$/
@@ -15,6 +16,8 @@ const PHONE_RE = /^1[3-9]\d{9}$/
 export default function LoginPage() {
   const { login, user } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const nextPath = getSafeNextPath(searchParams.get("next"))
   const [mode, setMode] = useState<"email" | "phone">("email")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
@@ -29,8 +32,8 @@ export default function LoginPage() {
 
   // Redirect if already logged in
   useEffect(() => {
-    if (user) router.replace("/")
-  }, [user, router])
+    if (user) router.replace(nextPath)
+  }, [user, router, nextPath])
 
   if (user) return null
 
@@ -66,7 +69,13 @@ export default function LoginPage() {
       passwordRef.current?.focus()
       return
     }
-    if (emailError || phoneError || passwordError) {
+    const invalidEmail = mode === "email" && !EMAIL_RE.test(email.trim())
+    const invalidPhone = mode === "phone" && !PHONE_RE.test(phone.trim())
+    const invalidPassword = password.length < 8
+    if (invalidEmail || invalidPhone || invalidPassword) {
+      if (invalidEmail) emailRef.current?.focus()
+      else if (invalidPhone) phoneRef.current?.focus()
+      else passwordRef.current?.focus()
       return
     }
 
@@ -81,7 +90,7 @@ export default function LoginPage() {
     if (result.error) {
       setError(result.error)
     } else {
-      router.push("/")
+      router.replace(nextPath)
     }
   }
 
@@ -92,14 +101,13 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-[80vh] items-center justify-center px-4">
-      <SolidCard variant="elevated" className="w-full max-w-form p-8">
+      <WebSurface variant="elevated" className="w-full max-w-form p-8">
         {/* Brand */}
         <div className="mb-8 flex flex-col items-center gap-3">
           <div className="flex size-14 items-center justify-center rounded-2xl bg-secondary shadow-[0_4px_0_rgba(14,143,95,0.12)]">
             <Compass className="size-7 text-secondary-foreground" />
           </div>
-          <h1 className="text-xl font-semibold text-foreground">登录司南</h1>
-          <p className="text-sm text-muted-foreground">入职前，先看清方向</p>
+          <h1 className="text-xl font-semibold text-foreground">登录在场</h1>
         </div>
 
         {/* Toggle email / phone */}
@@ -228,7 +236,7 @@ export default function LoginPage() {
             </p>
           ) : null}
 
-          <SolidButton
+          <WebButton
             type="submit"
             variant="primary"
             size="lg"
@@ -243,16 +251,16 @@ export default function LoginPage() {
             ) : (
               "登录"
             )}
-          </SolidButton>
+          </WebButton>
         </form>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           还没有账号？{" "}
-          <Link href="/register" className="font-semibold text-primary hover:underline">
+          <Link href={withNext("/register", nextPath)} className="font-semibold text-primary hover:underline">
             注册
           </Link>
         </p>
-      </SolidCard>
+      </WebSurface>
     </div>
   )
 }

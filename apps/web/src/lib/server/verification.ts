@@ -144,6 +144,7 @@ export async function approveVerification(
       })
       .from(companyVerifications)
       .where(eq(companyVerifications.id, verificationId))
+      .for("update")
       .limit(1)
 
     if (!verification) throw new Err("verification_not_found", "Verification not found", 404)
@@ -241,10 +242,22 @@ export async function rejectVerification(
   const { db } = await import("@/db/client")
   const { companyVerifications } = await import("@/db/schema/company-verifications")
   const { moderationEvents } = await import("@/db/schema/moderation-events")
-  const { eq } = await import("drizzle-orm")
+  const { and, eq, inArray } = await import("drizzle-orm")
 
   try {
     await db.transaction(async (tx) => {
+      const [verification] = await tx
+        .select({ status: companyVerifications.status })
+        .from(companyVerifications)
+        .where(eq(companyVerifications.id, verificationId))
+        .for("update")
+        .limit(1)
+
+      if (!verification) throw new Err("verification_not_found", "Verification not found", 404)
+      if (verification.status !== "submitted" && verification.status !== "reviewing") {
+        throw new Err("state_changed", "Only submitted verifications can be rejected", 409)
+      }
+
       const [updated] = await tx
         .update(companyVerifications)
         .set({
@@ -254,7 +267,12 @@ export async function rejectVerification(
           rejectReason: rejectReason.trim().slice(0, 500) || null,
           updatedAt: new Date(),
         })
-        .where(eq(companyVerifications.id, verificationId))
+        .where(
+          and(
+            eq(companyVerifications.id, verificationId),
+            inArray(companyVerifications.status, ["submitted", "reviewing"]),
+          ),
+        )
         .returning({ id: companyVerifications.id })
       if (!updated) throw new Err("verification_not_found", "Verification not found", 404)
       await tx.insert(moderationEvents).values({
@@ -262,6 +280,7 @@ export async function rejectVerification(
         entityId: verificationId,
         actorUserId: moderatorUserId,
         actorRole: "moderator",
+        fromStatus: verification.status,
         toStatus: "rejected",
         reason: rejectReason,
       })
@@ -301,6 +320,7 @@ export async function revokeVerification(
         })
         .from(companyVerifications)
         .where(eq(companyVerifications.id, verificationId))
+        .for("update")
         .limit(1)
 
       if (!verification) throw new Err("verification_not_found", "Verification not found", 404)
@@ -308,7 +328,7 @@ export async function revokeVerification(
         throw new Err("cannot_revoke_unapproved", "Only approved verifications can be revoked", 409)
       }
 
-      await tx
+      const [revoked] = await tx
         .update(companyVerifications)
         .set({
           status: "revoked",
@@ -317,7 +337,17 @@ export async function revokeVerification(
           rejectReason: rejectReason.trim().slice(0, 500) || null,
           updatedAt: new Date(),
         })
-        .where(eq(companyVerifications.id, verificationId))
+        .where(
+          and(
+            eq(companyVerifications.id, verificationId),
+            eq(companyVerifications.status, "approved"),
+          ),
+        )
+        .returning({ id: companyVerifications.id })
+
+      if (!revoked) {
+        throw new Err("state_changed", "Verification state changed", 409)
+      }
 
       await tx.insert(moderationEvents).values({
         entityType: "company_verification",
@@ -415,7 +445,7 @@ export async function confirmVerificationCode(
   const { companyVerifications } = await import("@/db/schema/company-verifications")
   const { users } = await import("@/db/schema/users")
   const { companies } = await import("@/db/schema/companies")
-  const { eq, and, isNull, desc, sql } = await import("drizzle-orm")
+  const { eq, and, isNull, desc, lt, sql } = await import("drizzle-orm")
 
   const now = new Date()
 
@@ -437,11 +467,24 @@ export async function confirmVerificationCode(
 
   const submittedHash = hashCode(submittedCode)
   if (submittedHash !== codeRow.codeHash) {
-    await db
+    const [attempted] = await db
       .update(emailVerificationCodes)
-      .set({ attemptCount: codeRow.attemptCount + 1 })
-      .where(eq(emailVerificationCodes.id, codeRow.id))
-    return "invalid"
+      .set({
+        attemptCount: sql`LEAST(${emailVerificationCodes.attemptCount} + 1, ${MAX_ATTEMPTS})`,
+      })
+      .where(
+        and(
+          eq(emailVerificationCodes.id, codeRow.id),
+          isNull(emailVerificationCodes.consumedAt),
+          lt(emailVerificationCodes.attemptCount, MAX_ATTEMPTS)
+        )
+      )
+      .returning({ attemptCount: emailVerificationCodes.attemptCount })
+    return attempted?.attemptCount === MAX_ATTEMPTS
+      ? "too_many_attempts"
+      : attempted
+        ? "invalid"
+        : "too_many_attempts"
   }
 
   // Code matches — consume it + approve verification in one transaction
@@ -454,7 +497,8 @@ export async function confirmVerificationCode(
         .where(
           and(
             eq(emailVerificationCodes.id, codeRow.id),
-            isNull(emailVerificationCodes.consumedAt)
+            isNull(emailVerificationCodes.consumedAt),
+            lt(emailVerificationCodes.attemptCount, MAX_ATTEMPTS)
           )
         )
         .returning({ id: emailVerificationCodes.id })
