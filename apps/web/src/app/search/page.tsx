@@ -1,37 +1,29 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Search, TrendingUp, ArrowRight } from "lucide-react"
 
 import { CompanyCard } from "@/components/company/company-card"
 import { WebButton } from "@/components/ui/web-button"
 import { WebEmptyState } from "@/components/ui/web-empty-state"
 import { WebSearchField } from "@/components/ui/web-search-field"
-import { searchCompanies } from "@/lib/api/companies"
-import type { CompanyListItem } from "@/lib/api/types"
+import { useCompanySearch } from "@/lib/queries/company-search"
 
 export default function SearchPage() {
   const [query, setQuery] = useState("")
   const [debouncedQuery, setDebouncedQuery] = useState("")
-  const [results, setResults] = useState<CompanyListItem[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  // Suggestion chips must come from the live catalog: hardcoded popular names
-  // led every click to the empty state while the company set was small.
-  const [suggestions, setSuggestions] = useState<string[]>([])
-
-  useEffect(() => {
-    let cancelled = false
-    searchCompanies({}).then((res) => {
-      if (cancelled || res.error) return
-      const names = (res.data?.companies ?? [])
+  const catalogQuery = useCompanySearch()
+  const searchQuery = useCompanySearch(
+    { q: debouncedQuery },
+    Boolean(debouncedQuery.trim()),
+  )
+  const suggestions = useMemo(() => {
+    const names = (catalogQuery.data ?? [])
         .map((company) => company.shortName || company.name)
         .filter((name): name is string => Boolean(name))
-      setSuggestions(names.slice(0, 6))
-    })
-    return () => { cancelled = true }
-  }, [])
+    return names.slice(0, 6)
+  }, [catalogQuery.data])
 
   // debounce
   useEffect(() => {
@@ -39,28 +31,9 @@ export default function SearchPage() {
     return () => clearTimeout(timer)
   }, [query])
 
-  // fetch when debounced query changes
-  useEffect(() => {
-    if (!debouncedQuery.trim()) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset to empty on cleared query
-      setResults([])
-      // setLoading(false) omitted: initial state is already false
-      return
-    }
-    let cancelled = false
-    setLoading(true)
-    setError(null)
-    searchCompanies({ q: debouncedQuery }).then((res) => {
-      if (cancelled) return
-      setLoading(false)
-      if (res.error) {
-        setError(res.error)
-      } else {
-        setResults(res.data?.companies ?? [])
-      }
-    })
-    return () => { cancelled = true }
-  }, [debouncedQuery])
+  const results = searchQuery.data ?? []
+  const loading = Boolean(debouncedQuery.trim()) && searchQuery.isFetching && !searchQuery.data
+  const error = searchQuery.error instanceof Error ? searchQuery.error.message : null
 
   function submitSearch() {
     setDebouncedQuery(query)

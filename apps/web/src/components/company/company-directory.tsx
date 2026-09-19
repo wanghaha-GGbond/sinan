@@ -1,38 +1,21 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { Building2, SlidersHorizontal } from "lucide-react"
 
 import { CompanyCard } from "@/components/company/company-card"
 import { SolidButton } from "@/components/ui/solid-button"
 import { SolidSearchInput } from "@/components/ui/solid-search-input"
-import { searchCompanies } from "@/lib/api/companies"
-import type { CompanyListItem } from "@/lib/api/types"
+import { useCompanySearch } from "@/lib/queries/company-search"
 
 type SortMode = "reviews" | "score" | "recommendation"
 
 export function CompanyDirectory() {
-  const [companies, setCompanies] = useState<CompanyListItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState("")
   const [city, setCity] = useState("全部")
   const [sort, setSort] = useState<SortMode>("reviews")
+  const { data: companies = [], isPending: loading, error } = useCompanySearch()
   const cities = ["全部", ...Array.from(new Set(companies.map((company) => company.city)))]
-
-  useEffect(() => {
-    let cancelled = false
-    searchCompanies({}).then((result) => {
-      if (cancelled) return
-      setLoading(false)
-      if (result.error) {
-        setError("公司数据暂时不可用，请稍后再试。")
-        return
-      }
-      setCompanies(result.data?.companies ?? [])
-    })
-    return () => { cancelled = true }
-  }, [])
 
   const filteredCompanies = useMemo(() => {
     const keyword = query.trim().toLowerCase()
@@ -56,7 +39,7 @@ export function CompanyDirectory() {
   }
 
   if (error) {
-    return <p className="border-y border-border py-8 text-sm text-muted-foreground" role="status">{error}</p>
+    return <p className="border-y border-border py-8 text-sm text-muted-foreground" role="status">公司数据暂时不可用，请稍后再试。</p>
   }
 
   return (

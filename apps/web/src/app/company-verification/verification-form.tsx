@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import React, { useEffect, useState } from "react"
+import React, { useState } from "react"
 import {
   Building2,
   CheckCircle2,
@@ -16,8 +16,7 @@ import { WebButton } from "@/components/ui/web-button"
 import { WebSurface } from "@/components/ui/web-surface"
 import { Textarea } from "@/components/ui/textarea"
 import { useAuth } from "@/lib/auth-context"
-import { searchCompanies } from "@/lib/api/companies"
-import type { CompanyListItem } from "@/lib/types"
+import { useCompanySearch } from "@/lib/queries/company-search"
 
 type ProofType = "work_email" | "business_document"
 
@@ -29,7 +28,7 @@ export function VerificationForm({
   initialCompanyName: string
 }) {
   const { user, loading } = useAuth()
-  const [companyOptions, setCompanyOptions] = useState<CompanyListItem[]>([])
+  const { data: companyOptions = [] } = useCompanySearch()
   const [companyId, setCompanyId] = useState(initialCompanyId)
   const [companyName, setCompanyName] = useState(initialCompanyName)
   const [applicantName, setApplicantName] = useState("")
@@ -47,14 +46,6 @@ export function VerificationForm({
   const [codeSending, setCodeSending] = useState(false)
   const [codeConfirming, setCodeConfirming] = useState(false)
   const [verified, setVerified] = useState(false)
-
-  useEffect(() => {
-    let active = true
-    searchCompanies({}).then((result) => {
-      if (active && result.data) setCompanyOptions(result.data.companies)
-    })
-    return () => { active = false }
-  }, [])
 
   function chooseCompany(value: string) {
     const company = companyOptions.find((item) => item.id === value)

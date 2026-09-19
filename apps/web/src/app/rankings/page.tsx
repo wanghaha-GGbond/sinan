@@ -1,11 +1,11 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { motion, useReducedMotion } from "framer-motion"
 
-import { searchCompanies } from "@/lib/api/companies"
-import type { CompanyListItem } from "@/lib/api/types"
+import { useCompanySearch } from "@/lib/queries/company-search"
+import type { CompanyListItem } from "@/lib/types"
 import { ErrorState } from "@/components/common/error-state"
 import { WebButton } from "@/components/ui/web-button"
 import { WebSurface } from "@/components/ui/web-surface"
@@ -22,25 +22,8 @@ const tabs = [
 type RankTab = (typeof tabs)[number]["key"]
 
 export default function RankingsPage() {
-  const [companies, setCompanies] = useState<CompanyListItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<RankTab>("score")
-
-  useEffect(() => {
-    let cancelled = false
-    // initial state is loading=true, error=null — no need to setState synchronously here
-    searchCompanies({}).then((res) => {
-      if (cancelled) return
-      if (res.error) {
-        setError(res.error)
-      } else if (res.data) {
-        setCompanies(res.data.companies)
-      }
-      setLoading(false)
-    })
-    return () => { cancelled = true }
-  }, [])
+  const { data: companies = [], isPending: loading, error } = useCompanySearch()
 
   // glassdoor-insights functions expect Company type (with reviews/dimensions/etc).
   // CompanyListItem from the API has fewer fields, so these functions will return

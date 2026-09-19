@@ -149,37 +149,40 @@ export async function getPublicCompanyDetail(
 
   if (!companyRow) return null
 
-  const [aggregate] = await db
-    .select({
-      avgDirection: sql<number>`round(avg(${reviews.directionScore})::numeric, 1)`,
-      recommendCount: sql<number>`count(*) filter (where ${reviews.recommendToJoin} = true)`,
-      totalCount: sql<number>`count(*)`,
-      score0to2: sql<number>`count(*) filter (where ${reviews.directionScore} < 2)`,
-      score2to4: sql<number>`count(*) filter (where ${reviews.directionScore} >= 2 and ${reviews.directionScore} < 4)`,
-      score4to6: sql<number>`count(*) filter (where ${reviews.directionScore} >= 4 and ${reviews.directionScore} < 6)`,
-      score6to8: sql<number>`count(*) filter (where ${reviews.directionScore} >= 6 and ${reviews.directionScore} < 8)`,
-      score8to10: sql<number>`count(*) filter (where ${reviews.directionScore} >= 8)`,
-    })
-    .from(reviews)
-    .where(
-      and(
-        eq(reviews.companyId, companyId),
-        inArray(reviews.status, ["visible", "limited_visible"]),
-        isNull(reviews.deletedAt),
+  const [aggregateRows, signalRows] = await Promise.all([
+    db
+      .select({
+        avgDirection: sql<number>`round(avg(${reviews.directionScore})::numeric, 1)`,
+        recommendCount: sql<number>`count(*) filter (where ${reviews.recommendToJoin} = true)`,
+        totalCount: sql<number>`count(*)`,
+        score0to2: sql<number>`count(*) filter (where ${reviews.directionScore} < 2)`,
+        score2to4: sql<number>`count(*) filter (where ${reviews.directionScore} >= 2 and ${reviews.directionScore} < 4)`,
+        score4to6: sql<number>`count(*) filter (where ${reviews.directionScore} >= 4 and ${reviews.directionScore} < 6)`,
+        score6to8: sql<number>`count(*) filter (where ${reviews.directionScore} >= 6 and ${reviews.directionScore} < 8)`,
+        score8to10: sql<number>`count(*) filter (where ${reviews.directionScore} >= 8)`,
+      })
+      .from(reviews)
+      .where(
+        and(
+          eq(reviews.companyId, companyId),
+          inArray(reviews.status, ["visible", "limited_visible"]),
+          isNull(reviews.deletedAt),
+        ),
       ),
-    )
+    db
+      .select({ directionScore: reviews.directionScore, questionnaire: reviews.questionnaire })
+      .from(reviews)
+      .where(
+        and(
+          eq(reviews.companyId, companyId),
+          inArray(reviews.status, ["visible", "limited_visible"]),
+          isNull(reviews.deletedAt),
+        ),
+      ),
+  ])
+  const aggregate = aggregateRows[0]
 
   const reviewCount = Number(aggregate?.totalCount ?? 0)
-  const signalRows = await db
-    .select({ directionScore: reviews.directionScore, questionnaire: reviews.questionnaire })
-    .from(reviews)
-    .where(
-      and(
-        eq(reviews.companyId, companyId),
-        inArray(reviews.status, ["visible", "limited_visible"]),
-        isNull(reviews.deletedAt),
-      ),
-    )
 
   return {
     ...toPublicCompanyView(companyRow),
@@ -214,20 +217,22 @@ export async function getPublicCompanyReviews(
   }
 
   const { db } = await import("@/db/client")
-  const rows = await db
-    .select()
-    .from(reviews)
-    .where(
-      and(
-        eq(reviews.companyId, companyId),
-        inArray(reviews.status, ["visible", "limited_visible"]),
-        isNull(reviews.deletedAt),
-      ),
-    )
-    .orderBy(desc(reviews.usefulCount), desc(reviews.createdAt), desc(reviews.id))
-    .limit(Math.min(Math.max(limit, 1), 50))
+  const [rows, authUser] = await Promise.all([
+    db
+      .select()
+      .from(reviews)
+      .where(
+        and(
+          eq(reviews.companyId, companyId),
+          inArray(reviews.status, ["visible", "limited_visible"]),
+          isNull(reviews.deletedAt),
+        ),
+      )
+      .orderBy(desc(reviews.usefulCount), desc(reviews.createdAt), desc(reviews.id))
+      .limit(Math.min(Math.max(limit, 1), 50)),
+    getAuthUser(),
+  ])
 
-  const authUser = await getAuthUser()
   const blockedAuthors = await getBlockedReviewAuthorKeys(authUser?.userId)
   const visibleRows = rows.filter((row) => !isReviewAuthorBlocked(row, blockedAuthors))
   const metadata = await getPublicReviewMetadata(visibleRows, authUser?.userId)

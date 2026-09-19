@@ -7,6 +7,10 @@ import { inferPublicCBTI } from "@/lib/server/company-cbti"
 import { mockCompanyToPublicView } from "@/lib/server/public-company-data"
 import { companies as mockCompanies } from "@/lib/mock-data"
 
+const publicCacheHeaders = {
+  "Cache-Control": "public, max-age=60, stale-while-revalidate=300",
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const q = (searchParams.get("q") ?? "").trim()
@@ -34,7 +38,10 @@ export async function GET(request: NextRequest) {
         const matchesIndustry = !industry || company.industry === industry
         return matchesQuery && matchesCity && matchesIndustry
       })
-      return NextResponse.json({ companies: matchingCompanies.map(mockCompanyToPublicView) })
+      return NextResponse.json(
+        { companies: matchingCompanies.map(mockCompanyToPublicView) },
+        { headers: publicCacheHeaders },
+      )
     }
 
     const { db } = await import("@/db/client")
@@ -70,7 +77,7 @@ export async function GET(request: NextRequest) {
       .orderBy(sql`${companies.createdAt} DESC`)
       .limit(50)
 
-    if (!rows.length) return NextResponse.json({ companies: [] })
+    if (!rows.length) return NextResponse.json({ companies: [] }, { headers: publicCacheHeaders })
 
     const companyIds = rows.map((row) => row.id)
     const [aggregates, signalRows] = await Promise.all([
@@ -102,22 +109,31 @@ export async function GET(request: NextRequest) {
         ),
     ])
     const aggregateByCompany = new Map(aggregates.map((item) => [item.companyId, item]))
+    const signalsByCompany = new Map<string, typeof signalRows>()
+    for (const signal of signalRows) {
+      const companySignals = signalsByCompany.get(signal.companyId)
+      if (companySignals) companySignals.push(signal)
+      else signalsByCompany.set(signal.companyId, [signal])
+    }
 
-    return NextResponse.json({
-      companies: rows.map((row) => {
-        const aggregate = aggregateByCompany.get(row.id)
-        const reviewCount = Number(aggregate?.totalCount ?? 0)
-        return {
-          ...toPublicCompanyView(row),
-          directionScore: reviewCount ? Number(aggregate?.avgDirection ?? 0) : 0,
-          recommendationRate: reviewCount
-            ? Math.round((Number(aggregate?.recommendCount ?? 0) / reviewCount) * 100)
+    return NextResponse.json(
+      {
+        companies: rows.map((row) => {
+          const aggregate = aggregateByCompany.get(row.id)
+          const reviewCount = Number(aggregate?.totalCount ?? 0)
+          return {
+            ...toPublicCompanyView(row),
+            directionScore: reviewCount ? Number(aggregate?.avgDirection ?? 0) : 0,
+            recommendationRate: reviewCount
+              ? Math.round((Number(aggregate?.recommendCount ?? 0) / reviewCount) * 100)
             : 0,
-          reviewCount,
-          cbti: inferPublicCBTI(signalRows.filter((signal) => signal.companyId === row.id)),
-        }
-      }),
-    })
+            reviewCount,
+            cbti: inferPublicCBTI(signalsByCompany.get(row.id) ?? []),
+          }
+        }),
+      },
+      { headers: publicCacheHeaders },
+    )
   } catch (error) {
     console.error("GET /api/companies/search failed:", error)
     return NextResponse.json(
