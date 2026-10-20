@@ -6,9 +6,9 @@ import { ArrowRight, Coffee, Gift, MonitorSmartphone, TrainFront } from "lucide-
 
 import { FilterBar } from "@/components/common/filter-bar"
 import { ScoreChip } from "@/components/ui/score-chip"
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
-import { SolidEmptyState } from "@/components/ui/solid-empty-state"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
+import { WebEmptyState } from "@/components/ui/web-empty-state"
 import { TagPill } from "@/components/ui/tag-pill"
 import { getBenefitInsights } from "@/lib/glassdoor-insights"
 import { companies } from "@/lib/mock-data"
@@ -57,7 +57,7 @@ export default function BenefitsPage() {
 
   return (
     <section className="mx-auto flex w-full max-w-page flex-col gap-5 px-4 py-6 sm:px-6">
-      <SolidCard variant="emerald" className="p-5">
+      <WebSurface variant="emerald" className="p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-secondary-foreground">
@@ -66,14 +66,14 @@ export default function BenefitsPage() {
             </div>
             <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground">把福利从口号拆成真实体验</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              聚合办公环境、通勤、食堂、下午茶、工位和设备等匿名样本,保留司南的「公司体感」表达。
+              聚合办公环境、通勤、食堂、下午茶、工位和设备等匿名样本,保留在场的「公司体感」表达。
             </p>
           </div>
-          <SolidButton asChild variant="dark">
+          <WebButton asChild variant="dark">
             <Link href="/submit/review">补充办公体验</Link>
-          </SolidButton>
+          </WebButton>
         </div>
-      </SolidCard>
+      </WebSurface>
 
       <FilterBar
         industries={industries}
@@ -94,19 +94,19 @@ export default function BenefitsPage() {
       />
 
       {filtered.length === 0 ? (
-        <SolidEmptyState
+        <WebEmptyState
           title="没有匹配的办公体验"
           description="换一个行业或城市,或者贡献一条新的办公体验。"
           action={
-            <SolidButton asChild variant="primary" size="sm">
+            <WebButton asChild variant="primary" size="sm">
               <Link href="/submit/review">补充办公体验</Link>
-            </SolidButton>
+            </WebButton>
           }
         />
       ) : (
         <div className="grid gap-4">
           {filtered.map((item) => (
-            <SolidCard key={item.companyId} variant="subtle" className="p-4">
+            <WebSurface key={item.companyId} variant="subtle" className="p-4">
               <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -138,15 +138,15 @@ export default function BenefitsPage() {
                 </div>
                 <div className="flex items-center gap-3 lg:justify-end">
                   <ScoreChip score={item.officeScore} label="体验分" compact />
-                  <SolidButton asChild variant="primary" size="sm">
+                  <WebButton asChild variant="primary" size="sm">
                     <Link href={`/company/${item.companyId}`}>
                       公司页
                       <ArrowRight className="size-4" />
                     </Link>
-                  </SolidButton>
+                  </WebButton>
                 </div>
               </div>
-            </SolidCard>
+            </WebSurface>
           ))}
         </div>
       )}

@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import React, { useMemo, useState } from "react"
+import React, { useState } from "react"
 import {
   Building2,
   CheckCircle2,
@@ -12,11 +12,11 @@ import {
 } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
 import { Textarea } from "@/components/ui/textarea"
 import { useAuth } from "@/lib/auth-context"
-import { companies } from "@/lib/mock-data"
+import { useCompanySearch } from "@/lib/queries/company-search"
 
 type ProofType = "work_email" | "business_document"
 
@@ -28,12 +28,9 @@ export function VerificationForm({
   initialCompanyName: string
 }) {
   const { user, loading } = useAuth()
-  const initialCompany = useMemo(
-    () => companies.find((company) => company.id === initialCompanyId),
-    [initialCompanyId]
-  )
-  const [companyId, setCompanyId] = useState(initialCompany?.id ?? initialCompanyId)
-  const [companyName, setCompanyName] = useState(initialCompany?.name ?? initialCompanyName)
+  const { data: companyOptions = [] } = useCompanySearch()
+  const [companyId, setCompanyId] = useState(initialCompanyId)
+  const [companyName, setCompanyName] = useState(initialCompanyName)
   const [applicantName, setApplicantName] = useState("")
   const [workEmail, setWorkEmail] = useState("")
   const [jobTitle, setJobTitle] = useState("")
@@ -51,7 +48,7 @@ export function VerificationForm({
   const [verified, setVerified] = useState(false)
 
   function chooseCompany(value: string) {
-    const company = companies.find((item) => item.id === value)
+    const company = companyOptions.find((item) => item.id === value)
     setCompanyId(value)
     setCompanyName(company?.name ?? "")
   }
@@ -143,14 +140,14 @@ export function VerificationForm({
   if (!loading && !user) {
     return (
       <section className="mx-auto w-full max-w-section px-4 py-12 sm:px-6">
-        <SolidCard variant="elevated" className="p-7 text-center">
+        <WebSurface variant="elevated" className="p-7 text-center">
           <ShieldCheck className="mx-auto size-9 text-primary" />
           <h1 className="mt-4 text-2xl font-semibold text-foreground">登录后申请公司认证</h1>
           <p className="mt-2 text-sm text-muted-foreground">认证申请需要绑定负责人账号，以便查询审核状态。</p>
-          <SolidButton asChild className="mt-6" variant="primary">
-            <Link href="/login">登录 / 注册</Link>
-          </SolidButton>
-        </SolidCard>
+          <WebButton asChild className="mt-6" variant="primary">
+            <Link href="/login?next=%2Fcompany-verification">登录 / 注册</Link>
+          </WebButton>
+        </WebSurface>
       </section>
     )
   }
@@ -166,9 +163,9 @@ export function VerificationForm({
             你的企业邮箱身份已经确认，身份卡材质即将解锁。如需进一步增强可信度，可继续提交任职证明。
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <SolidButton asChild variant="primary">
+            <WebButton asChild variant="primary">
               <Link href="/me">查看身份</Link>
-            </SolidButton>
+            </WebButton>
           </div>
         </div>
       </section>
@@ -178,7 +175,7 @@ export function VerificationForm({
   if (pendingVerificationId && !verified) {
     return (
       <section className="mx-auto w-full max-w-section px-4 py-12 sm:px-6">
-        <SolidCard variant="elevated" className="p-7">
+        <WebSurface variant="elevated" className="p-7">
           <div className="mb-6 text-center">
             <MailCheck className="mx-auto size-9 text-primary" />
             <h1 className="mt-4 text-xl font-semibold text-foreground">请查收验证码</h1>
@@ -207,7 +204,7 @@ export function VerificationForm({
               />
             </div>
             {error ? <p role="alert" className="text-sm font-medium text-destructive">{error}</p> : null}
-            <SolidButton
+            <WebButton
               type="submit"
               variant="primary"
               size="lg"
@@ -215,7 +212,7 @@ export function VerificationForm({
               disabled={codeConfirming || verificationCode.length !== 6}
             >
               {codeConfirming ? "验证中..." : "确认验证码"}
-            </SolidButton>
+            </WebButton>
             <button
               type="button"
               onClick={() => sendCode(pendingVerificationId)}
@@ -225,7 +222,7 @@ export function VerificationForm({
               {codeSending ? "发送中..." : "没收到？重新发送"}
             </button>
           </form>
-        </SolidCard>
+        </WebSurface>
       </section>
     )
   }
@@ -241,9 +238,9 @@ export function VerificationForm({
             审核通常需要 48 小时。通过后身份等级自动提升，凭证原件审完即删。
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <SolidButton asChild variant="primary">
+            <WebButton asChild variant="primary">
               <Link href="/me">查看认证状态</Link>
-            </SolidButton>
+            </WebButton>
           </div>
         </div>
       </section>
@@ -279,10 +276,10 @@ export function VerificationForm({
                 required
               >
                 <option value="">请选择公司</option>
-                {companyId && !companies.some((company) => company.id === companyId) ? (
+                {companyId && !companyOptions.some((company) => company.id === companyId) ? (
                   <option value={companyId}>{companyName}</option>
                 ) : null}
-                {companies.map((company) => (
+                {companyOptions.map((company) => (
                   <option key={company.id} value={company.id}>
                     {company.name} · {company.city}
                   </option>
@@ -393,9 +390,9 @@ export function VerificationForm({
 
           {error ? <p role="alert" className="text-sm font-medium text-destructive">{error}</p> : null}
 
-          <SolidButton type="submit" variant="primary" size="lg" disabled={submitting || loading}>
+          <WebButton type="submit" variant="primary" size="lg" disabled={submitting || loading}>
             {submitting ? "提交中..." : "提交认证申请"}
-          </SolidButton>
+          </WebButton>
         </form>
       </div>
 

@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server"
 
+import { isInviteRequired } from "@/lib/server/invites"
+
 export async function GET() {
-  const flag = process.env.INVITE_REQUIRED?.trim().toLowerCase()
   return NextResponse.json({
-    inviteRequired: flag === "1" || flag === "true",
+    inviteRequired: isInviteRequired(),
   })
 }

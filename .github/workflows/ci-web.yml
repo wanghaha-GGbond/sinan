@@ -1,0 +1,107 @@
+name: Web CI
+
+on:
+  pull_request:
+    paths:
+      - "apps/web/**"
+      - "packages/shared/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/ci-web.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/web/**"
+      - "packages/shared/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/ci-web.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: web-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Web quality, audit and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Reject high or critical Web production vulnerabilities
+        run: npm audit --workspace=@sinan/web --omit=dev --audit-level=high
+      - run: npm run typecheck --workspace=@sinan/shared
+      - name: Validate release environment contract
+        env:
+          AUTH_SECRET: ci-only-auth-secret-12345678901234567890
+          DATABASE_URL: postgresql://sinan:ci@127.0.0.1:5432/sinan
+          DATABASE_ADAPTER: pg
+          CRON_SECRET: ci-only-cron-secret
+          MAIL_PROVIDER: aliyun-direct-mail
+          MAIL_FROM_DOMAIN: sinanapp.cn
+          ALIYUN_DM_ACCOUNT_NAME: no-reply@sinanapp.cn
+          ALIYUN_DM_REGION: cn-hangzhou
+          ERROR_REPORTING_MODE: stdout
+          APP_RELEASE: ${{ github.sha }}
+          NEXT_PUBLIC_APP_URL: https://sinanapp.cn
+          NEXT_PUBLIC_ICP_FILING_NUMBER: 浙ICP备CI-PENDING号
+          NEXT_PUBLIC_APP_ENV: staging
+          NEXT_PUBLIC_API_ENABLED: "true"
+          NEXT_PUBLIC_PULSE_ENABLED: "true"
+          SUPPORT_EMAIL: support@sinanapp.cn
+          INVITE_REQUIRED: "true"
+          LAUNCH_SCOPE_ONLY: "true"
+        run: npm run release:check-env --workspace=@sinan/web
+      - run: npm run db:check --workspace=@sinan/web
+      - run: npm run lint --workspace=@sinan/web
+      - run: npm run typecheck --workspace=@sinan/web
+      - run: npm run test:unit --workspace=@sinan/web
+      - run: npm run research:test:algorithm --workspace=@sinan/web
+      - run: npm run build --workspace=@sinan/web
+
+  postgres:
+    name: PostgreSQL 16 migrations and core flows
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: sinan
+          POSTGRES_PASSWORD: sinan_test_only
+          POSTGRES_DB: sinan_migration
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sinan -d sinan_migration"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://sinan:sinan_test_only@127.0.0.1:5432/sinan_migration
+      DATABASE_ADAPTER: pg
+      AUTH_SECRET: ci-only-auth-secret-12345678901234567890
+      INVITE_REQUIRED: "true"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run db:check --workspace=@sinan/web
+      - name: Apply all current migrations
+        run: npm run db:migrate --workspace=@sinan/web
+      - name: Verify migration idempotency
+        run: npm run db:migrate --workspace=@sinan/web
+      - run: npm run test:integration --workspace=@sinan/web
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e:release --workspace=@sinan/web

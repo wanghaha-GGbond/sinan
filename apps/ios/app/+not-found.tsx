@@ -10,14 +10,14 @@ import { SolidTopbar } from "../components/SinanPrimitives"
 export default function NotFoundScreen() {
   return (
     <View style={S.container}>
-      <SolidTopbar title="司南" subtitle="404" />
+      <SolidTopbar title="在场" subtitle="404" />
       <View style={S.body}>
         <SolidCard variant="elevated" style={S.card}>
           <View style={S.iconWrap}>
             <Compass size={32} color={COLORS.mutedLight} />
           </View>
           <Text style={S.eyebrow}>404</Text>
-          <Text style={S.title}>这条路还没画在司南上</Text>
+          <Text style={S.title}>这条路还没画在在场上</Text>
           <Text style={S.description}>
             你访问的页面可能已下架、被合并,或者从未存在过。回到主页,或者直接搜一家公司。
           </Text>

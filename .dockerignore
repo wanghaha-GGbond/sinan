@@ -1,0 +1,17 @@
+.git
+.github
+**/.DS_Store
+**/.env*
+!**/.env.example
+**/node_modules
+apps/ios/ios
+packages/*/node_modules
+**/.next
+**/.expo
+**/.build
+**/test-results
+**/playwright-report
+apps/web/.research-browser
+apps/web/data/research/screenshots
+apps/web/src/db/seeds/research-artifacts
+apps/web/src/db/seeds/research-store.sqlite*

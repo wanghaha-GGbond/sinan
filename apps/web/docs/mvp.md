@@ -1,5 +1,9 @@
 # 司南 Web MVP
 
+## 当前网页视觉基线（2026-08）
+
+Web 端不再沿用 Solid 立体 C 端样式：桌面与移动 Web 统一使用扁平层级、轻量边框、中性表面和轻玻璃导航；Solid 风格只属于原生 App。公司页首屏优先展示真实评价，洞察条保留薪酬福利等决策信号，证据栏单独展示由结构化评价推导的公司 MBTI（CBTI）。
+
 ## 已实现页面
 
 - `/` 首页
@@ -84,14 +88,14 @@
 司南品牌不靠长文案解释，而靠推荐理由、方向分、关键指标、适合/慎重信息表达判断力。
 配色从白橙绿调整为雾灰绿、墨蓝、司南青绿和少量琥珀风险色。
 
-## Solid C 端风格收口（本轮）
+## Solid C 端风格收口（历史记录，已归档）
 
 司南移除“工友”词汇，统一改为“过来人 / 匿名评价者 / 后来者”。
 司南 UI 从轻线框风格转向高对比 solid C 端风格。
 司南借鉴多邻国式固态按钮、圆润卡片、明确反馈，但不复制其角色、插画、配色和布局。
 毛玻璃降级为浮层辅助，推荐卡和评论卡以实体白底和 solid 层级为主。
 
-## Solid 组件化与视觉基线（本轮）
+## Solid 组件化与视觉基线（历史记录，已归档）
 
 司南已抽象 solid 视觉组件，包括 SolidButton、SolidCard、ScoreChip、TagPill、MetricPill 等。
 /search 和 /rankings 已统一到高对比 solid C 端风格。
@@ -99,7 +103,7 @@
 毛玻璃仅保留为浮层辅助，不作为主卡片风格。
 建立或准备建立桌面端和移动端视觉回归基线，防止后续 UI 回退。
 
-## SolidTopbar + ReviewCard 组件化与视觉回归升级（本轮）
+## SolidTopbar + ReviewCard 组件化与视觉回归升级（历史记录，已归档）
 
 司南已抽象 SolidTopbar，用于统一首页、搜索页、榜单页、内容页的顶部导航。
 ReviewCard 已迁移到 SolidCard、SolidButton、ScoreChip、TagPill 等 solid primitives。
@@ -136,7 +140,7 @@ C-BTI（Company Behavior Type Indicator）保留为内部结构字段，不再�
 - 顶部进度与轻状态表达已答进度。
 
 按钮统一：
-- 发布链路核心按钮统一为 SolidButton；
+- 发布链路核心按钮统一为 WebButton；
 - 减少 outline/线框按钮残留。
 
 ## P0 修复进展（新增）
@@ -144,7 +148,7 @@ C-BTI（Company Behavior Type Indicator）保留为内部结构字段，不再�
 - 发布评价链路已补齐数据语义：`Company` 增加 `claimedStatus`，新增公司默认 `source=user_added`、`pendingReview=true`、`createdByUser=true`、`claimedStatus=unclaimed`。
 - 新增公司保存后会自动写入 `companyId` 与 `companyName`，并在本地状态继续后续步骤。
 - 问卷交互已补齐最后一题跳过逻辑：末题跳过直接进入完成态并回传问卷数据。
-- 关键发布路径按钮继续收敛到 `SolidButton`，包括新增公司、保存继续、发布评价等核心动作。
+- 关键发布路径按钮继续收敛到 `WebButton`，包括新增公司、保存继续、发布评价等核心动作。
 - `/submit/review` 公司选择状态已统一到 `selectedCompany` 单一来源：Step 1 下一步仅依赖 `selectedCompany !== null`。
 - 无结果卡由 `query + matchedCompanies + selectedCompany + mode` 派生，不再常驻。
 - e2e 已拆分为已有公司提交、新增公司提交、问卷完成返回、新增公司+问卷提交等独立用例。

@@ -142,15 +142,12 @@ export async function getOrCreateAnonymousProfile(params: {
       .returning()
 
     return toAnonymousProfilePublicView(row)
-  } catch {
-    // Fallback: return a generated profile without DB
-    return {
-      id: crypto.randomUUID(),
-      displayLabel: buildAnonymousDisplayLabel(params.role),
-      avatarSeed: buildAvatarSeed(
-        `${params.userId ?? params.fingerprintHash ?? "anon"}-${Date.now()}`
-      ),
-    }
+  } catch (error) {
+    // Never manufacture a UUID that is not present in the database. Callers
+    // may persist the returned id as a foreign key, so a fake fallback turns
+    // a recoverable lookup failure into a misleading insert failure.
+    console.error("[anonymous-profile] lookup/create failed:", error)
+    throw error
   }
 }
 

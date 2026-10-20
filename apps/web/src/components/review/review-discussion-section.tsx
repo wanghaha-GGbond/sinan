@@ -5,7 +5,7 @@ import { MessageCircle } from "lucide-react"
 
 import { ReviewDiscussionCard } from "@/components/review/review-discussion-card"
 import { ReviewDiscussionComposer } from "@/components/review/review-discussion-composer"
-import { SolidButton } from "@/components/ui/solid-button"
+import { WebButton } from "@/components/ui/web-button"
 import { createLocalDiscussion } from "@/lib/mock-data"
 import {
   getAuthorStatusDiscussions,
@@ -49,7 +49,7 @@ export function ReviewDiscussionSection({
           )}
         </button>
         <div className="flex gap-1">
-          <SolidButton
+          <WebButton
             data-testid="discussion-sort-useful"
             onClick={() => setSort("useful")}
             size="sm"
@@ -57,8 +57,8 @@ export function ReviewDiscussionSection({
             variant={sort === "useful" ? "dark" : "ghost"}
           >
             热门
-          </SolidButton>
-          <SolidButton
+          </WebButton>
+          <WebButton
             data-testid="discussion-sort-latest"
             onClick={() => setSort("latest")}
             size="sm"
@@ -66,7 +66,7 @@ export function ReviewDiscussionSection({
             variant={sort === "latest" ? "dark" : "ghost"}
           >
             最新
-          </SolidButton>
+          </WebButton>
         </div>
       </div>
 

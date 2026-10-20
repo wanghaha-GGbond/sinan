@@ -8,7 +8,7 @@
  */
 import Link from "next/link"
 
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebSurface } from "@/components/ui/web-surface"
 import { TagPill } from "@/components/ui/tag-pill"
 import { getAuctionLeaderboard } from "@/lib/server/auction-leaderboard"
 import { formatPrice } from "@/lib/server/auction-view"
@@ -35,7 +35,7 @@ export default async function LeaderboardPage({
 
   return (
     <section className="mx-auto flex w-full max-w-page flex-col gap-6 px-4 py-8 sm:px-6">
-      <SolidCard variant="elevated" className="p-6">
+      <WebSurface variant="elevated" className="p-6">
         <div className="flex flex-col gap-2">
           <div className="inline-flex w-fit items-center gap-2 rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-secondary-foreground">
             行情榜
@@ -48,26 +48,26 @@ export default async function LeaderboardPage({
             金额明细不暴露(08 §2)。
           </p>
         </div>
-      </SolidCard>
+      </WebSurface>
 
       {!dbAvailable ? (
-        <SolidCard variant="subtle" className="p-6">
+        <WebSurface variant="subtle" className="p-6">
           <p className="text-sm text-muted-foreground">
             数据库暂时不可用,稍后再来。
           </p>
-        </SolidCard>
+        </WebSurface>
       ) : page.items.length === 0 ? (
-        <SolidCard variant="subtle" className="p-6">
+        <WebSurface variant="subtle" className="p-6">
           <p className="text-sm text-muted-foreground">
             {hostId
               ? "该嘉宾还没有已成交的专场。"
               : "还没有已成交的专场,首批 10 场 M2 运营专场结束后会陆续上线。"}
           </p>
-        </SolidCard>
+        </WebSurface>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {page.items.map((item) => (
-            <SolidCard
+            <WebSurface
               key={item.auctionId}
               variant="elevated"
               className="p-5"
@@ -108,7 +108,7 @@ export default async function LeaderboardPage({
               <div className="mt-3 text-xs text-muted-foreground">
                 嘉宾:{item.host.displayName}
               </div>
-            </SolidCard>
+            </WebSurface>
           ))}
         </div>
       )}

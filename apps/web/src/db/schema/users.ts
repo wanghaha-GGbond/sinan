@@ -10,6 +10,7 @@ export const users = pgTable(
     email: text("email"),
     phone: text("phone"),
     passwordHash: text("password_hash"),
+    sessionVersion: integer("session_version").default(0).notNull(),
 
     displayName: text("display_name"),
     avatarUrl: text("avatar_url"),

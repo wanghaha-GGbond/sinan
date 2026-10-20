@@ -127,7 +127,10 @@ export async function GET(request: Request) {
       )
       .orderBy(desc(promiseRecords.promiseDate))
       .limit(50)
-    return NextResponse.json({ records: rows.map(toPublicPromiseRecord) })
+    return NextResponse.json(
+      { records: rows.map(toPublicPromiseRecord) },
+      { headers: { "Cache-Control": "public, max-age=60, stale-while-revalidate=300" } },
+    )
   } catch {
     return NextResponse.json({ records: [] })
   }

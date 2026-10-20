@@ -1,0 +1,124 @@
+name: Release iOS to TestFlight
+
+on:
+  push:
+    tags:
+      - "ios-v*"
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag, for example ios-v0.2.0"
+        required: true
+        type: string
+      source_ref:
+        description: "main or a commit/ref already contained in main"
+        required: true
+        default: main
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sinan-production-ios
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build and submit iOS TestFlight release
+    runs-on: macos-latest
+    timeout-minutes: 60
+    environment: production
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      EXPO_PUBLIC_API_URL: https://sinanapp.cn
+      EXPO_PUBLIC_LAUNCH_SCOPE_ONLY: "true"
+      EXPO_PUBLIC_APP_FILING_NUMBER: ${{ vars.EXPO_PUBLIC_APP_FILING_NUMBER }}
+      EXPO_PUBLIC_SUPPORT_EMAIL: ${{ vars.EXPO_PUBLIC_SUPPORT_EMAIL || 'support@sinanapp.cn' }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.source_ref || github.ref }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Verify release tag and main ancestry
+        id: release
+        env:
+          DISPATCH_TAG: ${{ inputs.release_tag }}
+          DISPATCH_SOURCE_REF: ${{ inputs.source_ref }}
+        run: |
+          git fetch origin main --no-tags
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            release_tag="$DISPATCH_TAG"
+            source_sha=$(git rev-parse HEAD)
+          else
+            release_tag="$GITHUB_REF_NAME"
+            source_sha="$GITHUB_SHA"
+          fi
+          [[ "$release_tag" =~ ^ios-v[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$ ]]
+          git merge-base --is-ancestor "$source_sha" origin/main
+          echo "tag=$release_tag" >> "$GITHUB_OUTPUT"
+          echo "sha=$source_sha" >> "$GITHUB_OUTPUT"
+          {
+            echo "### iOS release gate"
+            echo "- Tag: $release_tag"
+            echo "- Git SHA: $source_sha"
+            echo "- Target: TestFlight only; App Store release remains manual"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify EAS credential
+        run: test -n "$EXPO_TOKEN"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Reject high or critical production vulnerabilities
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Verify iOS release configuration
+        run: npm run release:check-config --workspace=@sinan/ios
+
+      - name: Run Expo Doctor
+        run: npx --yes expo-doctor@1.20.3
+
+      - name: Export production JavaScript bundle
+        run: npm run export:ios --workspace=@sinan/ios
+
+      - name: Build production IPA with EAS
+        id: eas-build
+        run: |
+          build_json="$RUNNER_TEMP/eas-build.json"
+          npx --yes eas-cli@22.5.0 build \
+            --platform ios \
+            --profile production \
+            --non-interactive \
+            --wait \
+            --json > "$build_json"
+          build_id=$(jq -r 'if type == "array" then .[0].id else .id end // empty' "$build_json")
+          build_url=$(jq -r 'if type == "array" then (.[0].artifacts.buildUrl // .[0].buildDetails.buildUrl // .[0].url) else (.artifacts.buildUrl // .buildDetails.buildUrl // .url) end // empty' "$build_json")
+          test -n "$build_id"
+          echo "build_id=$build_id" >> "$GITHUB_OUTPUT"
+          echo "build_url=$build_url" >> "$GITHUB_OUTPUT"
+          {
+            echo "### EAS production build"
+            echo "- Build ID: $build_id"
+            if [[ -n "$build_url" ]]; then echo "- EAS URL: $build_url"; fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Submit latest build to TestFlight
+        run: |
+          npx --yes eas-cli@22.5.0 submit \
+            --platform ios \
+            --profile production \
+            --non-interactive \
+            --latest
+          {
+            echo "### TestFlight submission"
+            echo "- Submitted build: ${{ steps.eas-build.outputs.build_id }}"
+            echo "- App Store release: manual"
+          } >> "$GITHUB_STEP_SUMMARY"

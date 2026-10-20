@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from "next/server"
 import { and, eq, isNull, inArray, desc, lt, or } from "drizzle-orm"
+import { z } from "zod"
 import { reviews } from "@/db/schema/reviews"
 import { reviewDiscussions } from "@/db/schema/review-discussions"
 import { toPublicReviewDiscussionView } from "@/lib/server/review-discussion-view"
-import { getAuthUser } from "@/lib/server/auth"
+import { getAuthUserFromRequest, requireAuthUser } from "@/lib/server/auth"
 import { getOrCreateAnonymousProfile } from "@/lib/server/anonymous-profile"
 import { hasSensitive, hasAttackWord } from "@/lib/content-guard"
+import { getRateLimitKey } from "@/lib/server/rate-limit"
+import { checkPersistentRateLimit } from "@/lib/server/persistent-rate-limit"
 
 type DiscussionSortKey = "useful" | "latest"
+
+const discussionSubmissionSchema = z.object({
+  companyId: z.string().trim().min(1).max(120),
+  type: z.enum(["question", "supplement"]),
+  content: z.string().trim().min(5).max(300),
+  tags: z.array(z.string().trim().min(1).max(40)).max(8).optional(),
+}).strict()
 
 function encodeDiscussionCursor(
   sort: DiscussionSortKey,
@@ -55,6 +65,13 @@ export async function GET(
   const sort = (searchParams.get("sort") ?? "useful") as DiscussionSortKey
   const limit = Math.min(Number(searchParams.get("limit") ?? "20"), 50)
   const rawCursor = searchParams.get("cursor") ?? null
+
+  if (sort !== "useful" && sort !== "latest") {
+    return NextResponse.json({ error: "Invalid discussion sort" }, { status: 400 })
+  }
+  if (!Number.isFinite(limit) || limit < 1) {
+    return NextResponse.json({ error: "limit must be between 1 and 50" }, { status: 400 })
+  }
 
   try {
     const { db } = await import("@/db/client")
@@ -139,7 +156,7 @@ export async function GET(
     const last = resultRows[resultRows.length - 1]
 
     // My discussions (if authenticated)
-    const authUser = await getAuthUser()
+    const authUser = await getAuthUserFromRequest(request)
     let myDiscussions: typeof rows = []
 
     if (authUser) {
@@ -191,38 +208,47 @@ export async function POST(
 ) {
   const { reviewId } = await params
 
-  let body: Record<string, unknown>
+  let authUser
+  try {
+    // Discussions are user-generated content and must have an accountable
+    // owner. Anonymous display labels are still preserved via the profile.
+    authUser = await requireAuthUser(request)
+  } catch (error) {
+    if (error instanceof Response) return error
+    throw error
+  }
+
+  const rateLimit = await checkPersistentRateLimit(
+    `review-discussion-submit:user:${authUser.userId}:${getRateLimitKey(request, "/api/reviews/:reviewId/discussions")}`,
+    { maxRequests: 10, windowSeconds: 60 * 60 },
+  )
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "补充内容提交过于频繁，请稍后再试", retryAfter: rateLimit.retryAfter },
+      { status: 429 },
+    )
+  }
+
+  const contentLength = Number(request.headers.get("content-length") ?? "")
+  if (Number.isFinite(contentLength) && contentLength > 32 * 1024) {
+    return NextResponse.json({ error: "补充内容请求过大" }, { status: 413 })
+  }
+
+  let body: unknown
   try {
     body = await request.json()
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
   }
 
-  const companyId = String(body.companyId ?? "").trim()
-  const type = String(body.type ?? "").trim()
-  const content = String(body.content ?? "").trim()
-  const tags: string[] | undefined = Array.isArray(body.tags)
-    ? (body.tags as string[])
-    : undefined
-
-  if (!companyId) {
-    return NextResponse.json({ error: "companyId is required" }, { status: 400 })
-  }
-
-  if (type !== "question" && type !== "supplement") {
+  const parsed = discussionSubmissionSchema.safeParse(body)
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: "type must be 'question' or 'supplement'" },
-      { status: 400 }
+      { error: parsed.error.issues[0]?.message ?? "补充内容参数不正确" },
+      { status: 400 },
     )
   }
-
-  if (content.length < 5) {
-    return NextResponse.json({ error: "Content must be at least 5 characters" }, { status: 400 })
-  }
-
-  if (content.length > 300) {
-    return NextResponse.json({ error: "Content must be at most 300 characters" }, { status: 400 })
-  }
+  const { companyId, type, content, tags } = parsed.data
 
   if (hasSensitive(content) || hasAttackWord(content)) {
     return NextResponse.json(
@@ -253,17 +279,15 @@ export async function POST(
     }
 
     // Extract auth user + anonymous profile
-    const authUser = await getAuthUser()
     let anonProfile = null
-    if (authUser) {
-      try {
-        anonProfile = await getOrCreateAnonymousProfile({
-          userId: authUser.userId,
-          scope: { scopeType: "company", scopeId: companyId },
-        })
-      } catch {
-        // Non-fatal
-      }
+    try {
+      anonProfile = await getOrCreateAnonymousProfile({
+        userId: authUser.userId,
+        scope: { scopeType: "company", scopeId: companyId },
+      })
+    } catch {
+      // The database-backed user link remains valid even if the optional
+      // anonymous profile cannot be refreshed.
     }
 
     const [row] = await db
@@ -272,7 +296,7 @@ export async function POST(
         reviewId,
         companyId,
         type: type as "question" | "supplement",
-        authorUserId: authUser?.userId ?? null,
+        authorUserId: authUser.userId,
         anonymousProfileId: anonProfile?.id ?? null,
         authorRole: "anonymous",
         authorLabel: "匿名评价者",

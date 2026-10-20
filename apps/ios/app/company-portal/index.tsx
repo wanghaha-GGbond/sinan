@@ -95,14 +95,14 @@ export default function CompanyPortalIndexScreen() {
             />
           </View>
           <Text style={S.footnote}>
-            公司端不能删评价、修改评分、购买排名或获取评价用户身份,任何此类请求都会被司南拒绝。
+            公司端不能删评价、修改评分、购买排名或获取评价用户身份,任何此类请求都会被在场拒绝。
           </Text>
         </SolidCard>
 
         <SolidCard variant="subtle" style={S.section}>
           <Text style={S.sectionTitle}>你还没认领的公司</Text>
           <Text style={S.footnote}>
-            提交工商资质后,司南会人工审核并开通控制台。下面是一些示例公司。
+            提交工商资质后,在场会人工审核并开通控制台。下面是一些示例公司。
           </Text>
           <View style={S.unboundRow}>
             {unbound.map((company) => (

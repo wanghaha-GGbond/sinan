@@ -17,6 +17,6 @@ export const moderationEvents = pgTable(
   },
   (table) => [
     index("moderation_events_entity_idx").on(table.entityType, table.entityId, table.createdAt),
-    index("moderation_events_actor_idx").on(table.actorUserId, table.createdAt),
+    index("review_moderation_events_actor_idx").on(table.actorUserId, table.createdAt),
   ]
 )

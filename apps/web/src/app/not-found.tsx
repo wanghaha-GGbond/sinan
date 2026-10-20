@@ -1,8 +1,8 @@
 import Link from "next/link"
-import { Compass, Home, Search, PenLine, TrendingUp, ArrowRight } from "lucide-react"
+import { BookOpen, Compass, Home, Search, PenLine, ArrowRight } from "lucide-react"
 
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
 
 export default function NotFound() {
   return (
@@ -17,31 +17,31 @@ export default function NotFound() {
         <span>4</span>
       </div>
 
-      <SolidCard variant="elevated" className="w-full p-8 text-center sm:p-10">
+      <WebSurface variant="elevated" className="w-full p-8 text-center sm:p-10">
         <p className="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
           Page not found
         </p>
         <h1 className="mt-3 text-2xl font-semibold text-foreground sm:text-3xl">
-          这条路还没画在司南上
+          这条路还没画在在场上
         </h1>
         <p className="mx-auto mt-3 max-w-[44ch] text-sm leading-6 text-muted-foreground">
           你访问的页面可能已下架、被合并,或者从未存在过。先回到推荐流,或者搜一家公司。
         </p>
         <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-          <SolidButton asChild variant="primary" size="lg">
+          <WebButton asChild variant="primary" size="lg">
             <Link href="/">
               <Home className="size-4" />
               回到推荐流
             </Link>
-          </SolidButton>
-          <SolidButton asChild variant="secondary" size="lg">
+          </WebButton>
+          <WebButton asChild variant="secondary" size="lg">
             <Link href="/search">
               <Search className="size-4" />
               搜索公司
             </Link>
-          </SolidButton>
+          </WebButton>
         </div>
-      </SolidCard>
+      </WebSurface>
 
       <p className="mt-6 text-xs text-muted-foreground">
         另一个常见入口:
@@ -62,11 +62,11 @@ export default function NotFound() {
         </Link>
         ,
         <Link
-          href="/salaries"
+          href="/research"
           className="ml-1 inline-flex items-center gap-0.5 font-medium text-foreground underline-offset-4 hover:underline"
         >
-          查薪资区间
-          <TrendingUp className="size-3" />
+          浏览公司研报
+          <BookOpen className="size-3" />
         </Link>
       </p>
     </section>

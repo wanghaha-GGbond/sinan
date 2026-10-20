@@ -1,14 +1,49 @@
 {
   "name": "sinan",
   "private": true,
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
+    "audit:release": "npm audit --omit=dev --audit-level=high",
     "dev:web": "npm run dev --workspace=@sinan/web",
     "dev:ios": "npm run dev --workspace=@sinan/ios",
     "build:web": "npm run build --workspace=@sinan/web"
   },
+  "devDependencies": {
+    "expo": "57.0.14",
+    "expo-constants": "57.0.12",
+    "expo-linking": "57.0.6",
+    "expo-router": "57.0.14",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.2",
+    "react-native-safe-area-context": "5.7.0",
+    "react-native-screens": "4.26.2",
+    "react-native-web": "0.21.2",
+    "expo-secure-store": "57.0.1",
+    "expo-status-bar": "57.0.1"
+  },
   "overrides": {
-    "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "@babel/core": "7.29.7",
+    "@expo/metro": "56.0.2",
+    "brace-expansion": "1.1.18",
+    "hono": "4.12.27",
+    "ip-address": "10.5.0",
+    "js-yaml": "4.3.2",
+    "fast-uri": "3.1.8",
+    "nanoid": "3.3.18",
+    "metro": "0.84.5",
+    "metro-config": "0.84.5",
+    "metro-transform-worker": "0.84.5",
+    "postcss": "8.5.26",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native-svg": "15.15.4",
+    "shell-quote": "1.10.0",
+    "tar": "7.5.22",
+    "uuid": "11.1.1",
+    "undici": "6.28.0"
   }
 }

@@ -1,14 +1,13 @@
+import { useCallback, useState } from "react"
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native"
-import { router, usePathname } from "expo-router"
+import { router, useFocusEffect, usePathname } from "expo-router"
 import { COLORS, RADIUS, SHADOWS } from "../theme"
 import { SolidButton } from "./SolidButton"
+import { getSession, type SessionUser } from "../lib/api"
 
 const intelLinks = [
-  { href: "/salaries", label: "薪资" },
-  { href: "/interviews", label: "面试" },
-  { href: "/jobs", label: "机会" },
-  { href: "/benefits", label: "福利" },
-  { href: "/community", label: "社区" },
+  { href: "/search", label: "公司" },
+  { href: "/research", label: "研报" },
 ]
 
 export function IntelNav() {
@@ -36,19 +35,32 @@ export function IntelNav() {
 export function AppFooter() {
   return (
     <View style={S.footer}>
-      <Text style={S.footerText}>司南：入职前，先看清方向。</Text>
+      <Text style={S.footerText}>在场：入职前，先看清方向。</Text>
       <Text style={S.footerText}>匿名保护优先，不向公司开放用户身份。</Text>
+      <TouchableOpacity onPress={() => router.push("/support")} accessibilityRole="link">
+        <Text style={S.footerLink}>帮助与内容安全</Text>
+      </TouchableOpacity>
     </View>
   )
 }
 
 export function HomeHeaderActions() {
+  const [user, setUser] = useState<SessionUser | null>(null)
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true
+      getSession()
+        .then((session) => { if (active) setUser(session) })
+        .catch(() => { if (active) setUser(null) })
+      return () => { active = false }
+    }, []),
+  )
+
   return (
     <View style={S.actions}>
-      <SolidButton title="登录" variant="ghost" size="sm" onPress={() => router.push("/login")} style={S.actionButton} />
-      <SolidButton title="我的" variant="secondary" size="sm" onPress={() => router.push("/me")} style={S.actionButton} />
+      {!user ? <SolidButton title="登录" variant="secondary" size="sm" onPress={() => router.push("/login")} style={S.actionButton} /> : <SolidButton title="我的" variant="ghost" size="sm" onPress={() => router.push("/me")} style={S.actionButton} />}
       <SolidButton title="写评价" variant="primary" size="sm" onPress={() => router.push("/submit")} style={S.actionButton} />
-      <SolidButton title="搜索" variant="dark" size="sm" onPress={() => router.push("/search")} style={S.actionButton} />
     </View>
   )
 }
@@ -83,6 +95,7 @@ const S = StyleSheet.create({
     gap: 6,
   },
   footerText: { fontSize: 13, color: COLORS.muted },
+  footerLink: { fontSize: 13, fontWeight: "800", color: COLORS.primaryDark },
   actions: { flexDirection: "row", flexWrap: "wrap", gap: 6, justifyContent: "flex-end" },
   actionButton: { minWidth: 0, paddingHorizontal: 10, borderRadius: RADIUS.lg },
 })

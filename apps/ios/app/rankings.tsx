@@ -73,7 +73,7 @@ export default function RankingsScreen() {
 
   return (
     <View style={S.container}>
-      <SolidTopbar title="司南 公司发现" subtitle="看看最近被更多过来人关注的公司" back />
+      <SolidTopbar title="在场 公司发现" subtitle="看看最近被更多过来人关注的公司" back />
       <ScrollView contentContainerStyle={S.content}>
         <View style={S.heroRow}>
           <View style={{ flex: 1 }}>

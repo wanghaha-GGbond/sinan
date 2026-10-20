@@ -17,7 +17,7 @@
 import { useEffect, useRef, useState } from "react"
 import { Keyboard, X } from "lucide-react"
 
-import { SolidButton } from "@/components/ui/solid-button"
+import { WebButton } from "@/components/ui/web-button"
 
 const STORAGE_KEY = "sinan:first-run-hint-seen"
 const AUTO_DISMISS_MS = 8_000
@@ -77,7 +77,7 @@ export function FirstRunHint() {
         <span>按 <kbd className="rounded border border-background/30 bg-background/10 px-1 font-mono text-xs">?</kbd> 看快捷键</span>
         <span>一键跳到搜索或公司</span>
       </span>
-      <SolidButton
+      <WebButton
         type="button"
         variant="ghost"
         size="sm"
@@ -87,7 +87,7 @@ export function FirstRunHint() {
         className="text-background hover:bg-background/10"
       >
         <X className="size-4" />
-      </SolidButton>
+      </WebButton>
     </div>
   )
 }

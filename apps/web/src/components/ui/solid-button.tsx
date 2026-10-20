@@ -4,26 +4,24 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
+// Deprecated Web compatibility wrapper. New browser surfaces should import
+// WebButton directly; the native apps keep their own SolidButton primitives.
 const solidButtonVariants = cva(
-"inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-[18px] text-sm font-semibold transition-all duration-150 ease-out-quart focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:translate-y-px disabled:pointer-events-none disabled:opacity-50 motion-safe:hover:-translate-y-px motion-safe:active:translate-y-0",
+"inline-flex min-h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-[10px] border text-sm font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
-        primary:
-          "bg-primary-hover text-primary-foreground shadow-[0_5px_0_var(--primary-deep)] hover:bg-primary-deep active:translate-y-[3px] active:shadow-[0_2px_0_var(--primary-deep)]",
-        secondary:
-          "bg-muted text-foreground shadow-[0_4px_0_var(--border)] hover:bg-muted-hover active:translate-y-[2px] active:shadow-[0_2px_0_var(--border)]",
-        dark:
-          "bg-foreground text-background shadow-[0_4px_0_rgba(17,24,39,0.22)] hover:bg-[var(--tw-slate-700)] active:translate-y-[2px] active:shadow-[0_2px_0_rgba(17,24,39,0.22)]",
-        ghost: "bg-transparent text-muted-foreground hover:bg-muted shadow-none",
-        risk:
-          "bg-risk-surface text-destructive shadow-[0_3px_0_rgba(146,64,14,0.16)] hover:bg-risk-surface-strong active:translate-y-[2px] active:shadow-[0_1px_0_rgba(146,64,14,0.16)]",
+        primary: "border-primary-hover bg-primary-hover text-primary-foreground hover:bg-primary-deep hover:border-primary-deep",
+        secondary: "border-border bg-card text-foreground hover:border-primary-surface-border hover:bg-muted",
+        dark: "border-foreground bg-foreground text-background hover:bg-[var(--tw-slate-700)]",
+        ghost: "border-transparent bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
+        risk: "border-risk-border bg-risk-surface text-destructive hover:bg-risk-surface-strong",
       },
       size: {
-        sm: "h-11 px-3",
-        md: "h-11 px-4",
+        sm: "h-9 px-3 text-xs",
+        md: "h-10 px-4",
         lg: "h-11 px-5",
-        icon: "size-11 rounded-full",
+        icon: "size-10 rounded-full px-0",
       },
     },
     defaultVariants: {

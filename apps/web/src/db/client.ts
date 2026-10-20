@@ -1,10 +1,12 @@
 import { Pool, neonConfig } from "@neondatabase/serverless"
-import { drizzle } from "drizzle-orm/neon-serverless"
+import { drizzle as drizzleNeon, type NeonDatabase } from "drizzle-orm/neon-serverless"
+import { drizzle as drizzleNodePostgres } from "drizzle-orm/node-postgres"
+import { Pool as NodePostgresPool } from "pg"
 
 import * as schema from "./schema"
 
 /**
- * Drizzle + Neon Postgres client.
+ * Drizzle PostgreSQL client.
  *
  * Why neon-serverless (WebSocket) instead of neon-http:
  *   The HTTP driver silently batches every "transaction" into a single
@@ -46,7 +48,30 @@ if (!databaseUrl) {
   throw new Error("DATABASE_URL is not set")
 }
 
-const pool = new Pool({ connectionString: databaseUrl })
+const databaseAdapter =
+  process.env.DATABASE_ADAPTER ??
+  (process.env.DATABASE_DRIVER === "node-postgres"
+    ? "pg"
+    : process.env.NODE_ENV === "production"
+      ? "pg"
+      : "neon")
 
-export const db = drizzle(pool, { schema })
+if (databaseAdapter !== "pg" && databaseAdapter !== "neon") {
+  throw new Error(`Unsupported DATABASE_ADAPTER: ${databaseAdapter}`)
+}
+
+const useNodePostgres = databaseAdapter === "pg"
+const pool = useNodePostgres
+  ? new NodePostgresPool({ connectionString: databaseUrl })
+  : new Pool({ connectionString: databaseUrl })
+
+// The two Drizzle adapters expose the same relational/query surface used by
+// the application. Mainland production uses node-postgres for RDS sessions,
+// transactions, row locks and advisory locks. Neon remains an explicit
+// optional adapter for non-mainland environments.
+export const db = (
+  useNodePostgres
+    ? drizzleNodePostgres(pool as NodePostgresPool, { schema })
+    : drizzleNeon(pool as Pool, { schema })
+) as unknown as NeonDatabase<typeof schema>
 export { pool }

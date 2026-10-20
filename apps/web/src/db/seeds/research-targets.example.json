@@ -1,0 +1,27 @@
+{
+  "generatedAt": "2026-06-21",
+  "notes": "Copy this file to research-targets.json. The collector opens public search pages and writes observations for later analysis.",
+  "defaults": {
+    "platforms": ["boss_zhipin", "xiaohongshu", "weibo", "zhihu"],
+    "maxTextLength": 2400,
+    "maxLinks": 20,
+    "timeoutMs": 20000,
+    "retryCount": 1,
+    "retryDelayMs": 2000,
+    "delayMs": 1500,
+    "blockAssets": true
+  },
+  "companies": [
+    {
+      "name": "示例科技",
+      "city": "上海",
+      "industry": "企业服务 / AI",
+      "queries": {
+        "boss_zhipin": "示例科技 招聘",
+        "xiaohongshu": "示例科技 面试 工作体验",
+        "weibo": "示例科技 裁员 奖金 招聘",
+        "zhihu": "示例科技 工作体验"
+      }
+    }
+  ]
+}
