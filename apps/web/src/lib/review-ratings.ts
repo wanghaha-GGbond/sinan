@@ -6,7 +6,7 @@ export const reviewRatingDimensionsSchema = z.object({
   leader: z.number().int().min(1).max(5),
   overtime_truth: z.number().int().min(1).max(5),
   promise_delivery: z.number().int().min(1).max(5),
-})
+}).partial()
 
 export type ReviewRatingDimensions = z.infer<typeof reviewRatingDimensionsSchema>
 

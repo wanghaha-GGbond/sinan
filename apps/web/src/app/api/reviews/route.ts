@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
   }
   if (!ratings.success) {
     return NextResponse.json(
-      { error: "请完成薪酬、成长、领导、加班和承诺兑现五项评分" },
+      { error: "细分评分格式不正确" },
       { status: 400 }
     )
   }

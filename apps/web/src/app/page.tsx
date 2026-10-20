@@ -1,138 +1,118 @@
 import Link from "next/link"
-import { ArrowRight, MessageCircleQuestion, Route } from "lucide-react"
+import { Activity, ArrowRight, Building2, MapPin, PenLine, ShieldCheck } from "lucide-react"
 
-import { MetricPill } from "@/components/ui/metric-pill"
-import { ScoreChip } from "@/components/ui/score-chip"
+import { CompanyCard } from "@/components/company/company-card"
 import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
-import { TagPill } from "@/components/ui/tag-pill"
-import { recommendedCompanyItems, reviewDiscussions, userPreference } from "@/lib/mock-data"
+import { companies } from "@/lib/mock-data"
 
 export default function HomePage() {
-  const quickPrefs = [
-    userPreference.targetIndustries[0],
-    userPreference.targetIndustries[1],
-    userPreference.targetCities[0],
-  ].filter(Boolean)
-  const extraCount =
-    userPreference.targetIndustries.length +
-    userPreference.targetCities.length +
-    userPreference.concerns.length -
-    quickPrefs.length
-  const publicDiscussions = reviewDiscussions.filter(
-    (discussion) => discussion.status === "visible" || discussion.status === "limited_visible"
-  )
+  const featuredCompanies = [...companies]
+    .sort((a, b) => b.reviewCount - a.reviewCount)
+    .slice(0, 6)
+  const totalReviews = companies.reduce((total, company) => total + company.reviewCount, 0)
+  const cities = Array.from(new Set(companies.map((company) => company.city)))
 
   return (
-    <section className="mx-auto w-full max-w-page px-4 py-4 sm:px-6" data-testid="home-recommend-feed">
-      <div data-testid="home-brand-hero" className="mb-5 border-b border-border px-1 pb-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-base font-semibold text-foreground">推荐</h2>
-            <p className="text-sm text-muted-foreground">最近被关注</p>
+    <section className="mx-auto w-full max-w-page px-4 py-5 sm:px-6" data-testid="home-recommend-feed">
+      <header data-testid="home-brand-hero" className="border-b border-border pb-6">
+        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-2xl">
+            <p className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
+              <Building2 className="size-4" />
+              公司广场
+            </p>
+            <h1 className="mt-2 text-3xl font-semibold text-foreground sm:text-4xl">先看公司，再决定下一站</h1>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground sm:text-base">
+              浏览真实员工体验，也可以用不到一分钟测评你的现公司或前公司。
+            </p>
           </div>
-          <Route className="size-4 text-primary" />
+          <div className="flex flex-wrap gap-2">
+            <SolidButton asChild variant="primary">
+              <Link href="/submit/review">
+                <PenLine className="size-4" />
+                开始测评
+              </Link>
+            </SolidButton>
+            <SolidButton asChild variant="secondary">
+              <Link href="/companies">
+                全部公司
+                <ArrowRight className="size-4" />
+              </Link>
+            </SolidButton>
+          </div>
         </div>
-        <p className="mt-2 inline-flex rounded-full bg-secondary px-2.5 py-1 text-xs text-secondary-foreground" data-testid="home-preference-hint">
-          你的方向：{quickPrefs.join(" / ")} {extraCount > 0 ? `+${extraCount}` : ""}
-        </p>
+
+        <div className="mt-5 grid grid-cols-3 divide-x divide-border border-y border-border py-3 text-center">
+          <div>
+            <p className="text-xl font-semibold text-foreground">{companies.length}</p>
+            <p className="text-xs text-muted-foreground">已收录公司</p>
+          </div>
+          <div>
+            <p className="text-xl font-semibold text-foreground">{totalReviews.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground">匿名体验</p>
+          </div>
+          <div>
+            <p className="text-xl font-semibold text-foreground">{cities.length}</p>
+            <p className="text-xs text-muted-foreground">热门城市</p>
+          </div>
+        </div>
+      </header>
+
+      <div className="mt-6 flex items-end justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-semibold text-foreground">大家最近在看</h2>
+          <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+            <MapPin className="size-3.5" />
+            上海 · 深圳 · 杭州
+          </p>
+        </div>
+        <Link href="/companies" className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary hover:underline">
+          查看全部
+          <ArrowRight className="size-4" />
+        </Link>
       </div>
 
-      <div className="grid gap-4">
-        {recommendedCompanyItems
-          .filter((item) => ["northstar-tech", "river-finance", "lighthouse-media"].includes(item.companyId))
-          .filter((item, index, items) => items.findIndex((candidate) => candidate.companyId === item.companyId) === index)
-          .map((item) => {
-            const companyDiscussions = publicDiscussions
-              .filter((discussion) => discussion.companyId === item.companyId)
-              .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-            const latestDiscussion =
-              companyDiscussions.find((discussion) => !discussion.tags?.includes("面试")) ??
-              companyDiscussions[0]
+      <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {featuredCompanies.map((company) => (
+          <div key={company.id} data-testid="recommend-company-card">
+            <CompanyCard company={company} />
+          </div>
+        ))}
+      </div>
 
-            return (
-          <SolidCard key={item.id} data-testid="recommend-company-card" variant="default" className="p-5 transition-transform hover:-translate-y-0.5">
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <TagPill tone="match" className="" selected={false}>{item.recommendReason}</TagPill>
-                <span className="text-xs text-muted-foreground">匹配：{item.matchedPreferences.slice(0, 2).join(" / ")}</span>
-              </div>
-
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <h3 className="truncate text-lg font-semibold text-foreground">{item.companyName}</h3>
-                  <p className="mt-1 flex flex-wrap gap-x-2.5 gap-y-1 text-sm text-muted-foreground">
-                    <span>{item.industry}</span>
-                    <span>{item.city}</span>
-                    <span>{item.size}</span>
-                  </p>
-                </div>
-                <ScoreChip score={item.directionScore} className="shrink-0" data-testid="recommend-direction-score" />
-              </div>
-
-              <p className="flex flex-wrap gap-x-2.5 gap-y-1 text-xs text-muted-foreground">
-                <span>{item.reviewCount} 条评价</span>
-                <span>{item.recommendationRate}% 推荐</span>
-              </p>
-
-              <div className="grid grid-cols-2 gap-2" data-testid="recommend-metrics">
-                {item.highlightedMetrics.slice(0, 2).map((metric) => (
-                  <MetricPill key={metric.label} label={metric.label} score={metric.score} />
-                ))}
-              </div>
-
-              {item.vibeTagName ? (
-                <TagPill tone="neutral" data-testid="recommend-vibe-tag">
-                  公司体感：{item.vibeTagName}
-                </TagPill>
-              ) : null}
-              {item.vibeTagSummary ? <p className="line-clamp-2 text-sm text-muted-foreground">{item.vibeTagSummary}</p> : null}
-
-              <div className="border-y border-border py-3" data-testid="recommend-discussion-preview">
-                <div className="flex items-start gap-3">
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-primary">
-                    <MessageCircleQuestion className="size-4" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm font-semibold text-foreground">讨论区</p>
-                      <span className="text-xs text-muted-foreground">{companyDiscussions.length} 条讨论</span>
-                    </div>
-                    <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted-foreground">
-                      {latestDiscussion?.maskedContent ?? latestDiscussion?.content ?? "还没有讨论，来问一个具体问题。"}
-                    </p>
-                    <Link
-                      href={`/community?companyId=${item.companyId}`}
-                      className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-primary hover:underline"
-                    >
-                      {latestDiscussion ? "进入讨论" : "去讨论区"}
-                      <ArrowRight className="ml-1 size-4" />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between gap-3 text-sm">
-                <p className="text-muted-foreground">
-                  近 7 天新增 {item.recentReviewCount} 条
-                  {typeof item.officeExperienceScore === "number" ? (
-                    <span data-testid="recommend-office-experience"> · 办公 {item.officeExperienceScore.toFixed(1)}</span>
-                  ) : null}
-                </p>
-                <SolidButton asChild variant="primary" size="sm">
-                  <Link href={`/company/${item.companyId}`} className="shrink-0">
-                    看这家公司
-                    <ArrowRight className="size-4" />
-                  </Link>
-                </SolidButton>
-              </div>
+      <section className="mt-8 border-y border-border bg-foreground px-5 py-6 text-white sm:px-6" aria-labelledby="pulse-home-title">
+        <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary text-white">
+              <Activity className="size-5" />
+            </span>
+            <div>
+              <p className="text-xs font-semibold text-white/60">COMPANY PULSE</p>
+              <h2 id="pulse-home-title" className="mt-1 text-xl font-semibold">把本周工时、下班时间和恢复度变成一张圆环周报</h2>
+              <p className="mt-2 text-sm text-white/70">每天两个问题，10 秒记录；公司趋势达到 30 人后匿名显示。</p>
             </div>
-          </SolidCard>
-            )
-          })}
-      </div>
+          </div>
+          <SolidButton asChild variant="secondary" className="shrink-0">
+            <Link href="/pulse">
+              查看我的 Pulse
+              <ArrowRight className="size-4" />
+            </Link>
+          </SolidButton>
+        </div>
+      </section>
 
-      <p className="mt-6 text-center text-sm text-muted-foreground">更多公司方向正在整理中。</p>
+      <div className="mt-8 flex flex-col gap-4 border-y border-border py-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-3">
+          <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary" />
+          <div>
+            <h2 className="font-semibold text-foreground">你经历过的公司，也值得被看见</h2>
+            <p className="mt-1 text-sm text-muted-foreground">无需社保号或雇佣证明，只选公司、岗位、状态和 Base。</p>
+          </div>
+        </div>
+        <SolidButton asChild variant="dark" className="shrink-0">
+          <Link href="/submit/review">测评现公司 / 前公司</Link>
+        </SolidButton>
+      </div>
     </section>
   )
 }

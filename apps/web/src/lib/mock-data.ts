@@ -1044,6 +1044,64 @@ export function calculateOfficeExperienceScore(questionnaire?: Review["questionn
   return Number((values.reduce((acc, current) => acc + current, 0) / values.length).toFixed(1))
 }
 
+function createDirectoryCompany(input: {
+  id: string
+  name: string
+  industry: string
+  city: string
+  size: string
+  stage: string
+  directionScore: number
+  recommendationRate: number
+  reviewCount: number
+  salaryRange: string
+  riskTags: string[]
+  highlights: string[]
+}): Company {
+  return {
+    ...input,
+    shortName: input.name.replace(/科技|系统|智能|研究院|平台/g, "").slice(0, 8),
+    claimedStatus: "unclaimed",
+    verifiedIdentityCount: Math.max(18, Math.round(input.reviewCount * 0.28)),
+    source: "mock",
+    pendingReview: false,
+    reviewStatus: "reviewable",
+    financingStage: input.stage,
+    description: `${input.city}的${input.industry}团队，信息来自匿名员工体验汇总。`,
+    riskLevel: input.directionScore >= 7.5 ? "低" : input.directionScore >= 6.5 ? "中" : "高",
+    trustLevel: input.reviewCount >= 150 ? "可信等级 B+" : "可信等级 B",
+    compassBriefs: [
+      {
+        id: `${input.id}-brief`,
+        text: input.highlights[0] ?? "建议结合岗位、团队和工作城市继续核对具体体验。",
+        score: input.directionScore,
+        helpful: Math.round(input.reviewCount * 0.35),
+        source: "在职员工",
+      },
+    ],
+    lowScoreReasons: [],
+    recommendationReasons: [],
+    dimensions: [
+      { key: "growth", label: "成长空间", score: input.directionScore, description: "项目复杂度与学习密度" },
+      { key: "management", label: "管理清晰度", score: Math.max(0, input.directionScore - 0.4), description: "目标与反馈是否稳定" },
+      { key: "workload", label: "工作负荷", score: Math.max(0, input.directionScore - 0.8), description: "节奏与恢复时间" },
+      { key: "pay", label: "薪资兑现", score: Math.min(10, input.directionScore + 0.3), description: "薪资与奖金兑现" },
+      { key: "respect", label: "尊重与边界", score: input.directionScore, description: "沟通方式与个人边界" },
+    ],
+    scoreDistribution: [],
+    trend: [],
+    reviews: [],
+  }
+}
+
+const directoryCompanies: Company[] = [
+  createDirectoryCompany({ id: "aurora-autonomy", name: "极光自动驾驶系统", industry: "自动驾驶", city: "深圳", size: "1000-3000 人", stage: "B+ 轮", directionScore: 7.3, recommendationRate: 58, reviewCount: 182, salaryRange: "28k-48k x 14", riskTags: ["项目节奏快", "量产节点压力"], highlights: ["算法与工程协作密度高", "核心项目成长快"] }),
+  createDirectoryCompany({ id: "cloudpulse-energy", name: "云脉新能源智能", industry: "新能源", city: "杭州", size: "1000-3000 人", stage: "D 轮", directionScore: 6.8, recommendationRate: 55, reviewCount: 194, salaryRange: "22k-38k x 14", riskTags: ["跨部门协作", "业务变化"], highlights: ["产业项目完整", "产品岗位参与度高"] }),
+  createDirectoryCompany({ id: "sharpbuild-hardware", name: "锐构硬件系统", industry: "智能硬件", city: "深圳", size: "300-500 人", stage: "B 轮", directionScore: 7.7, recommendationRate: 64, reviewCount: 122, salaryRange: "24k-40k x 13", riskTags: ["交付节点集中", "岗位边界清晰"], highlights: ["硬件研发流程稳定", "薪资兑现度较好"] }),
+  createDirectoryCompany({ id: "cleardomain-platform", name: "澄域互联网平台", industry: "互联网平台", city: "杭州", size: "3000+ 人", stage: "已上市", directionScore: 6.5, recommendationRate: 53, reviewCount: 258, salaryRange: "20k-36k x 15", riskTags: ["组织层级多", "成长依赖团队"], highlights: ["业务稳定、流程成熟", "内部岗位选择多"] }),
+  createDirectoryCompany({ id: "starrail-robotics", name: "星轨机器人研究院", industry: "机器人", city: "上海", size: "100-300 人", stage: "A+ 轮", directionScore: 7.1, recommendationRate: 59, reviewCount: 96, salaryRange: "26k-44k x 13", riskTags: ["研发压力", "管理体系建设中"], highlights: ["技术探索空间大", "机器人方向项目密度高"] }),
+]
+
 export const companies: Company[] = [
   {
     id: "northstar-tech",
@@ -1349,6 +1407,7 @@ export const companies: Company[] = [
     scoreOfficeExperience: 7.0,
     reviews: allReviews.filter((review) => review.companyId === "river-finance"),
   },
+  ...directoryCompanies,
 ]
 
 export function getCompany(id: string) {
@@ -1660,7 +1719,7 @@ export const recommendedCompanyItems: RecommendedCompanyItem[] = [
   },
   {
     id: "rec-2",
-    companyId: "northstar-tech",
+    companyId: "aurora-autonomy",
     companyName: "极光自动驾驶系统",
     industry: "自动驾驶",
     city: "深圳",
@@ -1708,7 +1767,7 @@ export const recommendedCompanyItems: RecommendedCompanyItem[] = [
   },
   {
     id: "rec-4",
-    companyId: "northstar-tech",
+    companyId: "cloudpulse-energy",
     companyName: "云脉新能源智能",
     industry: "新能源",
     city: "杭州",
@@ -1756,7 +1815,7 @@ export const recommendedCompanyItems: RecommendedCompanyItem[] = [
   },
   {
     id: "rec-6",
-    companyId: "river-finance",
+    companyId: "sharpbuild-hardware",
     companyName: "锐构硬件系统",
     industry: "硬件",
     city: "深圳",
@@ -1780,7 +1839,7 @@ export const recommendedCompanyItems: RecommendedCompanyItem[] = [
   },
   {
     id: "rec-7",
-    companyId: "lighthouse-media",
+    companyId: "cleardomain-platform",
     companyName: "澄域互联网平台",
     industry: "互联网平台",
     city: "杭州",
@@ -1804,7 +1863,7 @@ export const recommendedCompanyItems: RecommendedCompanyItem[] = [
   },
   {
     id: "rec-8",
-    companyId: "northstar-tech",
+    companyId: "starrail-robotics",
     companyName: "星轨机器人研究院",
     industry: "机器人",
     city: "上海",

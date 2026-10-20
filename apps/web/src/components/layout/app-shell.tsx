@@ -2,6 +2,8 @@
 
 import Link from "next/link"
 import {
+  Activity,
+  Building2,
   Compass,
   LogOut,
   MessageSquareText,
@@ -18,6 +20,8 @@ import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { useAuth } from "@/lib/auth-context"
 
 const intelLinks = [
+  { href: "/companies", label: "公司", icon: Building2 },
+  { href: "/pulse", label: "Pulse", icon: Activity },
   // Plan S0 T0.3 (2026-06-10): salaries / jobs / benefits moved out of
   // the main nav. The routes are still live (deep-link friendly), but
   // the surfaces are now reachable through the company page and search
