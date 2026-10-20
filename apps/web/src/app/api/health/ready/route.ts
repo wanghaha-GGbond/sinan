@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm"
 import { NextResponse } from "next/server"
+import { readinessContract, verifyReadinessSchema } from "@/lib/server/readiness-schema"
 
 export const dynamic = "force-dynamic"
 
@@ -76,8 +77,16 @@ export async function GET() {
   try {
     const { db } = await import("@/db/client")
     await db.execute(sql`select 1`)
+    try {
+      await verifyReadinessSchema((query) => db.execute(query))
+    } catch {
+      return NextResponse.json(
+        { status: "not_ready", configuration: "valid", database: "reachable", schema: "incompatible" },
+        { status: 503, headers: { "Cache-Control": "no-store" } },
+      )
+    }
     return NextResponse.json(
-      { status: "ready", configuration: "valid", database: "reachable" },
+      { status: "ready", configuration: "valid", database: "reachable", schema: "compatible", release: process.env.APP_RELEASE, ...readinessContract },
       { headers: { "Cache-Control": "no-store" } }
     )
   } catch {

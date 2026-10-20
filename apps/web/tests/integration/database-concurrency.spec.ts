@@ -1,9 +1,9 @@
 import { randomUUID } from "node:crypto"
 
-import { expect, test } from "@playwright/test"
+import { expect, test } from "../database-fixture"
 import { eq, inArray } from "drizzle-orm"
 
-import { db, pool } from "../../src/db/client"
+import { db } from "../../src/db/client"
 import { auctionBids, auctions } from "../../src/db/schema/auctions"
 import { companies } from "../../src/db/schema/companies"
 import { companyVerifications } from "../../src/db/schema/company-verifications"
@@ -78,10 +78,6 @@ test.afterEach(async () => {
     await db.delete(users).where(inArray(users.id, createdUserIds))
     createdUserIds.length = 0
   }
-})
-
-test.afterAll(async () => {
-  await pool.end()
 })
 
 test("an invite can be consumed by only one concurrent registration", async () => {

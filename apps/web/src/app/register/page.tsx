@@ -248,6 +248,8 @@ export default function RegisterPage() {
               ref={passwordRef}
               id="register-password"
               type="password"
+              autoComplete="new-password"
+              maxLength={128}
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value)

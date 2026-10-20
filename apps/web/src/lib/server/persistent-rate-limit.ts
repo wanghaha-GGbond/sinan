@@ -2,6 +2,7 @@ import crypto from "node:crypto"
 import { sql } from "drizzle-orm"
 
 import { checkRateLimit, type RateLimitConfig } from "@/lib/server/rate-limit"
+import { isDevAuthEnabled } from "@/lib/server/dev-auth"
 
 const CLEANUP_INTERVAL_MS = 5 * 60 * 1000
 let lastCleanupAt = 0
@@ -14,26 +15,23 @@ let lastCleanupAt = 0
 export async function checkPersistentRateLimit(
   key: string,
   config: RateLimitConfig,
-): Promise<{ allowed: true } | { allowed: false; retryAfter: number }> {
-  const isProduction =
-    process.env.NODE_ENV === "production" ||
-    process.env.VERCEL_ENV === "production" ||
-    process.env.NEXT_PUBLIC_APP_ENV === "production"
+): Promise<{ allowed: true } | { allowed: false; retryAfter: number; unavailable?: true }> {
+  const allowLocalFallback = isDevAuthEnabled()
 
   // Abuse-sensitive writes must not silently downgrade to a process-local
   // limiter in a deployed environment. If the database is unavailable, fail
   // closed until the operator restores the persistent bucket.
   if (!process.env.DATABASE_URL) {
-    if (isProduction) {
+    if (!allowLocalFallback) {
       console.error("[rate-limit] DATABASE_URL is required for production limits")
-      return { allowed: false, retryAfter: 60 }
+      return { allowed: false, retryAfter: 60, unavailable: true }
     }
     return checkRateLimit(key, config)
   }
 
   const bucketKey = crypto.createHash("sha256").update(key).digest("hex")
-  const now = new Date()
-  const resetAt = new Date(now.getTime() + config.windowSeconds * 1000)
+  // Creation, expiry and retry calculations use the same database clock.
+  const resetAt = sql`clock_timestamp() + ${config.windowSeconds} * interval '1 second'`
 
   try {
     const { db } = await import("@/db/client")
@@ -49,21 +47,22 @@ export async function checkPersistentRateLimit(
 
     const [row] = await db
       .insert(securityRateLimits)
-      .values({ key: bucketKey, count: 1, resetAt, updatedAt: now })
+      .values({ key: bucketKey, count: 1, resetAt, updatedAt: sql`clock_timestamp()` })
       .onConflictDoUpdate({
         target: securityRateLimits.key,
         set: {
-          count: sql`CASE WHEN ${securityRateLimits.resetAt} <= now() THEN 1 ELSE ${securityRateLimits.count} + 1 END`,
-          resetAt: sql`CASE WHEN ${securityRateLimits.resetAt} <= now() THEN ${resetAt} ELSE ${securityRateLimits.resetAt} END`,
-          updatedAt: now,
+          count: sql`CASE WHEN ${securityRateLimits.resetAt} <= clock_timestamp() THEN 1 ELSE ${securityRateLimits.count} + 1 END`,
+          resetAt: sql`CASE WHEN ${securityRateLimits.resetAt} <= clock_timestamp() THEN ${resetAt} ELSE ${securityRateLimits.resetAt} END`,
+          updatedAt: sql`clock_timestamp()`,
         },
       })
-      .returning({ count: securityRateLimits.count, resetAt: securityRateLimits.resetAt })
+      .returning({ count: securityRateLimits.count,
+        retryAfter: sql<number>`ceil(extract(epoch from (${securityRateLimits.resetAt} - clock_timestamp())))` })
 
     if (!row || Number(row.count) > config.maxRequests) {
       const retryAfter = Math.max(
         1,
-        Math.ceil(((row?.resetAt?.getTime() ?? resetAt.getTime()) - Date.now()) / 1000),
+        Number(row?.retryAfter ?? config.windowSeconds),
       )
       return { allowed: false, retryAfter }
     }
@@ -72,8 +71,8 @@ export async function checkPersistentRateLimit(
     // A missing migration should not take down local previews. Production
     // instead fails closed so a schema outage cannot reopen an unlimited
     // anonymous write path.
-    console.error("[rate-limit] persistent bucket unavailable:", error)
-    if (isProduction) return { allowed: false, retryAfter: 60 }
+    console.error(JSON.stringify({ event: "rate_limit_unavailable", errorType: error instanceof Error ? error.name : "unknown" }))
+    if (!allowLocalFallback) return { allowed: false, retryAfter: 60, unavailable: true }
     return checkRateLimit(key, config)
   }
 }

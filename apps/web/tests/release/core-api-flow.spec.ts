@@ -1,9 +1,9 @@
 import { randomUUID } from "node:crypto"
 
-import { expect, test } from "@playwright/test"
+import { expect, test } from "../database-fixture"
 import { eq, inArray } from "drizzle-orm"
 
-import { db, pool } from "../../src/db/client"
+import { db } from "../../src/db/client"
 import { anonymousProfiles } from "../../src/db/schema/anonymous-profiles"
 import { companies } from "../../src/db/schema/companies"
 import { invites } from "../../src/db/schema/invites"
@@ -11,6 +11,10 @@ import { moderationEvents } from "../../src/db/schema/moderation-events"
 import { reviews } from "../../src/db/schema/reviews"
 import { users } from "../../src/db/schema/users"
 import { hashPassword, signToken } from "../../src/lib/server/auth"
+
+// Simulate a trusted proxy on the local test server; each run owns its bucket.
+const testClientId = randomUUID().replaceAll("-", "")
+test.use({ extraHTTPHeaders: { "cf-connecting-ip": `2001:db8:${testClientId.slice(0, 4)}:${testClientId.slice(4, 8)}::1` } })
 
 let inviterId = ""
 let moderatorId = ""
@@ -51,7 +55,6 @@ test.afterAll(async () => {
   if (companyId) await db.delete(companies).where(eq(companies.id, companyId))
   const ids = [inviterId, moderatorId, registeredUserId].filter(Boolean)
   if (ids.length) await db.delete(users).where(inArray(users.id, ids))
-  await pool.end()
 })
 
 test("邀请注册、评价审核公开和账号注销形成真实数据库闭环", async ({ request }) => {

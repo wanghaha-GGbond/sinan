@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { and, eq, isNull, or } from "drizzle-orm"
 import { users } from "@/db/schema/users"
 import { hashPassword, setAuthCookie } from "@/lib/server/auth"
-import { checkRateLimit, getRateLimitKey } from "@/lib/server/rate-limit"
+import { checkAuthIpLimit } from "@/lib/server/auth-rate-limit"
+import { isNewPasswordValid } from "@/lib/server/password-recovery-policy"
 import {
   consumeInvite,
   findInvite,
@@ -18,6 +19,7 @@ export async function POST(request: NextRequest) {
   let body: Record<string, unknown>
   try {
     body = await request.json()
+    if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Invalid body")
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
   }
@@ -36,7 +38,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Validate email format
-  if (email && !EMAIL_RE.test(email)) {
+  if (email && (email.length > 254 || !EMAIL_RE.test(email))) {
     return NextResponse.json(
       { error: "Invalid email format" },
       { status: 400 }
@@ -52,17 +54,13 @@ export async function POST(request: NextRequest) {
   }
 
   // Password requirements
-  if (password.length < 8) {
+  if (!isNewPasswordValid(password)) {
     return NextResponse.json(
-      { error: "Password must be at least 8 characters" },
+      { error: "Password must be 8–128 characters" },
       { status: 400 }
     )
   }
 
-  // Hash password BEFORE database check so the timing profile is identical
-  // whether the account already exists or is new — prevents timing-based
-  // enumeration of registered emails/phones.
-  const passwordHash = await hashPassword(password)
   const displayName = email
     ? email.split("@")[0]
     : `用户${phone?.slice(-4) ?? ""}`
@@ -73,14 +71,17 @@ export async function POST(request: NextRequest) {
 
   // Rate limit only actual registration attempts (after validation passes),
   // so typos and format errors don't consume the quota.
-  const rlKey = `register:${getRateLimitKey(request, "/api/auth/register")}`
-  const rl = checkRateLimit(rlKey, { maxRequests: 3, windowSeconds: 3600 })
+  const rl = await checkAuthIpLimit(request, "register")
   if (!rl.allowed) {
+    if (rl.unavailable) return NextResponse.json({ error: "Service unavailable" }, { status: 503 })
     return NextResponse.json(
       { error: "Too many registration attempts", retryAfter: rl.retryAfter },
-      { status: 429 }
+      { status: 429, headers: { "Retry-After": String(rl.retryAfter) } }
     )
   }
+
+  // Expensive password hashing must happen after the shared abuse check.
+  const passwordHash = await hashPassword(password)
 
   // Explicit local-only preview mode. Never infer a bypass merely because a
   // deployed database variable is missing.
@@ -165,7 +166,7 @@ export async function POST(request: NextRequest) {
       return newUser
     })
 
-    const token = await setAuthCookie({ userId: user.id, role: user.role })
+    const token = await setAuthCookie({ userId: user.id, role: user.role, sessionVersion: user.sessionVersion })
 
     return NextResponse.json(
       {
@@ -196,7 +197,7 @@ export async function POST(request: NextRequest) {
         { status: 409 }
       )
     }
-    console.error("POST /api/auth/register failed:", error)
+    console.error(JSON.stringify({ event: "registration_failed", release: process.env.APP_RELEASE }))
     return NextResponse.json(
       { error: "Database not configured" },
       { status: 503 }

@@ -4,6 +4,8 @@
 
 ## 阅读顺序
 
+当前海外 Web 上线进度与验收：[web-release-progress.md](web-release-progress.md)。
+
 | # | 文档 | 内容 | 读者 |
 |---|---|---|---|
 | 01 | [01-vision.md](01-vision.md) | 产品定位、核心循环、取舍逻辑、已拍板决议 | 所有人，先读 |

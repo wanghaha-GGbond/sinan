@@ -27,6 +27,7 @@ async function sendViaResend(msg: MailMessage): Promise<void> {
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
+    signal: AbortSignal.timeout(10_000),
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
@@ -40,9 +41,18 @@ async function sendViaResend(msg: MailMessage): Promise<void> {
   })
 
   if (!res.ok) {
-    const body = await res.text().catch(() => "")
-    throw new Error(`Resend API error ${res.status}: ${body}`)
+    // Provider response bodies may echo recipients or message contents.
+    throw new Error(`Resend API error ${res.status}`)
   }
+}
+
+/** Configuration check only; actual delivery still requires a smoke test. */
+export function isMailConfigured(): boolean {
+  if (!process.env.DATABASE_URL || !process.env.MAIL_FROM_DOMAIN) return false
+  const provider = process.env.MAIL_PROVIDER ?? "aliyun-direct-mail"
+  if (provider === "resend") return Boolean(process.env.RESEND_API_KEY)
+  if (provider === "aliyun-direct-mail") return Boolean(process.env.ALIYUN_DM_ACCOUNT_NAME)
+  return false
 }
 
 async function sendViaAliyunDirectMail(msg: MailMessage): Promise<void> {

@@ -1,9 +1,6 @@
-name: Release Web to Alibaba Cloud
+name: Legacy Web release to Alibaba Cloud (manual only)
 
 on:
-  push:
-    tags:
-      - "web-v*"
   workflow_dispatch:
     inputs:
       release_tag:
@@ -26,6 +23,7 @@ concurrency:
 
 jobs:
   release:
+    if: vars.WEB_PRODUCTION_PLATFORM == 'aliyun'
     name: Build, scan, back up and deploy immutable images
     runs-on: ubuntu-latest
     timeout-minutes: 55

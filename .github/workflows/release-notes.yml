@@ -51,7 +51,7 @@ jobs:
             const metadata = [
               "## Release metadata",
               `- Git SHA: \`${context.sha}\``,
-              `- Image SHA: \`${context.sha}\``,
+              "- Deployment status: source tagged only; verify the platform release record before publishing",
               `- Current database migration: \`${currentMigration}\``,
               "- App Store release: manual",
               "",
@@ -63,6 +63,6 @@ jobs:
               target_commitish: context.sha,
               name: `${prefix} ${tag}`,
               body: metadata + generated.data.body,
-              draft: false,
+              draft: prefix === "Web",
               prerelease: tag.includes("-") && !/^web-v\d+\.\d+\.\d+$/.test(tag) && !/^ios-v\d+\.\d+\.\d+$/.test(tag),
             })
