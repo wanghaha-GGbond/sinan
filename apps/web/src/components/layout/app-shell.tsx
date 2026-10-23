@@ -74,12 +74,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <MainNav />
       <main>{children}</main>
       <footer className="border-t border-border">
-        <div className="mx-auto flex w-full max-w-page flex-col gap-3 px-4 py-7 text-sm text-muted-foreground sm:px-6 md:flex-row md:items-center md:justify-between">
+        <div className="mx-auto flex w-full max-w-page flex-col gap-3 px-4 py-7 text-sm text-muted-foreground sm:px-8 md:flex-row md:items-center md:justify-between">
           <p>在场</p>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
-            <Link href="/legal/privacy" className="hover:text-foreground">隐私政策</Link>
-            <Link href="/legal/terms" className="hover:text-foreground">用户协议</Link>
-            <Link href="/settings/account" className="hover:text-foreground">账号与数据</Link>
+            <Link href="/legal/privacy" className="inline-flex min-h-11 items-center hover:text-foreground">隐私政策</Link>
+            <Link href="/legal/terms" className="inline-flex min-h-11 items-center hover:text-foreground">用户协议</Link>
+            <Link href="/settings/account" className="inline-flex min-h-11 items-center hover:text-foreground">账号与数据</Link>
             {icpFilingNumber ? (
               <a href="https://beian.miit.gov.cn/" target="_blank" rel="noreferrer" className="hover:text-foreground">{icpFilingNumber}</a>
             ) : null}

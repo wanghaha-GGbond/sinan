@@ -1,15 +1,15 @@
 import Link from "next/link"
-import { BadgeCheck, BarChart3, ChevronRight, MapPin, ShieldCheck } from "lucide-react"
+import { BadgeCheck, ChevronRight, MapPin, PenLine, ShieldCheck } from "lucide-react"
 import { notFound } from "next/navigation"
 
 import { CompanyDecisionInsights } from "@/components/company/company-decision-insights"
 import { CompanyEvidenceRail } from "@/components/company/company-evidence-rail"
 import { CompanyReviewFeed } from "@/components/company/company-review-feed"
+import { CompanyRating, companyDisplayScore } from "@/components/company/company-rating"
 import { DepartmentInsights } from "@/components/company/department-insights"
 import { PromiseRecords } from "@/components/company/promise-records"
 import { SentimentTrend } from "@/components/company/sentiment-trend"
 import { ErrorState } from "@/components/common/error-state"
-import { EmptyState } from "@/components/common/state-blocks"
 import { WebButton } from "@/components/ui/web-button"
 import { WebSurface } from "@/components/ui/web-surface"
 import type { CompanyListItem } from "@/lib/types"
@@ -35,6 +35,8 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
 
   if (!company) notFound()
   const mappedReviews = reviewItems.map(mapPublicReview)
+  const reviewCount = company.reviewCount ?? 0
+  const displayScore = companyDisplayScore(company.directionScore, reviewCount)
 
   if (company.reviewStatus === "pending_review") {
     return (
@@ -50,70 +52,72 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
   }
 
   return (
-    <section className="mx-auto w-full max-w-[1340px] px-4 py-6 sm:px-6 lg:px-0 lg:pb-8 lg:pt-6">
-      <div className="mb-5 flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Link href="/search" className="hover:text-foreground">找公司</Link>
+    <section className="mx-auto w-full max-w-page px-4 pb-12 pt-4 sm:px-8 sm:pt-6">
+      <nav aria-label="面包屑" className="mb-4 flex items-center gap-1.5 text-sm text-muted-foreground">
+        <Link href="/search" className="inline-flex min-h-11 items-center hover:text-foreground">找公司</Link>
         <ChevronRight className="size-3.5" aria-hidden="true" />
         <span>{company.name}</span>
-      </div>
+      </nav>
 
-      <header className="border-b border-border pb-0">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex min-w-0 items-start gap-5 lg:gap-10">
-            <div className="flex size-20 shrink-0 items-center justify-center rounded-2xl border border-border bg-card text-primary-deep sm:size-24 lg:size-32" aria-label={`${company.name}公司标志`} role="img">
-              <BarChart3 className="size-9 sm:size-11 lg:size-14" strokeWidth={1.5} />
+      <header className="border-b border-border">
+        <div className="flex flex-col gap-6 pb-6 lg:flex-row lg:items-start lg:justify-between lg:gap-10">
+          <div className="flex min-w-0 items-start gap-4 sm:gap-5">
+            <div className="grid size-14 shrink-0 place-items-center rounded-lg border border-input bg-muted text-xl font-semibold text-foreground sm:size-16" aria-hidden="true">
+              {(company.shortName ?? company.name).slice(0, 1)}
             </div>
-            <div className="min-w-0 lg:ml-7">
-              <h1 className="truncate text-[2rem] font-semibold leading-tight tracking-[-0.035em] text-foreground sm:text-[2.25rem]">{company.name}</h1>
-              <p className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+            <div className="min-w-0">
+              <h1 className="text-2xl font-semibold leading-tight text-foreground sm:text-3xl">{company.name}</h1>
+              <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
                 <span>{company.industry}</span>
                 <span className="inline-flex items-center gap-1"><MapPin className="size-3.5" />{company.city}</span>
+                {company.size ? <span>{company.size}</span> : null}
                 {company.claimedStatus === "claimed" ? <span className="inline-flex items-center gap-1 text-primary-deep"><BadgeCheck className="size-3.5" />企业已认证</span> : null}
               </p>
-              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2.5">
-                <span className="text-[2rem] font-semibold leading-none tabular-nums text-primary-deep">{(company.directionScore ?? 0).toFixed(1)}</span>
-                <span className="text-base tracking-[0.16em] text-primary" aria-label="公司评分">★★★★☆</span>
-                <span className="text-sm text-muted-foreground">{(company.reviewCount ?? 0).toLocaleString()} 条评价</span>
-                <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground"><ShieldCheck className="size-4 text-primary" />匿名评价 · 人工审核</span>
-              </div>
             </div>
           </div>
-          <div className="flex shrink-0 flex-col items-start gap-3 lg:items-end lg:pt-1 lg:pr-6">
-            <div className="flex items-center gap-4">
-              <WebButton variant="secondary" className="lg:min-h-[52px] lg:min-w-[132px] lg:px-7">关注公司</WebButton>
-              <WebButton asChild variant="primary" className="lg:min-h-[52px] lg:min-w-[126px] lg:px-7"><Link href={`/submit/review?companyId=${encodeURIComponent(company.id)}`}>写评价</Link></WebButton>
+          <div className="flex flex-wrap items-end justify-between gap-5 border-t border-border pt-5 sm:justify-start lg:shrink-0 lg:justify-end lg:border-0 lg:pt-0">
+            <div>
+              <CompanyRating score={displayScore} prominent />
+              <Link href={`/company/${company.id}/reviews`} className="mt-1 block text-sm text-muted-foreground hover:text-foreground hover:underline">{reviewCount.toLocaleString()} 条公开评价</Link>
             </div>
-            <p className="text-xs text-muted-foreground">{(company.reviewCount ?? 0).toLocaleString()} 条公开评价 · {company.verifiedIdentityCount ?? 0} 位验证贡献者</p>
+            <WebButton asChild variant="primary"><Link href={`/submit/review?companyId=${encodeURIComponent(company.id)}`}><PenLine className="size-4" aria-hidden="true" />写评价</Link></WebButton>
           </div>
         </div>
-        <nav className="mt-7 flex gap-7 overflow-x-auto" aria-label="公司信息导航">
+        <p className="inline-flex items-center gap-1.5 pb-5 text-xs text-muted-foreground"><ShieldCheck className="size-4 shrink-0" aria-hidden="true" />匿名评价 · 人工审核 · {company.verifiedIdentityCount ?? 0} 位验证贡献者</p>
+        <nav className="flex gap-8 overflow-x-auto" aria-label="公司信息导航">
           {[
             ["概览", `/company/${company.id}`],
             ["评价", `/company/${company.id}/reviews`],
             ["评分", `/company/${company.id}/ratings`],
             ["承诺", `/company/${company.id}/promises`],
           ].map(([label, href]) => (
-            <Link key={href} href={href} className={`shrink-0 border-b-2 pb-3.5 text-sm font-semibold ${label === "评价" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+            <Link key={href} href={href} aria-current={label === "概览" ? "page" : undefined} className={`inline-flex min-h-12 shrink-0 items-center border-b-2 px-1 text-sm font-semibold ${label === "概览" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
               {label}
             </Link>
           ))}
         </nav>
       </header>
 
-      <div className="mt-4"><CompanyDecisionInsights company={company} /></div>
+      <div className="mt-8"><CompanyDecisionInsights company={company} /></div>
 
-      <div className="mt-4 grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
+      <div className="mt-8 grid gap-8 min-[1200px]:grid-cols-[minmax(0,1fr)_280px]">
         <div className="min-w-0">
-          {mappedReviews.length === 0 ? <EmptyState title="暂无评价" /> : <div data-testid="company-review-feed" className="min-w-0"><CompanyReviewFeed companyId={company.id} reviews={mappedReviews} reviewCount={company.reviewCount ?? mappedReviews.length} previewLimit={1} /></div>}
+          <h2 className="mb-5 text-xl font-semibold">评价概览</h2>
+          {mappedReviews.length === 0 ? (
+            <div className="border-y border-border py-10">
+              <h3 className="text-lg font-semibold">暂无评价</h3>
+              <p className="mt-2 text-sm text-muted-foreground">样本正在积累中。评价审核通过后公开展示，暂无评分不代表负面评价。</p>
+            </div>
+          ) : <div data-testid="company-review-feed" className="min-w-0"><CompanyReviewFeed companyId={company.id} reviews={mappedReviews} reviewCount={company.reviewCount ?? mappedReviews.length} previewLimit={1} /></div>}
+          <div className="mt-8">
+            <DepartmentInsights insights={departmentInsights} />
+            <PromiseRecords companyId={company.id} />
+            <SentimentTrend companyId={company.id} companyName={company.name} />
+          </div>
         </div>
         <CompanyEvidenceRail company={company} />
       </div>
 
-      <div className="mt-8">
-        <DepartmentInsights insights={departmentInsights} />
-        <PromiseRecords companyId={company.id} />
-        <SentimentTrend companyId={company.id} companyName={company.name} />
-      </div>
     </section>
   )
 }

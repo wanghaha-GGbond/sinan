@@ -43,50 +43,51 @@ export function CompanyReviewFeed({ companyId, reviews, reviewCount, previewLimi
   }, [activeTab, reviews, selectedTag])
   const visibleReviews = previewLimit ? filteredReviews.slice(0, previewLimit) : filteredReviews
 
-  const filterLabels = ["职位级别", "部门", "工作年限", "好评度", "更多筛选"]
+  const filterLabels = ["职位级别", "部门", "工作年限", "好评度"]
 
   return (
-    <div className="web-surface web-surface-base overflow-hidden">
-      <div className="flex flex-wrap items-center gap-2 border-b border-border px-5 pb-3 pt-3">
+    <div className="min-w-0 border-y border-border">
+      <div className="flex flex-wrap items-center gap-2 border-b border-border py-3">
         <div className="mr-1 flex items-center gap-2 text-sm font-semibold text-foreground">
           <SlidersHorizontal className="size-4 text-muted-foreground" aria-hidden="true" />
           筛选评价
         </div>
-        {filterLabels.map((label) => (
           <button
-            key={label}
             type="button"
-            className="inline-flex min-h-9 items-center gap-1.5 rounded-[9px] border border-border bg-card px-3 text-xs font-medium text-muted-foreground transition-colors hover:border-primary-surface-border hover:bg-muted hover:text-foreground"
-            aria-label={`${label}筛选`}
-            onClick={() => {
-              if (label === "更多筛选") setShowMoreFilters((current) => !current)
-            }}
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-input bg-card px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted-hover disabled:opacity-50"
+            aria-label="更多筛选"
+            aria-expanded={showMoreFilters}
+            onClick={() => setShowMoreFilters((current) => !current)}
           >
-            {label}
+            更多筛选
             <ChevronDown className="size-3.5" aria-hidden="true" />
           </button>
-        ))}
         <button
           type="button"
-          className="ml-auto inline-flex min-h-9 items-center gap-1.5 rounded-[9px] border border-transparent px-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="ml-auto inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-transparent px-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           onClick={() => setActiveTab("最新")}
         >
-          默认排序
+          最新排序
           <ChevronDown className="size-3.5" aria-hidden="true" />
         </button>
       </div>
 
       {showMoreFilters ? (
-        <div className="flex gap-2 overflow-x-auto px-5 pb-1" aria-label="评价主题筛选">
+        <div className="flex flex-wrap gap-2 py-3" aria-label="评价主题筛选">
+          {filterLabels.map((label) => (
+            <button key={label} type="button" disabled title="此筛选暂未开放" className="min-h-11 rounded-lg border border-border px-3 text-sm text-muted-foreground opacity-50">{label}</button>
+          ))}
+          {tags.length === 0 ? <p className="text-sm text-muted-foreground">暂无主题标签</p> : null}
           {tags.map(([tag]) => (
             <button
               key={tag}
               type="button"
               data-testid={`review-filter-${tag}`}
               onClick={() => setSelectedTag(tag)}
-              className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+              aria-pressed={selectedTag === tag}
+              className={`min-h-11 shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
                 selectedTag === tag
-                  ? "border-primary-surface-border bg-secondary text-secondary-foreground"
+                  ? "border-primary-surface-border bg-primary-tint text-primary-deep"
                   : "border-border bg-card text-muted-foreground hover:bg-muted"
               }`}
             >
@@ -97,12 +98,12 @@ export function CompanyReviewFeed({ companyId, reviews, reviewCount, previewLimi
       ) : null}
 
       {selectedTag ? (
-        <div className="flex items-center gap-2 px-5 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span>正在看：#{selectedTag}</span>
           <button
             type="button"
             data-testid="review-filter-clear"
-            className="font-medium text-primary-hover"
+            className="min-h-11 px-2 font-medium text-primary-hover"
             onClick={() => setSelectedTag("")}
           >
             清除
@@ -110,11 +111,11 @@ export function CompanyReviewFeed({ companyId, reviews, reviewCount, previewLimi
         </div>
       ) : null}
 
-      <div className="flex items-center justify-between border-b border-border px-5 py-1.5">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border py-3">
         <p className="text-sm text-muted-foreground">{(reviewCount ?? filteredReviews.length).toLocaleString()} 条评价</p>
-        <div className="sr-only" aria-hidden="true">
+        <div className="flex flex-wrap items-center" aria-label="评价分类">
           {tabs.map((tab) => (
-            <button key={tab} type="button" data-testid={`review-tab-${tab}`} onClick={() => setActiveTab(tab)}>{tab}</button>
+            <button key={tab} type="button" data-testid={`review-tab-${tab}`} aria-pressed={activeTab === tab} className={`min-h-11 min-w-11 rounded-lg px-2 text-sm ${activeTab === tab ? "bg-primary-tint font-semibold text-primary-deep" : "text-muted-foreground hover:bg-muted-hover"}`} onClick={() => setActiveTab(tab)}>{tab}</button>
           ))}
         </div>
       </div>
@@ -126,19 +127,19 @@ export function CompanyReviewFeed({ companyId, reviews, reviewCount, previewLimi
         />
       ) : (
         visibleReviews.map((review) => (
-          <ReviewCard key={review.id} review={review} companyId={companyId} compact preview={Boolean(previewLimit)} className={`rounded-none border-0 border-b border-border px-5 py-5 shadow-none last:border-b-0 ${previewLimit ? "lg:min-h-[394px] lg:pb-[14px]" : ""}`} />
+          <ReviewCard key={review.id} review={review} companyId={companyId} compact preview={Boolean(previewLimit)} className="rounded-none border-0 border-b border-border px-0 py-6 shadow-none last:border-b-0" />
         ))
       )}
 
-      <div className="border-t border-border px-5 py-4 text-sm text-muted-foreground">
+      <div className="border-t border-border py-3 text-sm text-muted-foreground">
         {previewLimit ? (
-          <Link href={`/company/${companyId}/reviews`} className="flex items-center justify-center gap-1 font-medium text-foreground hover:text-primary-hover">
+          <Link href={`/company/${companyId}/reviews`} className="flex min-h-11 items-center justify-center gap-1 font-medium text-foreground hover:text-primary-hover">
             查看全部 {(reviewCount ?? filteredReviews.length).toLocaleString()} 条评价
             <ChevronDown className="size-4" aria-hidden="true" />
           </Link>
         ) : filteredReviews.length > 3 ? "继续下滑，看更多过来人评价" : "已经看完这家公司的当前评价"}
       </div>
-      <Badge variant="outline" className="mx-5 mb-5 w-fit border-primary-surface-border bg-secondary text-secondary-foreground">
+      <Badge variant="outline" className="mb-5 min-h-7 w-fit border-border bg-muted text-muted-foreground">
         匿名评价这家公司
       </Badge>
     </div>

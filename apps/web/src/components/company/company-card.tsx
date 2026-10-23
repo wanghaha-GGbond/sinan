@@ -1,74 +1,57 @@
 import Link from "next/link"
-import { ArrowRight, MapPin } from "lucide-react"
+import { ArrowUpRight, MessageCircle } from "lucide-react"
 
-import { MetricPill } from "@/components/ui/metric-pill"
-import { ScoreChip } from "@/components/ui/score-chip"
-import { WebButton } from "@/components/ui/web-button"
-import { WebSurface } from "@/components/ui/web-surface"
-import { TagPill } from "@/components/ui/tag-pill"
+import { CompanyRating, companyDisplayScore } from "./company-rating"
+
 import type { CompanyListItem } from "@/lib/api/types"
 import type { Company } from "@/lib/types"
 
 type CompanyCardCompany = Company | CompanyListItem
 
-export function CompanyCard({ company }: { company: CompanyCardCompany }) {
-  const displayName = (company as CompanyListItem).shortName ?? (company as Company).name ?? ""
-  const salaryRange = (company as CompanyListItem).salaryRange ?? (company as Company).salaryRange
+export function CompanyCard({ company, variant = "directory" }: { company: CompanyCardCompany; variant?: "directory" | "feed" }) {
+  const displayName = (company as CompanyListItem).shortName ?? company.name
+  const reviewCount = company.reviewCount ?? 0
+  const score = companyDisplayScore(company.directionScore, reviewCount)
+  const summary = company.description || company.highlights?.slice(0, 2).join(" · ")
+  const isFeed = variant === "feed"
 
   return (
-    <WebSurface tone="base" className="p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="truncate text-lg font-semibold text-foreground">{displayName}</h3>
-          <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <span>{company.industry}</span>
-            <span className="inline-flex items-center gap-1">
-              <MapPin className="size-3.5" />
-              {company.city}
-            </span>
-          </p>
+    <Link
+      href={`/company/${company.id}`}
+      data-testid={isFeed ? "company-feed-item" : "company-directory-item"}
+      className={`group flex min-w-0 gap-3 border-b border-border transition-colors hover:bg-muted-hover focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring sm:gap-4 ${isFeed ? "px-4 py-5 sm:px-6" : "py-5 sm:px-3 sm:py-6"}`}
+      aria-label={`查看${displayName}，${score === null ? "暂无评分" : `方向评分 ${score.toFixed(1)} 分（满分 5 分）`}，${reviewCount} 条评价`}
+    >
+      <span className="grid size-11 shrink-0 place-items-center rounded-lg border border-input bg-muted text-base font-semibold text-foreground sm:size-12" aria-hidden="true">
+        {displayName.slice(0, 1)}
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex min-w-0 items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="text-base font-semibold leading-snug text-foreground sm:text-lg">{displayName}</h3>
+            <p className="mt-1 flex flex-wrap gap-x-2 text-xs text-muted-foreground sm:text-sm">
+              <span>{company.industry}</span>
+              <span aria-hidden="true">·</span>
+              <span>{company.city}</span>
+              {company.size ? <><span aria-hidden="true">·</span><span>{company.size}</span></> : null}
+            </p>
+          </div>
+          {!isFeed ? (
+            <div className="shrink-0 text-right">
+              <CompanyRating score={score} />
+              <p className="mt-1 text-xs tabular-nums text-muted-foreground">{reviewCount.toLocaleString()} 条评价</p>
+            </div>
+          ) : <ArrowUpRight className="mt-1 size-4 shrink-0 text-muted-foreground group-hover:text-foreground" aria-hidden="true" />}
         </div>
-        <ScoreChip score={company.directionScore ?? 0} compact />
-      </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-2">
-        <MetricPill label="推荐入职率" score={`${company.recommendationRate}%`} />
-        {salaryRange ? (
-          <div className="rounded-2xl bg-muted px-3 py-2">
-            <p className="text-xs text-muted-foreground">薪资区间</p>
-            <p className="text-sm font-medium text-foreground">{salaryRange}</p>
+        {summary ? <p className={`mt-3 text-sm leading-6 text-foreground/80 ${isFeed ? "line-clamp-3" : "line-clamp-1"}`}>{summary}</p> : null}
+        {isFeed ? (
+          <div className="mt-4 flex items-center gap-5 text-xs text-muted-foreground">
+            <CompanyRating score={score} />
+            <span className="inline-flex items-center gap-1.5"><MessageCircle className="size-4" aria-hidden="true" />{reviewCount.toLocaleString()} 条评价</span>
+            <span className="ml-auto hidden text-sm font-medium text-foreground group-hover:underline sm:inline">查看公司</span>
           </div>
-        ) : (
-          <div className="rounded-2xl bg-muted px-3 py-2">
-            <p className="text-xs text-muted-foreground">评价数</p>
-            <p className="text-sm font-medium text-foreground">{(company.reviewCount ?? 0).toLocaleString()} 条评价</p>
-          </div>
-        )}
+        ) : null}
       </div>
-
-      <div className="mt-3 flex flex-wrap gap-2">
-        {(company.riskTags ?? []).slice(0, 3).map((tag) => (
-          <TagPill key={tag} tone={tag.includes("压力") || tag.includes("波动") ? "risk" : "neutral"}>
-            #{tag}
-          </TagPill>
-        ))}
-      </div>
-
-      {"cbti" in company && company.cbti ? (
-        <p className="mt-2 text-xs text-muted-foreground">公司 MBTI：{company.cbti.title}</p>
-      ) : "vibeTag" in company && company.vibeTag ? (
-        <p className="mt-2 text-xs text-muted-foreground">
-          公司体感：{company.vibeTag.name}
-        </p>
-      ) : null}
-      <div className="mt-3">
-        <WebButton asChild variant="primary" size="sm">
-          <Link href={`/company/${company.id}`} className="inline-flex items-center gap-1">
-            看这家公司
-            <ArrowRight className="size-4" />
-          </Link>
-        </WebButton>
-      </div>
-    </WebSurface>
+    </Link>
   )
 }

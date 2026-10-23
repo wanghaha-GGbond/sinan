@@ -29,7 +29,7 @@ function ScoreStars({ score }: { score: unknown }) {
   const fullStars = Math.floor(value)
   const hasHalfStar = value - fullStars >= 0.25 && value - fullStars < 0.75
   return (
-    <span className="inline-flex items-center gap-0.5 text-primary" aria-label={`${value.toFixed(1)} 分（满分 5 分）`}>
+    <span className="inline-flex items-center gap-0.5 text-muted-foreground" aria-label={`${value.toFixed(1)} 分（满分 5 分）`}>
       {Array.from({ length: 5 }, (_, index) => {
         if (index < fullStars) return <Star key={index} className="size-3.5" fill="currentColor" aria-hidden="true" />
         if (index === fullStars && hasHalfStar) return <StarHalf key={index} className="size-3.5" fill="currentColor" aria-hidden="true" />
@@ -74,7 +74,7 @@ export function ReviewCard({
   return (
     <WebSurface tone="base" className={`p-4 sm:p-5 ${className ?? ""}`}>
       <div className="space-y-4">
-        <div className={`grid gap-4 lg:items-start ${compact ? "lg:grid-cols-[15rem_minmax(0,1fr)]" : "lg:grid-cols-[15rem_minmax(0,1fr)_auto]"}`}>
+        <div className={`grid gap-4 lg:items-start ${compact ? "" : "lg:grid-cols-[15rem_minmax(0,1fr)_auto]"}`}>
           <div className="flex items-start gap-3">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground" aria-hidden="true">
               <CircleUserRound className="size-6" strokeWidth={1.6} />
@@ -94,11 +94,11 @@ export function ReviewCard({
           </div>
           <div className="min-w-0">
             {detailHref ? (
-                <Link href={detailHref} className="block text-xl font-semibold leading-7 text-foreground hover:text-primary-hover">
+                <Link href={detailHref} className="block text-lg font-semibold leading-7 text-foreground hover:text-primary-hover">
                 {review.shortComment}
               </Link>
             ) : (
-              <h3 className="text-xl font-semibold leading-7 text-foreground">{review.shortComment}</h3>
+              <h3 className="text-lg font-semibold leading-7 text-foreground">{review.shortComment}</h3>
             )}
             <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
               <span>{review.role || "匿名评价者"}</span>
@@ -114,7 +114,7 @@ export function ReviewCard({
         </div>
 
         {review.questionnaire ? (
-          <div className="grid grid-cols-2 gap-3 border-y border-border py-3 sm:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 border-y border-border py-3 sm:grid-cols-3 min-[1280px]:grid-cols-5">
             {[
               ["工作节奏", review.questionnaire.stabilityScore ?? review.questionnaire.workLifeBalanceScore],
               ["成长机会", review.questionnaire.growthScore],
@@ -205,7 +205,7 @@ export function ReviewCard({
           </p>
         ) : null}
 
-        <div className={`flex flex-wrap items-center gap-2.5 text-sm text-muted-foreground ${compact && preview ? "lg:!mt-[39px]" : ""}`}>
+        <div className="flex flex-wrap items-center gap-2.5 text-sm text-muted-foreground">
           <WebButton
             type="button"
             variant="secondary"

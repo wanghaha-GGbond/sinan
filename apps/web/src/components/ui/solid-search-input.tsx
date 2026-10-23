@@ -3,32 +3,25 @@
 import { Search } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
-import { SolidButton } from "@/components/ui/solid-button"
 
 export function SolidSearchInput({
   value,
   onChange,
-  onQuickSearch,
 }: {
   value: string
   onChange: (value: string) => void
-  onQuickSearch?: () => void
 }) {
   return (
-    <div className="web-surface web-surface-base p-3">
-      <div className="flex items-center gap-2 rounded-2xl bg-white px-3 py-2">
-        <Search className="size-4 text-muted-foreground" />
-        <Input
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          placeholder="搜索公司"
-          className="border-0 bg-transparent px-0 text-foreground shadow-none placeholder:text-muted-foreground focus-visible:ring-0"
-        />
-        <SolidButton variant="dark" size="sm" type="button" onClick={onQuickSearch}>
-          搜索
-        </SolidButton>
-      </div>
-    </div>
+    <label className="flex min-h-12 min-w-0 items-center gap-3 rounded-lg border border-input bg-card px-4 focus-within:outline-2 focus-within:outline-ring">
+      <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+      <span className="sr-only">搜索公司</span>
+      <Input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder="搜索公司"
+        className="min-w-0 border-0 bg-transparent px-0 text-foreground shadow-none placeholder:text-muted-foreground focus-visible:ring-0"
+      />
+    </label>
   )
 }
 

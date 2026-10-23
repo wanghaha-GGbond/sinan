@@ -25,30 +25,32 @@ export function CompanyDecisionInsights({ company }: { company: CompanyListItem 
     { label: "管理", value: axisLabel(company, "management"), detail: axisDetail(company, "management"), icon: UsersRound },
     {
       label: "薪酬福利",
-      value: company.salaryRange ? "中上" : "样本积累中",
+      value: company.salaryRange ? "公开薪酬" : "样本积累中",
       detail: company.salaryRange ? `${company.salaryRange.replace(/\s*x\s*/i, " × ")} · 公开样本` : "等待更多匿名样本",
       icon: BadgeDollarSign,
     },
   ]
 
   return (
-    <>
-      <section className="web-surface web-surface-base grid grid-cols-2 overflow-hidden lg:grid-cols-4 lg:divide-x lg:divide-border" aria-label="公司关键洞察">
+    <section aria-label="公司关键洞察">
+      <h2 className="text-xl font-semibold">关键洞察</h2>
+      {!company.cbti && !company.salaryRange ? (
+        <p className="mt-3 border-b border-border pb-6 text-sm text-muted-foreground">样本积累中，等待更多匿名评价后展示工作节奏、成长、管理与薪酬洞察。</p>
+      ) : <div className="mt-4 grid grid-cols-2 gap-x-6 border-y border-border min-[1200px]:grid-cols-4">
         {signals.map((signal) => {
           const Icon = signal.icon
           return (
-            <div key={signal.label} className="bg-card px-4 py-4 sm:px-5 lg:min-h-[128px] lg:px-7 lg:py-5">
-              <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+            <div key={signal.label} className="py-5">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <Icon className="size-4 text-foreground" aria-hidden="true" />
                 {signal.label}
               </div>
-              <p className="mt-2 truncate text-xl font-semibold tracking-tight text-foreground">{signal.value}</p>
-              <p className="mt-1 text-xs text-muted-foreground">{signal.detail}</p>
+              <p className="mt-2 text-lg font-semibold text-foreground">{signal.value}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{signal.detail}</p>
             </div>
           )
         })}
-      </section>
-
-    </>
+      </div>}
+    </section>
   )
 }

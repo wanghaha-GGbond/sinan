@@ -7,28 +7,24 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-sans: Inter, -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   --font-heading: var(--font-sans);
 
-  /* Impeccable §Typography: 1.25x modular type scale from 16px base.
-     The body steps (xs / sm / base) stay close to defaults so
-     existing copy doesn't visibly grow. Display steps (lg / xl /
-     2xl / 3xl) step at 1.25x so display hierarchy has real
-     weight, not the flatter 1.17x that Tailwind ships with. */
+  /* Product typography: compact UI, readable body, restrained headings. */
   --text-xs: 0.75rem;     /* 12 */
   --text-sm: 0.875rem;    /* 14 */
   --text-base: 1rem;      /* 16 */
-  --text-lg: 1.25rem;     /* 20  (1.25x) */
-  --text-xl: 1.5625rem;   /* 25  (1.25x) */
-  --text-2xl: 1.953rem;   /* 31  (1.25x) */
-  --text-3xl: 2.441rem;   /* 39  (1.25x) */
-  --text-4xl: 3.052rem;   /* 49  (1.25x) */
-  --text-5xl: 3.815rem;   /* 61  (1.25x) */
-  --text-6xl: 4.768rem;   /* 76  (1.25x) */
-  --text-7xl: 5.96rem;    /* 95  (1.25x) */
+  --text-lg: 1.125rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 1.875rem;
+  --text-3xl: 2.25rem;
+  --text-4xl: 2.5rem;
+  --text-5xl: 3rem;
+  --text-6xl: 3.75rem;
+  --text-7xl: 4.5rem;
   --leading-snug: 1.3;
-  --leading-relaxed: 1.625;
+  --leading-relaxed: 1.65;
   /* 65-75ch body line length. Tailwind v4 ships a default line-
      clamp at 75ch for prose; we add the matching 65ch variant. */
   --container-prose-sm: 65ch;
@@ -42,7 +38,7 @@
   /* Layout width scale (Impeccable §Layout: semantic max-widths).
      Replaces 9 different inline max-w-[NNNpx] values with 5 named
      tokens. Use them instead of arbitrary pixels. */
-  --container-page: 1240px;
+  --container-page: 1200px;
   --container-section: 760px;
   --container-card: 420px;
   --container-form: 400px;
@@ -128,35 +124,44 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
 :root {
-  /* Impeccable §Color: 'use OKLCH throughout when picking a
-     palette'. The :root tokens are now all OKLCH. Hex values
-     are reserved for the few cases (lock-in product brand
-     identity, code comments) where readability beats
-     perceptual uniformity. Visual values are 1:1. */
-  --background: oklch(0.985 0.004 95);
-  --foreground: oklch(0.21 0.02 264);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.21 0.02 264);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.21 0.02 264);
-  --primary: oklch(0.58 0.12 158);
-  --primary-foreground: oklch(1 0 0);
-  --primary-hover: oklch(0.52 0.12 158);
-  --primary-deep: oklch(0.39 0.10 158);
-  --primary-tint: oklch(0.965 0.018 158);
-  --primary-surface-border: oklch(0.86 0.045 158);
-  --direction: oklch(0.58 0.12 158);
-  --direction-foreground: oklch(1 0 0);
+  /* V1 semantic palette. Legacy aliases keep existing Web components compatible. */
+  --background-primary: #FFFFFF;
+  --background-secondary: #F8F8FA;
+  --background-hover: #F5F5F7;
+  --surface-primary: #FFFFFF;
+  --text-primary: #17171C;
+  --text-secondary: #666670;
+  --text-tertiary: #858590;
+  --border-default: #E8E8ED;
+  --border-strong: #D5D5DE;
+  --brand-primary: #6346E8;
+  --brand-hover: #5136D1;
+  --brand-soft: #F3F0FF;
+  --brand-border: #DCD3FF;
+  --background: var(--background-primary);
+  --foreground: var(--text-primary);
+  --card: var(--surface-primary);
+  --card-foreground: var(--text-primary);
+  --popover: var(--surface-primary);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--brand-primary);
+  --primary-foreground: #FFFFFF;
+  --primary-hover: var(--brand-hover);
+  --primary-deep: var(--brand-hover);
+  --primary-tint: var(--brand-soft);
+  --primary-surface-border: var(--brand-border);
+  --direction: var(--brand-primary);
+  --direction-foreground: #FFFFFF;
   --risk: oklch(0.62 0.16 56);                      /* amber-700 */
   --risk-foreground: oklch(0.42 0.12 56);           /* amber-800 */
   --risk-surface: oklch(0.97 0.04 84);             /* amber-50 */
@@ -164,35 +169,35 @@
   --risk-border: oklch(0.89 0.08 72);              /* amber-200 */
   --signal: oklch(0.78 0.13 184);                   /* teal-400 */
   --signal-foreground: oklch(1 0 0);
-  --secondary: oklch(0.998 0 0);
-  --secondary-foreground: oklch(0.39 0.08 158);    /* emerald-800 */
-  --muted: oklch(0.965 0.006 95);
-  --muted-hover: oklch(0.94 0.008 95);
-  --muted-foreground: oklch(0.55 0.012 264);     /* gray-500 with the faintest green undertone */
-  --accent: oklch(0.98 0.01 154);
-  --accent-foreground: oklch(0.39 0.08 158);
+  --secondary: var(--background-secondary);
+  --secondary-foreground: var(--text-secondary);
+  --muted: var(--background-secondary);
+  --muted-hover: var(--background-hover);
+  --muted-foreground: var(--text-secondary);
+  --accent: var(--background-hover);
+  --accent-foreground: var(--text-primary);
   --destructive: oklch(0.42 0.12 56);
   --destructive-bright: oklch(0.55 0.22 25);      /* red-600 */
-  --border: oklch(0.88 0.008 95);
-  --input: oklch(0.84 0.008 95);
-  --ring: oklch(0.58 0.12 158);
+  --border: var(--border-default);
+  --input: var(--border-strong);
+  --ring: var(--brand-primary);
 
   /* Twitter-style palette used by components/review/* for the
      comment / reply surface. Impeccable §Color: 'use OKLCH
      throughout when picking a palette'. */
-  --tw-ink: oklch(0.21 0.02 264);          /* was #0F1419 */
-  --tw-ink-soft: oklch(0.18 0.02 264);     /* was #0F172A */
-  --tw-secondary: oklch(0.55 0.02 264);   /* was #475467, #475569, #64748B */
-  --tw-tertiary: oklch(0.58 0.01 264);    /* was #536471 */
-  --tw-slate: oklch(0.40 0.02 264);       /* was #334155 */
-  --tw-blue: oklch(0.66 0.16 234);        /* was #1D9BF0 */
+  --tw-ink: var(--text-primary);
+  --tw-ink-soft: var(--text-primary);
+  --tw-secondary: var(--text-secondary);
+  --tw-tertiary: var(--text-secondary);
+  --tw-slate: var(--text-secondary);
+  --tw-blue: var(--brand-primary);
   --tw-blue-soft: oklch(0.93 0.04 330);   /* was #CFD9DE */
   --tw-pink: oklch(0.65 0.22 0);          /* was #F91880 */
   --tw-pink-surface: oklch(0.95 0.04 350); /* was #FCE7F3 */
-  --tw-border: oklch(0.92 0.005 95);
-  --tw-surface: oklch(0.985 0.01 156);
-  --tw-mute: oklch(0.97 0.014 156);
-  --tw-mute-soft: oklch(0.99 0.008 156);
+  --tw-border: var(--border-default);
+  --tw-surface: var(--surface-primary);
+  --tw-mute: var(--background-secondary);
+  --tw-mute-soft: var(--background-hover);
   --tw-gray-50: oklch(0.985 0 0);
   --tw-slate-700: oklch(0.37 0.04 264);
   /* Recharts palette (used by components/company/company-intelligence-panel).
@@ -203,7 +208,7 @@
   --chart-3: oklch(0.78 0.13 184);
   --chart-4: oklch(0.62 0.16 56);
   --chart-5: oklch(0.37 0.04 264);
-  --radius: 0.625rem;
+  --radius: 0.75rem;
   --sidebar: oklch(0.985 0.014 156);
   --sidebar-foreground: oklch(0.18 0.025 220);
   --sidebar-primary: oklch(0.34 0.075 205);
@@ -252,6 +257,10 @@
   * {
     @apply border-border outline-ring/50;
   }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
   /* Impeccable §Typography: prevent 1-word orphan lines on short
      Chinese headings. "我的\n评价", "推荐\n公司", "公司\n不能" all
      break awkwardly without this — balance re-flows the words
@@ -267,6 +276,8 @@
   }
   body {
     @apply bg-background text-foreground;
+    line-height: 1.65;
+    letter-spacing: 0;
   }
   html {
     @apply font-sans;
@@ -423,21 +434,19 @@
     position: sticky;
     top: 0;
     z-index: var(--z-sticky);
-    border-bottom: 1px solid color-mix(in oklch, var(--border) 80%, transparent);
-    background: color-mix(in oklch, var(--background) 88%, transparent);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--border);
+    background: var(--background);
   }
 
   .web-nav-inner {
     display: flex;
     width: 100%;
-    max-width: 1400px;
-    min-height: 5.25rem;
+    max-width: var(--container-page);
+    min-height: 4rem;
     margin: 0 auto;
     align-items: center;
-    gap: 1.5rem;
-    padding: 0 1rem;
+    gap: 1rem;
+    padding: 0 2rem;
   }
 
   .web-brand {
@@ -448,7 +457,8 @@
     color: var(--foreground);
     font-size: 1.05rem;
     font-weight: 700;
-    letter-spacing: -0.02em;
+    letter-spacing: 0;
+    min-height: 44px;
   }
 
   .web-brand-mark {
@@ -457,22 +467,22 @@
     height: 1.75rem;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--primary-surface-border);
     border-radius: 999px;
-    color: var(--primary-deep);
+    color: var(--primary);
   }
 
   .web-nav-search {
     display: inline-flex;
     min-width: 15rem;
     max-width: 26rem;
-    margin-left: 5.25rem;
+    margin-left: 1rem;
     flex: 1;
     align-items: center;
     gap: 0.55rem;
+    min-height: 44px;
     border: 1px solid var(--border);
-    border-radius: 0.75rem;
-    background: color-mix(in oklch, var(--card) 94%, transparent);
+    border-radius: 10px;
+    background: var(--card);
     color: var(--muted-foreground);
     padding: 0.58rem 0.75rem;
     font-size: 0.8125rem;
@@ -480,8 +490,8 @@
   }
 
   .web-nav-search:hover {
-    border-color: var(--primary-surface-border);
-    background: var(--card);
+    border-color: var(--border);
+    background: var(--muted-hover);
   }
 
   .web-nav-search kbd {
@@ -496,8 +506,8 @@
   .web-nav-links {
     display: flex;
     align-items: stretch;
-    gap: 3.875rem;
-    margin-left: 2rem;
+    gap: 1.5rem;
+    margin-left: 1.5rem;
     white-space: nowrap;
   }
 
@@ -511,7 +521,10 @@
     font-weight: 600;
   }
 
-  .web-nav-links a:hover,
+  .web-nav-links a:hover {
+    color: var(--foreground);
+  }
+
   .web-nav-links a.is-active {
     border-bottom-color: var(--primary);
     color: var(--foreground);
@@ -526,7 +539,7 @@
 
   .web-surface {
     border: 1px solid var(--border);
-    border-radius: 0.75rem;
+    border-radius: 12px;
   }
 
   .web-surface-base {
@@ -540,12 +553,12 @@
 
   .web-surface-raised {
     background: var(--card);
-    box-shadow: 0 4px 16px color-mix(in oklch, var(--foreground) 4%, transparent);
+    box-shadow: none;
   }
 
   .web-surface-elevated {
     background: var(--card);
-    box-shadow: 0 4px 16px color-mix(in oklch, var(--foreground) 4%, transparent);
+    box-shadow: 0 2px 12px rgb(20 20 30 / 4%);
   }
 
   .web-surface-overlay {
@@ -609,14 +622,14 @@
 
   .btn-primary-modern {
     border-radius: 10px;
-    background: #19c37d;
-    color: #fff;
+    background: var(--primary);
+    color: var(--primary-foreground);
     font-weight: 600;
     transition: background 0.15s ease-out;
   }
 
   .btn-primary-modern:hover {
-    background: #0e8f5f;
+    background: var(--primary-hover);
   }
 
   .btn-primary-modern:active {
@@ -625,8 +638,9 @@
 
   .btn-secondary-solid {
     border-radius: 10px;
-    background: #effbf5;
-    color: #1f2937;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--foreground);
     transition: background 0.15s ease-out;
   }
 
@@ -639,7 +653,7 @@
   .web-nav-inner {
     min-height: 3.5rem;
     gap: 0.5rem;
-    padding-inline: 0.875rem;
+    padding-inline: 1rem;
   }
 
   .web-nav-search {
@@ -666,16 +680,21 @@
   }
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 1199px) {
   .web-nav-inner {
     gap: 0.75rem;
-    padding-inline: 0.875rem;
   }
 
   .web-nav-search {
     min-width: 0;
     max-width: none;
     margin-left: 0;
+    flex: 0 0 auto;
+    border-color: transparent;
+    background: transparent;
+    padding: 0.5rem;
+    width: 44px;
+    justify-content: center;
   }
 
   .web-nav-search span,

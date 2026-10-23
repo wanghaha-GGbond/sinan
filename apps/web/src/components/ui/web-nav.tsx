@@ -62,7 +62,7 @@ export function WebNav({
                 // Responsive utilities replace the old .web-mobile-menu CSS:
                 // that rule needed !important to beat these same utilities on
                 // desktop, which in turn made the button invisible on mobile.
-                "hidden max-md:inline-flex",
+                "hidden max-[1200px]:inline-flex min-[1200px]:hidden",
               )}
               aria-label="打开菜单"
             >
@@ -75,7 +75,7 @@ export function WebNav({
                     href={link.href}
                     aria-current={link.active ? "page" : undefined}
                     className={cn(
-                      "flex w-full items-center rounded-md px-2.5 py-2 text-sm",
+                      "flex min-h-11 w-full items-center rounded-lg px-3 py-2 text-sm",
                       link.active ? "font-semibold text-primary-deep" : "text-foreground",
                     )}
                   >

@@ -3,16 +3,16 @@ import type { HTMLAttributes, ReactNode } from "react"
 
 import { cn } from "@/lib/utils"
 
-const tagPillVariants = cva("inline-flex rounded-full border px-2.5 py-1 text-xs font-medium", {
+const tagPillVariants = cva("inline-flex min-h-7 items-center rounded-full border px-3 py-1 text-xs font-medium", {
   variants: {
     tone: {
-      positive: "border-primary-surface-border bg-secondary text-secondary-foreground",
-      match: "border-primary-surface-border bg-secondary text-secondary-foreground",
+      positive: "border-border bg-muted text-muted-foreground",
+      match: "border-border bg-muted text-muted-foreground",
       neutral: "border-tw-mute bg-muted text-foreground",
       risk: "border-risk-border bg-risk-surface text-destructive",
     },
     selected: {
-      true: "ring-1 ring-primary/40",
+      true: "border-primary-surface-border bg-primary-tint text-primary-deep",
       false: "",
     },
   },
