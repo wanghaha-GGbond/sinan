@@ -6,6 +6,7 @@ import { toPublicCompanyView } from "@/lib/server/company-view"
 import { inferPublicCBTI } from "@/lib/server/company-cbti"
 import { mockCompanyToPublicView } from "@/lib/server/public-company-data"
 import { companies as mockCompanies } from "@/lib/mock-data"
+import { curatedCompanyFacts, getCuratedCompany } from "@/lib/curated-companies"
 
 const publicCacheHeaders = {
   "Cache-Control": "public, max-age=60, stale-while-revalidate=300",
@@ -30,8 +31,12 @@ export async function GET(request: NextRequest) {
       }
 
       const normalizedQuery = q.toLowerCase()
-      const matchingCompanies = mockCompanies.filter((company) => {
-        const matchesQuery = !normalizedQuery || [company.name, company.shortName, company.englishName, ...(company.alias ?? [])]
+      const publicCompanies = [
+        ...mockCompanies.map(mockCompanyToPublicView),
+        ...curatedCompanyFacts.map((fact) => getCuratedCompany(fact.id)!),
+      ]
+      const matchingCompanies = publicCompanies.filter((company) => {
+        const matchesQuery = !normalizedQuery || [company.name, company.shortName, company.englishName, ...(company.aliases ?? [])]
           .filter(Boolean)
           .some((value) => value?.toLowerCase().includes(normalizedQuery))
         const matchesCity = !city || company.city === city
@@ -39,7 +44,7 @@ export async function GET(request: NextRequest) {
         return matchesQuery && matchesCity && matchesIndustry
       })
       return NextResponse.json(
-        { companies: matchingCompanies.map(mockCompanyToPublicView) },
+        { companies: matchingCompanies },
         { headers: publicCacheHeaders },
       )
     }

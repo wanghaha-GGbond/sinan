@@ -5,6 +5,7 @@ import { CompanyRating, companyDisplayScore } from "./company-rating"
 
 import type { CompanyListItem } from "@/lib/api/types"
 import type { Company } from "@/lib/types"
+import { isDemoCompanyId } from "@/lib/demo-company"
 
 type CompanyCardCompany = Company | CompanyListItem
 
@@ -28,7 +29,7 @@ export function CompanyCard({ company, variant = "directory" }: { company: Compa
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="text-base font-semibold leading-snug text-foreground sm:text-lg">{displayName}</h3>
+            <h3 className="flex flex-wrap items-center gap-2 text-base font-semibold leading-snug text-foreground sm:text-lg">{displayName}{isDemoCompanyId(company.id) ? <span className="border border-border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">演示</span> : null}</h3>
             <p className="mt-1 flex flex-wrap gap-x-2 text-xs text-muted-foreground sm:text-sm">
               <span>{company.industry}</span>
               <span aria-hidden="true">·</span>
@@ -43,11 +44,12 @@ export function CompanyCard({ company, variant = "directory" }: { company: Compa
             </div>
           ) : <ArrowUpRight className="mt-1 size-4 shrink-0 text-muted-foreground group-hover:text-foreground" aria-hidden="true" />}
         </div>
-        {summary ? <p className={`mt-3 text-sm leading-6 text-foreground/80 ${isFeed ? "line-clamp-3" : "line-clamp-1"}`}>{summary}</p> : null}
+        {isFeed ? <p className="mt-3 text-xs font-medium text-muted-foreground">{isDemoCompanyId(company.id) ? "本地演示评价" : reviewCount > 0 ? "在场评价" : "公司公开资料"}</p> : null}
+        {summary ? <p className={`mt-2 text-sm leading-6 text-foreground/80 ${isFeed ? "line-clamp-3" : "line-clamp-1"}`}>{summary}</p> : null}
         {isFeed ? (
           <div className="mt-4 flex items-center gap-5 text-xs text-muted-foreground">
             <CompanyRating score={score} />
-            <span className="inline-flex items-center gap-1.5"><MessageCircle className="size-4" aria-hidden="true" />{reviewCount.toLocaleString()} 条评价</span>
+            <span className="inline-flex items-center gap-1.5"><MessageCircle className="size-4" aria-hidden="true" />{reviewCount > 0 ? `${reviewCount.toLocaleString()} 条评价` : "等待首条评价"}</span>
             <span className="ml-auto hidden text-sm font-medium text-foreground group-hover:underline sm:inline">查看公司</span>
           </div>
         ) : null}

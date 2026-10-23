@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import Link from "next/link"
 
 import { WebButton } from "@/components/ui/web-button"
 import { useCompanySearch } from "@/lib/queries/company-search"
@@ -49,5 +50,30 @@ export function HomeCompanyFeed() {
         ) : companies.map((company) => <CompanyCard key={company.id} company={company} variant="feed" />)}
       </div>
     </div>
+  )
+}
+
+export function HomeCompanySidebar() {
+  const { data } = useCompanySearch()
+  const newlyListed = useMemo(() => [...(data ?? [])]
+    .filter((company) => (company.reviewCount ?? 0) === 0)
+    .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? "") || a.name.localeCompare(b.name, "zh-CN"))
+    .slice(0, 5), [data])
+
+  return (
+    <aside className="hidden px-6 pt-8 lg:block" aria-label="新收录公司">
+      {newlyListed.length > 0 ? <>
+        <h2 className="text-base font-semibold text-foreground">新收录公司</h2>
+        <div className="mt-4 divide-y divide-border border-y border-border">
+          {newlyListed.map((company) => (
+            <Link key={company.id} href={`/company/${company.id}`} className="block py-4 hover:bg-muted-hover focus-visible:outline-2 focus-visible:outline-ring">
+              <span className="block text-sm font-semibold text-foreground">{company.shortName ?? company.name}</span>
+              <span className="mt-1 block text-xs text-muted-foreground">{company.industry} · {company.city}</span>
+            </Link>
+          ))}
+        </div>
+        <Link href="/companies" className="mt-2 inline-flex min-h-11 items-center text-sm font-medium text-primary-deep hover:underline">查看全部公司</Link>
+      </> : null}
+    </aside>
   )
 }

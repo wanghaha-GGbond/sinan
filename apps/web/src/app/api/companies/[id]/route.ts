@@ -5,6 +5,7 @@ import { reviews } from "@/db/schema/reviews"
 import { toPublicCompanyView } from "@/lib/server/company-view"
 import { inferPublicCBTI } from "@/lib/server/company-cbti"
 import { getMockCompany, mockCompanyToPublicView } from "@/lib/server/public-company-data"
+import { getCuratedCompany } from "@/lib/curated-companies"
 
 export async function GET(
   request: NextRequest,
@@ -22,8 +23,9 @@ export async function GET(
       }
 
       const mockCompany = getMockCompany(companyId)
-      if (!mockCompany) return NextResponse.json({ error: "Company not found" }, { status: 404 })
-      return NextResponse.json({ company: mockCompanyToPublicView(mockCompany) })
+      const company = mockCompany ? mockCompanyToPublicView(mockCompany) : getCuratedCompany(companyId)
+      if (!company) return NextResponse.json({ error: "Company not found" }, { status: 404 })
+      return NextResponse.json({ company })
     }
 
     const { db } = await import("@/db/client")

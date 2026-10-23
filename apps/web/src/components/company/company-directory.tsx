@@ -8,12 +8,13 @@ import { CompanyListSkeleton } from "@/components/company/company-list-skeleton"
 import { SolidSearchInput } from "@/components/ui/solid-search-input"
 import { useCompanySearch } from "@/lib/queries/company-search"
 
-type SortMode = "reviews" | "score"
+type SortMode = "reviews" | "score" | "recent"
 
 export function CompanyDirectory() {
   const [query, setQuery] = useState("")
   const [city, setCity] = useState("全部")
   const [sort, setSort] = useState<SortMode>("reviews")
+  const [ratedOnly, setRatedOnly] = useState(false)
   const { data: companies = [], isPending: loading, error, refetch } = useCompanySearch()
   const cities = ["全部", ...Array.from(new Set(companies.map((company) => company.city)))]
 
@@ -21,6 +22,7 @@ export function CompanyDirectory() {
     const keyword = query.trim().toLowerCase()
     return companies
       .filter((company) => city === "全部" || company.city === city)
+      .filter((company) => !ratedOnly || (company.reviewCount ?? 0) > 0)
       .filter((company) => {
         if (!keyword) return true
         return [company.name, company.shortName, company.industry, company.city]
@@ -29,9 +31,10 @@ export function CompanyDirectory() {
       })
       .sort((a, b) => {
         if (sort === "score") return (b.directionScore ?? 0) - (a.directionScore ?? 0)
+        if (sort === "recent") return (b.createdAt ?? "").localeCompare(a.createdAt ?? "") || a.name.localeCompare(b.name, "zh-CN")
         return (b.reviewCount ?? 0) - (a.reviewCount ?? 0)
       })
-  }, [city, companies, query, sort])
+  }, [city, companies, query, ratedOnly, sort])
 
   if (loading) {
     return <CompanyListSkeleton />
@@ -43,7 +46,7 @@ export function CompanyDirectory() {
 
   return (
     <div data-testid="company-directory">
-      <div className="grid gap-3 border-b border-border pb-6 md:grid-cols-[minmax(0,1fr)_auto]">
+      <div className="grid gap-3 border-b border-border pb-6 lg:grid-cols-[minmax(0,1fr)_auto]">
         <SolidSearchInput value={query} onChange={setQuery} />
         <div className="flex flex-wrap items-center gap-3 text-sm">
         <label className="flex items-center gap-2 text-muted-foreground">
@@ -65,12 +68,17 @@ export function CompanyDirectory() {
           >
             <option value="reviews">评价最多</option>
             <option value="score">评分最高</option>
+            <option value="recent">最近收录</option>
           </select>
+        </label>
+        <label className="inline-flex min-h-11 items-center gap-2 text-sm text-foreground">
+          <input type="checkbox" checked={ratedOnly} onChange={(event) => setRatedOnly(event.target.checked)} className="size-4 accent-primary" />
+          只看有评价
         </label>
         </div>
       </div>
 
-      <p className="py-4 text-sm text-muted-foreground" aria-live="polite">找到 {filteredCompanies.length} 家公司</p>
+      <p className="py-4 text-sm text-muted-foreground" aria-live="polite">找到 {filteredCompanies.length} 家公司 · {filteredCompanies.filter((company) => (company.reviewCount ?? 0) > 0).length} 家有评价</p>
       {filteredCompanies.length ? (
         <div className="border-t border-border">
           {filteredCompanies.map((company) => (
