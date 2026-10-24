@@ -144,10 +144,10 @@
   --text-tertiary: #858590;
   --border-default: #E8E8ED;
   --border-strong: #D5D5DE;
-  --brand-primary: #6346E8;
-  --brand-hover: #5136D1;
-  --brand-soft: #F3F0FF;
-  --brand-border: #DCD3FF;
+  --brand-primary: #147D55;
+  --brand-hover: #0E6444;
+  --brand-soft: #EAF5EE;
+  --brand-border: #C7E5D2;
   --background: var(--background-primary);
   --foreground: var(--text-primary);
   --card: var(--surface-primary);

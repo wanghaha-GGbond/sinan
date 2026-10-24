@@ -11,6 +11,7 @@ import { isPulseEnabled } from "@/lib/pulse-feature"
 
 const primaryLinks = [
   { href: "/companies", label: "公司" },
+  { href: "/community", label: "社区" },
   { href: "/research", label: "研究" },
   { href: "/pulse", label: "Pulse" },
   { href: "/submit/review", label: "写评价" },

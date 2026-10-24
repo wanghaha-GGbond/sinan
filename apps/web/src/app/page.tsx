@@ -8,7 +8,9 @@ export default function HomePage() {
     <section className="mx-auto w-full max-w-[1120px] border-x-0 border-border pb-12 sm:border-x lg:grid lg:grid-cols-[minmax(0,740px)_minmax(0,1fr)]" data-testid="home-recommend-feed">
       <div className="min-w-0 lg:border-r lg:border-border">
         <header className="px-4 pb-4 pt-7 sm:px-6 sm:pt-9">
+          <p className="mb-2 text-xs font-semibold text-[#197354]">工作，从了解开始</p>
           <h1 className="text-2xl font-semibold text-foreground">找公司</h1>
+          <p className="mt-2 text-sm text-muted-foreground">真实评价和公开资料，帮你看清下一步。</p>
           <HomeCompanySearch />
           <div className="mt-2 flex gap-6 text-sm font-medium text-muted-foreground">
             <Link href="/companies" className="inline-flex min-h-11 items-center gap-2 hover:text-foreground">全部公司 <ArrowUpRight className="size-4" aria-hidden="true" /></Link>

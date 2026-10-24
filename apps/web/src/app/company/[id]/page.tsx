@@ -66,17 +66,18 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
   }
 
   return (
-    <section className="mx-auto w-full max-w-page px-4 pb-12 pt-4 sm:px-8 sm:pt-6">
+    <section className="min-h-[calc(100vh-160px)] bg-[#f5f6f7] px-4 pb-12 pt-4 dark:bg-background sm:px-8 sm:pt-6">
+      <div className="mx-auto w-full max-w-page">
       <nav aria-label="面包屑" className="mb-4 flex items-center gap-1.5 text-sm text-muted-foreground">
         <Link href="/search" className="inline-flex min-h-11 items-center hover:text-foreground">找公司</Link>
         <ChevronRight className="size-3.5" aria-hidden="true" />
         <span>{company.name}</span>
       </nav>
 
-      <header className="border-b border-border">
+      <header className="rounded-lg border border-border bg-card px-5 pt-6 shadow-[0_2px_8px_rgba(20,29,34,0.04)] sm:px-8 sm:pt-8">
         <div className="flex flex-col gap-6 pb-6 lg:flex-row lg:items-start lg:justify-between lg:gap-10">
           <div className="flex min-w-0 items-start gap-4 sm:gap-5">
-            <div className="grid size-14 shrink-0 place-items-center rounded-lg border border-input bg-muted text-xl font-semibold text-foreground sm:size-16" aria-hidden="true">
+            <div className="grid size-14 shrink-0 place-items-center rounded-lg border border-border bg-[#edf4f0] text-xl font-semibold text-[#245d4b] sm:size-16" aria-hidden="true">
               {(company.shortName ?? company.name).slice(0, 1)}
             </div>
             <div className="min-w-0">
@@ -92,7 +93,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
             </div>
           </div>
           <div className="flex flex-wrap items-end justify-between gap-5 border-t border-border pt-5 sm:justify-start lg:shrink-0 lg:justify-end lg:border-0 lg:pt-0">
-            <div>
+            <div className="min-w-24">
               <CompanyRating score={displayScore} prominent />
               <Link href={`/company/${company.id}/reviews`} className="mt-1 block text-sm text-muted-foreground hover:text-foreground hover:underline">{reviewCount.toLocaleString()} 条公开评价</Link>
             </div>
@@ -100,7 +101,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
         <p className="inline-flex items-center gap-1.5 pb-5 text-xs text-muted-foreground"><ShieldCheck className="size-4 shrink-0" aria-hidden="true" />{isDemoCompanyId(company.id) ? "本地演示数据 · 非真实公司评价" : reviewCount > 0 ? `匿名评价 · 人工审核 · ${company.verifiedIdentityCount ?? 0} 位验证贡献者` : "公司公开资料 · 站内评价独立收集"}</p>
-        <nav className="flex gap-8 overflow-x-auto" aria-label="公司信息导航">
+        <nav className="flex gap-8 overflow-x-auto border-t border-border" aria-label="公司信息导航">
           {[
             ["概览", `/company/${company.id}`],
             ["评价", `/company/${company.id}/reviews`],
@@ -117,7 +118,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
       {reviewCount > 0 ? <div className="mt-8"><CompanyDecisionInsights company={company} /></div> : null}
 
       <div className="mt-8 grid gap-8 min-[1200px]:grid-cols-[minmax(0,1fr)_280px]">
-        <div className="min-w-0">
+        <div className="min-w-0 rounded-lg border border-border bg-card p-5 sm:p-7">
           <h2 className="mb-5 text-xl font-semibold">{reviewCount > 0 ? "评价概览" : "员工评价"}</h2>
           {mappedReviews.length === 0 ? (
             <div className="border-y border-border py-10">
@@ -144,6 +145,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
         )}
       </div>
 
+      </div>
     </section>
   )
 }
