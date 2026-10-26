@@ -67,6 +67,27 @@ jobs:
       - run: npm run research:test:algorithm --workspace=@sinan/web
       - run: npm run build --workspace=@sinan/web
 
+  uiux:
+    name: Web UIUX V1 regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Isolated fixture UI and navigation checks (not a deployed Preview)
+        run: npm run test:uiux --workspace=@sinan/web
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: uiux-v1-${{ github.sha }}
+          path: apps/web/test-results/uiux-v1
+          retention-days: 30
+
   postgres:
     name: PostgreSQL 16 migrations and core flows
     runs-on: ubuntu-latest

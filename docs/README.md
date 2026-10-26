@@ -5,6 +5,7 @@
 ## 阅读顺序
 
 当前海外 Web 上线进度与验收：[web-release-progress.md](web-release-progress.md)。
+前端第一版产品与交互基线：[V1 RC1 PRD](archive/frontend-v1/PRD.md)（候选归档，未等同上线）。
 
 | # | 文档 | 内容 | 读者 |
 |---|---|---|---|
