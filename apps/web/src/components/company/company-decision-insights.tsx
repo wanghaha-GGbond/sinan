@@ -25,7 +25,7 @@ export function CompanyDecisionInsights({ company }: { company: CompanyListItem 
     { label: "管理", value: axisLabel(company, "management"), detail: axisDetail(company, "management"), icon: UsersRound },
     {
       label: "薪酬福利",
-      value: company.salaryRange ? "中上" : "样本积累中",
+      value: company.salaryRange ? "公开薪酬" : "样本积累中",
       detail: company.salaryRange ? `${company.salaryRange.replace(/\s*x\s*/i, " × ")} · 公开样本` : "等待更多匿名样本",
       icon: BadgeDollarSign,
     },

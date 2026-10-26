@@ -3,6 +3,7 @@ import { defineConfig } from "@playwright/test"
 export default defineConfig({
   testDir: "./tests",
   testMatch: [
+    "company-rating.spec.ts",
     "readiness-schema.spec.ts",
     "password-recovery.spec.ts",
     "account-deletion.spec.ts",

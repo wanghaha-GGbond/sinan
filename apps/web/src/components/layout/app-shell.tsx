@@ -44,6 +44,7 @@ function MainNav() {
   return (
     <WebNav
       links={isAuthRoute ? [] : linksFor(pathname)}
+      showSearch={!['/', '/companies', '/search'].includes(pathname)}
       rightSlot={
         <>
           {user ? (
@@ -56,8 +57,8 @@ function MainNav() {
               </WebButton>
             </>
           ) : (
-            <WebButton asChild variant="quiet" size="icon" className="hidden rounded-full bg-muted text-foreground sm:inline-flex" aria-label="登录">
-              <Link href="/login"><span className="text-xs font-semibold">N</span></Link>
+            <WebButton asChild variant="quiet" className="min-h-11" aria-label="登录">
+              <Link href="/login">登录</Link>
             </WebButton>
           )}
         </>
