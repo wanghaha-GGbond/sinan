@@ -21,7 +21,7 @@ test("ready returns compatible release metadata only with valid config and migra
     const ready = await GET()
     expect(ready.status).toBe(200)
     expect(ready.headers.get("cache-control")).toBe("no-store")
-    expect(await ready.json()).toMatchObject({ status: "ready", schema: "compatible", release: fixture.APP_RELEASE, authContract: 1 })
+    expect(await ready.json()).toMatchObject({ status: "ready", schema: "compatible", release: fixture.APP_RELEASE, authContract: 2 })
     delete process.env.AUTH_SECRET
     const blocked = await GET()
     expect(blocked.status).toBe(503)

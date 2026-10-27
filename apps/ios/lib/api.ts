@@ -118,7 +118,13 @@ export async function login(input: { email?: string; phone?: string; password: s
   ))
 }
 
-export async function register(input: { email?: string; phone?: string; password: string; inviteCode: string }) {
+export async function requestRegistrationCode(email: string, inviteCode: string) {
+  return request<{ message: string; retryAfter: number }>("/api/auth/register-code", {
+    method: "POST", body: JSON.stringify({ email, inviteCode }),
+  })
+}
+
+export async function register(input: { email: string; verificationCode: string; password: string; inviteCode: string }) {
   return persistSession(await request<AuthApiResponse>(
     "/api/auth/register",
     { method: "POST", body: JSON.stringify(input) },

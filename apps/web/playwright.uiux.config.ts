@@ -3,7 +3,7 @@ import { defineConfig, devices } from "@playwright/test"
 // A loopback-only visual fixture server. Never reuse a developer/production DB.
 export default defineConfig({
   testDir: "./tests",
-  testMatch: ["uiux-v1.spec.ts", "copy-interactions.spec.ts", "navigation-performance.spec.ts"],
+  testMatch: ["uiux-v1.spec.ts", "account-onboarding.spec.ts", "copy-interactions.spec.ts", "navigation-performance.spec.ts"],
   timeout: 60_000,
   workers: 1,
   outputDir: "./test-results/uiux-v1",

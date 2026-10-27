@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto"
 
-export const authContract = 1 // Never roll back to code that ignores users.session_version.
+export const authContract = 2 // Requires session_version and verified-email registration.
 
 export function releaseConfiguration(target, env, release) {
   if (!["staging", "production"].includes(target)) throw new Error("Choose staging or production explicitly")

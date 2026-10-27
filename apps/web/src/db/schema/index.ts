@@ -1,6 +1,7 @@
 export * from "./enums"
 export * from "./users"
 export * from "./password-reset-tokens"
+export * from "./registration-codes"
 export * from "./anonymous-profiles"
 export * from "./companies"
 export * from "./reviews"

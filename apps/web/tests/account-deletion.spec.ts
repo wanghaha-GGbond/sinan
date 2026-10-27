@@ -15,6 +15,7 @@ test("account deletion removes direct identifiers and profile fields", () => {
 
   expect(values).toMatchObject({
     email: null,
+    emailVerifiedAt: null,
     phone: null,
     passwordHash: null,
     avatarUrl: null,

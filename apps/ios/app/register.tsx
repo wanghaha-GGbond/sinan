@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Linking, ScrollView, StyleSheet, Text, View } from "react-native"
 import { Link, router, useLocalSearchParams } from "expo-router"
 import { COLORS } from "../theme"
@@ -6,32 +6,54 @@ import { SolidButton } from "../components/SolidButton"
 import { AppFooter } from "../components/AppShellBits"
 import { SolidCard } from "../components/SolidCard"
 import { SolidInput } from "../components/SolidInput"
-import { getWebUrl, register } from "../lib/api"
+import { getWebUrl, register, requestRegistrationCode } from "../lib/api"
 import { getSafeAppPath } from "../lib/navigation"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const PHONE_RE = /^1[3-9]\d{9}$/
 
 export default function RegisterScreen() {
   const params = useLocalSearchParams<{ next?: string | string[] }>()
   const nextPath = getSafeAppPath(params.next)
-  const [mode, setMode] = useState<"email" | "phone">("email")
   const [email, setEmail] = useState("")
-  const [phone, setPhone] = useState("")
+  const [verificationCode, setVerificationCode] = useState("")
+  const [sending, setSending] = useState(false)
+  const [cooldown, setCooldown] = useState(0)
+  const [notice, setNotice] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [inviteCode, setInviteCode] = useState("")
   const [error, setError] = useState("")
   const [submitting, setSubmitting] = useState(false)
 
+  useEffect(() => {
+    if (!cooldown) return
+    const timer = setTimeout(() => setCooldown((seconds) => seconds - 1), 1000)
+    return () => clearTimeout(timer)
+  }, [cooldown])
+
+  async function sendCode() {
+    setError("")
+    setNotice("")
+    if (!EMAIL_RE.test(email.trim())) { setError("请输入有效邮箱"); return }
+    if (!inviteCode.trim()) { setError("请输入邀请码"); return }
+    setSending(true)
+    try {
+      await requestRegistrationCode(email.trim().toLowerCase(), inviteCode.trim().toUpperCase())
+      setCooldown(60)
+      setNotice("验证码已发送，请查看邮箱")
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "发送失败，请稍后重试")
+    } finally { setSending(false) }
+  }
+
   async function submit() {
     setError("")
-    if (mode === "email" && !EMAIL_RE.test(email.trim())) {
+    if (!EMAIL_RE.test(email.trim())) {
       setError("请输入有效邮箱")
       return
     }
-    if (mode === "phone" && !PHONE_RE.test(phone.trim())) {
-      setError("请输入有效手机号")
+    if (!/^\d{6}$/.test(verificationCode)) {
+      setError("请输入 6 位邮箱验证码")
       return
     }
     if (password.length < 8) {
@@ -49,7 +71,8 @@ export default function RegisterScreen() {
     setSubmitting(true)
     try {
       await register({
-        ...(mode === "email" ? { email: email.trim().toLowerCase() } : { phone: phone.trim() }),
+        email: email.trim().toLowerCase(),
+        verificationCode,
         password,
         inviteCode: inviteCode.trim().toUpperCase(),
       })
@@ -69,24 +92,20 @@ export default function RegisterScreen() {
             <Text style={S.brandText}>司</Text>
           </View>
           <Text style={S.title}>注册在场</Text>
-          <Text style={S.subtitle}>成为指路人，分享真实体验</Text>
-        </View>
-
-        <View style={S.segment}>
-          <SolidButton title="邮箱" variant={mode === "email" ? "secondary" : "ghost"} onPress={() => setMode("email")} style={S.segmentButton} />
-          <SolidButton title="手机" variant={mode === "phone" ? "secondary" : "ghost"} onPress={() => setMode("phone")} style={S.segmentButton} />
         </View>
 
         <View style={S.form}>
-          {mode === "email" ? (
-            <Field label="邮箱">
-              <SolidInput value={email} onChangeText={setEmail} placeholder="name@company.com" keyboardType="email-address" autoCapitalize="none" />
-            </Field>
-          ) : (
-            <Field label="手机号">
-              <SolidInput value={phone} onChangeText={setPhone} placeholder="13800138000" keyboardType="phone-pad" maxLength={11} />
-            </Field>
-          )}
+          <Field label="邮箱">
+            <SolidInput value={email} editable={!sending && !submitting}
+              onChangeText={(value) => { setEmail(value); setVerificationCode(""); setNotice("") }}
+              placeholder="name@example.com" keyboardType="email-address" autoCapitalize="none" />
+          </Field>
+          <Field label="邮箱验证码">
+            <SolidInput value={verificationCode} onChangeText={(value) => setVerificationCode(value.replace(/\D/g, "").slice(0, 6))}
+              placeholder="6 位数字" keyboardType="number-pad" textContentType="oneTimeCode" maxLength={6} />
+            <SolidButton title={sending ? "发送中…" : cooldown ? `${cooldown} 秒后重发` : "获取验证码"}
+              variant="secondary" disabled={sending || submitting || cooldown > 0} onPress={() => void sendCode()} />
+          </Field>
 
           <Field label="密码">
             <SolidInput value={password} onChangeText={setPassword} placeholder="至少 8 位字符" secureTextEntry />
@@ -103,6 +122,7 @@ export default function RegisterScreen() {
               <Text style={S.errorText}>{error}</Text>
             </View>
           ) : null}
+          {notice ? <Text style={S.switchText}>{notice}</Text> : null}
 
           <View style={S.privacyBox}>
             <Text style={S.privacyText}>

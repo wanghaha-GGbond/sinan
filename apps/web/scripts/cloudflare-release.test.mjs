@@ -35,7 +35,7 @@ test("release rejects dirty, validation-only, modified and wrong-environment art
 test("rollback rejects pre-password-recovery releases and cross-migration/environment targets", () => {
   const previous = { ...good, release: "b".repeat(40) }
   assert.doesNotThrow(() => verifyRollback(good, previous))
-  for (const change of [{ authContract: undefined }, { authContract: 0 }, { migration: "0020_old" }, { worker: "zaichang-staging" }, { target: "staging" }, { dirty: true }, { validationOnly: true }, { release: sha }, { release: "not-a-sha" }]) {
+  for (const change of [{ authContract: undefined }, { authContract: 0 }, { authContract: 1 }, { migration: "0020_old" }, { worker: "zaichang-staging" }, { target: "staging" }, { dirty: true }, { validationOnly: true }, { release: sha }, { release: "not-a-sha" }]) {
     assert.throws(() => verifyRollback(good, { ...previous, ...change }))
   }
 })

@@ -104,7 +104,7 @@ test("登录后回到原页面并可从个人中心退出", async ({ page }) => 
   await page.getByLabel("密码", { exact: true }).fill("test1234")
   await page.getByRole("button", { name: "登录", exact: true }).click()
   await expect(page).toHaveURL("/me")
-  await expect(page.getByRole("heading", { name: "我的", exact: true })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "个人主页", exact: true })).toBeVisible()
 
   await page.getByRole("button", { name: "退出登录" }).click()
   await expect(page).toHaveURL("/")

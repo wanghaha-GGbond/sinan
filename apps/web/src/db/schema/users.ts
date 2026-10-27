@@ -8,6 +8,7 @@ export const users = pgTable(
     id: uuid("id").defaultRandom().primaryKey(),
 
     email: text("email"),
+    emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
     phone: text("phone"),
     passwordHash: text("password_hash"),
     sessionVersion: integer("session_version").default(0).notNull(),

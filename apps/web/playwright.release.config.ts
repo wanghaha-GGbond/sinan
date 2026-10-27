@@ -7,10 +7,12 @@ export default defineConfig({
   testMatch: ["core-api-flow.spec.ts", "password-recovery.release.spec.ts"],
   timeout: 60_000,
   workers: 1,
+  outputDir: "./test-results/release",
   reporter: "line",
   use: {
     ...devices["Desktop Chrome"],
     baseURL: releaseBaseURL,
+    launchOptions: process.env.PLAYWRIGHT_CHROMIUM_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH } : {},
   },
   ...(process.env.RELEASE_BASE_URL
     ? {}

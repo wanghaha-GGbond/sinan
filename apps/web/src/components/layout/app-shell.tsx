@@ -2,7 +2,6 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LogOut } from "lucide-react"
 
 import { WebButton } from "@/components/ui/web-button"
 import { WebNav, type WebNavLink } from "@/components/ui/web-nav"
@@ -38,7 +37,7 @@ function linksFor(pathname: string): WebNavLink[] {
 
 function MainNav() {
   const pathname = usePathname()
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const isAuthRoute = pathname.startsWith("/login") || pathname.startsWith("/register") || pathname.startsWith("/invite/")
 
   return (
@@ -49,17 +48,17 @@ function MainNav() {
         <>
           {user ? (
             <>
-              <WebButton asChild variant="quiet" size="icon" className="hidden rounded-full bg-muted text-foreground sm:inline-flex" aria-label="打开我的账户">
-                <Link href="/me"><span className="text-xs font-semibold">{(user.displayName ?? "我").slice(0, 1)}</span></Link>
-              </WebButton>
-              <WebButton type="button" variant="quiet" size="icon" className="hidden sm:inline-flex" aria-label="退出登录" onClick={() => logout()}>
-                <LogOut className="size-4" />
+              <WebButton asChild variant="quiet" className="min-h-11" aria-label="个人主页">
+                <Link href="/me">个人主页</Link>
               </WebButton>
             </>
           ) : (
-            <WebButton asChild variant="quiet" className="min-h-11" aria-label="登录">
-              <Link href="/login">登录</Link>
-            </WebButton>
+            <>
+              <WebButton asChild variant="quiet" className="min-h-11" aria-label="登录">
+                <Link href="/login">登录</Link>
+              </WebButton>
+              {!isAuthRoute ? <WebButton asChild variant="primary" className="min-h-11"><Link href="/register">注册</Link></WebButton> : null}
+            </>
           )}
         </>
       }

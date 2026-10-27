@@ -7,6 +7,7 @@ export const ACCOUNT_DELETION_CONFIRMATION = "DELETE"
 export function buildDeletedUserValues(userId: string, deletedAt = new Date()) {
   return {
     email: null,
+    emailVerifiedAt: null,
     phone: null,
     passwordHash: null,
     displayName: `已注销用户-${userId.slice(0, 8)}`,

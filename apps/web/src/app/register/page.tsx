@@ -1,361 +1,149 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { Compass, Mail, Phone, Shield, Loader2, Ticket } from "lucide-react"
-
+import { Loader2, Mail } from "lucide-react"
 import { WebButton } from "@/components/ui/web-button"
 import { WebSurface } from "@/components/ui/web-surface"
 import { useAuth } from "@/lib/auth-context"
 import { getSafeNextPath, withNext } from "@/lib/navigation"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const PHONE_RE = /^1[3-9]\d{9}$/
 
 export default function RegisterPage() {
   const { register, user } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const requestedNext = searchParams.get("next")
-  const nextPath = getSafeNextPath(
-    requestedNext,
-    "/submit/review?mode=add-company&onboarding=1",
-  )
-  const [mode, setMode] = useState<"email" | "phone">("email")
+  const nextPath = getSafeNextPath(searchParams.get("next"), "/me")
   const [email, setEmail] = useState("")
-  const [phone, setPhone] = useState("")
+  const [verificationCode, setVerificationCode] = useState("")
   const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [inviteCode, setInviteCode] = useState(
-    () => searchParams.get("invite")?.toUpperCase() ?? ""
-  )
-  const [inviteRequired, setInviteRequired] = useState(false)
-  const [touched, setTouched] = useState<{ email?: boolean; phone?: boolean; password?: boolean; confirm?: boolean }>({})
+  const [confirmation, setConfirmation] = useState("")
+  const [inviteCode, setInviteCode] = useState(() => searchParams.get("invite")?.toUpperCase() ?? "")
+  const [config, setConfig] = useState<{ inviteRequired: boolean; emailDeliveryAvailable?: boolean } | null>(null)
   const [error, setError] = useState("")
+  const [notice, setNotice] = useState("")
+  const [sending, setSending] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [cooldown, setCooldown] = useState(0)
 
-  const emailRef = useRef<HTMLInputElement | null>(null)
-  const phoneRef = useRef<HTMLInputElement | null>(null)
-  const passwordRef = useRef<HTMLInputElement | null>(null)
-  const confirmRef = useRef<HTMLInputElement | null>(null)
-
+  useEffect(() => { if (user) router.replace(nextPath) }, [user, router, nextPath])
   useEffect(() => {
-    if (user) router.replace(nextPath)
-  }, [user, router, nextPath])
-
-  useEffect(() => {
-    let active = true
-    fetch("/api/config/register")
-      .then((response) => response.json())
-      .then((config: { inviteRequired?: boolean }) => {
-        if (active) setInviteRequired(Boolean(config.inviteRequired))
+    const controller = new AbortController()
+    fetch("/api/config/register", { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error()
+        const result = await response.json()
+        if (typeof result.inviteRequired !== "boolean") throw new Error()
+        setConfig(result)
       })
-      .catch(() => undefined)
-    return () => {
-      active = false
-    }
+      .catch(() => { if (!controller.signal.aborted) setError("注册信息加载失败，请刷新重试") })
+    return () => controller.abort()
   }, [])
+  useEffect(() => {
+    if (!cooldown) return
+    const timer = setTimeout(() => setCooldown((seconds) => Math.max(0, seconds - 1)), 1000)
+    return () => clearTimeout(timer)
+  }, [cooldown])
 
-  if (user) return null
-
-  const emailError =
-    touched.email && email && !EMAIL_RE.test(email.trim())
-      ? "邮箱格式看起来不太对,检查一下 @ 和域名"
-      : null
-  const phoneError =
-    touched.phone && phone && !PHONE_RE.test(phone.trim())
-      ? "手机号应该是 11 位数字,以 1 开头"
-      : null
-  const passwordError =
-    touched.password && password && password.length < 8
-      ? "密码至少 8 位字符"
-      : null
-  const confirmError =
-    touched.confirm && confirmPassword && confirmPassword !== password
-      ? "两次密码输入不一致"
-      : null
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError("")
-
-    setTouched({ email: true, phone: true, password: true, confirm: true })
-
-    if (mode === "email" && !email.trim()) {
-      emailRef.current?.focus()
-      return
-    }
-    if (mode === "phone" && !phone.trim()) {
-      phoneRef.current?.focus()
-      return
-    }
-    if (!password) {
-      passwordRef.current?.focus()
-      return
-    }
-    if (!confirmPassword) {
-      confirmRef.current?.focus()
-      return
-    }
-    const invalidEmail = mode === "email" && !EMAIL_RE.test(email.trim())
-    const invalidPhone = mode === "phone" && !PHONE_RE.test(phone.trim())
-    const invalidPassword = password.length < 8
-    const invalidConfirmation = confirmPassword !== password
-    if (invalidEmail || invalidPhone || invalidPassword || invalidConfirmation) {
-      // Focus the first invalid field
-      if (invalidEmail) emailRef.current?.focus()
-      else if (invalidPhone) phoneRef.current?.focus()
-      else if (invalidPassword) passwordRef.current?.focus()
-      else confirmRef.current?.focus()
-      return
-    }
-    if (inviteRequired && !inviteCode.trim()) {
-      setError("请输入有效的邀请码")
-      return
-    }
-
-    setSubmitting(true)
-    const result = await register({
-      email: mode === "email" ? email.trim() : undefined,
-      phone: mode === "phone" ? phone.trim() : undefined,
-      password,
-      inviteCode: inviteCode.trim() || undefined,
-    })
-    setSubmitting(false)
-
-    if (result.error) {
-      setError(result.error)
-    } else {
-      router.replace(nextPath)
-    }
+  function validEmailAndInvite() {
+    if (!EMAIL_RE.test(email.trim()) || email.trim().length > 254) { setError("请输入有效邮箱"); return false }
+    if (config?.inviteRequired && !inviteCode.trim()) { setError("请输入邀请码"); return false }
+    return true
   }
 
-  const inputBase =
-    "w-full rounded-2xl border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-all focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-  const inputNormal = "border-border focus-visible:border-primary"
-  const inputError = "border-destructive-bright focus-visible:border-destructive-bright focus-visible:ring-destructive-bright/30"
+  async function sendCode() {
+    setError("")
+    setNotice("")
+    if (!validEmailAndInvite()) return
+    setSending(true)
+    try {
+      const response = await fetch("/api/auth/register-code", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), inviteCode: inviteCode.trim() || undefined }),
+      })
+      const result = await response.json()
+      if (!response.ok) {
+        if (response.status === 429) setCooldown(Math.min(3600, Math.max(1, Number(response.headers.get("Retry-After")) || 60)))
+        throw new Error(result.error ?? "验证码发送失败，请稍后重试")
+      }
+      setCooldown(60)
+      setNotice("验证码已发送，请查看邮箱")
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "网络异常，请稍后重试")
+    } finally { setSending(false) }
+  }
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault()
+    setError("")
+    if (!validEmailAndInvite()) return
+    if (!/^\d{6}$/.test(verificationCode)) { setError("请输入 6 位邮箱验证码"); return }
+    if (password.length < 8 || password.length > 128) { setError("密码需要 8–128 位字符"); return }
+    if (confirmation !== password) { setError("两次密码输入不一致"); return }
+    setSubmitting(true)
+    const result = await register({ email: email.trim().toLowerCase(), verificationCode, password, inviteCode: inviteCode.trim() || undefined })
+    setSubmitting(false)
+    if (result.error) setError(result.error)
+    else router.replace(nextPath)
+  }
+
+  if (user) return null
+  const inputClass = "mt-1.5 min-h-11 w-full rounded-lg border border-input bg-card px-3 py-2 text-sm font-normal outline-none focus-visible:ring-2 focus-visible:ring-ring"
+  const unavailable = config?.emailDeliveryAvailable === false
 
   return (
-    <div className="flex min-h-[80vh] items-center justify-center px-4">
-      <WebSurface variant="elevated" className="w-full max-w-form p-8">
-        {/* Brand */}
-        <div className="mb-8 flex flex-col items-center gap-3">
-          <div className="flex size-14 items-center justify-center rounded-2xl bg-secondary shadow-[0_4px_0_rgba(14,143,95,0.12)]">
-            <Compass className="size-7 text-secondary-foreground" />
-          </div>
-          <h1 className="text-xl font-semibold text-foreground">注册在场</h1>
-        </div>
-
-        {/* Toggle */}
-        <div className="mb-6 flex rounded-2xl bg-muted p-1">
-          <button
-            type="button"
-            onClick={() => {
-              setMode("email")
-              setTouched((t) => ({ ...t, phone: false }))
-            }}
-            aria-pressed={mode === "email"}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition-all ${
-              mode === "email"
-                ? "bg-white text-foreground shadow-[0_2px_0_rgba(17,24,39,0.06)]"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Mail className="size-4" />
+    <section className="mx-auto flex min-h-[80vh] w-full max-w-form items-center px-4 py-10">
+      <WebSurface variant="elevated" className="w-full p-6 sm:p-8">
+        <Mail className="mb-3 size-6 text-primary" aria-hidden="true" />
+        <h1 className="text-2xl font-semibold">注册在场</h1>
+        <form onSubmit={submit} className="mt-6 space-y-4" noValidate>
+          <label className="block text-sm font-medium">
             邮箱
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setMode("phone")
-              setTouched((t) => ({ ...t, email: false }))
-            }}
-            aria-pressed={mode === "phone"}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition-all ${
-              mode === "phone"
-                ? "bg-white text-foreground shadow-[0_2px_0_rgba(17,24,39,0.06)]"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Phone className="size-4" />
-            手机
-          </button>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-          {mode === "email" ? (
-            <div>
-              <label htmlFor="register-email" className="mb-1.5 block text-sm font-medium text-foreground">
-                邮箱
-              </label>
-              <input
-                ref={emailRef}
-                id="register-email"
-                type="email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value)
-                  if (error) setError("")
-                }}
-                onBlur={() => setTouched((t) => ({ ...t, email: true }))}
-                placeholder="name@company.com"
-                aria-invalid={emailError ? true : undefined}
-                aria-describedby={emailError ? "register-email-error" : undefined}
-                className={`${inputBase} ${emailError ? inputError : inputNormal}`}
-              />
-              {emailError ? (
-                <p id="register-email-error" className="mt-1.5 text-xs text-destructive-bright">
-                  {emailError}
-                </p>
-              ) : null}
-            </div>
-          ) : (
-            <div>
-              <label htmlFor="register-phone" className="mb-1.5 block text-sm font-medium text-foreground">
-                手机号
-              </label>
-              <input
-                ref={phoneRef}
-                id="register-phone"
-                type="tel"
-                value={phone}
-                onChange={(e) => {
-                  setPhone(e.target.value)
-                  if (error) setError("")
-                }}
-                onBlur={() => setTouched((t) => ({ ...t, phone: true }))}
-                placeholder="13800138000"
-                maxLength={11}
-                inputMode="numeric"
-                aria-invalid={phoneError ? true : undefined}
-                aria-describedby={phoneError ? "register-phone-error" : undefined}
-                className={`${inputBase} ${phoneError ? inputError : inputNormal}`}
-              />
-              {phoneError ? (
-                <p id="register-phone-error" className="mt-1.5 text-xs text-destructive-bright">
-                  {phoneError}
-                </p>
-              ) : null}
-            </div>
-          )}
-
-          <div>
-            <label htmlFor="register-password" className="mb-1.5 block text-sm font-medium text-foreground">
-              密码
-            </label>
-            <input
-              ref={passwordRef}
-              id="register-password"
-              type="password"
-              autoComplete="new-password"
-              maxLength={128}
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value)
-                if (error) setError("")
-              }}
-              onBlur={() => setTouched((t) => ({ ...t, password: true }))}
-              placeholder="至少 8 位字符"
-              aria-invalid={passwordError ? true : undefined}
-              aria-describedby={passwordError ? "register-password-error" : undefined}
-              className={`${inputBase} ${passwordError ? inputError : inputNormal}`}
-            />
-            {passwordError ? (
-              <p id="register-password-error" className="mt-1.5 text-xs text-destructive-bright">
-                {passwordError}
-              </p>
-            ) : null}
-          </div>
-
-          <div>
-            <label htmlFor="register-confirm" className="mb-1.5 block text-sm font-medium text-foreground">
-              确认密码
-            </label>
-            <input
-              ref={confirmRef}
-              id="register-confirm"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => {
-                setConfirmPassword(e.target.value)
-                if (error) setError("")
-              }}
-              onBlur={() => setTouched((t) => ({ ...t, confirm: true }))}
-              placeholder="再次输入密码"
-              aria-invalid={confirmError ? true : undefined}
-              aria-describedby={confirmError ? "register-confirm-error" : undefined}
-              className={`${inputBase} ${confirmError ? inputError : inputNormal}`}
-            />
-            {confirmError ? (
-              <p id="register-confirm-error" className="mt-1.5 text-xs text-destructive-bright">
-                {confirmError}
-              </p>
-            ) : null}
-          </div>
-
-          {/* Invite code */}
-          <div>
-            <label htmlFor="register-invite" className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-foreground">
-              <Ticket className="size-3.5 text-muted-foreground" />
-              邀请码
-              <span className="text-xs font-normal text-muted-foreground">
-                {inviteRequired ? "（必填）" : "（选填）"}
-              </span>
-            </label>
-            <input
-              id="register-invite"
-              type="text"
-              value={inviteCode}
-              onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-              placeholder="XXXXXXXX"
-              maxLength={8}
-              autoCapitalize="characters"
-              spellCheck={false}
-              required={inviteRequired}
-              className={`${inputBase} ${inputNormal} font-mono tracking-widest`}
-            />
-          </div>
-
-          {error ? (
-            <p id="register-error" role="alert" className="rounded-xl bg-destructive-bright/10 px-4 py-2.5 text-sm text-destructive-bright">
-              {error}
-            </p>
-          ) : null}
-
-          {/* Privacy note */}
-          <div className="flex items-start gap-2 rounded-2xl bg-muted p-3">
-            <Shield className="mt-0.5 size-4 shrink-0 text-primary" />
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              注册即表示同意在场的匿名保护规则。你的身份信息不会向公司方公开。
-            </p>
-          </div>
-
-          <WebButton
-            type="submit"
-            variant="primary"
-            size="lg"
-            disabled={submitting}
-            className="w-full"
-          >
-            {submitting ? (
-              <>
-                <Loader2 className="size-4 animate-spin" />
-                注册中…
-              </>
-            ) : (
-              "注册"
-            )}
+            <input type="email" autoComplete="email" maxLength={254} value={email} disabled={sending || submitting}
+              onChange={(event) => { setEmail(event.target.value); setVerificationCode(""); setNotice("") }}
+              placeholder="name@example.com" className={inputClass} />
+          </label>
+          {config?.inviteRequired ? <label className="block text-sm font-medium">
+            邀请码
+            <input value={inviteCode} onChange={(event) => setInviteCode(event.target.value.toUpperCase())}
+              maxLength={8} autoCapitalize="characters" spellCheck={false} className={inputClass} />
+          </label> : null}
+          <label className="block text-sm font-medium">
+            邮箱验证码
+            <span className="mt-1.5 flex min-w-0 gap-2">
+              <input aria-label="邮箱验证码" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={verificationCode}
+                onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="6 位数字" className={inputClass + " mt-0 min-w-0 flex-1 tabular-nums"} />
+              <WebButton type="button" variant="secondary" onClick={() => void sendCode()}
+                disabled={sending || submitting || cooldown > 0 || !config || unavailable}>
+                {sending ? "发送中…" : cooldown ? cooldown + " 秒后重发" : "获取验证码"}
+              </WebButton>
+            </span>
+          </label>
+          <label className="block text-sm font-medium">
+            密码
+            <input type="password" autoComplete="new-password" minLength={8} maxLength={128} value={password}
+              onChange={(event) => setPassword(event.target.value)} placeholder="8–128 位字符" className={inputClass} />
+          </label>
+          <label className="block text-sm font-medium">
+            确认密码
+            <input type="password" autoComplete="new-password" maxLength={128} value={confirmation}
+              onChange={(event) => setConfirmation(event.target.value)} className={inputClass} />
+          </label>
+          {notice ? <p role="status" className="text-sm text-primary-deep">{notice}</p> : null}
+          {unavailable ? <p role="status" className="text-sm text-muted-foreground">邮箱验证暂不可用，请稍后再试。</p> : null}
+          {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
+          <p className="text-xs leading-6 text-muted-foreground">
+            注册即表示同意<Link href="/legal/terms" className="underline">用户协议</Link>和<Link href="/legal/privacy" className="underline">隐私政策</Link>。你的身份信息不会向公司方公开。
+          </p>
+          <WebButton type="submit" variant="primary" disabled={submitting || sending || !config || unavailable} className="w-full">
+            {submitting ? <><Loader2 className="size-4 animate-spin" aria-hidden="true" />注册中…</> : "注册"}
           </WebButton>
         </form>
-
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          已有账号？{" "}
-          <Link href={withNext("/login", nextPath)} className="font-semibold text-primary hover:underline">
-            登录
-          </Link>
-        </p>
+        <p className="mt-6 text-center text-sm text-muted-foreground">已有账号？<Link href={withNext("/login", nextPath)} className="ml-1 font-medium text-primary-deep underline">登录</Link></p>
       </WebSurface>
-    </div>
+    </section>
   )
 }

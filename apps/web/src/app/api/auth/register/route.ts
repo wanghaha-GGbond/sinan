@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { and, eq, isNull, or } from "drizzle-orm"
+import { randomUUID } from "node:crypto"
+import { and, eq, isNull } from "drizzle-orm"
 import { users } from "@/db/schema/users"
 import { hashPassword, setAuthCookie } from "@/lib/server/auth"
 import { checkAuthIpLimit } from "@/lib/server/auth-rate-limit"
@@ -10,9 +11,10 @@ import {
   isInviteRequired,
 } from "@/lib/server/invites"
 import { isDevAuthEnabled } from "@/lib/server/dev-auth"
+import { isRegistrationCode } from "@/lib/server/registration-code-policy"
+import { consumeRegistrationCode } from "@/lib/server/registration-codes"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const PHONE_RE = /^1[3-9]\d{9}$/
 
 export async function POST(request: NextRequest) {
   const nativeClient = request.headers.get("x-sinan-client") === "ios"
@@ -25,14 +27,13 @@ export async function POST(request: NextRequest) {
   }
 
   const email = body.email ? String(body.email).trim().toLowerCase() : undefined
-  const phone = body.phone ? String(body.phone).trim() : undefined
+  const verificationCode = typeof body.verificationCode === "string" ? body.verificationCode.trim() : ""
   const password = String(body.password ?? "")
   const inviteCode = body.inviteCode ? String(body.inviteCode).trim().toUpperCase() : undefined
 
-  // Must provide email or phone
-  if (!email && !phone) {
+  if (!email || body.phone) {
     return NextResponse.json(
-      { error: "Email or phone is required" },
+      { error: "请使用邮箱注册" },
       { status: 400 }
     )
   }
@@ -40,15 +41,7 @@ export async function POST(request: NextRequest) {
   // Validate email format
   if (email && (email.length > 254 || !EMAIL_RE.test(email))) {
     return NextResponse.json(
-      { error: "Invalid email format" },
-      { status: 400 }
-    )
-  }
-
-  // Validate phone format
-  if (phone && !PHONE_RE.test(phone)) {
-    return NextResponse.json(
-      { error: "Invalid phone format" },
+      { error: "请输入有效邮箱" },
       { status: 400 }
     )
   }
@@ -56,17 +49,20 @@ export async function POST(request: NextRequest) {
   // Password requirements
   if (!isNewPasswordValid(password)) {
     return NextResponse.json(
-      { error: "Password must be 8–128 characters" },
+      { error: "密码需要 8–128 位字符" },
       { status: 400 }
     )
   }
 
-  const displayName = email
-    ? email.split("@")[0]
-    : `用户${phone?.slice(-4) ?? ""}`
+  // The public nickname must not disclose part of the verified email address.
+  const displayName = `用户${randomUUID().slice(0, 6)}`
+
+  if (!isDevAuthEnabled() && !isRegistrationCode(verificationCode)) {
+    return NextResponse.json({ error: "请输入邮箱收到的 6 位验证码" }, { status: 400 })
+  }
 
   if (isInviteRequired() && !inviteCode) {
-    return NextResponse.json({ error: "Invite code required" }, { status: 403 })
+    return NextResponse.json({ error: "请输入邀请码" }, { status: 403 })
   }
 
   // Rate limit only actual registration attempts (after validation passes),
@@ -91,7 +87,7 @@ export async function POST(request: NextRequest) {
       {
         user: {
           id: "dev-user-001",
-          displayName: email ? email.split("@")[0] : `用户${phone?.slice(-4) ?? ""}`,
+          displayName,
           role: "user",
         }, ...(nativeClient ? { token } : {}),
       },
@@ -110,7 +106,7 @@ export async function POST(request: NextRequest) {
     pendingInvite = await findInvite(inviteCode)
     if (!pendingInvite) {
       return NextResponse.json(
-        { error: "Invalid or already used invite code" },
+        { error: "邀请码无效或已使用" },
         { status: 422 }
       )
     }
@@ -119,35 +115,28 @@ export async function POST(request: NextRequest) {
   try {
     const { db } = await import("@/db/client")
 
-    // Check for duplicate email or phone
-    const dupChecks: ReturnType<typeof and>[] = [isNull(users.deletedAt)]
-    if (email) dupChecks.push(eq(users.email, email))
-    if (phone) dupChecks.push(eq(users.phone, phone))
-
     const [existing] = await db
       .select({ id: users.id })
       .from(users)
-      .where(
-        email && phone
-          ? and(isNull(users.deletedAt), or(eq(users.email, email), eq(users.phone, phone)))
-          : and(...dupChecks)
-      )
+      .where(and(isNull(users.deletedAt), eq(users.email, email)))
       .limit(1)
 
     if (existing) {
       return NextResponse.json(
-        { error: "Email or phone already registered" },
+        { error: "该邮箱已注册，请登录" },
         { status: 409 }
       )
     }
 
-    // Create user + consume invite atomically
+    // Email challenge, account and invitation commit together. Failed code
+    // attempts must commit their counter rather than be rolled back by a throw.
     const user = await db.transaction(async (tx) => {
+      if (!(await consumeRegistrationCode(tx, email, verificationCode))) return null
       const [newUser] = await tx
         .insert(users)
         .values({
           email,
-          phone,
+          emailVerifiedAt: new Date(),
           passwordHash,
           displayName,
           role: "user",
@@ -166,6 +155,10 @@ export async function POST(request: NextRequest) {
       return newUser
     })
 
+    if (!user) {
+      return NextResponse.json({ error: "验证码错误或已失效，请重新获取" }, { status: 400 })
+    }
+
     const token = await setAuthCookie({ userId: user.id, role: user.role, sessionVersion: user.sessionVersion })
 
     return NextResponse.json(
@@ -181,7 +174,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof Error && error.message === "INVITE_ALREADY_CONSUMED") {
       return NextResponse.json(
-        { error: "Invalid or already used invite code" },
+        { error: "邀请码无效或已使用" },
         { status: 422 }
       )
     }
@@ -193,13 +186,13 @@ export async function POST(request: NextRequest) {
       (error as { code: string }).code === "23505"
     ) {
       return NextResponse.json(
-        { error: "Email or phone already registered" },
+        { error: "该邮箱已注册，请登录" },
         { status: 409 }
       )
     }
     console.error(JSON.stringify({ event: "registration_failed", release: process.env.APP_RELEASE }))
     return NextResponse.json(
-      { error: "Database not configured" },
+      { error: "注册暂不可用，请稍后重试" },
       { status: 503 }
     )
   }

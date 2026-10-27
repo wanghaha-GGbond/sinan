@@ -10,7 +10,7 @@ export function getAuthClientKey(request: Request): string {
   return value && isIP(value) ? value : "unknown"
 }
 
-export async function checkAuthIpLimit(request: Request, action: "login" | "register" | "forgot-password" | "reset-password") {
+export async function checkAuthIpLimit(request: Request, action: "login" | "register" | "register-code" | "forgot-password" | "reset-password") {
   const config = action === "register"
     ? { maxRequests: 3, windowSeconds: 3600 }
     : action === "login"
@@ -19,8 +19,10 @@ export async function checkAuthIpLimit(request: Request, action: "login" | "regi
   return checkPersistentRateLimit(`auth:${action}:ip:${getAuthClientKey(request)}`, config)
 }
 
-export async function checkAuthAccountLimit(action: "login" | "forgot-password", identity: string) {
+export async function checkAuthAccountLimit(action: "login" | "forgot-password" | "register-code", identity: string) {
   return checkPersistentRateLimit(`auth:${action}:account:${identity}`, action === "login"
     ? { maxRequests: 30, windowSeconds: 900 }
-    : { maxRequests: 3, windowSeconds: 3600 })
+    : action === "register-code"
+      ? { maxRequests: 1, windowSeconds: 60 }
+      : { maxRequests: 3, windowSeconds: 3600 })
 }

@@ -48,8 +48,8 @@ MAIL_FROM_DOMAIN=<verified sender domain>
 ERROR_REPORTING_MODE=stdout
 ```
 
-`MAIL_PROVIDER=disabled` 仅允许用于 `staging`。此时注册、登录、公司、评价等
-非邮件流程可测试，企业邮箱验证码接口会安全返回不可用，且不会把邮箱或验证码
+`MAIL_PROVIDER=disabled` 仅允许用于 `staging`。此时可用预置账号测试登录、公司、评价等
+非邮件流程；新注册和企业邮箱验证码会安全返回不可用，且不会把邮箱或验证码
 写入日志。Production 仍强制要求 Resend 或阿里云邮件推送。
 
 如果使用阿里云 DirectMail，可以把邮件变量替换为 `ALIYUN_DM_ACCOUNT_NAME` 和 `ALIYUN_DM_REGION`。不要把任何 token、数据库连接串或密钥提交到 Git。
@@ -98,7 +98,7 @@ npm run build --workspace=@sinan/web
 https://<staging-url>/invite/<invite-code>
 ```
 
-测试人员在邀请页进入注册，使用邮箱或手机号、至少 8 位密码完成注册。注册成功后即可登录并测试评价主链路；同一邀请码不能重复使用。
+邮件服务配置并验收后，测试人员在邀请页进入注册，使用邮箱收到的六位验证码和 8–128 位密码完成注册。注册成功后默认进入个人主页，再测试评价主链路；同一邀请码不能重复使用。手机号不再作为新注册入口。详见 [邮箱注册验收](email-registration.md)。
 
 ## 晋级生产
 

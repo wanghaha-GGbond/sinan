@@ -155,6 +155,13 @@
       "when": 1790985600000,
       "tag": "0021_password_recovery",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1793059200000,
+      "tag": "0022_email_registration",
+      "breakpoints": true
     }
   ]
 }

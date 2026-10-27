@@ -55,7 +55,7 @@ CI 的两套构建使用 `CF_VALIDATION_ONLY=true` 和 `.invalid` 邮箱，标�
 2. 创建隔离 staging Worker 并配置独立 Neon 测试库。不要复制含真实用户的生产分支作为公共 Preview。
 3. 每个 Worker 分别配置 secrets：`DATABASE_URL`、至少 32 字符的 `AUTH_SECRET`、`CRON_SECRET`，正式环境另需 `RESEND_API_KEY`。通过控制台或明确 Worker/config 的交互式 secret 命令输入，不写入 vars、命令参数、日志或仓库。
 4. GitHub 配置需人工批准的发布 Environment；未来上传使用受限 Cloudflare API Token。当前新增 workflow **只有检查，没有自动上传/切流量**。
-5. staging 应用全部当前迁移并重复验证；确认缺少迁移时 ready 为 503。生产先创建可恢复备份，再应用兼容迁移。当前最新为 `0021_password_recovery`。
+5. staging 应用全部当前迁移并重复验证；确认缺少迁移时 ready 为 503。生产先创建可恢复备份，再应用兼容迁移。当前最新为 `0022_email_registration`，认证契约为 `2`，详见 [邮箱注册验收](email-registration.md)。
 6. 验收真实邮件、支持邮箱、注册登录、找回改密、研报、评价审核、投票和注销。仅使用授权测试账号。
 7. 核实认证兼容的回滚基线。**现有旧版本可能没有 session_version 检查，不可默认拿它回滚。** 首次升级未制定兼容回滚方案前，不开放实际改密。
 8. 完成准备后，再启用候选上传、受保护探针、批准切流量及失败处理。OpenNext `upload` 可上传候选而不立即接管流量；默认禁止公开 preview URL，所以本次没有假装已有候选探针。新 Worker 的入口/触发器需单独确认，上传不等于开站。
