@@ -102,11 +102,12 @@ jobs:
 
       - name: Validate staging environment contract
         env:
+          DEPLOYMENT_REGION: global
           DATABASE_URL: ${{ steps.create-neon-branch.outputs.db_url_pooled }}
           DATABASE_ADAPTER: neon
           APP_RELEASE: ${{ github.sha }}
           NEXT_PUBLIC_APP_URL: https://sinan-staging.vercel.app
-          NEXT_PUBLIC_ICP_FILING_NUMBER: 浙ICP备STAGING-PENDING号
+          NEXT_PUBLIC_ICP_FILING_NUMBER: ""
           NEXT_PUBLIC_APP_ENV: staging
           NEXT_PUBLIC_API_ENABLED: "true"
           NEXT_PUBLIC_PULSE_ENABLED: "true"
@@ -129,12 +130,15 @@ jobs:
             --scope "$VERCEL_ORG_ID" \
             --token "$VERCEL_TOKEN" \
             --build-env NEXT_PUBLIC_APP_URL=https://sinan-staging.vercel.app \
+            --build-env DEPLOYMENT_REGION=global \
             --build-env NEXT_PUBLIC_APP_ENV=staging \
             --build-env NEXT_PUBLIC_API_ENABLED=true \
             --build-env NEXT_PUBLIC_PULSE_ENABLED=true \
-            --build-env NEXT_PUBLIC_ICP_FILING_NUMBER=浙ICP备STAGING-PENDING号 \
+            --build-env NEXT_PUBLIC_ICP_FILING_NUMBER= \
             --build-env LAUNCH_SCOPE_ONLY=true \
             --env NEXT_PUBLIC_APP_URL=https://sinan-staging.vercel.app \
+            --env DEPLOYMENT_REGION=global \
+            --env AUTH_TRUSTED_IP_HEADER=x-vercel-forwarded-for \
             --env NEXT_PUBLIC_APP_ENV=staging \
             --env NEXT_PUBLIC_API_ENABLED=true \
             --env NEXT_PUBLIC_PULSE_ENABLED=true \
@@ -149,7 +153,7 @@ jobs:
             --env MAIL_FROM_DOMAIN=sinanapp.cn \
             --env ERROR_REPORTING_MODE=stdout \
             --env SUPPORT_EMAIL=support@sinanapp.cn \
-            --env NEXT_PUBLIC_ICP_FILING_NUMBER=浙ICP备STAGING-PENDING号)
+            --env NEXT_PUBLIC_ICP_FILING_NUMBER=)
           preview_url=$(printf '%s\n' "$deploy_output" | tail -n 1 | tr -d '\r')
           [[ "$preview_url" == https://* ]]
           echo "url=$preview_url" >> "$GITHUB_OUTPUT"
@@ -243,10 +247,11 @@ jobs:
 
       - name: Validate staging environment contract
         env:
+          DEPLOYMENT_REGION: global
           DATABASE_ADAPTER: neon
           APP_RELEASE: ${{ github.sha }}
           NEXT_PUBLIC_APP_URL: https://sinan-staging.vercel.app
-          NEXT_PUBLIC_ICP_FILING_NUMBER: 浙ICP备STAGING-PENDING号
+          NEXT_PUBLIC_ICP_FILING_NUMBER: ""
           NEXT_PUBLIC_APP_ENV: staging
           NEXT_PUBLIC_API_ENABLED: "true"
           NEXT_PUBLIC_PULSE_ENABLED: "true"
@@ -267,12 +272,15 @@ jobs:
             --scope "$VERCEL_ORG_ID" \
             --token "$VERCEL_TOKEN" \
             --build-env NEXT_PUBLIC_APP_URL=https://sinan-staging.vercel.app \
+            --build-env DEPLOYMENT_REGION=global \
             --build-env NEXT_PUBLIC_APP_ENV=staging \
             --build-env NEXT_PUBLIC_API_ENABLED=true \
             --build-env NEXT_PUBLIC_PULSE_ENABLED=true \
-            --build-env NEXT_PUBLIC_ICP_FILING_NUMBER=浙ICP备STAGING-PENDING号 \
+            --build-env NEXT_PUBLIC_ICP_FILING_NUMBER= \
             --build-env LAUNCH_SCOPE_ONLY=true \
             --env NEXT_PUBLIC_APP_URL=https://sinan-staging.vercel.app \
+            --env DEPLOYMENT_REGION=global \
+            --env AUTH_TRUSTED_IP_HEADER=x-vercel-forwarded-for \
             --env NEXT_PUBLIC_APP_ENV=staging \
             --env NEXT_PUBLIC_API_ENABLED=true \
             --env NEXT_PUBLIC_PULSE_ENABLED=true \
@@ -287,7 +295,7 @@ jobs:
             --env MAIL_FROM_DOMAIN=sinanapp.cn \
             --env ERROR_REPORTING_MODE=stdout \
             --env SUPPORT_EMAIL=support@sinanapp.cn \
-            --env NEXT_PUBLIC_ICP_FILING_NUMBER=浙ICP备STAGING-PENDING号)
+            --env NEXT_PUBLIC_ICP_FILING_NUMBER=)
           staging_url=$(printf '%s\n' "$deploy_output" | tail -n 1 | tr -d '\r')
           [[ "$staging_url" == https://* ]]
           echo "url=$staging_url" >> "$GITHUB_OUTPUT"
