@@ -35,7 +35,8 @@ jobs:
     env:
       VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      # Accept the deployment credential saved as VERCEL in the staging environment.
+      VERCEL_TOKEN: ${{ secrets.VERCEL || secrets.VERCEL_TOKEN }}
       NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
       NEON_PARENT_BRANCH: ${{ vars.NEON_STAGING_BRANCH }}
       AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
@@ -207,7 +208,7 @@ jobs:
     env:
       VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL || secrets.VERCEL_TOKEN }}
       DATABASE_URL: ${{ secrets.NEON_STAGING_DATABASE_URL }}
       AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
