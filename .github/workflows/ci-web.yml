@@ -127,4 +127,6 @@ jobs:
         run: npm run db:migrate --workspace=@sinan/web
       - run: npm run test:integration --workspace=@sinan/web
       - run: npx playwright install --with-deps chromium
+      - name: Preview routed request teardown regression
+        run: npm exec --workspace=@sinan/web -- playwright test --config=playwright.preview-lifecycle.config.ts
       - run: npm run test:e2e:release --workspace=@sinan/web

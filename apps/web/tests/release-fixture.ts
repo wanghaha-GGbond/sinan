@@ -38,7 +38,20 @@ export const test = base.extend({
         }
       })
     }
-    await completeFixture(context)
+    try {
+      await completeFixture(context)
+    } finally {
+      await context.unrouteAll({ behavior: "wait" })
+    }
+  },
+  page: async ({ page }, completeFixture) => {
+    try {
+      await completeFixture(page)
+    } finally {
+      // The base page fixture closes before the context fixture tears down.
+      // Drain routed background requests while the page and test are alive.
+      await page.context().unrouteAll({ behavior: "wait" })
+    }
   },
   request: async ({ request }, completeFixture) => {
     await completeFixture(authorizedReleaseRequest(request))
