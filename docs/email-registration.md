@@ -79,3 +79,13 @@ UI 历史标签 `ui-v0.0.1` 保持不变，本功能是该冻结版本之后的�
 2. 在目标运行环境配置独立的 `RESEND_API_KEY`。没有验证过的自有发信域名，只能按上文进行账号本人测试，不能向公众开放注册。
 3. iOS 审计仍受 Expo 依赖链中的 [node-forge 未修复漏洞](https://github.com/advisories/GHSA-86w9-cpqp-85rv) 和 [Zod 旧版本漏洞](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5) 阻断。未关闭审计、添加豁免或强制跨大版本替换依赖。
 4. PR #7 仍需另一位开发者批准，且必需检查通过才能合并；随后才能迁移正式库并发布。真实邮件和线上完整注册仍未验收。
+
+### 部署权限后续核查
+
+- 2026-10-28 Preview 第二次执行（run `40649869929`、job `122697088769`）已通过配置项检查，随后在 `Link Vercel project` 报 `You do not have access to the specified account`。这不是 UI 编译失败，也不能仅凭此消息断定项目 ID 错误。
+- 已在流水线增加精确项目只读预检（`scripts/vercel-access.mjs`）：区分凭据 401、项目/团队访问 403/404、错误项目或构建根目录。凭据与服务商响应正文均不输出到日志；预检失败时不创建 Neon 分支、不部署。
+- 预检本地 5 项测试、Web 类型检查和 lint 通过（0 错误、2 项既有 warning）。工作流 YAML 与 shell 语法检查通过；这不是云端权限恢复的证明。
+- staging 已保存新的项目限定 `NEON_API_KEY` 和仅发送权限 `RESEND_API_KEY`，并启用所有者部署审批、关闭管理员绕过。现有 Preview 仍保持 `MAIL_PROVIDER=disabled`，保存邮件密钥不等于已经启用注册发信。
+- 新 Vercel 部署 Token 拟仅授权 `web` 项目、有效 30 天，等待所有者明确确认后创建并保存至受保护 staging；不使用临时 MCP 认证凭据作为持久 CI 密钥。
+- 朋友 PR #4 的三页 UI 已在 `5600826` 选择性移植，来源与取舍保留在 `docs/uiux-v1-baseline.md`。无需再次覆盖相同文件；代码整合、合并主线和生产部署分别记录。
+- 生产注册仍需自有且完成 Resend 验证的发信域名。没有域名时只能在 staging 对授权本人邮箱验收；不会把 `resend.dev` 测试发件人用于公开生产注册。

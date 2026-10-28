@@ -64,6 +64,9 @@ jobs:
             exit 1
           fi
 
+      - name: Verify access to the exact Vercel staging project
+        run: node apps/web/scripts/vercel-access.mjs
+
       - name: Link Vercel project
         run: |
           npx --yes vercel@"$VERCEL_CLI_VERSION" link \
@@ -224,6 +227,9 @@ jobs:
           test -n "$DATABASE_URL"
           test -n "$AUTH_SECRET"
           test -n "$CRON_SECRET"
+
+      - name: Verify access to the exact Vercel staging project
+        run: node apps/web/scripts/vercel-access.mjs
 
       - name: Link Vercel project
         run: |
