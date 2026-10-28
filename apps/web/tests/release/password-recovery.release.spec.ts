@@ -50,9 +50,11 @@ test("password recovery works in the browser and revokes old sessions", async ({
   }
 })
 
-test("recovery form shows delivery errors and missing links without fake success", async ({ page }, testInfo) => {
+test("recovery form shows delivery errors and missing links without fake success", async ({ page, context }, testInfo) => {
   // UI-only mail failure simulation; no external email service is contacted.
-  await page.route("**/api/auth/forgot-password", (route) => route.fulfill({ status: 503,
+  // Register after the Preview proxy at the same interception level so the
+  // mock wins without overlapping page/context interception during navigation.
+  await context.route("**/api/auth/forgot-password", (route) => route.fulfill({ status: 503,
     json: { error: "邮件找回暂不可用，请稍后再试" } }))
   await page.goto("/forgot-password")
   await page.getByLabel("注册邮箱").fill("person@integration.sinan.test")

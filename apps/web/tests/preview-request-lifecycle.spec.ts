@@ -42,3 +42,30 @@ test("a page can finish with a real routed background request still in flight", 
 test("the preceding page fixture drained its request before closing", async () => {
   expect(finished).toBe(true)
 })
+
+test("mail failure mock takes precedence over the proxy across navigation", async ({ page, context }) => {
+  let proxiedMailRequests = 0
+  let mockCalls = 0
+  await context.route("**/*", async (route) => {
+    if (route.request().url().endsWith("/api/auth/forgot-password")) proxiedMailRequests++
+    const response = await route.fetch({ maxRedirects: 0 })
+    await route.fulfill({ response })
+  })
+  await context.route("**/api/auth/forgot-password", (route) => {
+    mockCalls++
+    return route.fulfill({ status: 503, json: { error: "邮件找回暂不可用，请稍后再试" } })
+  })
+  await page.goto(baseURL + "/forgot-password")
+  const result = await page.evaluate(async () => {
+    const response = await fetch("/api/auth/forgot-password", { method: "POST" })
+    return { status: response.status, body: await response.json() }
+  })
+  expect(result.status).toBe(503)
+  expect(result.body.error).toContain("邮件找回暂不可用")
+  startedRequest = new Promise<void>((resolve) => { started = resolve })
+  await page.evaluate(() => { void fetch("/background") })
+  await startedRequest
+  await page.goto(baseURL + "/reset-password")
+  expect(mockCalls).toBe(1)
+  expect(proxiedMailRequests).toBe(0)
+})
