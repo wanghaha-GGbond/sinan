@@ -4,7 +4,7 @@ const releaseBaseURL = process.env.RELEASE_BASE_URL?.trim() || "http://127.0.0.1
 
 export default defineConfig({
   testDir: "./tests/release",
-  testMatch: ["core-api-flow.spec.ts", "password-recovery.release.spec.ts"],
+  testMatch: ["core-api-flow.spec.ts", "password-recovery.release.spec.ts", "owner-registration.mail.spec.ts"],
   timeout: 60_000,
   workers: 1,
   outputDir: "./test-results/release",

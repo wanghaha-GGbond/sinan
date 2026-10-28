@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto"
 
-import { expect, test } from "../database-fixture"
+import { expect, test } from "../release-fixture"
 import { eq, inArray } from "drizzle-orm"
 
 import { db } from "../../src/db/client"

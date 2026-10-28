@@ -42,6 +42,11 @@ jobs:
       AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
       NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEXT_PUBLIC_APP_ENV: staging
+      STAGING_MAIL_TEST_ENABLED: ${{ vars.STAGING_MAIL_TEST_ENABLED || 'false' }}
+      STAGING_OWNER_MAIL_SMOKE_ENABLED: ${{ vars.STAGING_OWNER_MAIL_SMOKE_ENABLED || 'false' }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      MAIL_TEST_RECIPIENT: ${{ secrets.MAIL_TEST_RECIPIENT }}
     steps:
       - uses: actions/checkout@v6
 
@@ -67,6 +72,9 @@ jobs:
 
       - name: Verify access to the exact Vercel staging project
         run: node apps/web/scripts/vercel-access.mjs
+
+      - name: Configure restricted staging email test
+        run: node apps/web/scripts/staging-mail.mjs
 
       - name: Link Vercel project
         run: |
@@ -115,8 +123,6 @@ jobs:
           NEXT_PUBLIC_API_ENABLED: "true"
           NEXT_PUBLIC_PULSE_ENABLED: "true"
           SUPPORT_EMAIL: support@sinanapp.cn
-          MAIL_PROVIDER: disabled
-          MAIL_FROM_DOMAIN: sinanapp.cn
           ERROR_REPORTING_MODE: stdout
           INVITE_REQUIRED: "true"
           LAUNCH_SCOPE_ONLY: "true"
@@ -127,6 +133,12 @@ jobs:
         env:
           DATABASE_URL: ${{ steps.create-neon-branch.outputs.db_url_pooled }}
         run: |
+          mail_args=(--env "MAIL_PROVIDER=$MAIL_PROVIDER" --env "MAIL_FROM_DOMAIN=$MAIL_FROM_DOMAIN" --env "MAIL_FROM_ADDRESS=$MAIL_FROM_ADDRESS")
+          if [[ "$STAGING_MAIL_TEST_ENABLED" == true ]]; then
+            mail_args+=(--env RESEND_API_KEY --env MAIL_TEST_RECIPIENT)
+          else
+            mail_args+=(--env RESEND_API_KEY= --env MAIL_TEST_RECIPIENT=)
+          fi
           deploy_output=$(npx --yes vercel@"$VERCEL_CLI_VERSION" deploy . \
             --yes \
             --project "$VERCEL_PROJECT_ID" \
@@ -151,8 +163,7 @@ jobs:
             --env AUTH_SECRET \
             --env CRON_SECRET \
             --env APP_RELEASE="${GITHUB_SHA}" \
-            --env MAIL_PROVIDER=disabled \
-            --env MAIL_FROM_DOMAIN=sinanapp.cn \
+            "${mail_args[@]}" \
             --env ERROR_REPORTING_MODE=stdout \
             --env SUPPORT_EMAIL=support@sinanapp.cn \
             --env NEXT_PUBLIC_ICP_FILING_NUMBER=)
@@ -182,11 +193,12 @@ jobs:
           migration=$(jq -r '.entries[-1].tag' apps/web/src/db/migrations/meta/_journal.json)
           vc_curl /api/health/live | jq -e '.status == "ok"'
           vc_curl /api/health/ready | jq -e --arg release "$GITHUB_SHA" --arg migration "$migration" '.status == "ready" and .configuration == "valid" and .database == "reachable" and .schema == "compatible" and .authContract == 2 and .release == $release and .migration == $migration'
-          vc_curl /api/config/register | jq -e '.inviteRequired == true and .emailVerificationRequired == true and .emailDeliveryAvailable == false'
+          vc_curl /api/config/register | jq -e --argjson delivery "$STAGING_MAIL_TEST_ENABLED" '.inviteRequired == true and .emailVerificationRequired == true and .emailDeliveryAvailable == $delivery'
           for path in / /legal/privacy /pulse; do vc_curl "$path" >/dev/null; done
 
       - name: Run release E2E against the isolated Preview
         env:
+          NEON_PREVIEW_BRANCH: sinan-pr-${{ github.event.pull_request.number }}
           DATABASE_URL: ${{ steps.create-neon-branch.outputs.db_url_pooled }}
           DATABASE_ADAPTER: neon
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
@@ -197,7 +209,7 @@ jobs:
           RELEASE_BASE_URL: ${{ steps.deploy.outputs.url }}
         run: |
           npx playwright install --with-deps chromium
-          npm run test:e2e:release --workspace=@sinan/web
+          node apps/web/scripts/run-vercel-release-tests.mjs
 
   staging:
     name: Deploy stable staging to Vercel
@@ -212,6 +224,10 @@ jobs:
       DATABASE_URL: ${{ secrets.NEON_STAGING_DATABASE_URL }}
       AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
+      NEXT_PUBLIC_APP_ENV: staging
+      STAGING_MAIL_TEST_ENABLED: ${{ vars.STAGING_MAIL_TEST_ENABLED || 'false' }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      MAIL_TEST_RECIPIENT: ${{ secrets.MAIL_TEST_RECIPIENT }}
     steps:
       - uses: actions/checkout@v6
 
@@ -231,6 +247,9 @@ jobs:
 
       - name: Verify access to the exact Vercel staging project
         run: node apps/web/scripts/vercel-access.mjs
+
+      - name: Configure restricted staging email test
+        run: node apps/web/scripts/staging-mail.mjs
 
       - name: Link Vercel project
         run: |
@@ -261,8 +280,6 @@ jobs:
           NEXT_PUBLIC_API_ENABLED: "true"
           NEXT_PUBLIC_PULSE_ENABLED: "true"
           SUPPORT_EMAIL: support@sinanapp.cn
-          MAIL_PROVIDER: disabled
-          MAIL_FROM_DOMAIN: sinanapp.cn
           ERROR_REPORTING_MODE: stdout
           INVITE_REQUIRED: "true"
           LAUNCH_SCOPE_ONLY: "true"
@@ -271,6 +288,12 @@ jobs:
       - name: Deploy stable staging
         id: deploy
         run: |
+          mail_args=(--env "MAIL_PROVIDER=$MAIL_PROVIDER" --env "MAIL_FROM_DOMAIN=$MAIL_FROM_DOMAIN" --env "MAIL_FROM_ADDRESS=$MAIL_FROM_ADDRESS")
+          if [[ "$STAGING_MAIL_TEST_ENABLED" == true ]]; then
+            mail_args+=(--env RESEND_API_KEY --env MAIL_TEST_RECIPIENT)
+          else
+            mail_args+=(--env RESEND_API_KEY= --env MAIL_TEST_RECIPIENT=)
+          fi
           deploy_output=$(npx --yes vercel@"$VERCEL_CLI_VERSION" deploy . \
             --yes \
             --project "$VERCEL_PROJECT_ID" \
@@ -295,8 +318,7 @@ jobs:
             --env AUTH_SECRET \
             --env CRON_SECRET \
             --env APP_RELEASE="${GITHUB_SHA}" \
-            --env MAIL_PROVIDER=disabled \
-            --env MAIL_FROM_DOMAIN=sinanapp.cn \
+            "${mail_args[@]}" \
             --env ERROR_REPORTING_MODE=stdout \
             --env SUPPORT_EMAIL=support@sinanapp.cn \
             --env NEXT_PUBLIC_ICP_FILING_NUMBER=)
@@ -326,7 +348,7 @@ jobs:
           migration=$(jq -r '.entries[-1].tag' apps/web/src/db/migrations/meta/_journal.json)
           vc_curl /api/health/live | jq -e '.status == "ok"'
           vc_curl /api/health/ready | jq -e --arg release "$GITHUB_SHA" --arg migration "$migration" '.status == "ready" and .configuration == "valid" and .database == "reachable" and .schema == "compatible" and .authContract == 2 and .release == $release and .migration == $migration'
-          vc_curl /api/config/register | jq -e '.inviteRequired == true and .emailVerificationRequired == true and .emailDeliveryAvailable == false'
+          vc_curl /api/config/register | jq -e --argjson delivery "$STAGING_MAIL_TEST_ENABLED" '.inviteRequired == true and .emailVerificationRequired == true and .emailDeliveryAvailable == $delivery'
           for path in / /legal/privacy /pulse; do vc_curl "$path" >/dev/null; done
 
       - name: Run release E2E against stable staging candidate
@@ -339,7 +361,7 @@ jobs:
           RELEASE_BASE_URL: ${{ steps.deploy.outputs.url }}
         run: |
           npx playwright install --with-deps chromium
-          npm run test:e2e:release --workspace=@sinan/web
+          node apps/web/scripts/run-vercel-release-tests.mjs
 
       - name: Point stable staging alias to verified candidate
         run: |

@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto"
 import { eq, sql } from "drizzle-orm"
-import { expect, test } from "../database-fixture"
+import { authorizedReleaseRequest, expect, test } from "../release-fixture"
 import { db } from "../../src/db/client"
 import { users } from "../../src/db/schema/users"
 import { passwordResetTokens } from "../../src/db/schema/password-reset-tokens"
@@ -13,6 +13,7 @@ test.use({ viewport: { width: 390, height: 844 }, extraHTTPHeaders: {
 } })
 
 test("password recovery works in the browser and revokes old sessions", async ({ page }, testInfo) => {
+  const request = authorizedReleaseRequest(page.request)
   const email = `recovery-e2e-${randomUUID()}@integration.sinan.test`
   const [user] = await db.insert(users).values({ email, passwordHash: await hashPassword("BeforeReset123!") }).returning({ id: users.id })
   try {
@@ -37,13 +38,13 @@ test("password recovery works in the browser and revokes old sessions", async ({
     await page.getByRole("button", { name: "保存新密码" }).click()
     await expect(page.getByRole("heading", { name: "密码已更新" })).toBeVisible()
 
-    const replay = await page.request.post("/api/auth/reset-password", { data: { token, password: "OtherPassword123!" } })
+    const replay = await request.post("/api/auth/reset-password", { data: { token, password: "OtherPassword123!" } })
     expect(replay.status()).toBe(400)
-    const oldSession = await page.request.get("/api/auth/me", { headers: { authorization: `Bearer ${oldJwt}` } })
+    const oldSession = await request.get("/api/auth/me", { headers: { authorization: `Bearer ${oldJwt}` } })
     expect((await oldSession.json()).user).toBeNull()
-    expect((await page.request.post("/api/auth/login", { data: { email, password: "BeforeReset123!" } })).status()).toBe(401)
-    expect((await page.request.post("/api/auth/login", { data: { email, password: "AfterReset123!" } })).status()).toBe(200)
-    expect((await (await page.request.get("/api/auth/me")).json()).user.id).toBe(user.id)
+    expect((await request.post("/api/auth/login", { data: { email, password: "BeforeReset123!" } })).status()).toBe(401)
+    expect((await request.post("/api/auth/login", { data: { email, password: "AfterReset123!" } })).status()).toBe(200)
+    expect((await (await request.get("/api/auth/me")).json()).user.id).toBe(user.id)
   } finally {
     await db.delete(users).where(eq(users.id, user.id))
   }
