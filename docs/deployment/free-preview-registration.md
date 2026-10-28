@@ -23,9 +23,10 @@ test does not run against stable staging or production.
 
 ## Protected Preview tests
 
-Release tests obtain a temporary development OIDC credential for the linked Web
-project. Only that credential is forwarded from the project's environment; the
-test database and application auth secret remain those of the approved CI job.
+Release tests use `vercel project token` to obtain a temporary development OIDC
+credential for the linked Web project. They do not pull project environment
+variables; the test database and application auth secret remain those of the
+approved CI job. Project security settings must have OIDC federation enabled.
 API requests cannot leave the exact Preview origin or follow redirects with the
 credential. Browser requests attach it only to that origin. Diagnostic output
 redacts the credential. Preview access protection remains enabled.
