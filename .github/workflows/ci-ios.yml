@@ -42,6 +42,8 @@ jobs:
       - run: npm ci
       - name: Reject high or critical iOS production vulnerabilities
         run: npm audit --workspace=@sinan/ios --omit=dev --audit-level=high
+      - name: Expo security override compatibility
+        run: node --test apps/ios/scripts/expo-dependency-compat.test.mjs
       - run: npm run typecheck --workspace=@sinan/shared
       - run: npm run typecheck --workspace=@sinan/ios
       - run: npm run release:check-config:ci --workspace=@sinan/ios
