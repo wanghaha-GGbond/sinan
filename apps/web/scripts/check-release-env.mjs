@@ -1,7 +1,10 @@
+import { mailConfigurationErrors } from "../src/lib/server/mail-configuration.mjs"
+
 const required = [
   "AUTH_SECRET",
   "DATABASE_URL",
   "CRON_SECRET",
+  "MAIL_PROVIDER",
   "MAIL_FROM_DOMAIN",
   "APP_RELEASE",
   "NEXT_PUBLIC_APP_URL",
@@ -30,25 +33,7 @@ if (process.env.NEXT_PUBLIC_APP_ENV === "production" && deploymentRegion === "ma
 if (process.env.DATABASE_DRIVER) {
   errors.push("DATABASE_DRIVER is deprecated; use DATABASE_ADAPTER")
 }
-const allowedMailProviders =
-  process.env.NEXT_PUBLIC_APP_ENV === "staging"
-    ? new Set(["aliyun-direct-mail", "resend", "disabled"])
-    : new Set(["aliyun-direct-mail", "resend"])
-if (!allowedMailProviders.has(process.env.MAIL_PROVIDER)) {
-  errors.push(
-    process.env.NEXT_PUBLIC_APP_ENV === "staging"
-      ? "MAIL_PROVIDER must be aliyun-direct-mail, resend, or disabled in staging"
-      : "MAIL_PROVIDER must be aliyun-direct-mail or resend"
-  )
-}
-if (process.env.MAIL_PROVIDER === "aliyun-direct-mail") {
-  for (const name of ["ALIYUN_DM_ACCOUNT_NAME", "ALIYUN_DM_REGION"]) {
-    if (!process.env[name]?.trim()) errors.push(`${name} is required for Aliyun DirectMail`)
-  }
-}
-if (process.env.MAIL_PROVIDER === "resend" && !process.env.RESEND_API_KEY?.trim()) {
-  errors.push("RESEND_API_KEY is required for Resend")
-}
+errors.push(...mailConfigurationErrors(process.env))
 if (!new Set(["stdout", "webhook"]).has(process.env.ERROR_REPORTING_MODE)) {
   errors.push("ERROR_REPORTING_MODE must be stdout or webhook")
 }
@@ -73,7 +58,7 @@ if (process.env.NEXT_PUBLIC_APP_ENV !== "production" && process.env.NEXT_PUBLIC_
 if (process.env.NEXT_PUBLIC_APP_ENV === "production" && deploymentRegion === "mainland" && !process.env.NEXT_PUBLIC_ICP_FILING_NUMBER?.trim()) {
   errors.push("NEXT_PUBLIC_ICP_FILING_NUMBER is required in production")
 }
-if (process.env.AUTH_SECRET && process.env.AUTH_SECRET.length < 32) {
+if (process.env.AUTH_SECRET && process.env.AUTH_SECRET.trim().length < 32) {
   errors.push("AUTH_SECRET must contain at least 32 characters")
 }
 if (process.env.ERROR_REPORTING_MODE === "webhook" && process.env.ERROR_REPORTING_WEBHOOK) {

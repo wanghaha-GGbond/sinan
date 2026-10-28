@@ -13,6 +13,7 @@
  */
 
 import { isDevAuthEnabled } from "@/lib/server/dev-auth"
+import { mailConfigurationErrors, resendSender } from "./mail-configuration.mjs"
 
 export interface MailMessage {
   to: string
@@ -21,8 +22,7 @@ export interface MailMessage {
 }
 
 async function sendViaResend(msg: MailMessage): Promise<void> {
-  const apiKey = process.env.RESEND_API_KEY
-  const fromDomain = process.env.MAIL_FROM_DOMAIN ?? "notifications.example.com"
+  const apiKey = process.env.RESEND_API_KEY?.trim()
   if (!apiKey) throw new Error("RESEND_API_KEY is not set")
 
   const res = await fetch("https://api.resend.com/emails", {
@@ -33,7 +33,7 @@ async function sendViaResend(msg: MailMessage): Promise<void> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: `no-reply@${fromDomain}`,
+      from: resendSender(process.env),
       to: [msg.to],
       subject: msg.subject,
       text: msg.text,
@@ -48,11 +48,8 @@ async function sendViaResend(msg: MailMessage): Promise<void> {
 
 /** Configuration check only; actual delivery still requires a smoke test. */
 export function isMailConfigured(): boolean {
-  if (!process.env.DATABASE_URL || !process.env.MAIL_FROM_DOMAIN) return false
-  const provider = process.env.MAIL_PROVIDER ?? "aliyun-direct-mail"
-  if (provider === "resend") return Boolean(process.env.RESEND_API_KEY)
-  if (provider === "aliyun-direct-mail") return Boolean(process.env.ALIYUN_DM_ACCOUNT_NAME)
-  return false
+  return Boolean(process.env.DATABASE_URL?.trim()) && process.env.MAIL_PROVIDER !== "disabled" &&
+    mailConfigurationErrors(process.env).length === 0
 }
 
 async function sendViaAliyunDirectMail(msg: MailMessage): Promise<void> {
@@ -96,6 +93,11 @@ export async function sendMail(msg: MailMessage): Promise<void> {
   }
 
   const provider = process.env.MAIL_PROVIDER ?? "aliyun-direct-mail"
+  if (mailConfigurationErrors(process.env).length) throw new Error("Invalid mail configuration")
+  const testRecipient = process.env.MAIL_TEST_RECIPIENT?.trim().toLowerCase()
+  if (testRecipient && msg.to.trim().toLowerCase() !== testRecipient) {
+    throw new Error("Mail recipient is not allowed in this test environment")
+  }
   if (provider === "aliyun-direct-mail") {
     await sendViaAliyunDirectMail(msg)
     return

@@ -69,8 +69,7 @@ jobs:
           npx --yes vercel@"$VERCEL_CLI_VERSION" link \
             --yes \
             --project "$VERCEL_PROJECT_ID" \
-            --scope "$VERCEL_ORG_ID" \
-            --token "$VERCEL_TOKEN"
+            --scope "$VERCEL_ORG_ID"
 
       - name: Calculate preview branch expiration
         id: expiration
@@ -128,7 +127,6 @@ jobs:
             --yes \
             --project "$VERCEL_PROJECT_ID" \
             --scope "$VERCEL_ORG_ID" \
-            --token "$VERCEL_TOKEN" \
             --build-env NEXT_PUBLIC_APP_URL=https://sinan-staging.vercel.app \
             --build-env DEPLOYMENT_REGION=global \
             --build-env NEXT_PUBLIC_APP_ENV=staging \
@@ -145,9 +143,9 @@ jobs:
             --env LAUNCH_SCOPE_ONLY=true \
             --env INVITE_REQUIRED=true \
             --env DATABASE_ADAPTER=neon \
-            --env DATABASE_URL="$DATABASE_URL" \
-            --env AUTH_SECRET="$AUTH_SECRET" \
-            --env CRON_SECRET="$CRON_SECRET" \
+            --env DATABASE_URL \
+            --env AUTH_SECRET \
+            --env CRON_SECRET \
             --env APP_RELEASE="${GITHUB_SHA}" \
             --env MAIL_PROVIDER=disabled \
             --env MAIL_FROM_DOMAIN=sinanapp.cn \
@@ -169,18 +167,19 @@ jobs:
           npx --yes vercel@"$VERCEL_CLI_VERSION" inspect \
             "${{ steps.deploy.outputs.url }}" \
             --scope "$VERCEL_ORG_ID" \
-            --token "$VERCEL_TOKEN" \
             --wait
 
       - name: Verify Preview health and public pages
         env:
           PREVIEW_URL: ${{ steps.deploy.outputs.url }}
         run: |
-          curl --fail --silent --show-error --retry 10 --retry-delay 2 "$PREVIEW_URL/api/health/live" | jq -e '.status == "ok"'
-          curl --fail --silent --show-error --retry 10 --retry-delay 2 "$PREVIEW_URL/api/health/ready" | jq -e '.status == "ready" and .configuration == "valid" and .database == "reachable"'
-          curl --fail --silent --show-error "$PREVIEW_URL/" >/dev/null
-          curl --fail --silent --show-error "$PREVIEW_URL/legal/privacy" >/dev/null
-          curl --fail --silent --show-error "$PREVIEW_URL/pulse" >/dev/null
+          set -euo pipefail
+          vc_curl() { npx --yes vercel@"$VERCEL_CLI_VERSION" curl "$PREVIEW_URL$1" --scope "$VERCEL_ORG_ID" -- --fail --silent --show-error --max-time 30 --retry 3 --retry-delay 2; }
+          migration=$(jq -r '.entries[-1].tag' apps/web/src/db/migrations/meta/_journal.json)
+          vc_curl /api/health/live | jq -e '.status == "ok"'
+          vc_curl /api/health/ready | jq -e --arg release "$GITHUB_SHA" --arg migration "$migration" '.status == "ready" and .configuration == "valid" and .database == "reachable" and .schema == "compatible" and .authContract == 2 and .release == $release and .migration == $migration'
+          vc_curl /api/config/register | jq -e '.inviteRequired == true and .emailVerificationRequired == true and .emailDeliveryAvailable == false'
+          for path in / /legal/privacy /pulse; do vc_curl "$path" >/dev/null; done
 
       - name: Run release E2E against the isolated Preview
         env:
@@ -231,8 +230,7 @@ jobs:
           npx --yes vercel@"$VERCEL_CLI_VERSION" link \
             --yes \
             --project "$VERCEL_PROJECT_ID" \
-            --scope "$VERCEL_ORG_ID" \
-            --token "$VERCEL_TOKEN"
+            --scope "$VERCEL_ORG_ID"
 
       - name: Install dependencies
         run: npm ci
@@ -270,7 +268,6 @@ jobs:
             --yes \
             --project "$VERCEL_PROJECT_ID" \
             --scope "$VERCEL_ORG_ID" \
-            --token "$VERCEL_TOKEN" \
             --build-env NEXT_PUBLIC_APP_URL=https://sinan-staging.vercel.app \
             --build-env DEPLOYMENT_REGION=global \
             --build-env NEXT_PUBLIC_APP_ENV=staging \
@@ -287,9 +284,9 @@ jobs:
             --env LAUNCH_SCOPE_ONLY=true \
             --env INVITE_REQUIRED=true \
             --env DATABASE_ADAPTER=neon \
-            --env DATABASE_URL="$DATABASE_URL" \
-            --env AUTH_SECRET="$AUTH_SECRET" \
-            --env CRON_SECRET="$CRON_SECRET" \
+            --env DATABASE_URL \
+            --env AUTH_SECRET \
+            --env CRON_SECRET \
             --env APP_RELEASE="${GITHUB_SHA}" \
             --env MAIL_PROVIDER=disabled \
             --env MAIL_FROM_DOMAIN=sinanapp.cn \
@@ -311,18 +308,19 @@ jobs:
           npx --yes vercel@"$VERCEL_CLI_VERSION" inspect \
             "${{ steps.deploy.outputs.url }}" \
             --scope "$VERCEL_ORG_ID" \
-            --token "$VERCEL_TOKEN" \
             --wait
 
       - name: Verify stable staging health and core pages
         env:
           STAGING_URL: ${{ steps.deploy.outputs.url }}
         run: |
-          curl --fail --silent --show-error --retry 10 --retry-delay 2 "$STAGING_URL/api/health/live" | jq -e '.status == "ok"'
-          curl --fail --silent --show-error --retry 10 --retry-delay 2 "$STAGING_URL/api/health/ready" | jq -e '.status == "ready" and .configuration == "valid" and .database == "reachable"'
-          curl --fail --silent --show-error "$STAGING_URL/" >/dev/null
-          curl --fail --silent --show-error "$STAGING_URL/legal/privacy" >/dev/null
-          curl --fail --silent --show-error "$STAGING_URL/pulse" >/dev/null
+          set -euo pipefail
+          vc_curl() { npx --yes vercel@"$VERCEL_CLI_VERSION" curl "$STAGING_URL$1" --scope "$VERCEL_ORG_ID" -- --fail --silent --show-error --max-time 30 --retry 3 --retry-delay 2; }
+          migration=$(jq -r '.entries[-1].tag' apps/web/src/db/migrations/meta/_journal.json)
+          vc_curl /api/health/live | jq -e '.status == "ok"'
+          vc_curl /api/health/ready | jq -e --arg release "$GITHUB_SHA" --arg migration "$migration" '.status == "ready" and .configuration == "valid" and .database == "reachable" and .schema == "compatible" and .authContract == 2 and .release == $release and .migration == $migration'
+          vc_curl /api/config/register | jq -e '.inviteRequired == true and .emailVerificationRequired == true and .emailDeliveryAvailable == false'
+          for path in / /legal/privacy /pulse; do vc_curl "$path" >/dev/null; done
 
       - name: Run release E2E against stable staging candidate
         env:
@@ -341,8 +339,7 @@ jobs:
           npx --yes vercel@"$VERCEL_CLI_VERSION" alias set \
             "${{ steps.deploy.outputs.url }}" \
             sinan-staging.vercel.app \
-            --scope "$VERCEL_ORG_ID" \
-            --token "$VERCEL_TOKEN"
+            --scope "$VERCEL_ORG_ID"
 
   cleanup:
     name: Delete isolated Neon preview branch

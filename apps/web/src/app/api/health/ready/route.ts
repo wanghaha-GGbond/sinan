@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm"
 import { NextResponse } from "next/server"
 import { readinessContract, verifyReadinessSchema } from "@/lib/server/readiness-schema"
+import { mailConfigurationErrors } from "@/lib/server/mail-configuration.mjs"
 
 export const dynamic = "force-dynamic"
 
@@ -17,19 +18,7 @@ const requiredRuntimeVariables = [
 ] as const
 
 function hasValidMailConfiguration() {
-  if (
-    process.env.NEXT_PUBLIC_APP_ENV === "staging" &&
-    process.env.MAIL_PROVIDER === "disabled"
-  ) {
-    return true
-  }
-  if (process.env.MAIL_PROVIDER === "aliyun-direct-mail") {
-    return Boolean(
-      process.env.ALIYUN_DM_ACCOUNT_NAME?.trim() &&
-      process.env.ALIYUN_DM_REGION?.trim()
-    )
-  }
-  return process.env.MAIL_PROVIDER === "resend" && Boolean(process.env.RESEND_API_KEY?.trim())
+  return mailConfigurationErrors(process.env).length === 0
 }
 
 function hasValidErrorReportingConfiguration() {
@@ -53,6 +42,7 @@ function hasValidRuntimeConfiguration() {
 
   return (
     requiredRuntimeVariables.every((name) => Boolean(process.env[name]?.trim())) &&
+    (process.env.AUTH_SECRET?.trim().length ?? 0) >= 32 &&
     process.env.INVITE_REQUIRED === "true" &&
     process.env.NEXT_PUBLIC_API_ENABLED === "true" &&
     process.env.LAUNCH_SCOPE_ONLY === "true" &&

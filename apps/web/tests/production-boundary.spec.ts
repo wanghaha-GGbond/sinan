@@ -46,6 +46,14 @@ test("mainland defaults retain filing and pg requirements; invalid regions fail 
   expect(checkRelease({ DEPLOYMENT_REGION: "unknown" }).status).toBe(1)
 })
 
+test("release preflight rejects shared Resend senders in production and whitespace credentials", () => {
+  expect(checkRelease({ DEPLOYMENT_REGION: "global", RESEND_API_KEY: " " }).status).toBe(1)
+  expect(checkRelease({ DEPLOYMENT_REGION: "global", MAIL_FROM_DOMAIN: "resend.dev", MAIL_FROM_ADDRESS: "onboarding@resend.dev" }).status).toBe(1)
+  expect(checkRelease({ DEPLOYMENT_REGION: "global", MAIL_TEST_RECIPIENT: "owner@example.test" }).status).toBe(1)
+  expect(checkRelease({ DEPLOYMENT_REGION: "global", NEXT_PUBLIC_APP_ENV: "staging", NEXT_PUBLIC_PULSE_ENABLED: "true",
+    MAIL_FROM_DOMAIN: "resend.dev", MAIL_FROM_ADDRESS: "onboarding@resend.dev", MAIL_TEST_RECIPIENT: "owner@example.test" }).status).toBe(0)
+})
+
 test("production company search fails closed when the database is missing", async () => {
   const previousEnvironment = process.env.NEXT_PUBLIC_APP_ENV
   const previousDatabaseURL = process.env.DATABASE_URL

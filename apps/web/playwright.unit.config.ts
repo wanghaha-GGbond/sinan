@@ -3,6 +3,7 @@ import { defineConfig } from "@playwright/test"
 export default defineConfig({
   testDir: "./tests",
   testMatch: [
+    "mail-configuration.spec.ts",
     "registration-code.spec.ts",
     "company-rating.spec.ts",
     "readiness-schema.spec.ts",

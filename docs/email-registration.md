@@ -45,6 +45,10 @@ INVITE_REQUIRED=true
 
 现有发件格式为 `no-reply@MAIL_FROM_DOMAIN`。`workers.dev` 网页入口与发信域名是两件事，不能把未拥有的 `sinanapp.cn` 当成已验证域名。
 
+可选 `MAIL_FROM_ADDRESS` 必须属于 `MAIL_FROM_DOMAIN`。发信配置使用同一份规则进行注册可用性、readiness 和发布前检查；空白密钥、非法域名、跨域发件地址均拒绝。
+
+没有自有域名时，只能在独立 staging 中验收账号本人收信：设置 `MAIL_FROM_DOMAIN=resend.dev`、`MAIL_FROM_ADDRESS=onboarding@resend.dev`、`MAIL_TEST_RECIPIENT=<Resend 账号本人邮箱>`，再配置该环境独立的 `RESEND_API_KEY`。其他收件人会在调用服务商前被拒绝；production 禁止此测试模式。此配置不意味着其他用户可以注册。参考 [Resend 测试域限制](https://resend.com/docs/knowledge-base/403-error-resend-dev-domain)。不要将真实收件地址提交到 Git。
+
 `MAIL_PROVIDER=disabled` 时注册页面明确显示暂不可用，不能据此声称用户已经可以邮箱注册。
 真实投递仅发送到用户明确授权的测试收件人，不将收件地址写入测试配置或文档。
 
@@ -57,7 +61,21 @@ INVITE_REQUIRED=true
 - 2026-10-28 已创建独立 PostgreSQL 16 测试项目 `zaichang-staging`，未复制原 `sinan-preview` 数据。
 - 本地验证：90 项单测、18 项真实 Neon 数据库集成测试、26 项页面回归、5 项算法测试、Web 生产构建及 iOS 类型检查通过；全部迁移和重复迁移通过。
 - 注册到登录、本人/公开资料隔离、评价和注销的单条 release E2E 在隔离 Neon 上通过。远程数据库总链路允许 180 秒，CI 本地 PostgreSQL 仍保留 60 秒；业务断言没有删减。
-- 全套 release E2E 首轮另有两项找回密码浏览器用例失败，尚不能声明完整套件通过；需要在 CI 的本地 PostgreSQL 环境复核。邮箱注册的页面及数据库测试不依赖这两项用例。
+- 全套 release E2E 首轮在远程数据库上另有两项找回密码浏览器用例失败；随后 GitHub 的 PostgreSQL 16 核心流程任务（run `40542760823`）完整三项通过。隔离测试中的投递捕获仍不代表真实邮件送达。
 - 真实发信、正式库迁移和部署尚未验收；测试通过不等于已经上线。
 
 UI 历史标签 `ui-v0.0.1` 保持不变，本功能是该冻结版本之后的增量。
+
+## 2026-10-28 配置与部署修复
+
+- 邮件配置统一校验；staging 的单收件人测试模式不会带入 production。
+- Vercel 流水线不再通过命令行参数传入 Token、数据库连接串和应用密钥，而是从已有受控环境读取；CLI 固定版本 `59.5.0` 已检查支持此用法。
+- Preview 健康探针使用已认证的 `vercel curl`，不关闭 Deployment Protection；校验当前 Git SHA、全部当前迁移、`authContract=2` 和注册接口字段，防止将旧服务的 HTTP 200 当成新版本已上线。
+- 本地验证：96 项单元测试、类型检查、Web 生产构建、5 项 Cloudflare 发布策略测试通过；lint 0 错误、2 项既有导航警告；工作流 YAML 和 21 段 shell 语法检查通过。未重新执行远程数据库写入或真实发信。
+
+仍需外部完成的步骤：
+
+1. Neon 的 GitHub OAuth/MCP 登录不等于 GitHub Actions 拥有 Neon API Key。将测试项目所需的最小权限 Key 直接保存到仓库 `staging` Environment 的 `NEON_API_KEY`，不要发在聊天或 PR 中。项目与父分支变量分别是 `NEON_PROJECT_ID` 和 `NEON_STAGING_BRANCH`。
+2. 在目标运行环境配置独立的 `RESEND_API_KEY`。没有验证过的自有发信域名，只能按上文进行账号本人测试，不能向公众开放注册。
+3. iOS 审计仍受 Expo 依赖链中的 [node-forge 未修复漏洞](https://github.com/advisories/GHSA-86w9-cpqp-85rv) 和 [Zod 旧版本漏洞](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5) 阻断。未关闭审计、添加豁免或强制跨大版本替换依赖。
+4. PR #7 仍需另一位开发者批准，且必需检查通过才能合并；随后才能迁移正式库并发布。真实邮件和线上完整注册仍未验收。
