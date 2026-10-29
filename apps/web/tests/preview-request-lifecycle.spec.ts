@@ -1,14 +1,21 @@
 import { createServer, type ServerResponse } from "node:http"
 import type { AddressInfo } from "node:net"
-import { expect, test } from "./release-fixture"
+import { expect, test, installReleaseProxy } from "./release-fixture"
 
 let baseURL = ""
 let started: () => void
 let startedRequest: Promise<void>
 let finished = false
 let releaseResponse: ServerResponse | undefined
+let concurrentStarted = 0
+let concurrentFinished = 0
+let allConcurrentStarted: () => void
 const server = createServer((request, response) => {
-  if (request.url === "/background") {
+  if (request.url?.startsWith("/concurrent/")) {
+    if (++concurrentStarted === 3) allConcurrentStarted()
+    response.on("finish", () => { concurrentFinished++ })
+    setTimeout(() => response.end("complete"), Number(request.url.split("/")[2]))
+  } else if (request.url === "/background") {
     releaseResponse = response
     started()
     // The test deliberately finishes while a routed backend response is pending.
@@ -68,4 +75,21 @@ test("mail failure mock takes precedence over the proxy across navigation", asyn
   await page.goto(baseURL + "/reset-password")
   expect(mockCalls).toBe(1)
   expect(proxiedMailRequests).toBe(0)
+})
+
+test("multiple Preview responses remain intercepted until every proxy completes", async ({ page, context }) => {
+  concurrentStarted = 0
+  concurrentFinished = 0
+  const allStarted = new Promise<void>((resolve) => { allConcurrentStarted = resolve })
+  await installReleaseProxy(context, { NODE_ENV: "test", RELEASE_BASE_URL: baseURL })
+  await page.goto(baseURL)
+  await page.evaluate(() => {
+    for (const delay of [100, 300, 500]) void fetch(`/concurrent/${delay}`)
+  })
+  await allStarted
+  expect(concurrentFinished).toBe(0)
+})
+
+test("all concurrent responses completed before the previous page closed", async () => {
+  expect(concurrentFinished).toBe(3)
 })
