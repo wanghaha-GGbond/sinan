@@ -1,5 +1,20 @@
 import { expect, test } from "@playwright/test"
 
+test("Zaichang uses Z across navigation and install icons without publishing the slogan", async ({ page, request }) => {
+  await page.goto("/")
+  await expect(page).toHaveTitle("在场")
+  await expect(page.getByRole("link", { name: "返回在场首页" }).locator("img")).toHaveAttribute("src", "/brand-z.svg")
+  await expect(page.locator("body")).not.toContainText("永远在场，永远连接")
+  const manifest = await (await request.get("/manifest.webmanifest")).json()
+  expect(manifest.name).toBe("在场")
+  expect(manifest.icons.every((icon: { src: string }) => icon.src === "/icon.png")).toBe(true)
+  for (const path of ["/icon.png", "/apple-icon.png", "/favicon.ico", "/brand-z.svg"]) {
+    const response = await request.get(path)
+    expect(response.status()).toBe(200)
+    expect(response.headers()["content-type"]).toMatch(/^image\//)
+  }
+})
+
 for (const width of [375, 390, 768, 1280, 1440]) {
   for (const [name, path, heading] of [
     ["home", "/", "找公司"],

@@ -8,7 +8,7 @@ import { ThemeProvider, THEME_INIT_SCRIPT } from "@/lib/theme-context";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "在场 | 入职前，先看清方向",
+  title: "在场",
   description: "匿名公司方向评分、真实评价、薪资区间与企业认证平台。",
   applicationName: "在场",
   appleWebApp: {

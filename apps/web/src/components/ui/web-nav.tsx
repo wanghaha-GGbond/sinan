@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { Leaf, Menu, Search } from "lucide-react"
+import Image from "next/image"
+import { Menu, Search } from "lucide-react"
 import type { ReactNode } from "react"
 
 import {
@@ -34,7 +35,7 @@ export function WebNav({
     <header className={cn("web-nav", className)}>
       <div className="web-nav-inner">
         <Link href="/" className="web-brand" aria-label="返回在场首页">
-          <span className="web-brand-mark" aria-hidden="true"><Leaf className="size-[1.15rem]" strokeWidth={2.2} /></span>
+          <Image src="/brand-z.svg" alt="" width={32} height={32} className="rounded-lg" unoptimized />
           <span>{brand}</span>
         </Link>
 
