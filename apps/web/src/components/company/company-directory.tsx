@@ -44,7 +44,7 @@ export function CompanyDirectory() {
 
   return (
     <div data-testid="company-directory">
-      <div className="grid gap-3 border-b border-border pb-6 md:grid-cols-[minmax(0,1fr)_auto]">
+      <div className="grid gap-3 rounded-lg border border-border bg-card p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_auto]">
         <SolidSearchInput value={query} onChange={setQuery} />
         <div className="flex flex-wrap items-center gap-3 text-sm">
         <label className="flex items-center gap-2 text-muted-foreground">
@@ -72,9 +72,9 @@ export function CompanyDirectory() {
         </div>
       </div>
 
-      <p className="py-4 text-sm text-muted-foreground" aria-live="polite">找到 {filteredCompanies.length} 家公司</p>
+      <p className="py-5 text-sm text-muted-foreground" aria-live="polite">找到 {filteredCompanies.length} 家公司</p>
       {filteredCompanies.length ? (
-        <div className="border-t border-border">
+        <div data-testid="company-directory-grid" className="grid gap-3 sm:gap-4 lg:grid-cols-2">
           {filteredCompanies.map((company) => (
             <CompanyCard key={company.id} company={company} />
           ))}

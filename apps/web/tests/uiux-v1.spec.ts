@@ -25,6 +25,11 @@ for (const width of [375, 390, 768, 1280, 1440]) {
       }
       await expect(page.getByRole("button", { name: "通知", exact: true })).toHaveCount(0)
       await expect(page.getByRole("link", { name: "登录", exact: true })).toBeVisible()
+      await expect(page.getByRole("link", { name: "注册", exact: true })).toBeVisible()
+      if (name === "companies") {
+        const columns = await page.getByTestId("company-directory-grid").evaluate((grid) => getComputedStyle(grid).gridTemplateColumns.split(" ").length)
+        expect(columns).toBe(width >= 1024 ? 2 : 1)
+      }
       if (width < 1024) {
         await page.getByRole("button", { name: "打开菜单" }).click()
         await expect(page.getByRole("menu").getByRole("link", { name: "公司", exact: true })).toBeVisible()
@@ -65,6 +70,13 @@ test("directory retains filters, ten-point scores, clearing and keyboard navigat
   await expect(page).toHaveURL(/\/company\/rated$/)
 })
 
+test("integrated UI keeps demo community behind the launch gate", async ({ page }) => {
+  const response = await page.goto("/community")
+  expect(response?.status()).toBe(404)
+  await expect(page.getByRole("heading", { name: "社区", exact: true })).toHaveCount(0)
+  await expect(page.getByRole("link", { name: "社区", exact: true })).toHaveCount(0)
+})
+
 test("failed catalog has a working retry, not fabricated companies", async ({ page }) => {
   let fail = true
   await page.route("**/api/companies/search**", (route) => route.fulfill(fail
@@ -88,5 +100,29 @@ test("dark theme and reduced motion retain usable directory controls", async ({ 
   await expect(page.getByRole("link", { name: /查看北辰/ })).toBeVisible()
   await input.focus()
   await expect(input).toBeFocused()
+  const contrasts = await page.evaluate(() => {
+    const context = document.createElement("canvas").getContext("2d")!
+    const luminance = (color: string) => {
+      context.fillStyle = color
+      context.fillRect(0, 0, 1, 1)
+      const rgb = [...context.getImageData(0, 0, 1, 1).data].slice(0, 3).map((channel) => {
+        const c = channel / 255
+        return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+      })
+      return rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722
+    }
+    const ratio = (foreground: string, background: string) => {
+      const values = [luminance(foreground), luminance(background)].sort((a, b) => b - a)
+      return (values[0] + 0.05) / (values[1] + 0.05)
+    }
+    const card = document.querySelector('[data-testid="company-directory-item"]')!
+    const score = card.querySelector('[aria-label^="方向评分"]')!
+    const register = document.querySelector('a[href="/register"]')!
+    return [
+      ratio(getComputedStyle(score).color, getComputedStyle(card).backgroundColor),
+      ratio(getComputedStyle(register).color, getComputedStyle(register).backgroundColor),
+    ]
+  })
+  for (const contrast of contrasts) expect(contrast).toBeGreaterThanOrEqual(4.5)
   await page.screenshot({ path: testInfo.outputPath("directory-dark.png"), fullPage: true })
 })

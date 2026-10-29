@@ -52,17 +52,18 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
   }
 
   return (
-    <section className="mx-auto w-full max-w-page px-4 pb-12 pt-4 sm:px-8 sm:pt-6">
+    <section className="min-h-[calc(100vh-160px)] bg-muted px-4 pb-12 pt-4 sm:px-8 sm:pt-6">
+      <div className="mx-auto w-full max-w-page">
       <nav aria-label="面包屑" className="mb-4 flex items-center gap-1.5 text-sm text-muted-foreground">
         <Link href="/companies" className="inline-flex min-h-11 items-center hover:text-foreground">找公司</Link>
         <ChevronRight className="size-3.5" aria-hidden="true" />
         <span>{company.name}</span>
       </nav>
 
-      <header className="border-b border-border">
+      <header className="rounded-lg border border-border bg-card px-5 pt-5 shadow-sm sm:px-7 sm:pt-7">
         <div className="flex flex-col gap-6 pb-6 lg:flex-row lg:items-start lg:justify-between lg:gap-10">
           <div className="flex min-w-0 items-start gap-4 sm:gap-5">
-            <div className="grid size-14 shrink-0 place-items-center rounded-lg border border-input bg-muted text-xl font-semibold text-foreground sm:size-16" aria-hidden="true">
+            <div className="grid size-14 shrink-0 place-items-center rounded-lg border border-primary-surface-border bg-primary-tint text-xl font-semibold text-primary-deep sm:size-16" aria-hidden="true">
               {(company.shortName ?? company.name).slice(0, 1)}
             </div>
             <div className="min-w-0">
@@ -84,7 +85,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
         <p className="inline-flex items-center gap-1.5 pb-5 text-xs text-muted-foreground"><ShieldCheck className="size-4 shrink-0" aria-hidden="true" />匿名评价 · 人工审核 · {company.verifiedIdentityCount ?? 0} 位验证贡献者</p>
-        <nav className="flex gap-8 overflow-x-auto" aria-label="公司信息导航">
+        <nav className="flex gap-8 overflow-x-auto border-t border-border" aria-label="公司信息导航">
           {[
             ["概览", `/company/${company.id}`],
             ["评价", `/company/${company.id}/reviews`],
@@ -101,7 +102,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
       <div className="mt-8"><CompanyDecisionInsights company={company} /></div>
 
       <div className="mt-8 grid gap-8 min-[1200px]:grid-cols-[minmax(0,1fr)_280px]">
-        <div className="min-w-0">
+        <div className="min-w-0 rounded-lg border border-border bg-card p-5 sm:p-7">
           <h2 className="mb-5 text-xl font-semibold">评价概览</h2>
           {mappedReviews.length === 0 ? (
             <div className="border-y border-border py-10">
@@ -118,6 +119,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
         <CompanyEvidenceRail company={company} />
       </div>
 
+      </div>
     </section>
   )
 }
