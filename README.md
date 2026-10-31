@@ -6,6 +6,7 @@
 
 - 正式站：[zaichang.space](https://zaichang.space)。完整网站版本：**Web v0.0.1**，标签 [`web-v0.0.1`](https://github.com/wanghaha-GGbond/sinan/releases/tag/web-v0.0.1)。
 - 唯一长期主线：`main`；没有长期 release、web-dev 或 ios-dev 分支。短期分支通过 PR 合并。
+- PR 不再要求另一位成员批准；原 CI、严格同步和管理员保护继续生效，部署环境审批独立保留。代码合并不代表自动上线。
 - 朋友 UI 的可取部分通过 PR #7 整合并上线，不需要再合并旧 PR #4/#6。
 - [版本与 PR 状态](docs/repository-status.md) · [Web v0.0.1 发布记录](docs/releases/web-v0.0.1.md) · [协作规则](CONTRIBUTING.md)。
 

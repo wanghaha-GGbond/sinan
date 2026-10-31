@@ -44,10 +44,12 @@
 2. 所有者明确授权对 #7/#16/#17 各次操作临时调整人工审批数 `1 → 0`，在 CI 全通过后合并，再恢复 `1`。#7 在 2026-10-31 合入 main，并在本次首发部署。
 3. staging 部署审批是访问测试环境密钥的批准，不是 PR 代码批准。
 
-本次核验 main：严格同步开启、管理员同样受保护、1 个批准，三条必需检查为 Web quality/audit/build、PostgreSQL migrations/core flows、iOS typecheck/release config/export。没有永久放开主线，也没有沿用旧授权自动豁免未来 PR。
+上述是首次上线时的历史审批过程。随后，所有者在 2026-10-31 明确决定：**今后 PR 不再等待朋友批准，main 的必需人工批准数长期设为 0。** 这是新的持续规则，不是把某一次旧豁免延伸到未来；不要再自动恢复成 1。也不要求 Code Owner 或最后提交人之外成员批准。
+
+新规则下仍保留严格同步、管理员保护、讨论解决、禁止强推与删除，以及原三条必需检查：Web quality/audit/build、PostgreSQL migrations/core flows、iOS typecheck/release config/export。此次没有关闭 staging/production 部署审批；当前 staging 仍要求所有者批准工作流使用测试密钥。
 
 ## 后续两人怎么做
 
-从最新 main 开一个短期分支 → 提一个主题明确的 PR → CI/隔离 Preview → 另一人审核 → 合并 main 并删除该已合并分支 → 单独批准正式部署 → 记录新版本和实际 SHA。
+从最新 main 开一个短期分支 → 提一个主题明确的 PR → CI/隔离 Preview（部署审批与 review 分开）→ 检查通过、讨论已解决且同步主线后即可合并，不必等另一人批准 → 删除已合并分支 → 单独执行受控正式部署 → 记录新版本和实际 SHA。
 
 这次文档整理不再次部署、不改生产数据、不开放 Pulse/社区、不发布 iOS。当前仓库仍是公开仓库；私有化不是本次已完成事项，需单独确认其权限和套餐影响。
