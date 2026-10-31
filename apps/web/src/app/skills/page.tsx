@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Loader2, ThumbsUp } from "lucide-react"
-import { SolidCard } from "@/components/ui/solid-card"
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidEmptyState } from "@/components/ui/solid-empty-state"
+import { WebSurface } from "@/components/ui/web-surface"
+import { WebButton } from "@/components/ui/web-button"
+import { WebEmptyState } from "@/components/ui/web-empty-state"
 import { useAuth } from "@/lib/auth-context"
 
 type SkillItem = {
@@ -59,7 +59,7 @@ function EndorseButton({ skillId, onDone }: { skillId: string; onDone: () => voi
 
   return (
     <div className="flex flex-col items-end gap-1">
-      <SolidButton
+      <WebButton
         type="button"
         variant="secondary"
         size="sm"
@@ -76,7 +76,7 @@ function EndorseButton({ skillId, onDone }: { skillId: string; onDone: () => voi
             背书
           </>
         )}
-      </SolidButton>
+      </WebButton>
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
     </div>
   )
@@ -107,9 +107,9 @@ export default function SkillsPage() {
             把你的看家本领写下来，3 人背书即可上榜。L1+ 认证用户可背书。
           </p>
         </div>
-        <SolidButton asChild variant="secondary" size="sm">
+        <WebButton asChild variant="secondary" size="sm">
           <Link href="/me/skills">提交我的技能</Link>
-        </SolidButton>
+        </WebButton>
       </header>
 
       {loading ? (
@@ -119,20 +119,20 @@ export default function SkillsPage() {
           ))}
         </div>
       ) : items?.length === 0 ? (
-        <SolidEmptyState
+        <WebEmptyState
           title="暂无已审核技能"
           description="成为第一批提交技能的人，通过审核 + 3 人背书即可上榜。"
           action={
-            <SolidButton asChild variant="primary" size="sm">
+            <WebButton asChild variant="primary" size="sm">
               <Link href="/me/skills">提交技能</Link>
-            </SolidButton>
+            </WebButton>
           }
         />
       ) : (
         <ul className="space-y-4">
           {items?.map((item) => (
             <li key={item.id}>
-              <SolidCard variant="elevated" className="p-5">
+              <WebSurface variant="elevated" className="p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -154,7 +154,7 @@ export default function SkillsPage() {
                   </div>
                   <EndorseButton skillId={item.id} onDone={load} />
                 </div>
-              </SolidCard>
+              </WebSurface>
             </li>
           ))}
         </ul>

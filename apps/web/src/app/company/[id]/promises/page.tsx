@@ -4,7 +4,7 @@ import { useParams } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
 
-import { SolidButton } from "@/components/ui/solid-button"
+import { WebButton } from "@/components/ui/web-button"
 import { Textarea } from "@/components/ui/textarea"
 
 export default function PromiseSubmissionPage() {
@@ -101,9 +101,9 @@ export default function PromiseSubmissionPage() {
           证据摘要
           <input value={evidenceReference} onChange={(event) => setEvidenceReference(event.target.value)} maxLength={300} placeholder="例如：Offer 第 3 条，或邮件日期与主题" className={inputClass} required />
         </label>
-        <SolidButton type="submit" disabled={submitting} className="sm:col-span-2">
+        <WebButton type="submit" disabled={submitting} className="sm:col-span-2">
           {submitting ? "提交中..." : "提交人工审核"}
-        </SolidButton>
+        </WebButton>
       </form>
     </main>
   )

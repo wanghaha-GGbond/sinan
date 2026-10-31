@@ -61,7 +61,7 @@ export function MobileDiscussionComposer({
         <View style={S.headerText}>
           <Text style={S.headerTitle}>写下你的评论</Text>
           <Text style={S.headerHint}>
-            司南优先保护匿名身份。建议基于事实提问或补充,避免情绪化。
+            在场优先保护匿名身份。建议基于事实提问或补充,避免情绪化。
           </Text>
         </View>
         {onCancel ? (

@@ -39,10 +39,13 @@ export async function GET(
         .where(and(eq(companyEvents.companyId, id), gte(companyEvents.eventDate, since)))
         .orderBy(asc(companyEvents.eventDate)),
     ])
-    return NextResponse.json({
-      points: points.map((point) => ({ ...point, score: Number(point.score) })),
-      events,
-    })
+    return NextResponse.json(
+      {
+        points: points.map((point) => ({ ...point, score: Number(point.score) })),
+        events,
+      },
+      { headers: { "Cache-Control": "public, max-age=60, stale-while-revalidate=300" } },
+    )
   } catch {
     return NextResponse.json({ points: [], events: [] })
   }

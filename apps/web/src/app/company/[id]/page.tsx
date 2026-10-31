@@ -1,265 +1,125 @@
 import Link from "next/link"
-import { BadgeCheck, PenLine, ShieldCheck } from "lucide-react"
+import { BadgeCheck, ChevronRight, MapPin, PenLine, ShieldCheck } from "lucide-react"
+import { notFound } from "next/navigation"
 
-import { CompanyIntelligencePanel } from "@/components/company/company-intelligence-panel"
+import { CompanyDecisionInsights } from "@/components/company/company-decision-insights"
+import { CompanyEvidenceRail } from "@/components/company/company-evidence-rail"
 import { CompanyReviewFeed } from "@/components/company/company-review-feed"
+import { CompanyRating, companyDisplayScore } from "@/components/company/company-rating"
 import { DepartmentInsights } from "@/components/company/department-insights"
 import { PromiseRecords } from "@/components/company/promise-records"
 import { SentimentTrend } from "@/components/company/sentiment-trend"
 import { ErrorState } from "@/components/common/error-state"
-import { EmptyState } from "@/components/common/state-blocks"
-import { Badge } from "@/components/ui/badge"
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
-import { getCompany } from "@/lib/api/companies"
-import { getReviews } from "@/lib/api/reviews"
-import { companies as mockCompanies } from "@/lib/mock-data"
-import type { CompanyListItem, Review } from "@/lib/types"
-import type { ReviewListItem } from "@/lib/api/types"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
+import type { CompanyListItem } from "@/lib/types"
 import { getDepartmentInsights, type DepartmentInsight } from "@/lib/server/department-insights"
-
-function mapToReview(item: ReviewListItem): Review {
-  const rawEmployment = item.employmentStatus ?? ""
-  const relationMap: Record<string, Review["relation"]> = {
-    "在职员工": "在职员工",
-    "离职员工": "离职员工",
-    "面试者": "面试者",
-    "实习生": "实习生",
-    "外包 / 派遣": "外包 / 派遣",
-  }
-  const relation = (relationMap[rawEmployment] ?? "面试者") as Review["relation"]
-
-  return {
-    id: item.id,
-    companyId: item.companyId,
-    role: "匿名评价者",
-    relation,
-    tenure: "",
-    score: Number(item.directionScore),
-    title: item.title,
-    content: item.content ?? item.summary ?? item.title,
-    tags: item.tags ?? [],
-    helpful: item.usefulCount,
-    commentCount: item.discussionCount,
-    shortComment: item.title,
-    jobCategory: item.jobTitle ?? "",
-    employmentStatus: (rawEmployment || "面试者") as Review["employmentStatus"],
-    trustLevel: 3,
-    city: item.city ?? "未知",
-    comments: [],
-    createdAt: item.createdAt,
-    verifiedHint: "",
-  }
-}
+import { getPublicCompanyDetail, getPublicCompanyReviews } from "@/lib/server/public-company-data"
+import { mapPublicReview } from "@/lib/review-mappers"
 
 export default async function CompanyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const [companyRes, reviewsRes, departmentInsights] = await Promise.all([
-    getCompany(id),
-    getReviews({ companyId: id }),
-    getDepartmentInsights(id),
-  ])
+  let company: CompanyListItem | null
+  let reviewItems: Awaited<ReturnType<typeof getPublicCompanyReviews>>
+  let departmentInsights: DepartmentInsight[]
 
-  if (companyRes.loading || reviewsRes.loading) {
-    // Skeleton that mirrors the final layout's structure, not a
-    // generic spinner. CLS = 0, the user sees the shape of the
-    // page before the data arrives.
-    return (
-      <section className="mx-auto flex w-full max-w-page flex-col gap-4 px-4 py-6 sm:px-6">
-        <div className="flex items-center gap-3">
-          <div className="size-12 animate-pulse rounded-2xl bg-muted" />
-          <div className="flex-1 space-y-2">
-            <div className="h-5 w-44 animate-pulse rounded-md bg-muted" />
-            <div className="h-3.5 w-72 animate-pulse rounded-md bg-muted" />
-          </div>
-          <div className="size-12 animate-pulse rounded-full bg-muted" />
-        </div>
-        <div className="grid gap-3 sm:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-24 animate-pulse rounded-2xl bg-muted" />
-          ))}
-        </div>
-        <div className="h-40 animate-pulse rounded-3xl bg-muted" />
-        <div className="h-64 animate-pulse rounded-3xl bg-muted" />
-        <div className="space-y-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-28 animate-pulse rounded-2xl bg-muted" />
-          ))}
-        </div>
-      </section>
-    )
+  try {
+    ;[company, reviewItems, departmentInsights] = await Promise.all([
+      getPublicCompanyDetail(id),
+      getPublicCompanyReviews(id),
+      getDepartmentInsights(id),
+    ])
+  } catch {
+    return <ErrorState title="公司信息加载失败" message="请稍后重试。" />
   }
 
-  if (companyRes.error) {
-    // Fallback to mock data when the API is unavailable (no DB,
-    // DB not seeded, dev-mode without DATABASE_URL, etc.). The
-    // home page links land here straight from the rec feed, so
-    // a stub DB must not render an error state. Look up the
-    // mock `companies` array; if we don't have one, fall back
-    // to the actual ErrorState. The review list also falls
-    // back if its own API call errored.
-    const mockCompany = mockCompanies.find((c) => c.id === id)
-    if (!mockCompany) {
-      return (
-        <ErrorState
-          title="加载这家公司没成功"
-          message={`${companyRes.error}。刷新一下试试,或换一家公司看看。`}
-        />
-      )
-    }
-    const company: CompanyListItem = {
-      id: mockCompany.id,
-      name: mockCompany.name,
-      registeredName: null,
-      shortName: mockCompany.shortName ?? null,
-      englishName: null,
-      aliases: null,
-      city: mockCompany.city,
-      industry: mockCompany.industry,
-      size: mockCompany.size ?? null,
-      financingStage: mockCompany.stage ?? null,
-      website: null,
-      logoUrl: null,
-      description: null,
-      reviewStatus: mockCompany.reviewStatus === "reviewable" ? "reviewable" : "pending_review",
-      claimedStatus: mockCompany.claimedStatus === "claimed" ? "claimed" : "unclaimed",
-      verifiedIdentityCount: mockCompany.verifiedIdentityCount ?? 0,
-      source: "platform_seed",
-      businessStatus: null,
-      foundedDate: null,
-      unifiedSocialCreditCode: null,
-      registeredAddress: null,
-      legalRepresentative: null,
-      createdAt: "2024-01-01T00:00:00Z",
-      updatedAt: "2024-01-01T00:00:00Z",
-      directionScore: mockCompany.directionScore,
-      recommendationRate: mockCompany.recommendationRate,
-      reviewCount: mockCompany.reviewCount,
-      salaryRange: null,
-      riskLevel: mockCompany.riskLevel,
-      riskTags: mockCompany.riskTags,
-      highlights: mockCompany.highlights,
-    }
-    return renderCompanyPage(
-      company,
-      [],
-      // getCompanySnapshot reads company.reviews.filter(...).
-      // The mock Company shape has no `reviews` field; pass an
-      // empty array so the panel renders its 0-data state
-      // (no-open-roles chip, no-interviews stat) rather than
-      // crashing on undefined.map.
-      { ...(company as unknown as Parameters<typeof CompanyIntelligencePanel>[0]["company"]), reviews: [] },
-      []
-    )
-  }
-
-  const company = companyRes.data!.company
-  const mappedReviews: Review[] = (reviewsRes.data?.reviews ?? []).map(mapToReview)
+  if (!company) notFound()
+  const mappedReviews = reviewItems.map(mapPublicReview)
+  const reviewCount = company.reviewCount ?? 0
+  const displayScore = companyDisplayScore(company.directionScore, reviewCount)
 
   if (company.reviewStatus === "pending_review") {
     return (
       <section className="mx-auto w-full max-w-section px-4 py-10 sm:px-6">
-        <SolidCard variant="subtle" className="p-6" data-testid="company-pending-review-page">
+        <WebSurface tone="base" className="p-6" data-testid="company-pending-review-page">
           <p className="text-sm font-medium text-muted-foreground">{company.name}</p>
           <h1 className="mt-2 text-2xl font-semibold text-foreground">该公司信息待审核</h1>
-          <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            已有用户提交公司注册信息，审核通过后即可评价。审核前不展示方向分、公司体感和评论流。
-          </p>
-          <div className="mt-5">
-            <SolidButton asChild variant="primary">
-              <Link href="/">返回推荐</Link>
-            </SolidButton>
-          </div>
-        </SolidCard>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">审核通过后开放评价。</p>
+          <div className="mt-5"><WebButton asChild variant="secondary"><Link href="/">返回首页</Link></WebButton></div>
+        </WebSurface>
       </section>
     )
   }
 
-  // riskTags/highlights are in CompanyListItem; vibeTag/scoreOfficeExperience/scoreCanteen are not
-  // pass as unknown→Company to CompanyIntelligencePanel — panel uses riskTags and scoreOfficeExperience
-  // no-ops on missing fields at runtime
-  // @ts-expect-error CompanyListItem is a partial shape of Company; runtime data is sufficient
-  const companyForPanel: Parameters<typeof CompanyIntelligencePanel>[0]["company"] = company as Parameters<
-    typeof CompanyIntelligencePanel
-  >[0]["company"]
-
-  return renderCompanyPage(company, mappedReviews, companyForPanel, departmentInsights)
-}
-
-function renderCompanyPage(
-  company: CompanyListItem,
-  mappedReviews: Review[],
-  companyForPanel?: Parameters<typeof CompanyIntelligencePanel>[0]["company"],
-  departmentInsights: DepartmentInsight[] = []
-) {
   return (
-    <section className="mx-auto w-full max-w-page px-4 py-4 sm:px-6">
-      <div
-        data-testid="company-sticky-header"
-        className="sticky top-14 z-sticky mb-4 border-b border-border bg-background/95 px-1 py-3 backdrop-blur"
-      >
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="truncate text-base font-semibold text-foreground sm:text-lg">{company.name}</h1>
-            <p className="flex flex-wrap gap-x-2.5 gap-y-1 text-xs text-muted-foreground sm:text-sm">
-              <span>{company.industry}</span>
-              <span>{company.city}</span>
-              <span>方向分 {(company.directionScore ?? 0).toFixed(1)}</span>
-              <span>{(company.reviewCount ?? 0)} 条评价</span>
-            </p>
+    <section className="min-h-[calc(100vh-160px)] bg-muted px-4 pb-12 pt-4 sm:px-8 sm:pt-6">
+      <div className="mx-auto w-full max-w-page">
+      <nav aria-label="面包屑" className="mb-4 flex items-center gap-1.5 text-sm text-muted-foreground">
+        <Link href="/companies" className="inline-flex min-h-11 items-center hover:text-foreground">找公司</Link>
+        <ChevronRight className="size-3.5" aria-hidden="true" />
+        <span>{company.name}</span>
+      </nav>
+
+      <header className="rounded-lg border border-border bg-card px-5 pt-5 shadow-sm sm:px-7 sm:pt-7">
+        <div className="flex flex-col gap-6 pb-6 lg:flex-row lg:items-start lg:justify-between lg:gap-10">
+          <div className="flex min-w-0 items-start gap-4 sm:gap-5">
+            <div className="grid size-14 shrink-0 place-items-center rounded-lg border border-primary-surface-border bg-primary-tint text-xl font-semibold text-primary-deep sm:size-16" aria-hidden="true">
+              {(company.shortName ?? company.name).slice(0, 1)}
+            </div>
+            <div className="min-w-0">
+              <h1 className="break-words text-2xl font-semibold leading-tight text-foreground sm:text-3xl">{company.name}</h1>
+              <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+                <span>{company.industry}</span>
+                <span className="inline-flex items-center gap-1"><MapPin className="size-3.5" />{company.city}</span>
+                {company.size ? <span>{company.size}</span> : null}
+                {company.claimedStatus === "claimed" ? <span className="inline-flex items-center gap-1 text-primary-deep"><BadgeCheck className="size-3.5" />企业已认证</span> : null}
+              </p>
+            </div>
           </div>
-          <SolidButton asChild size="sm">
-            <Link href={`/submit/review?companyId=${company.id}`}>
-              <PenLine />
-              匿名评价
+          <div className="flex flex-wrap items-end justify-between gap-5 border-t border-border pt-5 sm:justify-start lg:shrink-0 lg:justify-end lg:border-0 lg:pt-0">
+            <div>
+              <CompanyRating score={displayScore} prominent />
+              <Link href={`/company/${company.id}/reviews`} className="mt-1 block text-sm text-muted-foreground hover:text-foreground hover:underline">{reviewCount.toLocaleString()} 条公开评价</Link>
+            </div>
+            <WebButton asChild variant="primary"><Link href={`/submit/review?companyId=${encodeURIComponent(company.id)}`}><PenLine className="size-4" aria-hidden="true" />写评价</Link></WebButton>
+          </div>
+        </div>
+        <p className="inline-flex items-center gap-1.5 pb-5 text-xs text-muted-foreground"><ShieldCheck className="size-4 shrink-0" aria-hidden="true" />匿名评价 · 人工审核 · {company.verifiedIdentityCount ?? 0} 位验证贡献者</p>
+        <nav className="flex gap-8 overflow-x-auto border-t border-border" aria-label="公司信息导航">
+          {[
+            ["概览", `/company/${company.id}`],
+            ["评价", `/company/${company.id}/reviews`],
+            ["评分", `/company/${company.id}/ratings`],
+            ["承诺", `/company/${company.id}/promises`],
+          ].filter(([label]) => label !== "评分" || process.env.LAUNCH_SCOPE_ONLY !== "true").map(([label, href]) => (
+            <Link key={href} href={href} aria-current={label === "概览" ? "page" : undefined} className={`inline-flex min-h-12 shrink-0 items-center border-b-2 px-1 text-sm font-semibold ${label === "概览" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+              {label}
             </Link>
-          </SolidButton>
+          ))}
+        </nav>
+      </header>
+
+      <div className="mt-8"><CompanyDecisionInsights company={company} /></div>
+
+      <div className="mt-8 grid gap-8 min-[1200px]:grid-cols-[minmax(0,1fr)_280px]">
+        <div className="min-w-0 rounded-lg border border-border bg-card p-5 sm:p-7">
+          <h2 className="mb-5 text-xl font-semibold">评价概览</h2>
+          {mappedReviews.length === 0 ? (
+            <div className="border-y border-border py-10">
+              <h3 className="text-lg font-semibold">暂无评价</h3>
+              <p className="mt-2 text-sm text-muted-foreground">审核通过后展示。</p>
+            </div>
+          ) : <div data-testid="company-review-feed" className="min-w-0"><CompanyReviewFeed companyId={company.id} reviews={mappedReviews} reviewCount={company.reviewCount ?? mappedReviews.length} previewLimit={1} /></div>}
+          <div className="mt-8">
+            <DepartmentInsights insights={departmentInsights} />
+            <PromiseRecords companyId={company.id} />
+            <SentimentTrend companyId={company.id} companyName={company.name} />
+          </div>
         </div>
+        <CompanyEvidenceRail company={company} />
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center gap-2 border-b border-border pb-4 text-xs text-muted-foreground sm:text-sm">
-        <span>推荐入职率 {(company.recommendationRate ?? 0)}%</span>
-        <span
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-muted px-3 font-medium text-foreground"
-          title="完成企业邮箱或任职证明核验的匿名用户人数"
-          data-testid="company-verified-identity-count"
-        >
-          <ShieldCheck className="size-3.5 text-primary" />
-          {(company.verifiedIdentityCount ?? 0).toLocaleString()} 人已认证身份
-        </span>
-        {company.claimedStatus === "claimed" ? (
-          <Badge variant="secondary" className="gap-1">
-            <BadgeCheck className="size-3.5" />
-            企业已认证
-          </Badge>
-        ) : (
-          <Link
-            href={`/company-verification?companyId=${encodeURIComponent(company.id)}&companyName=${encodeURIComponent(company.name)}`}
-            className="inline-flex min-h-11 items-center gap-1.5 font-medium text-primary hover:underline"
-          >
-            <ShieldCheck className="size-3.5" />
-            申请公司认证
-          </Link>
-        )}
-        {(company.riskTags ?? []).slice(0, 2).map((tag) => (
-          <Badge key={tag} variant="secondary">
-            #{tag}
-          </Badge>
-        ))}
       </div>
-
-      <CompanyIntelligencePanel company={companyForPanel ?? (company as unknown as Parameters<typeof CompanyIntelligencePanel>[0]["company"])} />
-      <DepartmentInsights insights={departmentInsights} />
-      <PromiseRecords companyId={company.id} />
-      <SentimentTrend companyId={company.id} companyName={company.name} />
-
-      {mappedReviews.length === 0 ? (
-        <EmptyState />
-      ) : (
-        <div data-testid="company-review-feed" className="min-w-0">
-          <CompanyReviewFeed companyId={company.id} reviews={mappedReviews} />
-        </div>
-      )}
     </section>
   )
 }

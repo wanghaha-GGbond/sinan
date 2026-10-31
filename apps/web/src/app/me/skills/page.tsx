@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { Loader2 } from "lucide-react"
-import { SolidCard } from "@/components/ui/solid-card"
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidEmptyState } from "@/components/ui/solid-empty-state"
+import { WebSurface } from "@/components/ui/web-surface"
+import { WebButton } from "@/components/ui/web-button"
+import { WebEmptyState } from "@/components/ui/web-empty-state"
 import { useAuth } from "@/lib/auth-context"
 
 const NAME_MAX = 40
@@ -109,7 +109,7 @@ export default function MySkillsPage() {
         </p>
       </header>
 
-      <SolidCard variant="elevated" className="p-6">
+      <WebSurface variant="elevated" className="p-6">
         {!user ? (
           <p className="text-sm text-muted-foreground">请先登录后提交技能。</p>
         ) : (
@@ -149,12 +149,12 @@ export default function MySkillsPage() {
             {message ? (
               <p className={`text-xs ${message.ok ? "text-primary" : "text-destructive"}`}>{message.text}</p>
             ) : null}
-            <SolidButton type="submit" variant="primary" size="sm" disabled={submitting} className="w-full">
+            <WebButton type="submit" variant="primary" size="sm" disabled={submitting} className="w-full">
               {submitting ? <><Loader2 className="size-4 animate-spin" />提交中…</> : "提交技能"}
-            </SolidButton>
+            </WebButton>
           </form>
         )}
-      </SolidCard>
+      </WebSurface>
 
       <section className="mt-10">
         <h2 className="mb-4 text-base font-semibold text-foreground">我的技能</h2>
@@ -163,12 +163,12 @@ export default function MySkillsPage() {
             {[1, 2].map((i) => <div key={i} className="h-16 animate-pulse rounded-2xl bg-muted" />)}
           </div>
         ) : items.length === 0 ? (
-          <SolidEmptyState title="还没有提交" description="提交你的看家本领，满 3 人背书即可登上一技封神榜。" />
+          <WebEmptyState title="还没有提交" description="提交你的看家本领，满 3 人背书即可登上一技封神榜。" />
         ) : (
           <ul className="space-y-3">
             {items.map((item) => (
               <li key={item.id}>
-                <SolidCard variant="default" className="p-4">
+                <WebSurface variant="default" className="p-4">
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="text-sm font-medium text-foreground">{item.name}</p>
@@ -185,7 +185,7 @@ export default function MySkillsPage() {
                       </span>
                     )}
                   </div>
-                </SolidCard>
+                </WebSurface>
               </li>
             ))}
           </ul>

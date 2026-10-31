@@ -1,0 +1,27 @@
+import { defineConfig, devices } from "@playwright/test"
+
+const releaseBaseURL = process.env.RELEASE_BASE_URL?.trim() || "http://127.0.0.1:3000"
+
+export default defineConfig({
+  testDir: "./tests/release",
+  testMatch: ["core-api-flow.spec.ts", "password-recovery.release.spec.ts", "owner-registration.mail.spec.ts"],
+  timeout: 60_000,
+  workers: 1,
+  outputDir: "./test-results/release",
+  reporter: "line",
+  use: {
+    ...devices["Desktop Chrome"],
+    baseURL: releaseBaseURL,
+    launchOptions: process.env.PLAYWRIGHT_CHROMIUM_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH } : {},
+  },
+  ...(process.env.RELEASE_BASE_URL
+    ? {}
+    : {
+        webServer: {
+          command: "npm run dev -- --hostname 127.0.0.1 --port 3000",
+          url: "http://127.0.0.1:3000/api/health/live",
+          reuseExistingServer: false,
+          timeout: 120_000,
+        },
+      }),
+})

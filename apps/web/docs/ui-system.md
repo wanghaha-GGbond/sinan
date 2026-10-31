@@ -1,14 +1,26 @@
 # UI System
 
+## 当前 Web 规范（2026-08）
+
+本节覆盖旧版 Solid C 端章节，并作为网页端实施基线。桌面 Web 与移动 Web 使用统一响应式网页语言；原生 App 继续保留 Solid 组件。
+
+- 内容表面使用中性白底、1px 边框、12px 圆角和轻阴影；玻璃材质只用于吸顶导航、筛选浮层和临时弹层。
+- `WebButton` 提供 `primary / secondary / quiet / danger` 四级操作，单页最多 1–2 个高强调操作；移动 Web 最小点击区为 44px。
+- `WebSurface` 提供 `base / raised / overlay / tint / risk` 五种表面语义；`WebEmptyState` 负责统一空状态。
+- `WebNav`、`WebSearchField`、`FilterChip`、`TrustBadge`、`ScoreBadge` 是 Web 新组件；`SolidButton`、`SolidCard`、`SolidTopbar` 进入弃用兼容期，不再新增业务引用。
+- 公司页采用评价优先布局：公司摘要 → 四项关键洞察（工作节奏、成长机会、管理方式、薪酬福利）→ 评价流 → 评分分布、CBTI 与可信证据栏。
+
+旧版 Solid 章节保留为迁移记录，不代表当前网页视觉要求。
+
 ## Visual Direction
 
-司南 uses a restrained C-end product style:
+司南 uses a restrained web product style:
 
 - Sinan Primary: `#12B981`, Primary Dark: `#047857`, Primary Soft: `#ECFDF5`.
 - Ink: `#0F172A`, Ink Soft: `#1E293B`, Muted: `#64748B`.
 - Background: `#F8FAFC`, Surface: `#FFFFFF`, Border: `#E2E8F0`.
 - Risk: `#F97316`, Risk Soft: `#FFF7ED`, Risk Dark: `#C2410C`.
-- Rounded but compact cards, with 8-16px radius depending on surface.
+- Flat buttons, compact cards, with 8-16px radius depending on surface.
 - Dense enough for decision-making, not a marketing-only landing page.
 
 ## Gamification Boundary
@@ -88,14 +100,14 @@ Avoid 神评、黑公司、垃圾公司、曝光、挂人、撕、公开处刑 a
 司南品牌不靠长文案解释，而靠推荐理由、方向分、关键指标、适合/慎重信息表达判断力。
 配色从白橙绿调整为雾灰绿、墨蓝、司南青绿和少量琥珀风险色。
 
-## Solid C 端风格收口（本轮）
+## Solid C 端风格收口（历史记录，已归档）
 
 司南移除“工友”词汇，统一改为“过来人 / 匿名评价者 / 后来者”。
 司南 UI 从轻线框风格转向高对比 solid C 端风格。
 司南借鉴多邻国式固态按钮、圆润卡片、明确反馈，但不复制其角色、插画、配色和布局。
 毛玻璃降级为浮层辅助，推荐卡和评论卡以实体白底和 solid 层级为主。
 
-## Solid 组件化与视觉基线（本轮）
+## Solid 组件化与视觉基线（历史记录，已归档）
 
 司南已抽象 solid 视觉组件，包括 SolidButton、SolidCard、ScoreChip、TagPill、MetricPill 等。
 /search 和 /rankings 已统一到高对比 solid C 端风格。
@@ -103,14 +115,14 @@ Avoid 神评、黑公司、垃圾公司、曝光、挂人、撕、公开处刑 a
 毛玻璃仅保留为浮层辅助，不作为主卡片风格。
 建立或准备建立桌面端和移动端视觉回归基线，防止后续 UI 回退。
 
-## SolidTopbar + ReviewCard 组件化与视觉回归升级（本轮）
+## SolidTopbar + ReviewCard 组件化与视觉回归升级（历史记录，已归档）
 
 司南已抽象 SolidTopbar，用于统一首页、搜索页、榜单页、内容页的顶部导航。
 ReviewCard 已迁移到 SolidCard、SolidButton、ScoreChip、TagPill 等 solid primitives。
 视觉测试从简单截图生成升级为 Playwright toHaveScreenshot baseline，对 desktop/mobile 核心页面进行视觉回归保护。
 后续 UI 改动必须同步更新视觉基线，避免 solid 风格回退。
 
-## 发布与问卷视觉收口（本轮）
+## 发布与问卷视觉收口（历史记录，已归档）
 
 - 发布评价 Step 1 增加“新增未收录公司”表单卡，沿用 SolidCard + SolidButton + solid 输入框。
 - 新增公司表单升级为注册信息提交：必填公司名称、统一社会信用代码、注册地址、法定代表人、注册城市、所属行业。
@@ -118,14 +130,14 @@ ReviewCard 已迁移到 SolidCard、SolidButton、ScoreChip、TagPill 等 solid 
 - 全屏问卷主视觉保持“单题卡片”，状态信息降级为顶部轻量进度与底部弱提示。
 - 发布链路按钮统一到 SolidButton，减少 shadcn 默认 outline/ghost 残留。
 
-## P0 UI 收敛（新增）
+## P0 UI 收敛（历史记录，已归档）
 
 - 新增公司表单与 CTA 沿用 solid 输入框 + `SolidButton`。
 - 新增公司入口文案限定为 C 端流程语义：`还没有这家公司 / 新增这家公司 / 保存并继续评价`。
 - 问卷场景继续保持“中央题卡主导”，不引入右侧大状态栏。
 - 问卷完成态保留 `方向值 +8` 强反馈，避免在答题过程中堆叠冗余状态卡。
 
-## 追问与补充 UI
+## 追问与补充 UI（历史记录，已归档）
 
 - 追问与补充区继续使用 solid 视觉体系：SolidCard、SolidButton、TagPill。
 - 输入区采用实体卡片和高对比输入框，避免评论区线框化或论坛噪音感。

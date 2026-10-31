@@ -1,10 +1,10 @@
-import { useMemo, useState } from "react"
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native"
+import { useEffect, useState } from "react"
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native"
 import { router, useLocalSearchParams } from "expo-router"
 import { CheckCircle2, Shield, Sparkles, X } from "lucide-react-native"
 
 import { COLORS, RADIUS, SHADOWS } from "../theme"
-import { companies, searchCompanies, type MobileCompany } from "../data"
+import { getCompany, getSession, searchCompanies, submitReview, type CompanyListItem } from "../lib/api"
 import { SolidButton } from "../components/SolidButton"
 import { SolidCard } from "../components/SolidCard"
 import { SolidInput } from "../components/SolidInput"
@@ -94,29 +94,87 @@ const STEPS: StepDef[] = [
   { key: "review", title: "匿名安全检查", description: "发布前最后过一遍" },
 ]
 
+type SubmitRouteParams = {
+  companyId?: string
+  companyName?: string
+  mode?: string
+  name?: string
+}
+
+function buildSubmitPath(params: SubmitRouteParams): string {
+  const query = Object.entries(params)
+    .filter((entry): entry is [string, string] => typeof entry[1] === "string" && entry[1].length > 0)
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+    .join("&")
+  return `/submit${query ? `?${query}` : ""}`
+}
+
 export default function SubmitScreen() {
-  const params = useLocalSearchParams<{
-    companyId?: string
-    companyName?: string
-    mode?: string
-    name?: string
-  }>()
+  const params = useLocalSearchParams<SubmitRouteParams>()
+  const [authState, setAuthState] = useState<"checking" | "authenticated" | "unauthenticated">("checking")
+  const nextPath = buildSubmitPath(params)
+
+  useEffect(() => {
+    let active = true
+    getSession()
+      .then((user) => { if (active) setAuthState(user ? "authenticated" : "unauthenticated") })
+      .catch(() => { if (active) setAuthState("unauthenticated") })
+    return () => { active = false }
+  }, [])
+
+  useEffect(() => {
+    if (authState === "unauthenticated") {
+      router.replace({ pathname: "/login", params: { next: nextPath } })
+    }
+  }, [authState, nextPath])
+
+  if (authState !== "authenticated") {
+    return (
+      <View style={S.authGate}>
+        <ActivityIndicator color={COLORS.primary} />
+        <Text style={S.authGateText}>{authState === "checking" ? "正在确认登录状态…" : "正在前往登录…"}</Text>
+      </View>
+    )
+  }
+
+  return <SubmitFormScreen />
+}
+
+function SubmitFormScreen() {
+  const params = useLocalSearchParams<SubmitRouteParams>()
   const addCompanyMode = params.mode === "add-company"
-  const initialCompany = companies.find((company) => company.id === params.companyId) ?? companies[0]
-  const initialQuery = params.name ?? params.companyName ?? (addCompanyMode ? "" : initialCompany.name)
+  const initialQuery = params.name ?? params.companyName ?? ""
 
   const [stepIndex, setStepIndex] = useState(0)
   const [companyQuery, setCompanyQuery] = useState(initialQuery)
-  const [selectedCompany, setSelectedCompany] = useState<MobileCompany | null>(
-    addCompanyMode ? null : initialCompany
-  )
+  const [selectedCompany, setSelectedCompany] = useState<CompanyListItem | null>(null)
   const [addingCompany, setAddingCompany] = useState(addCompanyMode)
   const [newCompanyCity, setNewCompanyCity] = useState("")
   const [newCompanyIndustry, setNewCompanyIndustry] = useState("")
   const [form, setForm] = useState<FormState>(INITIAL_FORM)
   const [submitted, setSubmitted] = useState(false)
+  const [submitError, setSubmitError] = useState("")
+  const [submitting, setSubmitting] = useState(false)
+  const [matchedCompanies, setMatchedCompanies] = useState<CompanyListItem[]>([])
 
-  const matchedCompanies = useMemo(() => searchCompanies(companyQuery).slice(0, 4), [companyQuery])
+  useEffect(() => {
+    let active = true
+    const timer = setTimeout(() => {
+      searchCompanies(companyQuery).then((items) => { if (active) setMatchedCompanies(items.slice(0, 4)) }).catch(() => { if (active) setMatchedCompanies([]) })
+    }, 250)
+    return () => { active = false; clearTimeout(timer) }
+  }, [companyQuery])
+
+  useEffect(() => {
+    let active = true
+    if (!params.companyId) return
+    getCompany(params.companyId).then((company) => {
+      if (!active) return
+      setSelectedCompany(company)
+      setCompanyQuery(company.name)
+    }).catch(() => {})
+    return () => { active = false }
+  }, [params.companyId])
   const totalSteps = STEPS.length
   const progress = Math.round(((stepIndex + 1) / totalSteps) * 100)
   const step = STEPS[stepIndex]
@@ -160,8 +218,52 @@ export default function SubmitScreen() {
     })
   }
 
-  function handleSubmit() {
-    setSubmitted(true)
+  async function handleSubmit() {
+    if (!selectedCompany) return
+    setSubmitting(true)
+    setSubmitError("")
+    const roleMap: Record<RelationValue, string> = {
+      "在职员工": "current_employee", "离职员工": "former_employee", "面试者": "interviewee", "实习生": "intern", "外包 / 派遣": "contractor",
+    }
+    try {
+      await submitReview({
+        companyId: selectedCompany.id,
+        authorRole: roleMap[form.relation],
+        title: form.shortComment.trim(),
+        content: form.content.trim(),
+        directionScore: form.directionScore,
+        jobTitle: form.role.trim(),
+        city: selectedCompany.city,
+        employmentStatus: form.relation,
+        recommendToJoin: form.directionScore >= 7,
+        ratingDimensions: {
+          pay_worth: Math.max(1, Math.min(5, Math.round(form.dimensions.salary / 2))),
+          growth: Math.max(1, Math.min(5, Math.round(form.dimensions.growth / 2))),
+          leader: Math.max(1, Math.min(5, Math.round(form.dimensions.management / 2))),
+          overtime_truth: Math.max(1, Math.min(5, Math.round(form.dimensions.worklife / 2))),
+          promise_delivery: Math.max(1, Math.min(5, Math.round(form.dimensions.integrity / 2))),
+        },
+        questionnaire: {
+          tags: form.tags,
+          salaryRange: form.salaryRange.trim() || null,
+          // Keep the native payload identical to the Web questionnaire
+          // contract. The server and company profile algorithm read these
+          // fields at the top level.
+          salaryScore: form.dimensions.salary,
+          growthScore: form.dimensions.growth,
+          workLifeBalanceScore: form.dimensions.worklife,
+          managementClarityScore: form.dimensions.management,
+          collaborationScore: form.dimensions.culture,
+          stabilityScore: form.dimensions.stability,
+          integrityScore: form.dimensions.integrity,
+        },
+      })
+      setSubmitted(true)
+    } catch (cause) {
+      setSubmitError(cause instanceof Error ? cause.message : "评价提交失败")
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   function resetForm() {
@@ -184,7 +286,7 @@ export default function SubmitScreen() {
             你的评价会在审核后展示。正式版本会先完成匿名保护和真实性校验,再进入公开样本。
           </Text>
           <View style={S.rewardGrid}>
-            {["方向值 +20", "连续点灯 +1", "司南徽章进度 +1"].map((item) => (
+            {["方向值 +20", "连续点灯 +1", "在场徽章进度 +1"].map((item) => (
               <View key={item} style={S.rewardPill}>
                 <Text style={S.rewardText}>{item}</Text>
               </View>
@@ -346,6 +448,7 @@ export default function SubmitScreen() {
         ) : null}
 
         <View style={S.navRow}>
+          {submitError ? <Text style={S.errorText}>{submitError}</Text> : null}
           <SolidButton
             title="上一步"
             variant="secondary"
@@ -354,10 +457,10 @@ export default function SubmitScreen() {
             testID="submit-prev"
           />
           <SolidButton
-            title={stepIndex === STEPS.length - 1 ? "提交评价" : "下一步"}
-            disabled={!canGoNext()}
+            title={stepIndex === STEPS.length - 1 ? (submitting ? "提交中…" : "提交评价") : "下一步"}
+            disabled={!canGoNext() || submitting}
             onPress={() => {
-              if (stepIndex === STEPS.length - 1) handleSubmit()
+              if (stepIndex === STEPS.length - 1) void handleSubmit()
               else setStepIndex((value) => Math.min(STEPS.length - 1, value + 1))
             }}
             testID="submit-next"
@@ -373,9 +476,9 @@ export default function SubmitScreen() {
 function CompanyStep(props: {
   companyQuery: string
   setCompanyQuery: (value: string) => void
-  matchedCompanies: MobileCompany[]
-  selectedCompany: MobileCompany | null
-  onSelectCompany: (company: MobileCompany | null) => void
+  matchedCompanies: CompanyListItem[]
+  selectedCompany: CompanyListItem | null
+  onSelectCompany: (company: CompanyListItem | null) => void
   addingCompany: boolean
   setAddingCompany: (value: boolean) => void
   newCompanyCity: string
@@ -388,27 +491,8 @@ function CompanyStep(props: {
   setRelation: (value: RelationValue) => void
 }) {
   function saveNewCompany() {
-    const name = props.companyQuery.trim()
-    if (!name || !props.newCompanyCity.trim() || !props.newCompanyIndustry.trim()) return
-    props.onSelectCompany({
-      ...companies[0],
-      id: `company-custom-${Date.now()}`,
-      name,
-      shortName: name.slice(0, 8),
-      city: props.newCompanyCity.trim(),
-      industry: props.newCompanyIndustry.trim(),
-      size: "规模待补充",
-      stage: "待审核",
-      reviewCount: 0,
-      recentReviewCount: 0,
-      directionScore: 0,
-      recommendationRate: 0,
-      salaryRange: "待补充",
-      highlights: ["公司信息待审核"],
-      riskTags: ["待审核"],
-      vibe: "待审核",
-      roles: [],
-    })
+    // Company creation requires the fuller Web verification form. Keeping
+    // this explicit prevents a local-only company from producing a fake id.
     props.setAddingCompany(false)
   }
 
@@ -492,9 +576,6 @@ function CompanyStep(props: {
           <Text style={S.selectedText}>
             {props.selectedCompany.name} · {props.selectedCompany.city} · {props.selectedCompany.industry}
           </Text>
-          {props.selectedCompany.stage === "待审核" ? (
-            <Text style={S.pendingText}>当前状态:待审核</Text>
-          ) : null}
         </View>
       ) : null}
 
@@ -747,7 +828,7 @@ function ReviewStep(props: {
       </View>
 
       <Text style={[S.label, S.safetyHead]}>匿名安全检查</Text>
-      <Text style={S.helperText}>逐条确认。司南会先做匿名保护 + 真实性校验,再公开。</Text>
+      <Text style={S.helperText}>逐条确认。在场会先做匿名保护 + 真实性校验,再公开。</Text>
       <View style={S.safetyList}>
         {SAFETY_ITEMS.map((item, index) => {
           const checked = props.safetyItems[index]
@@ -799,6 +880,8 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
 
 const S = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
+  authGate: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, backgroundColor: COLORS.bg },
+  authGateText: { fontSize: 13, color: COLORS.muted },
   content: { paddingBottom: 96 },
   progressCard: {
     margin: 16,
@@ -855,6 +938,7 @@ const S = StyleSheet.create({
   selectedPill: { borderRadius: RADIUS.lg, backgroundColor: COLORS.surfaceHover, padding: 12 },
   selectedText: { fontSize: 13, fontWeight: "700", color: COLORS.inkSoft },
   pendingText: { fontSize: 12, color: COLORS.muted, marginTop: 4 },
+  errorText: { flexBasis: "100%", color: COLORS.danger, fontSize: 13, fontWeight: "700" },
   chipWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   inlineButtons: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 4 },
   sectionTitle: { fontSize: 16, fontWeight: "800", color: COLORS.ink },

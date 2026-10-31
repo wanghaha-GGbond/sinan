@@ -99,7 +99,7 @@ export function MobileDiscussionCard({
           <View style={S.pendingBox}>
             <Text style={S.pendingTitle}>已提交,等待审核</Text>
             <Text style={S.pendingHint}>
-              司南优先保护匿名与事实表达,审核通过后会公开。
+              在场优先保护匿名与事实表达,审核通过后会公开。
             </Text>
             <Text style={S.mutedText} numberOfLines={3}>
               {discussion.content}

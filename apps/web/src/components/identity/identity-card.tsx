@@ -120,7 +120,7 @@ export function IdentityCard({ data, className = "" }: { data: IdentityCardData;
             {/* Top row */}
             <div className="flex items-start justify-between">
               <div>
-                <p className={`text-xs font-medium tracking-widest uppercase opacity-60 ${m.accent}`}>司南</p>
+                <p className={`text-xs font-medium tracking-widest uppercase opacity-60 ${m.accent}`}>在场</p>
                 <p className={`mt-1 text-xl font-semibold tracking-tight ${m.nameText}`}>{data.displayName}</p>
               </div>
               {data.trustLevel > 0 && (

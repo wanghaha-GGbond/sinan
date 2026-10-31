@@ -1,0 +1,126 @@
+{
+  "generatedAt": "2026-06-21",
+  "notes": "互联网和金融头部公司第一批研报目标。复制为 research-targets.json 后按需删减或扩充。",
+  "defaults": {
+    "platforms": ["boss_zhipin", "xiaohongshu", "weibo", "zhihu"],
+    "maxTextLength": 2400,
+    "maxLinks": 20,
+    "timeoutMs": 20000,
+    "retryCount": 1,
+    "retryDelayMs": 2000,
+    "delayMs": 1500,
+    "blockAssets": true
+  },
+  "companies": [
+    {
+      "name": "字节跳动",
+      "city": "北京",
+      "industry": "互联网 / 内容 / AI",
+      "queries": {
+        "boss_zhipin": "字节跳动 招聘 北京",
+        "xiaohongshu": "字节跳动 面试 工作体验",
+        "weibo": "字节跳动 招聘 裁员 奖金",
+        "zhihu": "字节跳动 工作体验"
+      }
+    },
+    {
+      "name": "腾讯",
+      "city": "深圳",
+      "industry": "互联网 / 游戏 / 云计算",
+      "queries": {
+        "boss_zhipin": "腾讯 招聘 深圳",
+        "xiaohongshu": "腾讯 面试 工作体验",
+        "weibo": "腾讯 招聘 裁员 奖金",
+        "zhihu": "腾讯 工作体验"
+      }
+    },
+    {
+      "name": "阿里巴巴",
+      "city": "杭州",
+      "industry": "互联网 / 电商 / 云计算",
+      "queries": {
+        "boss_zhipin": "阿里巴巴 招聘 杭州",
+        "xiaohongshu": "阿里巴巴 面试 工作体验",
+        "weibo": "阿里巴巴 招聘 裁员 奖金",
+        "zhihu": "阿里巴巴 工作体验"
+      }
+    },
+    {
+      "name": "美团",
+      "city": "北京",
+      "industry": "互联网 / 本地生活",
+      "queries": {
+        "boss_zhipin": "美团 招聘 北京",
+        "xiaohongshu": "美团 面试 工作体验",
+        "weibo": "美团 招聘 裁员 奖金",
+        "zhihu": "美团 工作体验"
+      }
+    },
+    {
+      "name": "小红书",
+      "city": "上海",
+      "industry": "互联网 / 内容社区 / 电商",
+      "queries": {
+        "boss_zhipin": "小红书 招聘 上海",
+        "xiaohongshu": "小红书 面试 工作体验",
+        "weibo": "小红书 招聘 裁员 奖金",
+        "zhihu": "小红书 工作体验"
+      }
+    },
+    {
+      "name": "招商银行",
+      "city": "深圳",
+      "industry": "金融 / 银行",
+      "queries": {
+        "boss_zhipin": "招商银行 招聘 深圳 金融科技",
+        "xiaohongshu": "招商银行 面试 工作体验",
+        "weibo": "招商银行 招聘 校招 年终奖",
+        "zhihu": "招商银行 工作体验"
+      }
+    },
+    {
+      "name": "平安集团",
+      "city": "深圳",
+      "industry": "金融 / 保险 / 金融科技",
+      "queries": {
+        "boss_zhipin": "平安集团 招聘 金融科技",
+        "xiaohongshu": "平安集团 面试 工作体验",
+        "weibo": "平安集团 招聘 裁员 奖金",
+        "zhihu": "平安集团 工作体验"
+      }
+    },
+    {
+      "name": "中信证券",
+      "city": "北京",
+      "industry": "金融 / 券商",
+      "queries": {
+        "boss_zhipin": "中信证券 招聘 金融科技",
+        "xiaohongshu": "中信证券 面试 工作体验",
+        "weibo": "中信证券 招聘 年终奖",
+        "zhihu": "中信证券 工作体验"
+      }
+    },
+    {
+      "name": "蚂蚁集团",
+      "city": "杭州",
+      "industry": "金融科技 / 支付",
+      "queries": {
+        "boss_zhipin": "蚂蚁集团 招聘 杭州",
+        "xiaohongshu": "蚂蚁集团 面试 工作体验",
+        "weibo": "蚂蚁集团 招聘 裁员 奖金",
+        "zhihu": "蚂蚁集团 工作体验"
+      }
+    },
+    {
+      "name": "东方财富",
+      "city": "上海",
+      "industry": "金融 / 证券信息 / 互联网金融",
+      "queries": {
+        "boss_zhipin": "东方财富 招聘 上海",
+        "xiaohongshu": "东方财富 面试 工作体验",
+        "weibo": "东方财富 招聘 年终奖",
+        "zhihu": "东方财富 工作体验"
+      }
+    }
+  ]
+}

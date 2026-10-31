@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { Check, Loader2, X } from "lucide-react"
 
-import { SolidButton } from "@/components/ui/solid-button"
+import { WebButton } from "@/components/ui/web-button"
 import { Textarea } from "@/components/ui/textarea"
 
 type RecordItem = {
@@ -95,12 +95,12 @@ export function PromiseRecordQueue() {
                   className="min-h-20"
                 />
                 <div className="grid grid-cols-2 gap-2">
-                  <SolidButton type="button" variant="secondary" onClick={() => void act(record, "reject")}>
+                  <WebButton type="button" variant="secondary" onClick={() => void act(record, "reject")}>
                     <X className="size-4" />拒绝
-                  </SolidButton>
-                  <SolidButton type="button" onClick={() => void act(record, "approve")}>
+                  </WebButton>
+                  <WebButton type="button" onClick={() => void act(record, "approve")}>
                     <Check className="size-4" />通过
-                  </SolidButton>
+                  </WebButton>
                 </div>
               </div>
             </article>

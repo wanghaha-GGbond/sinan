@@ -107,8 +107,9 @@ const S = StyleSheet.create({
     flexDirection: "row",
     gap: 4,
   },
-  sm: { height: 36, paddingHorizontal: 12 },
-  md: { height: 40, paddingHorizontal: 16 },
+  // Keep every native-web-facing action at Apple's 44pt minimum hit target.
+  sm: { minHeight: 44, paddingHorizontal: 12 },
+  md: { minHeight: 44, paddingHorizontal: 16 },
   lg: { height: 48, paddingHorizontal: 20 },
   text: {
     fontWeight: "700",

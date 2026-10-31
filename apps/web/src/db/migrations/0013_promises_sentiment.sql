@@ -65,7 +65,7 @@ CREATE INDEX "promise_records_company_public_idx" ON "promise_records" ("company
 CREATE INDEX "promise_records_moderation_idx" ON "promise_records" ("status","created_at");--> statement-breakpoint
 CREATE INDEX "promise_records_author_idx" ON "promise_records" ("author_user_id","created_at");--> statement-breakpoint
 CREATE INDEX "moderation_events_entity_idx" ON "moderation_events" ("entity_type","entity_id","created_at");--> statement-breakpoint
-CREATE INDEX "moderation_events_actor_idx" ON "moderation_events" ("actor_user_id","created_at");--> statement-breakpoint
+CREATE INDEX "review_moderation_events_actor_idx" ON "moderation_events" ("actor_user_id","created_at");--> statement-breakpoint
 CREATE UNIQUE INDEX "company_sentiment_company_date_unique" ON "company_sentiment_daily" ("company_id","date");--> statement-breakpoint
 CREATE INDEX "company_sentiment_date_idx" ON "company_sentiment_daily" ("date");--> statement-breakpoint
 CREATE INDEX "company_events_company_date_idx" ON "company_events" ("company_id","event_date");

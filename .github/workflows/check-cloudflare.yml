@@ -1,0 +1,52 @@
+name: Cloudflare build validation
+
+on:
+  pull_request:
+    paths: ["apps/web/**", "packages/shared/**", "package.json", "package-lock.json", ".github/workflows/check-cloudflare.yml"]
+  push:
+    branches: [main]
+    paths: ["apps/web/**", "packages/shared/**", "package.json", "package-lock.json", ".github/workflows/check-cloudflare.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Cloudflare ${{ matrix.target }} build (no deploy)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [staging, production]
+    env:
+      CF_VALIDATION_ONLY: "true"
+      CF_MAIL_FROM_DOMAIN: mail.example.invalid
+      CF_SUPPORT_EMAIL: support@example.invalid
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run test:release-cf --workspace=@sinan/web
+      - run: npm run build:cf --workspace=@sinan/web -- ${{ matrix.target }}
+      - name: Save validation metadata, never a deployable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloudflare-${{ matrix.target }}-validation
+          path: apps/web/.release/manifest.json
+          include-hidden-files: true
+      - name: Summarize build only
+        env:
+          BUILD_TARGET: ${{ matrix.target }}
+        run: |
+          echo "### Cloudflare $BUILD_TARGET validation" >> "$GITHUB_STEP_SUMMARY"
+          echo 'OpenNext build and Wrangler dry-run passed. No cloud credentials, upload, migration or traffic switch.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'This fixture build is validation-only and cannot pass the release gate.' >> "$GITHUB_STEP_SUMMARY"

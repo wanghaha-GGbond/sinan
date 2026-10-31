@@ -6,9 +6,9 @@ import { ArrowRight, ReceiptText, Search } from "lucide-react"
 
 import { FilterBar } from "@/components/common/filter-bar"
 import { ScoreChip } from "@/components/ui/score-chip"
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
-import { SolidEmptyState } from "@/components/ui/solid-empty-state"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
+import { WebEmptyState } from "@/components/ui/web-empty-state"
 import { getSalaryInsights } from "@/lib/glassdoor-insights"
 import { companies } from "@/lib/mock-data"
 
@@ -55,7 +55,7 @@ export default function SalariesPage() {
 
   return (
     <section className="mx-auto flex w-full max-w-page flex-col gap-5 px-4 py-6 sm:px-6">
-      <SolidCard variant="emerald" className="p-5">
+      <WebSurface variant="emerald" className="p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-secondary-foreground">
@@ -67,11 +67,11 @@ export default function SalariesPage() {
               从现有评价里提取薪资区间、奖金兑现、调薪透明度和岗位样本,作为入职前的谈薪参考。
             </p>
           </div>
-          <SolidButton asChild variant="dark">
+          <WebButton asChild variant="dark">
             <Link href="/submit/review">贡献薪资样本</Link>
-          </SolidButton>
+          </WebButton>
         </div>
-      </SolidCard>
+      </WebSurface>
 
       <FilterBar
         industries={industries}
@@ -92,19 +92,19 @@ export default function SalariesPage() {
       />
 
       {filtered.length === 0 ? (
-        <SolidEmptyState
+        <WebEmptyState
           title="没有匹配的薪资样本"
           description="换一个行业或城市,或者贡献一条新的薪资样本。"
           action={
-            <SolidButton asChild variant="primary" size="sm">
+            <WebButton asChild variant="primary" size="sm">
               <Link href="/submit/review">贡献薪资样本</Link>
-            </SolidButton>
+            </WebButton>
           }
         />
       ) : (
         <div className="grid gap-4" style={{ gridTemplateColumns: "var(--container-card-grid)" }}>
           {filtered.map((item) => (
-            <SolidCard key={`${item.companyId}-${item.role}`} variant="subtle" className="p-4">
+            <WebSurface key={`${item.companyId}-${item.role}`} variant="subtle" className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-foreground">{item.role}</p>
@@ -122,20 +122,20 @@ export default function SalariesPage() {
               </div>
               <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.signal}</p>
               <div className="mt-4 flex items-center justify-between">
-                <SolidButton asChild variant="ghost" size="sm">
+                <WebButton asChild variant="ghost" size="sm">
                   <Link href="/search">
                     <Search className="size-4" />
                     换家公司
                   </Link>
-                </SolidButton>
-                <SolidButton asChild variant="primary" size="sm">
+                </WebButton>
+                <WebButton asChild variant="primary" size="sm">
                   <Link href={`/company/${item.companyId}`}>
                     公司页
                     <ArrowRight className="size-4" />
                   </Link>
-                </SolidButton>
+                </WebButton>
               </div>
-            </SolidCard>
+            </WebSurface>
           ))}
         </div>
       )}

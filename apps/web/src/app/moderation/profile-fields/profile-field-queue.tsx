@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { Check, Loader2, X } from "lucide-react"
 
-import { SolidButton } from "@/components/ui/solid-button"
+import { WebButton } from "@/components/ui/web-button"
 
 type Submission = {
   userId: string
@@ -91,7 +91,7 @@ export function ProfileFieldQueue() {
                   <p className="mt-2 text-sm leading-6 text-foreground">{row.value}</p>
                 </div>
                 <div className="flex gap-2">
-                  <SolidButton
+                  <WebButton
                     type="button"
                     variant="secondary"
                     size="sm"
@@ -100,8 +100,8 @@ export function ProfileFieldQueue() {
                   >
                     <X className="size-4" />
                     拒绝
-                  </SolidButton>
-                  <SolidButton
+                  </WebButton>
+                  <WebButton
                     type="button"
                     size="sm"
                     disabled={actingKey === key}
@@ -109,7 +109,7 @@ export function ProfileFieldQueue() {
                   >
                     <Check className="size-4" />
                     通过
-                  </SolidButton>
+                  </WebButton>
                 </div>
               </article>
             )

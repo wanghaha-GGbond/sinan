@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { and, eq, isNull, count } from "drizzle-orm"
+import { z } from "zod"
 import { reviewDiscussions } from "@/db/schema/review-discussions"
 import { discussionUsefulVotes } from "@/db/schema/discussion-useful-votes"
-import { getAuthUser } from "@/lib/server/auth"
+import { requireAuthUser } from "@/lib/server/auth"
 
 export async function POST(
   request: NextRequest,
@@ -17,7 +18,11 @@ export async function POST(
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
   }
 
-  const useful = Boolean(body.useful)
+  const parsed = z.object({ useful: z.boolean() }).strict().safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: "useful must be a boolean" }, { status: 400 })
+  }
+  const useful = parsed.data.useful
 
   try {
     const { db } = await import("@/db/client")
@@ -47,13 +52,7 @@ export async function POST(
     }
 
     // Require voter identity
-    const authUser = await getAuthUser()
-    if (!authUser) {
-      return NextResponse.json(
-        { error: "Voter identity is required" },
-        { status: 401 }
-      )
-    }
+    const authUser = await requireAuthUser(request)
 
     if (useful) {
       // Check for any existing vote (active or soft-deleted)
@@ -167,6 +166,7 @@ export async function POST(
       })
     }
   } catch (error) {
+    if (error instanceof Response) return error
     console.error("POST /api/review-discussions/:discussionId/useful failed:", error)
     return NextResponse.json({ error: "Database not configured" }, { status: 503 })
   }

@@ -1,6 +1,7 @@
 import { ReactNode } from "react"
 import { View, Text, StyleSheet, TouchableOpacity, type ViewStyle } from "react-native"
 import { router } from "expo-router"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { COLORS, RADIUS, SHADOWS } from "../theme"
 
 export function ScoreChip({ score, compact }: { score: number | string; compact?: boolean }) {
@@ -39,11 +40,18 @@ export function SolidTopbar({
   right?: ReactNode
   back?: boolean
 }) {
+  const insets = useSafeAreaInsets()
+
   return (
     <View style={S.topbar}>
-      <View style={S.topbarInner}>
+      <View style={[S.topbarInner, { paddingTop: Math.max(8, insets.top + 4) }]}>
         {back ? (
-          <TouchableOpacity onPress={() => router.back()} style={S.backButton}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="返回"
+            onPress={() => router.canGoBack() ? router.back() : router.replace("/")}
+            style={S.backButton}
+          >
             <Text style={S.backText}>‹</Text>
           </TouchableOpacity>
         ) : (
@@ -97,9 +105,9 @@ const S = StyleSheet.create({
   },
   tagText: { fontSize: 11, fontWeight: "700" },
   topbar: {
-    backgroundColor: "rgba(247,248,242,0.96)",
+    backgroundColor: "rgba(248,255,251,0.96)",
     borderBottomWidth: 1,
-    borderColor: "rgba(229,231,219,0.7)",
+    borderColor: "rgba(214,238,226,0.78)",
     ...SHADOWS.hero,
   },
   topbarInner: {

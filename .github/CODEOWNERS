@@ -1,0 +1,11 @@
+# CODEOWNERS records responsibility. Branch protection requires one approval,
+# but does not require Code Owner approval so a two-person team cannot deadlock.
+
+* @wanghaha-GGbond
+
+/apps/web/ @wanghaha-GGbond @g2561845325-debug
+/apps/ios/ @wanghaha-GGbond
+/packages/shared/ @wanghaha-GGbond @g2561845325-debug
+/.github/ @wanghaha-GGbond
+/deploy/ @wanghaha-GGbond
+/docs/ @wanghaha-GGbond @g2561845325-debug

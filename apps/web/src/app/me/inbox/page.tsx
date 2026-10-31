@@ -14,8 +14,8 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
-import { SolidCard } from "@/components/ui/solid-card"
-import { SolidButton } from "@/components/ui/solid-button"
+import { WebSurface } from "@/components/ui/web-surface"
+import { WebButton } from "@/components/ui/web-button"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/lib/auth-context"
 
@@ -117,22 +117,22 @@ export default function InboxPage() {
       </header>
 
       {error && (
-        <SolidCard variant="elevated" className="p-4 text-sm text-destructive">
+        <WebSurface variant="elevated" className="p-4 text-sm text-destructive">
           {error}
-        </SolidCard>
+        </WebSurface>
       )}
 
       <section className="flex flex-col gap-3">
         <h2 className="text-base font-semibold text-foreground">消息</h2>
         {threads === null ? (
-          <SolidCard variant="elevated" className="h-20 animate-pulse" />
+          <WebSurface variant="elevated" className="h-20 animate-pulse" />
         ) : threads.length === 0 ? (
-          <SolidCard
+          <WebSurface
             variant="elevated"
             className="p-6 text-center text-sm text-muted-foreground"
           >
             还没有会话
-          </SolidCard>
+          </WebSurface>
         ) : (
           threads.map((t) => (
             <Link
@@ -140,7 +140,7 @@ export default function InboxPage() {
               href={`/me/inbox/${t.id}`}
               className="block transition hover:opacity-80"
             >
-              <SolidCard variant="elevated" className="p-4">
+              <WebSurface variant="elevated" className="p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
@@ -162,7 +162,7 @@ export default function InboxPage() {
                     })}
                   </span>
                 </div>
-              </SolidCard>
+              </WebSurface>
             </Link>
           ))
         )}
@@ -179,17 +179,17 @@ export default function InboxPage() {
           </Link>
         </div>
         {requests === null ? (
-          <SolidCard variant="elevated" className="h-20 animate-pulse" />
+          <WebSurface variant="elevated" className="h-20 animate-pulse" />
         ) : requests.length === 0 ? (
-          <SolidCard
+          <WebSurface
             variant="elevated"
             className="p-6 text-center text-sm text-muted-foreground"
           >
             暂无新请求
-          </SolidCard>
+          </WebSurface>
         ) : (
           requests.map((r) => (
-            <SolidCard key={r.id} variant="elevated" className="p-4">
+            <WebSurface key={r.id} variant="elevated" className="p-4">
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -211,22 +211,22 @@ export default function InboxPage() {
                   {r.introText}
                 </p>
                 <div className="flex gap-2">
-                  <SolidButton
+                  <WebButton
                     size="sm"
                     onClick={() => acceptReq(r.id)}
                   >
                     同意
-                  </SolidButton>
-                  <SolidButton
+                  </WebButton>
+                  <WebButton
                     size="sm"
                     variant="secondary"
                     onClick={() => rejectReq(r.id)}
                   >
                     暂不回应
-                  </SolidButton>
+                  </WebButton>
                 </div>
               </div>
-            </SolidCard>
+            </WebSurface>
           ))
         )}
       </section>

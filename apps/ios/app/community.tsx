@@ -120,7 +120,7 @@ export default function CommunityScreen() {
           <SolidCard variant="subtle" style={S.emptyCard}>
             <Text style={S.emptyTitle}>没有匹配的社区讨论</Text>
             <Text style={S.emptyHint}>
-              换一个行业或城市,或者发起新评价。司南的追问空间依赖你。
+              换一个行业或城市,或者发起新评价。在场的追问空间依赖你。
             </Text>
           </SolidCard>
         ) : (

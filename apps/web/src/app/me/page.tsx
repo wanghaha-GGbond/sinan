@@ -10,6 +10,7 @@ import {
   Flame,
   Lock,
   LogIn,
+  LogOut,
   Navigation,
   ShieldAlert,
   ShieldCheck,
@@ -19,9 +20,9 @@ import {
   Check,
 } from "lucide-react"
 
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
-import { SolidEmptyState } from "@/components/ui/solid-empty-state"
+import { WebButton } from "@/components/ui/web-button"
+import { WebSurface } from "@/components/ui/web-surface"
+import { WebEmptyState } from "@/components/ui/web-empty-state"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/lib/auth-context"
@@ -190,23 +191,18 @@ export default function MePage() {
   if (!authLoading && !authUser) {
     return (
       <section className="mx-auto flex w-full max-w-5xl flex-col items-center px-4 py-20">
-        <SolidCard variant="elevated" className="w-full max-w-card p-10 text-center">
+        <WebSurface variant="elevated" className="w-full max-w-card p-10 text-center">
           <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-2xl bg-muted">
             <Navigation className="size-8 text-muted-foreground" />
           </div>
-          <h2 className="text-lg font-semibold text-foreground">登录司南</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            登录后查看方向值、连续点灯和指路等级
-            <br />
-            匿名保护,不向公司开放身份
-          </p>
-          <SolidButton asChild variant="primary" size="lg" className="mt-6 w-full">
-            <Link href="/login">
+          <h2 className="text-lg font-semibold text-foreground">登录在场</h2>
+          <WebButton asChild variant="primary" size="lg" className="mt-6 w-full">
+            <Link href="/login?next=%2Fme">
               <LogIn className="size-4" />
               登录 / 注册
             </Link>
-          </SolidButton>
-        </SolidCard>
+          </WebButton>
+        </WebSurface>
       </section>
     )
   }
@@ -243,34 +239,23 @@ export default function MePage() {
     )
   }
 
-  // ── Error fallback ─────────────────────────────────────────────────────
+  // ── Deployed API failure ───────────────────────────────────────────────
   if (dashboardError && !dashboard) {
-    // Use static defaults so page still renders
-    const stats = DEFAULT_STATS
-    const dailyTasks = DEFAULT_TASKS
-    const badges = DEFAULT_BADGES
-    const myReviews: MyReview[] = []
-    const favoriteCompanies: FavoriteCompany[] = []
-
-    const displayName = authUser?.displayName ?? "指路人"
-    const trustLevel = authUser?.trustLevel ?? 0
-
-    const favoriteSet = new Set<string>(extraFavoriteIds)
-
     return (
-      <MeContent
-        displayName={displayName}
-        trustLevel={trustLevel}
-        stats={stats}
-        dailyTasks={dailyTasks}
-        myReviews={myReviews}
-        badges={badges}
-        favoriteCompanies={favoriteCompanies}
-        favoriteSet={favoriteSet}
-        hydrated={hydrated}
-      invites={{ total: 0, used: 0, unused: [] }}
-      identity={{ displayName, trustLevel }}
-      />
+      <section className="mx-auto flex w-full max-w-5xl flex-col items-center px-4 py-20">
+        <WebSurface variant="elevated" className="w-full max-w-card p-10 text-center">
+          <h2 className="text-lg font-semibold text-foreground">账户信息暂时无法加载</h2>
+          <WebButton
+            type="button"
+            variant="primary"
+            size="lg"
+            className="mt-6 w-full"
+            onClick={() => window.location.reload()}
+          >
+            重试
+          </WebButton>
+        </WebSurface>
+      </section>
     )
   }
 
@@ -372,6 +357,7 @@ function MeContent({
   invites = { total: 0, used: 0, unused: [] },
   identity,
 }: MeContentProps) {
+  const { logout } = useAuth()
   const [favoritesOpen, setFavoritesOpen] = useState(false)
   const [badgesOpen, setBadgesOpen] = useState(false)
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
@@ -397,15 +383,18 @@ function MeContent({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">我的</h1>
+          <h1 className="text-2xl font-semibold text-foreground">个人主页</h1>
           <p className="mt-1 flex flex-wrap gap-x-2.5 gap-y-1 text-sm text-muted-foreground">
-            <span>{displayName}</span>
+            <span>{cardData.displayName ?? displayName}</span>
             <span>{trustLevel > 0 ? "身份已核验" : "身份待核验"}</span>
           </p>
         </div>
-        <div className="flex items-center gap-1 rounded-full bg-muted px-4 py-2 text-sm font-medium text-muted-foreground">
-          指路人
-          <ChevronRight className="size-3.5" />
+        <div className="flex items-center gap-2">
+          <WebButton asChild variant="secondary" size="sm"><Link href="/settings/account">账号与数据</Link></WebButton>
+          <WebButton type="button" variant="ghost" size="sm" onClick={() => void logout()} aria-label="退出登录">
+            <LogOut className="size-4" aria-hidden="true" />
+            <span className="hidden sm:inline">退出</span>
+          </WebButton>
         </div>
       </div>
 
@@ -414,30 +403,35 @@ function MeContent({
       </div>
 
       <ProfileEditor
+        key={identity.displayName}
         initial={cardData}
         onSaved={(next) => setCardData((current) => ({ ...current, ...next }))}
       />
 
+      <nav aria-label="个人功能" className="flex flex-wrap gap-2 border-b border-border pb-5">
+        <WebButton asChild variant="secondary"><Link href="#my-reviews">我的评价</Link></WebButton>
+        <WebButton asChild variant="secondary"><Link href="/me/skills">我的技能</Link></WebButton>
+        <WebButton asChild variant="secondary"><Link href="/me/highlights">我的高光</Link></WebButton>
+        <WebButton asChild variant="secondary"><Link href="/company-verification">身份认证</Link></WebButton>
+      </nav>
+
       {isNewUser ? (
         <section className="flex flex-col gap-4 border-y border-border py-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="max-w-prose-sm">
-            <h2 className="text-xl font-semibold text-foreground">从一条真实经验开始</h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              写下你熟悉的公司，或先阅读一篇评价。完成第一次行动后，这里会展示方向值和社区贡献。
-            </p>
+            <h2 className="text-xl font-semibold text-foreground">我的评价</h2>
           </div>
           <div className="flex shrink-0 flex-wrap gap-2">
-            <SolidButton asChild>
+            <WebButton asChild>
               <Link href="/submit/review">写第一条评价</Link>
-            </SolidButton>
-            <SolidButton asChild variant="secondary">
+            </WebButton>
+            <WebButton asChild variant="secondary">
               <Link href="/search">先看看公司</Link>
-            </SolidButton>
+            </WebButton>
           </div>
         </section>
       ) : (
       <div className="grid gap-4 md:grid-cols-3">
-        <SolidCard variant="default" className="p-5">
+        <WebSurface variant="default" className="p-5">
           <div className="mb-3 flex items-center gap-2">
             <div className="flex size-9 items-center justify-center rounded-xl bg-muted">
               <Navigation className="size-4 text-secondary-foreground" />
@@ -449,9 +443,9 @@ function MeContent({
           </p>
           <p className="mt-1 text-xs text-muted-foreground">距离下一阶段还差 {levelGap}</p>
           <Progress value={levelProgress} className="mt-3 h-1.5" />
-        </SolidCard>
+        </WebSurface>
 
-        <SolidCard variant="default" className="p-5">
+        <WebSurface variant="default" className="p-5">
           <div className="mb-3 flex items-center gap-2">
             <div className="flex size-9 items-center justify-center rounded-xl bg-risk-surface">
               <Flame className="size-4 text-risk" />
@@ -462,9 +456,9 @@ function MeContent({
             {stats.streakDays} 天
           </p>
           <p className="mt-1 text-xs text-muted-foreground">今天再看 1 条评价即可保持</p>
-        </SolidCard>
+        </WebSurface>
 
-        <SolidCard variant="default" className="p-5">
+        <WebSurface variant="default" className="p-5">
           <div className="mb-3 flex items-center gap-2">
             <div className="flex size-9 items-center justify-center rounded-xl bg-foreground">
               <Award className="size-4 text-white" />
@@ -473,7 +467,7 @@ function MeContent({
           </div>
           <p className="text-3xl font-semibold text-foreground">L{trustLevel}</p>
           <p className="mt-1 text-xs text-muted-foreground">已帮助 {stats.helpedCount} 位后来者</p>
-        </SolidCard>
+        </WebSurface>
       </div>
       )}
 
@@ -495,9 +489,9 @@ function MeContent({
             <p className="mt-1 text-xs text-muted-foreground">
               完成企业邮箱认证，解锁身份卡与邀请名额
             </p>
-            <SolidButton asChild variant="secondary" size="sm" className="mt-4">
+            <WebButton asChild variant="secondary" size="sm" className="mt-4">
               <Link href="/company-verification">立即认证</Link>
-            </SolidButton>
+            </WebButton>
           </div>
         ) : (
           <div className="space-y-2">
@@ -619,9 +613,9 @@ function MeContent({
                 </p>
               </div>
               {!task.completed && task.href ? (
-                <SolidButton asChild variant="secondary" size="sm">
+                <WebButton asChild variant="secondary" size="sm">
                   <Link href={task.href}>去完成</Link>
-                </SolidButton>
+                </WebButton>
               ) : null}
             </div>
           ))}
@@ -634,19 +628,18 @@ function MeContent({
       {/* My reviews */}
       <section className="border-t border-border pt-6">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-foreground">我的评价</h2>
+          <h2 id="my-reviews" className="text-base font-semibold text-foreground">我的评价</h2>
           <Link href="/submit/review" className="inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline">
             写新评价 →
           </Link>
         </div>
         {myReviews.length === 0 ? (
-          <SolidEmptyState
+          <WebEmptyState
             title="还没有评价"
-            description="分享你熟悉的那家公司,帮助更多后来者看清方向。"
             action={
-              <SolidButton asChild variant="primary" size="sm">
+              <WebButton asChild variant="primary" size="sm">
                 <Link href="/submit/review">写第一条评价</Link>
-              </SolidButton>
+              </WebButton>
             }
           />
         ) : (
@@ -699,13 +692,12 @@ function MeContent({
         {favoritesOpen ? (
           <div id="me-my-favorites" className="mt-4">
             {favoriteSet.size === 0 && hydrated ? (
-              <SolidEmptyState
+              <WebEmptyState
                 title="还没有收藏公司"
-                description="在任意公司详情页点 ☆,这里会汇总你关注的公司方向变化。"
                 action={
-                  <SolidButton asChild variant="secondary" size="sm">
+                  <WebButton asChild variant="secondary" size="sm">
                     <Link href="/search">去发现公司</Link>
-                  </SolidButton>
+                  </WebButton>
                 }
               />
             ) : (
@@ -751,7 +743,7 @@ function MeContent({
           aria-controls="me-badges-list"
           data-testid="me-toggle-badges"
         >
-          <h2 className="text-base font-semibold text-foreground">司南徽章</h2>
+          <h2 className="text-base font-semibold text-foreground">在场徽章</h2>
           <span className="flex items-center gap-2 text-xs text-muted-foreground" data-testid="me-badges-progress">
             {badges.filter((b) => b.unlocked).length} / {badges.length} 已解锁
             <ChevronRight
@@ -813,6 +805,7 @@ function ProfileEditor({
   onSaved: (data: Partial<IdentityCardData>) => void
 }) {
   const [open, setOpen] = useState(false)
+  const [displayName, setDisplayName] = useState(initial.displayName ?? "")
   const [jobBand, setJobBand] = useState(initial.jobBand ?? "")
   const [years, setYears] = useState(
     initial.yearsOfExperience == null ? "" : String(initial.yearsOfExperience)
@@ -831,6 +824,7 @@ function ProfileEditor({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          displayName: displayName.trim(),
           jobBand: jobBand.trim() || null,
           yearsOfExperience: years === "" ? null : Number(years),
           highlightMoment: highlight.trim() || null,
@@ -840,6 +834,7 @@ function ProfileEditor({
       const result = await response.json()
       if (!response.ok) throw new Error(result.error ?? "保存失败")
       onSaved({
+        displayName: displayName.trim(),
         jobBand: jobBand.trim() || undefined,
         yearsOfExperience: years === "" ? undefined : Number(years),
       })
@@ -864,7 +859,7 @@ function ProfileEditor({
         aria-expanded={open}
       >
         <span>
-          <span className="block text-sm font-semibold text-foreground">身份资料</span>
+          <span className="block text-sm font-semibold text-foreground">编辑个人资料</span>
           <span className="mt-1 block text-xs text-muted-foreground">
             高光与拒绝陈列审核通过后公开
           </span>
@@ -873,6 +868,11 @@ function ProfileEditor({
       </button>
       {open ? (
         <form onSubmit={save} className="mt-4 grid gap-4 sm:grid-cols-2">
+          <label className="text-sm font-medium text-foreground sm:col-span-2">
+            昵称
+            <input value={displayName} onChange={(event) => setDisplayName(event.target.value)} minLength={2} maxLength={40} required
+              className="mt-1.5 h-11 w-full border border-input bg-card px-3 font-normal outline-none focus-visible:border-ring" />
+          </label>
           <label className="text-sm font-medium text-foreground">
             职级带
             <input
@@ -915,9 +915,9 @@ function ProfileEditor({
             />
           </label>
           <div className="flex items-center gap-3 sm:col-span-2">
-            <SolidButton type="submit" disabled={saving}>
+            <WebButton type="submit" disabled={saving}>
               {saving ? "保存中..." : "保存资料"}
-            </SolidButton>
+            </WebButton>
             {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
           </div>
         </form>

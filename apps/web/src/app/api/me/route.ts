@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthUser } from "@/lib/server/auth"
+import { getAuthUserFromRequest } from "@/lib/server/auth"
 import { checkRateLimit, getRateLimitKey } from "@/lib/server/rate-limit"
 
 // ---------------------------------------------------------------------------
@@ -256,7 +256,7 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const authUser = await getAuthUser()
+  const authUser = await getAuthUserFromRequest(request)
 
   // Default fallback when not authenticated
   const emptyResponse = (): DashboardResponse => ({
@@ -299,7 +299,6 @@ export async function GET(request: NextRequest) {
         yearsOfExperience: users.yearsOfExperience,
         highlightMoment: users.highlightMoment,
         declinedOffer: users.declinedOffer,
-        profileFieldsStatus: users.profileFieldsStatus,
         inviterUserId: users.inviterUserId,
       })
       .from(users)
@@ -327,7 +326,6 @@ export async function GET(request: NextRequest) {
           .limit(1)
         inviterName = inviter?.displayName ?? null
       }
-      const fieldStatus = row.profileFieldsStatus ?? {}
       dbUser = {
         id: row.id,
         displayName: row.displayName,
@@ -336,10 +334,10 @@ export async function GET(request: NextRequest) {
         reputationScore: row.reputationScore ?? 0,
         jobBand: row.jobBand,
         yearsOfExperience: row.yearsOfExperience,
-        highlightMoment:
-          fieldStatus.highlightMoment === "approved" ? row.highlightMoment : null,
-        declinedOffer:
-          fieldStatus.declinedOffer === "approved" ? row.declinedOffer : null,
+        // This response is owner-only. Preserve pending drafts in the editor;
+        // the public profile endpoint independently filters unapproved fields.
+        highlightMoment: row.highlightMoment,
+        declinedOffer: row.declinedOffer,
         companyName: approvedCompany?.companyName ?? null,
         inviterName,
       }
@@ -415,7 +413,12 @@ export async function GET(request: NextRequest) {
       })),
     }
   } catch {
-    // DB unavailable — return safe defaults
+    // A deployed dashboard must not turn a database outage into a successful
+    // response containing fabricated account state. Local development can
+    // still render the static shell while the database is being configured.
+    if (process.env.NEXT_PUBLIC_APP_ENV === "staging" || process.env.NEXT_PUBLIC_APP_ENV === "production") {
+      return NextResponse.json({ error: "Service unavailable" }, { status: 503 })
+    }
     dbUser = null
     myReviews = []
     verifications = []

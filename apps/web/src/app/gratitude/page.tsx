@@ -1,16 +1,16 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Loader2, Send } from "lucide-react"
-import { SolidCard } from "@/components/ui/solid-card"
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidEmptyState } from "@/components/ui/solid-empty-state"
+import { Heart, Loader2, Send } from "lucide-react"
+import { WebSurface } from "@/components/ui/web-surface"
+import { WebButton } from "@/components/ui/web-button"
+import { WebEmptyState } from "@/components/ui/web-empty-state"
 import { useAuth } from "@/lib/auth-context"
 
 type GratitudeItem = {
   id: string
   fromUserId: string
-  toUserId: string
+  toUserId: string | null
   content: string
   isAnonymous: string
   createdAt: string
@@ -19,7 +19,7 @@ type GratitudeItem = {
   fromTrustLevel: number
 }
 
-function SendGratitudeForm({ onSent }: { onSent: () => void }) {
+function SendGratitudeForm({ onSent, onClose }: { onSent: () => void; onClose: () => void }) {
   const { user } = useAuth()
   const [toUserId, setToUserId] = useState("")
   const [content, setContent] = useState("")
@@ -54,16 +54,20 @@ function SendGratitudeForm({ onSent }: { onSent: () => void }) {
       setContent("")
       setToUserId("")
       onSent()
+      setTimeout(onClose, 1200)
     } finally {
       setSubmitting(false)
     }
   }
 
   return (
-    <SolidCard variant="elevated" className="p-6">
-      <h2 className="text-base font-semibold text-foreground">写一封感谢信</h2>
-      <p className="mt-1 text-xs text-muted-foreground">同一人 12 小时内最多发 1 封。</p>
-      <form onSubmit={handle} className="mt-4 space-y-4">
+    <WebSurface variant="elevated" className="p-6">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-base font-bold text-foreground">写一封感谢信</h2>
+        <button onClick={onClose} className="text-xs text-muted-foreground hover:text-foreground">取消</button>
+      </div>
+      <p className="mb-4 text-xs text-muted-foreground">同一人 12 小时内最多发 1 封。</p>
+      <form onSubmit={handle} className="space-y-4">
         <div>
           <label className="mb-1.5 block text-xs font-medium text-foreground">
             收件人 ID（选填，不填为漂流信）
@@ -101,17 +105,19 @@ function SendGratitudeForm({ onSent }: { onSent: () => void }) {
         {message ? (
           <p className={`text-xs ${message.ok ? "text-primary" : "text-destructive"}`}>{message.text}</p>
         ) : null}
-        <SolidButton type="submit" variant="primary" size="sm" disabled={submitting} className="w-full">
+        <WebButton type="submit" variant="primary" disabled={submitting} className="w-full">
           {submitting ? <><Loader2 className="size-4 animate-spin" />发送中…</> : <><Send className="size-4" />发送感谢信</>}
-        </SolidButton>
+        </WebButton>
       </form>
-    </SolidCard>
+    </WebSurface>
   )
 }
 
 export default function GratitudePage() {
+  const { user } = useAuth()
   const [items, setItems] = useState<GratitudeItem[] | null>(null)
   const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
 
   function load() {
     fetch("/api/gratitude")
@@ -126,53 +132,71 @@ export default function GratitudePage() {
   useEffect(load, [])
 
   return (
-    <section className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
-      <header className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">感谢信漂流</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          公开的感谢信流 — 匿名模式下只显示段位，不暴露身份。
-        </p>
-      </header>
+    <section className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-6 sm:px-6">
 
-      <div className="grid gap-8 md:grid-cols-[1fr_360px]">
-        <div className="space-y-4">
-          <h2 className="text-base font-semibold text-foreground">公开信流</h2>
-          {loading ? (
-            <div className="space-y-3">
-              {[1, 2].map((i) => <div key={i} className="h-24 animate-pulse rounded-2xl bg-muted" />)}
-            </div>
-          ) : items?.length === 0 ? (
-            <SolidEmptyState
-              title="还没有感谢信"
-              description="成为第一个写感谢信的人。"
-            />
-          ) : (
-            <ul className="space-y-3">
-              {items?.map((item) => {
-                const isAnon = item.isAnonymous === "true"
-                return (
-                  <li key={item.id}>
-                    <SolidCard variant="default" className="p-4">
-                      <p className="text-sm leading-6 text-foreground">{item.content}</p>
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        {isAnon
-                          ? `匿名 · L${item.fromTrustLevel ?? 0}`
-                          : `来自 ${item.fromDisplayName ?? "匿名"} · L${item.fromTrustLevel ?? 0}`}
-                        {" · "}
-                        {new Date(item.createdAt).toLocaleDateString("zh-CN")}
-                      </p>
-                    </SolidCard>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground">感谢信</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">匿名模式下只显示段位，不暴露身份。</p>
         </div>
-
-        <div className="lg:sticky lg:top-20 lg:self-start">
-          <SendGratitudeForm onSent={load} />
-        </div>
+        {user && (
+          <WebButton size="sm" variant="primary" onClick={() => setShowForm(true)}>
+            写信
+          </WebButton>
+        )}
       </div>
+
+      {/* Write form (shown inline on click) */}
+      {showForm && (
+        <SendGratitudeForm onSent={load} onClose={() => setShowForm(false)} />
+      )}
+
+      {/* Letter feed */}
+      {loading ? (
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => <div key={i} className="h-28 animate-pulse rounded-[28px] bg-muted" />)}
+        </div>
+      ) : items?.length === 0 ? (
+        <WebEmptyState
+          title="还没有感谢信"
+          description="成为第一个写感谢信的人。"
+        />
+      ) : (
+        <div className="space-y-3">
+          {items?.map((item) => {
+            const isAnon = item.isAnonymous === "true"
+            const fromLabel = isAnon
+              ? `匿名 · L${item.fromTrustLevel ?? 0}`
+              : `${item.fromDisplayName ?? "匿名"} · L${item.fromTrustLevel ?? 0}`
+            const timeLabel = new Date(item.createdAt).toLocaleDateString("zh-CN")
+
+            return (
+              <WebSurface key={item.id} variant="default" className="p-5">
+                {/* From + time */}
+                <div className="mb-3 flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground">{fromLabel}</span>
+                  <span className="text-[11px] text-muted-foreground">{timeLabel}</span>
+                </div>
+
+                {/* Content */}
+                <p className="mb-4 text-sm leading-7 text-foreground">{item.content}</p>
+
+                {/* Footer */}
+                <div className="flex items-center justify-between border-t border-border/60 pt-3">
+                  <span className="text-[11px] text-muted-foreground">
+                    {item.toUserId ? "定向感谢" : "漂流信"}
+                  </span>
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <Heart className="size-3" />
+                    <span className="text-xs">—</span>
+                  </div>
+                </div>
+              </WebSurface>
+            )
+          })}
+        </div>
+      )}
     </section>
   )
 }

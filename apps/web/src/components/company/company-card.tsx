@@ -1,73 +1,47 @@
 import Link from "next/link"
-import { ArrowRight, MapPin } from "lucide-react"
+import { ArrowRight, MessageCircle } from "lucide-react"
 
-import { MetricPill } from "@/components/ui/metric-pill"
-import { ScoreChip } from "@/components/ui/score-chip"
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidCard } from "@/components/ui/solid-card"
-import { TagPill } from "@/components/ui/tag-pill"
+import { CompanyRating, companyDisplayScore } from "./company-rating"
+
 import type { CompanyListItem } from "@/lib/api/types"
 import type { Company } from "@/lib/types"
 
 type CompanyCardCompany = Company | CompanyListItem
 
-export function CompanyCard({ company }: { company: CompanyCardCompany }) {
-  const displayName = (company as CompanyListItem).shortName ?? (company as Company).name ?? ""
-  const salaryRange = (company as CompanyListItem).salaryRange ?? (company as Company).salaryRange
+export function CompanyCard({ company, variant = "directory" }: { company: CompanyCardCompany; variant?: "directory" | "feed" }) {
+  const displayName = (company as CompanyListItem).shortName ?? company.name
+  const reviewCount = company.reviewCount ?? 0
+  const score = companyDisplayScore(company.directionScore, reviewCount)
+  const summary = company.description || company.highlights?.slice(0, 2).join(" · ")
+  const isFeed = variant === "feed"
 
   return (
-    <SolidCard variant="subtle" className="p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="truncate text-lg font-semibold text-foreground">{displayName}</h3>
-          <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+    <Link
+      href={`/company/${company.id}`}
+      data-testid={isFeed ? "company-feed-item" : "company-directory-item"}
+      className={`group flex min-w-0 flex-col bg-card transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${isFeed ? "border-b border-border px-4 py-6 hover:bg-muted-hover sm:px-6" : "rounded-lg border border-border p-5 shadow-sm hover:border-primary-surface-border sm:p-6"}`}
+      aria-label={`查看${displayName}，${score === null ? "暂无评分" : `方向评分 ${score.toFixed(1)} 分（满分 10 分）`}，${reviewCount} 条评价`}
+    >
+      <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+        <span className="grid size-12 shrink-0 place-items-center rounded-lg border border-primary-surface-border bg-primary-tint text-lg font-semibold text-primary-deep sm:size-14" aria-hidden="true">
+          {displayName.slice(0, 1)}
+        </span>
+        <div className="min-w-0 flex-1">
+          <h3 className="break-words text-base font-semibold leading-snug text-foreground sm:text-lg">{displayName}</h3>
+          <p className="mt-1 flex flex-wrap gap-x-2 text-xs text-muted-foreground sm:text-sm">
             <span>{company.industry}</span>
-            <span className="inline-flex items-center gap-1">
-              <MapPin className="size-3.5" />
-              {company.city}
-            </span>
+            <span aria-hidden="true">·</span>
+            <span>{company.city}</span>
+            {company.size ? <><span aria-hidden="true">·</span><span>{company.size}</span></> : null}
           </p>
         </div>
-        <ScoreChip score={company.directionScore ?? 0} compact />
       </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-2">
-        <MetricPill label="推荐入职率" score={`${company.recommendationRate}%`} />
-        {salaryRange ? (
-          <div className="rounded-2xl bg-muted px-3 py-2">
-            <p className="text-xs text-muted-foreground">薪资区间</p>
-            <p className="text-sm font-medium text-foreground">{salaryRange}</p>
-          </div>
-        ) : (
-          <div className="rounded-2xl bg-muted px-3 py-2">
-            <p className="text-xs text-muted-foreground">评价数</p>
-            <p className="text-sm font-medium text-foreground">{(company.reviewCount ?? 0).toLocaleString()} 条评价</p>
-          </div>
-        )}
+      {summary ? <p className={`mt-4 break-words text-sm leading-6 text-foreground/80 ${isFeed ? "line-clamp-2" : "line-clamp-1"}`}>{summary}</p> : null}
+      <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-3 pt-5 text-xs text-muted-foreground">
+        <CompanyRating score={score} />
+        <span className="inline-flex items-center gap-1.5"><MessageCircle className="size-4" aria-hidden="true" />{reviewCount.toLocaleString()} 条评价</span>
+        <span className="ml-auto inline-flex min-h-11 items-center gap-1 rounded-full border border-border px-3 text-sm font-medium text-foreground group-hover:border-primary group-hover:text-primary-deep">查看公司<ArrowRight className="size-4" aria-hidden="true" /></span>
       </div>
-
-      <div className="mt-3 flex flex-wrap gap-2">
-        {(company.riskTags ?? []).slice(0, 3).map((tag) => (
-          <TagPill key={tag} tone={tag.includes("压力") || tag.includes("波动") ? "risk" : "neutral"}>
-            #{tag}
-          </TagPill>
-        ))}
-      </div>
-
-      <p className="mt-3 text-sm text-muted-foreground">{(company.reviewCount ?? 0).toLocaleString()} 条真实体验</p>
-      {"vibeTag" in company && company.vibeTag ? (
-        <p className="mt-2 text-xs text-muted-foreground">
-          公司体感：{company.vibeTag.name}
-        </p>
-      ) : null}
-      <div className="mt-3">
-        <SolidButton asChild variant="primary" size="sm">
-          <Link href={`/company/${company.id}`} className="inline-flex items-center gap-1">
-            看这家公司
-            <ArrowRight className="size-4" />
-          </Link>
-        </SolidButton>
-      </div>
-    </SolidCard>
+    </Link>
   )
 }

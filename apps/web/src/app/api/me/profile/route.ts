@@ -1,19 +1,20 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 
 import { requireAuthUser } from "@/lib/server/auth"
 
 const profileSchema = z.object({
+  displayName: z.string().trim().min(2, "昵称至少 2 个字符").max(40, "昵称最多 40 个字符").optional(),
   jobBand: z.string().trim().max(40).nullable(),
   yearsOfExperience: z.number().int().min(0).max(60).nullable(),
   highlightMoment: z.string().trim().max(120).nullable(),
   declinedOffer: z.string().trim().max(120).nullable(),
 })
 
-export async function PATCH(request: Request) {
+export async function PATCH(request: NextRequest) {
   let authUser
   try {
-    authUser = await requireAuthUser()
+    authUser = await requireAuthUser(request)
   } catch (error) {
     if (error instanceof Response) return error
     throw error
@@ -64,6 +65,7 @@ export async function PATCH(request: Request) {
     await db
       .update(users)
       .set({
+        ...(data.displayName === undefined ? {} : { displayName: data.displayName }),
         jobBand: data.jobBand || null,
         yearsOfExperience: data.yearsOfExperience,
         highlightMoment: data.highlightMoment || null,
@@ -79,8 +81,8 @@ export async function PATCH(request: Request) {
         .filter(([, status]) => status === "pending")
         .map(([field]) => field),
     })
-  } catch (error) {
-    console.error("PATCH /api/me/profile failed:", error)
+  } catch {
+    console.error(JSON.stringify({ event: "profile_update_failed", release: process.env.APP_RELEASE }))
     return NextResponse.json({ error: "资料暂时无法保存" }, { status: 503 })
   }
 }

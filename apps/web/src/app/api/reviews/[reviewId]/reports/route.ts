@@ -2,8 +2,14 @@ import { NextRequest, NextResponse } from "next/server"
 import { and, eq, isNull } from "drizzle-orm"
 import { reviews } from "@/db/schema/reviews"
 import { reviewReports } from "@/db/schema/review-reports"
-import { getAuthUser } from "@/lib/server/auth"
+import { getAuthUserFromRequest } from "@/lib/server/auth"
 import { getOrCreateAnonymousProfile } from "@/lib/server/anonymous-profile"
+import { getRateLimitKey } from "@/lib/server/rate-limit"
+import { checkPersistentRateLimit } from "@/lib/server/persistent-rate-limit"
+import {
+  hashClientFingerprint,
+  normalizeClientFingerprint,
+} from "@/lib/server/fingerprint"
 
 const VALID_REASONS = [
   "personal_attack",
@@ -39,6 +45,11 @@ export async function POST(
 ) {
   const { reviewId } = await params
 
+  const contentLength = Number(request.headers.get("content-length") ?? "")
+  if (Number.isFinite(contentLength) && contentLength > 16 * 1024) {
+    return NextResponse.json({ error: "举报请求过大" }, { status: 413 })
+  }
+
   let body: Record<string, unknown>
   try {
     body = await request.json()
@@ -71,17 +82,32 @@ export async function POST(
       return NextResponse.json({ error: "Review not found" }, { status: 404 })
     }
 
-    // 2. Identify reporter — auth user OR anonymous profile via fingerprint
-    const authUser = await getAuthUser()
+    // 2. Identify reporter — auth user OR anonymous profile via fingerprint.
+    // Reports are an abuse-sensitive write path, so apply both a proxy/IP
+    // bucket and an identity bucket before creating any profile or report.
+    const authUser = await getAuthUserFromRequest(request)
     const reporterUserId: string | null = authUser?.userId ?? null
     let reporterAnonymousProfileId: string | null = null
     let reporterFingerprintHash: string | null = null
 
+    const rawFingerprint =
+      request.headers.get("x-sinan-fingerprint") ??
+      request.cookies.get("sinan_anon_fp")?.value ??
+      null
+    const fingerprint = normalizeClientFingerprint(rawFingerprint)
+
+    const ipLimit = await checkPersistentRateLimit(
+      `review-report:ip:${getRateLimitKey(request, "/api/reviews/:reviewId/reports")}`,
+      { maxRequests: 30, windowSeconds: 10 * 60 },
+    )
+    if (!ipLimit.allowed) {
+      return NextResponse.json(
+        { error: "举报操作过于频繁，请稍后再试", retryAfter: ipLimit.retryAfter },
+        { status: 429 },
+      )
+    }
+
     if (!reporterUserId) {
-      const fingerprint =
-        request.headers.get("x-sinan-fingerprint") ??
-        request.cookies.get("sinan_anon_fp")?.value ??
-        null
       if (!fingerprint) {
         // Need at least some identity — fingerprint header is the bare minimum.
         return NextResponse.json(
@@ -89,12 +115,33 @@ export async function POST(
           { status: 400 }
         )
       }
+      const identityLimit = await checkPersistentRateLimit(
+        `review-report:fingerprint:${hashClientFingerprint(fingerprint)}`,
+        { maxRequests: 5, windowSeconds: 10 * 60 },
+      )
+      if (!identityLimit.allowed) {
+        return NextResponse.json(
+          { error: "举报操作过于频繁，请稍后再试", retryAfter: identityLimit.retryAfter },
+          { status: 429 },
+        )
+      }
+      reporterFingerprintHash = hashClientFingerprint(fingerprint)
       const profile = await getOrCreateAnonymousProfile({
-        fingerprintHash: fingerprint,
+        fingerprintHash: reporterFingerprintHash,
         scope: { scopeType: "review", scopeId: reviewId },
       })
       reporterAnonymousProfileId = profile.id
-      reporterFingerprintHash = fingerprint
+    } else {
+      const identityLimit = await checkPersistentRateLimit(
+        `review-report:user:${reporterUserId}`,
+        { maxRequests: 20, windowSeconds: 10 * 60 },
+      )
+      if (!identityLimit.allowed) {
+        return NextResponse.json(
+          { error: "举报操作过于频繁，请稍后再试", retryAfter: identityLimit.retryAfter },
+          { status: 429 },
+        )
+      }
     }
 
     // 3. Dedup: if an authenticated user already has an open report on this
@@ -120,6 +167,29 @@ export async function POST(
             alreadyReported: true,
           },
           { status: 200 }
+        )
+      }
+    } else if (reporterFingerprintHash) {
+      const [existing] = await db
+        .select()
+        .from(reviewReports)
+        .where(
+          and(
+            eq(reviewReports.reviewId, reviewId),
+            eq(reviewReports.reporterFingerprintHash, reporterFingerprintHash),
+          ),
+        )
+        .limit(1)
+      if (existing) {
+        return NextResponse.json(
+          {
+            id: existing.id,
+            status: existing.status,
+            reason: existing.reason,
+            createdAt: existing.createdAt.toISOString(),
+            alreadyReported: true,
+          },
+          { status: 200 },
         )
       }
     }

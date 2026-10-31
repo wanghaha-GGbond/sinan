@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { Loader2, Sparkles } from "lucide-react"
-import { SolidCard } from "@/components/ui/solid-card"
-import { SolidButton } from "@/components/ui/solid-button"
-import { SolidEmptyState } from "@/components/ui/solid-empty-state"
+import { WebSurface } from "@/components/ui/web-surface"
+import { WebButton } from "@/components/ui/web-button"
+import { WebEmptyState } from "@/components/ui/web-empty-state"
 import { useAuth } from "@/lib/auth-context"
 
 const MIN = 10
@@ -102,7 +102,7 @@ export default function MyHighlightsPage() {
         </p>
       </header>
 
-      <SolidCard variant="elevated" className="p-6">
+      <WebSurface variant="elevated" className="p-6">
         {!user ? (
           <p className="text-sm text-muted-foreground">请先登录后提交高光。</p>
         ) : (
@@ -119,16 +119,16 @@ export default function MyHighlightsPage() {
               <span className={`text-xs ${content.trim().length > MAX ? "text-destructive" : "text-muted-foreground"}`}>
                 {content.trim().length} / {MAX}
               </span>
-              <SolidButton type="submit" variant="primary" size="sm" disabled={submitting}>
+              <WebButton type="submit" variant="primary" size="sm" disabled={submitting}>
                 {submitting ? <><Loader2 className="size-4 animate-spin" />提交中…</> : "提交"}
-              </SolidButton>
+              </WebButton>
             </div>
             {message ? (
               <p className={`text-xs ${message.ok ? "text-primary" : "text-destructive"}`}>{message.text}</p>
             ) : null}
           </form>
         )}
-      </SolidCard>
+      </WebSurface>
 
       <section className="mt-10">
         <h2 className="mb-4 text-base font-semibold text-foreground">我的提交</h2>
@@ -137,12 +137,12 @@ export default function MyHighlightsPage() {
             {[1, 2].map((i) => <div key={i} className="h-20 animate-pulse rounded-2xl bg-muted" />)}
           </div>
         ) : items.length === 0 ? (
-          <SolidEmptyState title="还没有提交" description="写下你的高光瞬间，审核后将展示在公开高光馆。" />
+          <WebEmptyState title="还没有提交" description="写下你的高光瞬间，审核后将展示在公开高光馆。" />
         ) : (
           <ul className="space-y-3">
             {items.map((item) => (
               <li key={item.id}>
-                <SolidCard variant="default" className="p-4">
+                <WebSurface variant="default" className="p-4">
                   <p className="text-sm leading-6 text-foreground line-clamp-3">{item.content}</p>
                   <p className="mt-2 flex items-center gap-2 text-xs">
                     <span className={STATUS_COLOR[item.status] ?? "text-muted-foreground"}>
@@ -152,7 +152,7 @@ export default function MyHighlightsPage() {
                       · {new Date(item.createdAt).toLocaleDateString("zh-CN")}
                     </span>
                   </p>
-                </SolidCard>
+                </WebSurface>
               </li>
             ))}
           </ul>

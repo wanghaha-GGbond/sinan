@@ -4,7 +4,7 @@ import { Moon, Sun } from "lucide-react"
 
 import { useTheme } from "@/lib/theme-context"
 
-import { SolidButton } from "./solid-button"
+import { WebButton } from "./web-button"
 
 /**
  * Light/dark theme switch. Renders in the topbar's right slot.
@@ -20,9 +20,9 @@ export function ThemeToggle() {
   const isDark = resolved === "dark"
 
   return (
-    <SolidButton
+    <WebButton
       type="button"
-      variant="ghost"
+      variant="quiet"
       size="sm"
       onClick={toggle}
       aria-label={isDark ? "切换到浅色模式" : "切换到深色模式"}
@@ -35,6 +35,6 @@ export function ThemeToggle() {
         <Moon className="size-3.5" aria-hidden="true" />
       )}
       <span className="hidden sm:inline">{isDark ? "浅色" : "深色"}</span>
-    </SolidButton>
+    </WebButton>
   )
 }

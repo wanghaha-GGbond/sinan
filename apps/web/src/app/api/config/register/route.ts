@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server"
 
+import { isInviteRequired } from "@/lib/server/invites"
+import { isMailConfigured } from "@/lib/server/mail"
+
 export async function GET() {
-  const flag = process.env.INVITE_REQUIRED?.trim().toLowerCase()
   return NextResponse.json({
-    inviteRequired: flag === "1" || flag === "true",
-  })
+    inviteRequired: isInviteRequired(),
+    emailVerificationRequired: true,
+    emailDeliveryAvailable: isMailConfigured(),
+  }, { headers: { "Cache-Control": "no-store" } })
 }

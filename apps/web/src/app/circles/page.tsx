@@ -12,9 +12,8 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
-import { SolidCard } from "@/components/ui/solid-card"
-import { SolidButton } from "@/components/ui/solid-button"
-import { Badge } from "@/components/ui/badge"
+import { WebSurface } from "@/components/ui/web-surface"
+import { WebButton } from "@/components/ui/web-button"
 import { useAuth } from "@/lib/auth-context"
 
 type CircleItem = {
@@ -41,93 +40,97 @@ export default function CirclesListPage() {
         return (await r.json()) as { circles: CircleItem[] }
       })
       .then((data) => setCircles(data.circles))
-      .catch(() => setError("加载失败, 请稍后再试"))
+      .catch(() => setError("加载失败，请稍后再试"))
   }, [])
 
   return (
-    <section className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          圈层
-        </h1>
-        <p className="text-sm leading-6 text-muted-foreground">
-          入圈需要 1 名现有成员背书, 段位门槛
-          {circles && circles.length > 0
-            ? ` L${Math.min(...circles.map((c) => c.minTrustLevel))}+`
-            : " L1+"}
-          。圈层是声誉场, 不是社交场。
-        </p>
-      </header>
+    <section className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-6 sm:px-6">
+
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground">圈层</h1>
+          <p className="mt-1 text-sm text-muted-foreground">声誉场，不是社交场。</p>
+        </div>
+      </div>
 
       {error && (
-        <SolidCard variant="elevated" className="p-4 text-sm text-muted-foreground">
+        <WebSurface variant="subtle" className="p-4 text-sm text-muted-foreground">
           {error}
-        </SolidCard>
+        </WebSurface>
       )}
 
       {!circles && !error && (
-        <SolidCard variant="elevated" className="h-32 animate-pulse" />
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-36 animate-pulse rounded-[28px] bg-muted" />
+          ))}
+        </div>
       )}
 
       {circles && circles.length === 0 && (
-        <SolidCard variant="elevated" className="p-6 text-center text-sm text-muted-foreground">
-          圈层即将开放, 运营在筹备首批名单。
-        </SolidCard>
+        <WebSurface variant="subtle" className="p-6 text-center text-sm text-muted-foreground">
+          圈层即将开放，运营在筹备首批名单。
+        </WebSurface>
       )}
 
       {circles?.map((c) => {
         const joined = c.myMembership?.status === "active"
         return (
-          <SolidCard key={c.id} variant="elevated" className="p-5">
-            <div className="flex flex-col gap-3">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-lg font-semibold text-foreground">
-                    {c.name}
-                  </h2>
-                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                    {c.description}
-                  </p>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  <Badge variant="secondary">段位 L{c.minTrustLevel}+</Badge>
-                  <span className="text-xs text-muted-foreground">
-                    {c.memberCount} 位成员
-                  </span>
-                </div>
-              </div>
-
+          <WebSurface
+            key={c.id}
+            variant="default"
+            className={`p-5 ${joined ? "border-t-2 border-t-primary" : ""}`}
+          >
+            {/* Name + badge row */}
+            <div className="mb-2.5 flex items-start justify-between gap-3">
               <div className="flex items-center gap-2">
-                {joined ? (
-                  <Badge variant="default">已加入</Badge>
-                ) : (
-                  <Badge variant="outline">未加入</Badge>
+                <h2 className="text-xl font-extrabold tracking-tight text-foreground">{c.name}</h2>
+                {joined && (
+                  <span className="text-xs font-semibold text-primary">已加入</span>
                 )}
-                <div className="ml-auto flex gap-2">
-                  <SolidButton
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => router.push(`/circles/${c.id}`)}
-                  >
-                    查看详情
-                  </SolidButton>
-                  {!joined && user && (
-                    <SolidButton
-                      size="sm"
-                      onClick={() => router.push(`/circles/${c.id}`)}
-                    >
-                      申请入圈
-                    </SolidButton>
-                  )}
-                  {!user && (
-                    <Link href="/login">
-                      <SolidButton size="sm">登录后申请</SolidButton>
-                    </Link>
-                  )}
+              </div>
+              <div className="shrink-0 text-right">
+                <div className="mb-1 inline-block rounded-full bg-foreground px-2.5 py-0.5 text-[10px] font-semibold text-background">
+                  L{c.minTrustLevel}+
                 </div>
+                <div className="text-[11px] text-muted-foreground">{c.memberCount} 人</div>
               </div>
             </div>
-          </SolidCard>
+
+            {/* Description */}
+            <p className="mb-4 text-sm leading-6 text-muted-foreground">{c.description}</p>
+
+            {/* Footer row */}
+            <div className="flex items-center gap-3 border-t border-border/60 pt-4">
+              {!joined && (
+                <span className="flex-1 text-xs text-muted-foreground">需 1 名成员背书</span>
+              )}
+              {joined ? (
+                <WebButton
+                  size="sm"
+                  variant="secondary"
+                  className="ml-auto"
+                  onClick={() => router.push(`/circles/${c.id}`)}
+                >
+                  进入圈子
+                </WebButton>
+              ) : user ? (
+                <WebButton
+                  size="sm"
+                  variant="dark"
+                  className="ml-auto"
+                  onClick={() => router.push(`/circles/${c.id}`)}
+                >
+                  申请入圈
+                </WebButton>
+              ) : (
+                <Link href="/login" className="ml-auto">
+                  <WebButton size="sm" variant="dark">登录后申请</WebButton>
+                </Link>
+              )}
+            </div>
+          </WebSurface>
         )
       })}
     </section>

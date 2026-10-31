@@ -18,11 +18,18 @@ export const RETURN_QUOTA_AT_TRUST = 2
 export const MAX_QUOTA = 6
 export const TRUST_LEVEL_TO_EARN_INVITES = 1
 
+export function isInviteRequired(
+  value = process.env.INVITE_REQUIRED
+): boolean {
+  const normalized = value?.trim().toLowerCase()
+  return normalized === "1" || normalized === "true"
+}
+
 // ---------------------------------------------------------------------------
 // Code generation
 // ---------------------------------------------------------------------------
 
-const CODE_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
+const CODE_ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"
 
 /** Generate an 8-character invite code (no ambiguous chars: 0/O, 1/I/l). */
 export function generateInviteCode(): string {

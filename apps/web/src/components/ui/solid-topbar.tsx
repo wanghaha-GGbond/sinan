@@ -23,17 +23,17 @@ export function SolidTopbar({
   sticky?: boolean
   className?: string
 }) {
-  const heightClass = variant === "compact" ? "h-[54px]" : "h-[58px]"
+  const heightClass = variant === "compact" ? "h-14" : "h-16"
 
   return (
     <header
       className={cn(
-        "z-sticky border-b border-border/50 bg-background/95 shadow-[0_4px_0_rgba(17,24,39,0.025)]",
+        "web-nav z-sticky",
         sticky ? "sticky top-0" : "",
         className
       )}
     >
-      <div className={cn("mx-auto flex w-full max-w-page items-center justify-between px-4 sm:px-6", heightClass)}>
+      <div className={cn("web-nav-inner", heightClass)}>
         <div className="min-w-0">
           {leftSlot ? (
             leftSlot
@@ -49,4 +49,3 @@ export function SolidTopbar({
     </header>
   )
 }
-

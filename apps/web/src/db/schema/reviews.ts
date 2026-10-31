@@ -63,6 +63,9 @@ export const reviews = pgTable(
     }),
 
     usefulCount: integer("useful_count").default(0).notNull(),
+    // Votes collected before the persistent vote ledger was introduced.
+    // New totals are baseline + active rows in review_useful_votes.
+    usefulVoteBaseline: integer("useful_vote_baseline").default(0).notNull(),
     discussionCount: integer("discussion_count").default(0).notNull(),
 
     status: reviewStatusEnum("status").default("pending_review").notNull(),
