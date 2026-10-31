@@ -24,6 +24,7 @@ import { buildQuestionnaireSession } from "@/lib/questionnaire/question-bank"
 import { searchCompanies, getCompany } from "@/lib/api/companies"
 import { useAuth } from "@/lib/auth-context"
 import { withNext } from "@/lib/navigation"
+import { ratingDraftScore } from "@/lib/rating-navigation"
 import type { Company, CompanyListItem } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -311,7 +312,7 @@ function SubmitReviewForm() {
       title: "",
       content: "",
       salaryRange: "",
-      directionScore: 7,
+      directionScore: ratingDraftScore(searchParams.get("directionScore")) ?? 7,
       payWorth: 3,
       growthRating: 3,
       leaderRating: 3,

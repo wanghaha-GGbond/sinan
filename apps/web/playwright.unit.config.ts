@@ -6,6 +6,7 @@ export default defineConfig({
     "mail-configuration.spec.ts",
     "registration-code.spec.ts",
     "company-rating.spec.ts",
+    "rating-navigation.spec.ts",
     "readiness-schema.spec.ts",
     "password-recovery.spec.ts",
     "account-deletion.spec.ts",

@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { Building2, BookOpen, MessageCircle, PenLine, UserRound, Activity } from "lucide-react"
 
 import { WebButton } from "@/components/ui/web-button"
 import { WebNav, type WebNavLink } from "@/components/ui/web-nav"
@@ -11,6 +12,7 @@ import { isPulseEnabled } from "@/lib/pulse-feature"
 const primaryLinks = [
   { href: "/companies", label: "公司" },
   { href: "/research", label: "研究" },
+  { href: "/community", label: "社区" },
   { href: "/pulse", label: "Pulse" },
   { href: "/submit/review", label: "写评价" },
   { href: "/me", label: "我的" },
@@ -66,11 +68,29 @@ function MainNav() {
   )
 }
 
+function MobileNav() {
+  const pathname = usePathname()
+  if (["/login", "/register", "/forgot-password", "/reset-password", "/invite/"].some((path) => pathname.startsWith(path))) return null
+  const icons = { "/companies": Building2, "/research": BookOpen, "/community": MessageCircle, "/pulse": Activity, "/submit/review": PenLine, "/me": UserRound }
+  const links = linksFor(pathname)
+  return (
+    <nav aria-label="快捷导航" className="fixed inset-x-0 bottom-0 z-40 grid border-t border-border bg-card pb-[env(safe-area-inset-bottom)] lg:hidden" style={{ gridTemplateColumns: `repeat(${links.length}, minmax(0, 1fr))` }}>
+      {links.map((link) => {
+        const Icon = icons[link.href as keyof typeof icons]
+        return <Link key={link.href} href={link.href} aria-current={link.active ? "page" : undefined}
+          className={`flex min-h-16 min-w-0 flex-col items-center justify-center gap-1 px-1 text-xs font-medium focus-visible:outline-2 focus-visible:outline-ring ${link.active ? "text-primary-deep" : "text-muted-foreground"}`}>
+          <Icon className="size-5" aria-hidden="true" />{link.href === "/submit/review" ? "评分" : link.label}
+        </Link>
+      })}
+    </nav>
+  )
+}
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const icpFilingNumber = process.env.NEXT_PUBLIC_ICP_FILING_NUMBER
 
   return (
-    <div className="flex min-h-dvh flex-col bg-background text-foreground">
+    <div className="flex min-h-dvh flex-col bg-background text-foreground max-lg:pb-20">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-card focus:px-4 focus:py-3 focus:text-foreground focus:shadow-lg">跳到主要内容</a>
       <MainNav />
       <main id="main-content" tabIndex={-1} className="flex-1 scroll-mt-24">{children}</main>
@@ -88,6 +108,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </footer>
+      <MobileNav />
     </div>
   )
 }

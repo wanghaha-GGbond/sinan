@@ -3,6 +3,7 @@ import { ChevronLeft } from "lucide-react"
 import { notFound } from "next/navigation"
 
 import { CompanyReviewFeed } from "@/components/company/company-review-feed"
+import { CompanySectionNav } from "@/components/company/company-section-nav"
 import { EmptyState } from "@/components/common/state-blocks"
 import { ErrorState } from "@/components/common/error-state"
 import { WebButton } from "@/components/ui/web-button"
@@ -38,8 +39,9 @@ export default async function CompanyReviewsPage({ params }: { params: Promise<{
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">公司评价阅读区</h1>
           <p className="mt-3 text-muted-foreground">高赞真实体验、低分体验与风险评价统一按匿名保护规则展示。</p>
         </div>
-        <WebButton asChild><Link href="/submit/review">发布评价</Link></WebButton>
+        <WebButton asChild><Link href={`/submit/review?companyId=${encodeURIComponent(company.id)}`}>发布评价</Link></WebButton>
       </div>
+      <CompanySectionNav id={company.id} active="评价" />
       {mappedReviews.length === 0 ? (
         <EmptyState />
       ) : (
