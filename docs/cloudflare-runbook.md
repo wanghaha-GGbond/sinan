@@ -12,7 +12,15 @@
 - 新域名配置的 OpenNext 打包、Wrangler upload dry-run 与绑定类型生成通过；本次使用 `CF_VALIDATION_ONLY=true` 的不可发布制品，没有上传新版或修改线上变量。
 - PR #7 尚未合并：上一提交的 iOS 审计被 `decode-uri-component <=0.5.0` 高危漏洞阻断，另有 Preview 审批和合并审批未完成。不能以 Web 本地通过代替这些门禁。
 - 正式库只读检查确认缺少 `registration_codes`、`password_reset_tokens`、`users.session_version` 和 `users.email_verified_at`。未执行正式迁移；先备份，验证全部当前迁移，再进行兼容升级。
-- Resend 登录、发信域名验证、正式发送凭据、支持邮箱和真实投递仍待完成。注册尚不可用；不能将配置齐备等同于收件成功。
+- `mail.zaichang.space` 的四条 Resend DNS 记录已导入并全部验证通过；授权测试邮件的服务商状态为 `delivered`。这仅验证邮件通道，不代表正式应用注册已接通。
+- `www.zaichang.space` 已新增代理 CNAME，并启用明确 HTTPS 匹配的 308 跳转；实测保留路径和查询参数，主站返回 200。
+- 正式发送凭据、支持邮箱转发、数据库迁移及新版发布仍待完成。注册尚不可用；不能将配置齐备等同于注册验收成功。
+
+### 2026-10-31 发布依赖修复
+
+- Expo 57 的 `query-string@7.1.3` 依赖旧版 `decode-uri-component`，触发 GHSA-qr28-fpjm-wq7f。仅将该依赖覆盖为官方修复版 `0.5.1`，不升级整个 Expo。
+- 修复版为 ESM，旧调用方需要函数。`patches/query-string+7.1.3.patch` 只兼容默认导出；`patch-package --error-on-fail` 在安装时应用，失败则中止，不修改解码算法、不屏蔽审计。
+- 已通过 iOS 生产依赖审计（0 high/critical，仍有 low/moderate）、类型检查、production export，以及中文、重复参数、空值、畸形编码和大输入超时回归。`npm ci` 干净安装成功应用补丁，3 项兼容性测试通过，Web 生产审计同样为 0 high/critical。待远端 CI 验证后才能合并。
 
 ## 历史准备状态（2026-10-03）
 
