@@ -79,7 +79,7 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Isolated fixture UI and navigation checks (not a deployed Preview)
         run: npm run test:uiux --workspace=@sinan/web
-      - name: Deferred community UI (isolated demo only)
+      - name: Community API interactions (isolated fixtures only)
         run: npm exec --workspace=@sinan/web -- playwright test --config=playwright.community-ui.config.ts
       - uses: actions/upload-artifact@v4
         if: always()

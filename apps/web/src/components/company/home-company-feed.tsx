@@ -1,5 +1,9 @@
 "use client"
 
+import Link from "next/link"
+import { useState } from "react"
+import { ArrowUpRight, ClipboardList, PenLine, ShieldCheck, Sparkles, UserRound } from "lucide-react"
+
 import { WebButton } from "@/components/ui/web-button"
 import { useCompanySearch } from "@/lib/queries/company-search"
 
@@ -8,7 +12,8 @@ import { CompanyListSkeleton } from "./company-list-skeleton"
 
 export function HomeCompanyFeed() {
   const { data, isPending, error, refetch } = useCompanySearch()
-  const companies = data?.slice(0, 6) ?? []
+  const [visibleCount, setVisibleCount] = useState(6)
+  const companies = data?.slice(0, visibleCount) ?? []
 
   function retry() {
     void refetch()
@@ -34,6 +39,25 @@ export function HomeCompanyFeed() {
   return (
     <div className="border-t border-border">
       {companies.map((company) => <CompanyCard key={company.id} company={company} variant="feed" />)}
+      {(data?.length ?? 0) > visibleCount ? <div className="p-4"><WebButton variant="secondary" className="w-full" onClick={() => setVisibleCount((count) => count + 6)}>查看更多公司</WebButton></div> : null}
     </div>
   )
+}
+
+export function HomeCompanySidebar() {
+  const items = [
+    { href: "/submit/review", label: "评分与评价", icon: PenLine },
+    { href: "/submit/review?questionnaire=1", label: "问卷评分", icon: ClipboardList },
+    { href: "/company-verification", label: "职业身份认证", icon: ShieldCheck },
+    { href: "/skills", label: "一技封神", icon: Sparkles },
+    { href: "/highlights", label: "高光馆", icon: Sparkles },
+    { href: "/me", label: "个人主页", icon: UserRound },
+  ]
+  return <aside className="self-start border-t border-border p-4 sm:p-6 lg:sticky lg:top-20 lg:border-0" aria-label="在场功能">
+    <h2 className="text-lg font-semibold">参与在场</h2>
+    <div className="mt-3 grid grid-cols-2 gap-2 lg:grid-cols-1">
+      {items.map(({ href, label, icon: Icon }) => <Link key={href} href={href} className="flex min-h-12 min-w-0 items-center gap-2 rounded-lg border border-border bg-card px-3 py-3 text-sm font-medium hover:border-primary-surface-border hover:text-primary-deep"><Icon className="size-4 shrink-0" aria-hidden="true" />{label}</Link>)}
+    </div>
+    <Link href="/community" className="mt-4 inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary-deep">公司讨论<ArrowUpRight className="size-4" aria-hidden="true" /></Link>
+  </aside>
 }

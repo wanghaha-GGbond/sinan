@@ -31,7 +31,7 @@ for (const width of [375, 390, 768, 1280, 1440]) {
         await expect(page.getByRole("link", { name: /查看北辰/ })).toBeVisible()
         await expect(page.getByRole("link", { name: "搜索公司", exact: true })).toHaveCount(0)
       } else {
-        await expect(page.getByRole("navigation", { name: "公司信息导航" }).getByRole("link", { name: "评分", exact: true })).toHaveCount(0)
+        await expect(page.getByRole("navigation", { name: "公司信息导航" }).getByRole("link", { name: "评分", exact: true })).toHaveAttribute("href", "/company/northstar-tech/ratings")
         await expect(page.getByRole("navigation", { name: "公司信息导航" }).getByRole("link", { name: "概览" })).toHaveAttribute("aria-current", "page")
         await expect(page.getByText("★★★★☆")).toHaveCount(0)
         await expect(page.getByRole("button", { name: "关注公司" })).toHaveCount(0)
@@ -47,6 +47,7 @@ for (const width of [375, 390, 768, 1280, 1440]) {
         expect(columns).toBe(width >= 1024 ? 2 : 1)
       }
       if (width < 1024) {
+        await expect(page.getByRole("navigation", { name: "快捷导航" }).getByRole("link", { name: "评分", exact: true })).toBeVisible()
         await page.getByRole("button", { name: "打开菜单" }).click()
         await expect(page.getByRole("menu").getByRole("link", { name: "公司", exact: true })).toBeVisible()
         await page.keyboard.press("Escape")
@@ -86,11 +87,30 @@ test("directory retains filters, ten-point scores, clearing and keyboard navigat
   await expect(page).toHaveURL(/\/company\/rated$/)
 })
 
-test("integrated UI keeps demo community behind the launch gate", async ({ page }) => {
+test("integrated community has a real empty state, never demo discussions", async ({ page }) => {
+  await page.route("**/api/community**", (route) => route.fulfill({ json: { discussions: [], limit: 50 } }))
   const response = await page.goto("/community")
-  expect(response?.status()).toBe(404)
-  await expect(page.getByRole("heading", { name: "社区", exact: true })).toHaveCount(0)
-  await expect(page.getByRole("link", { name: "社区", exact: true })).toHaveCount(0)
+  expect(response?.status()).toBe(200)
+  await expect(page.getByRole("heading", { name: "社区", exact: true })).toBeVisible()
+  await expect(page.getByText("没有匹配的社区讨论", { exact: true })).toBeVisible()
+  await expect(page.locator("article")).toHaveCount(0)
+  await expect(page.locator("body")).not.toContainText("产品演示讨论")
+})
+
+test("restored ratings preserve the selected draft and company through login", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 })
+  const response = await page.goto("/company/northstar-tech/ratings")
+  expect(response?.status()).toBe(200)
+  await expect(page.getByRole("heading", { name: "公司评分", exact: true })).toBeVisible()
+  const next = page.getByRole("button", { name: "继续提交评价" })
+  await expect(next).toBeDisabled()
+  const zero = page.getByRole("radio", { name: "0 分", exact: true })
+  await expect(zero).toBeEnabled()
+  await zero.check({ force: true })
+  await expect(page.getByText("你的方向分：0 / 10")).toBeVisible()
+  await next.click()
+  await expect(page).toHaveURL((url) => url.pathname === "/login" && url.searchParams.get("next") === "/submit/review?companyId=northstar-tech&directionScore=0")
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
 })
 
 test("public help is reachable, honest about contact configuration, and keyboard accessible", async ({ page }) => {

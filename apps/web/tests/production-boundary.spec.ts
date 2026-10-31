@@ -4,6 +4,7 @@ import { spawnSync } from "node:child_process"
 import path from "node:path"
 
 import { GET as searchCompanies } from "../src/app/api/companies/search/route"
+import { GET as getCommunity } from "../src/app/api/community/route"
 import { proxy } from "../src/proxy"
 
 function checkRelease(overrides: Record<string, string>) {
@@ -71,6 +72,22 @@ test("production company search fails closed when the database is missing", asyn
     else process.env.NEXT_PUBLIC_APP_ENV = previousEnvironment
     if (previousDatabaseURL === undefined) delete process.env.DATABASE_URL
     else process.env.DATABASE_URL = previousDatabaseURL
+  }
+})
+
+test("community fails closed without its database and rejects malformed filters", async () => {
+  const previous = process.env.DATABASE_URL
+  delete process.env.DATABASE_URL
+  try {
+    const invalid = await getCommunity(new NextRequest("https://sinan.test/api/community?type=private"))
+    expect(invalid.status).toBe(400)
+    const response = await getCommunity(new NextRequest("https://sinan.test/api/community"))
+    expect(response.status).toBe(503)
+    expect(response.headers.get("cache-control")).toBe("private, no-store")
+    expect(await response.json()).toEqual({ error: "讨论暂时无法加载，请重试" })
+  } finally {
+    if (previous === undefined) delete process.env.DATABASE_URL
+    else process.env.DATABASE_URL = previous
   }
 })
 

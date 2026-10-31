@@ -1,7 +1,6 @@
 const deferredPrefixes = [
   "/auction",
   "/circles",
-  "/community",
   "/salaries",
   "/jobs",
   "/benefits",
@@ -18,8 +17,5 @@ function matchesPrefix(pathname: string, prefix: string): boolean {
 }
 
 export function isDeferredLaunchPath(pathname: string): boolean {
-  return (
-    deferredPrefixes.some((prefix) => matchesPrefix(pathname, prefix)) ||
-    /^\/company\/[^/]+\/ratings(?:\/|$)/.test(pathname)
-  )
+  return deferredPrefixes.some((prefix) => matchesPrefix(pathname, prefix))
 }

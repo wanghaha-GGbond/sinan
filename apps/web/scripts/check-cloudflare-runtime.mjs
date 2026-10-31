@@ -75,7 +75,11 @@ try {
     assert.match(await page.text(), /在场/)
   }
   assert.equal((await request("/pulse")).status, target === "production" ? 404 : 200)
-  assert.equal((await request("/community")).status, 404)
+  assert.equal((await request("/community")).status, 200)
+  const community = await request("/api/community")
+  assert.equal(community.status, 503, "Missing database must not return demonstration discussions")
+  assert.deepEqual(await community.json(), { error: "讨论暂时无法加载，请重试" })
+  assert.equal((await request("/auction")).status, 404)
   console.log(`Cloudflare ${target} runtime passed: live, fail-closed readiness, registration config, account pages and launch boundaries. No remote writes.`)
 } catch (error) {
   console.error(output)

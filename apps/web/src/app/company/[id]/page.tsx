@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 
 import { CompanyDecisionInsights } from "@/components/company/company-decision-insights"
 import { CompanyEvidenceRail } from "@/components/company/company-evidence-rail"
+import { CompanySectionNav } from "@/components/company/company-section-nav"
 import { CompanyReviewFeed } from "@/components/company/company-review-feed"
 import { CompanyRating, companyDisplayScore } from "@/components/company/company-rating"
 import { DepartmentInsights } from "@/components/company/department-insights"
@@ -85,18 +86,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
         <p className="inline-flex items-center gap-1.5 pb-5 text-xs text-muted-foreground"><ShieldCheck className="size-4 shrink-0" aria-hidden="true" />匿名评价 · 人工审核 · {company.verifiedIdentityCount ?? 0} 位验证贡献者</p>
-        <nav className="flex gap-8 overflow-x-auto border-t border-border" aria-label="公司信息导航">
-          {[
-            ["概览", `/company/${company.id}`],
-            ["评价", `/company/${company.id}/reviews`],
-            ["评分", `/company/${company.id}/ratings`],
-            ["承诺", `/company/${company.id}/promises`],
-          ].filter(([label]) => label !== "评分" || process.env.LAUNCH_SCOPE_ONLY !== "true").map(([label, href]) => (
-            <Link key={href} href={href} aria-current={label === "概览" ? "page" : undefined} className={`inline-flex min-h-12 shrink-0 items-center border-b-2 px-1 text-sm font-semibold ${label === "概览" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
-              {label}
-            </Link>
-          ))}
-        </nav>
+        <CompanySectionNav id={company.id} active="概览" />
       </header>
 
       <div className="mt-8"><CompanyDecisionInsights company={company} /></div>
