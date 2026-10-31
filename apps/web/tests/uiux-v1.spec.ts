@@ -107,7 +107,7 @@ test("restored ratings preserve the selected draft and company through login", a
   await page.getByRole("radio", { name: "0 分", exact: true }).check({ force: true })
   await expect(page.getByText("你的方向分：0 / 10")).toBeVisible()
   await next.click()
-  await expect(page).toHaveURL(/companyId=northstar-tech&directionScore=0/)
+  await expect(page).toHaveURL((url) => url.pathname === "/login" && url.searchParams.get("next") === "/submit/review?companyId=northstar-tech&directionScore=0")
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
 })
 
