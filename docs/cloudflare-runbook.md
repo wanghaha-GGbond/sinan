@@ -4,6 +4,18 @@
 
 ## 2026-10-31 公开注册决策
 
+### Cloudflare 运行时兼容修复
+
+PR #16 已合并为 `f2d9aa1`，审批数已恢复为 1；合并后 Vercel staging 运行 `41183315173` 成功。Cloudflare 隔离验收发现 Next.js 16.4.3 与旧 OpenNext 1.20.6 不兼容：本地 workerd 实际请求 `/api/health/live` 复现 `Unexpected loadManifest(/.next/server/preview-props.json) call!`，远端返回 1101。构建通过不代表可运行，正式站未切换。
+
+升级 OpenNext 1.20.15 与满足其 peer 要求的 Wrangler 4.156.0，保持 Next.js、业务代码和数据库不变。新增 `npm run test:runtime-cf --workspace=@sinan/web`：无数据库、发信或云端凭据，真实启动本地 workerd，请求健康、注册配置、账号页面及首发边界；CI 的 staging/production 构建都必须通过。ready 在缺少密钥时必须返回 503，不能伪造健康。
+
+隔离 Worker `zaichang-staging` 已创建，使用独立 Neon staging 项目的测试分支；规范入口改为 `https://staging.zaichang.space` 并保留 workers.dev 兜底，以免本地 workers.dev DNS 污染妨碍验收。该域名绑定已建立；新制品仍须通过远端完整验收。旧历史记录不代表当前发布完成。
+
+上游根因：[OpenNext issue #1355](https://github.com/opennextjs/opennextjs-cloudflare/issues/1355)。
+
+本地验证：旧构建被新增门禁稳定拒绝；升级后的 staging workerd 检查通过，96 项单测、类型检查通过，lint 0 错误（2 条既有警告），Web/iOS 生产审计均为 0 high/critical（仍有 low/moderate）。npm 10 可通过新 lockfile 的 `npm ci --dry-run` 一致性校验；完整 CI 和远端验收仍是合并/发布前置条件。锁文件由 npm 11 重算，包含构建依赖升级与 hoisting 路径变化；两端 CI 均须执行。构建脚本同时兼容工作区和仓库根目录的本地工具位置。
+
 所有者已确认海外正式站改为 `INVITE_REQUIRED=false`，通过真实邮箱验证码注册，不再要求邀请码；staging 和大陆部署继续邀请制。此决策覆盖下文历史准备记录中的“正式站邀请制”要求，不代表已经发布。
 
 发布前检查和 runtime readiness 共用注册配置校验，拒绝缺失/拼错的开关和非海外正式环境开放注册。邮箱验证、验证码限流、生产禁止测试收件人、Pulse 关闭和首发功能范围不变。

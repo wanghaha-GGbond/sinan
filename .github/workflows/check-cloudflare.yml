@@ -37,6 +37,8 @@ jobs:
       - run: npm ci
       - run: npm run test:release-cf --workspace=@sinan/web
       - run: npm run build:cf --workspace=@sinan/web -- ${{ matrix.target }}
+      - name: Exercise built Worker in the Cloudflare runtime
+        run: npm run test:runtime-cf --workspace=@sinan/web
       - name: Save validation metadata, never a deployable artifact
         uses: actions/upload-artifact@v4
         with:
@@ -48,5 +50,5 @@ jobs:
           BUILD_TARGET: ${{ matrix.target }}
         run: |
           echo "### Cloudflare $BUILD_TARGET validation" >> "$GITHUB_STEP_SUMMARY"
-          echo 'OpenNext build and Wrangler dry-run passed. No cloud credentials, upload, migration or traffic switch.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'OpenNext build, Wrangler dry-run and workerd runtime checks passed. No cloud credentials, upload, migration or traffic switch.' >> "$GITHUB_STEP_SUMMARY"
           echo 'This fixture build is validation-only and cannot pass the release gate.' >> "$GITHUB_STEP_SUMMARY"
