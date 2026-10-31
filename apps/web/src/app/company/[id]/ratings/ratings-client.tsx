@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useSyncExternalStore } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, ArrowRight, PenLine } from "lucide-react"
 
@@ -12,8 +12,13 @@ import { WebButton } from "@/components/ui/web-button"
 import { ratingReviewHref } from "@/lib/rating-navigation"
 import type { CompanyListItem } from "@/lib/types"
 
+const subscribeToHydration = () => () => {}
+const clientReady = () => true
+const serverReady = () => false
+
 export function RatingsClient({ company }: { company: CompanyListItem }) {
   const router = useRouter()
+  const hydrated = useSyncExternalStore(subscribeToHydration, clientReady, serverReady)
   const [score, setScore] = useState<number | null>(null)
   const reviewCount = company.reviewCount ?? 0
   return (
@@ -29,7 +34,7 @@ export function RatingsClient({ company }: { company: CompanyListItem }) {
       </header>
       <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
         <div className="min-w-0 self-start rounded-lg border border-border bg-card p-5 sm:p-7">
-          <fieldset>
+          <fieldset disabled={!hydrated} aria-busy={!hydrated}>
             <legend className="text-xl font-semibold">你会给几分？</legend>
             <p className="mt-2 text-sm text-muted-foreground">0–10 分</p>
             <div className="mt-5 grid grid-cols-6 gap-2 sm:grid-cols-11">
