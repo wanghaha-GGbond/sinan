@@ -123,7 +123,7 @@ jobs:
             .
 
       - name: Scan standalone Web image
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.IMAGE_REPOSITORY }}:${{ steps.tags.outputs.sha }}
           format: table
@@ -132,7 +132,7 @@ jobs:
           severity: HIGH,CRITICAL
 
       - name: Scan migration image
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.MIGRATOR_IMAGE_REPOSITORY }}:${{ steps.tags.outputs.sha }}
           format: table
