@@ -10,7 +10,7 @@
     "deploy:cf": "node scripts/cloudflare-release.mjs deploy",
     "release:verify-cf": "node scripts/cloudflare-release.mjs verify",
     "release:check-rollback-cf": "node scripts/cloudflare-release.mjs check-rollback",
-    "test:release-cf": "node --test scripts/cloudflare-release.test.mjs scripts/release-network.test.mjs",
+    "test:release-cf": "node --test scripts/cloudflare-release.test.mjs scripts/release-network.test.mjs scripts/isolated-pool.test.mjs",
     "test:runtime-cf": "node scripts/check-cloudflare-runtime.mjs",
     "start": "next start",
     "lint": "eslint",
