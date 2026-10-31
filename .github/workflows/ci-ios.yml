@@ -1,14 +1,8 @@
 name: iOS CI
 
 on:
+  # This check is required by main protection, even for Web/docs-only PRs.
   pull_request:
-    paths:
-      - "apps/ios/**"
-      - "packages/shared/**"
-      - "package.json"
-      - "package-lock.json"
-      - "patches/**"
-      - ".github/workflows/ci-ios.yml"
   push:
     branches: [main]
     paths:

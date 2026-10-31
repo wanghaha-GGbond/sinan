@@ -1,4 +1,20 @@
-import { expect, test } from "@playwright/test"
+import { expect, test, type Page } from "@playwright/test"
+
+const pulseNoticeText = "体验版 · 周报与公司趋势为示例数据"
+// Streaming can temporarily leave a duplicate in a hidden React S:* container
+// outside the app shell. Assert the real main landmark, not that transport copy.
+const pulseNotice = (page: Page) => page.getByRole("main").getByText(pulseNoticeText, { exact: true })
+
+test("Pulse notice locator excludes hidden streaming copies without accepting duplicates in main", async ({ page }) => {
+  await page.setContent(`<main><p>${pulseNoticeText}</p></main><div hidden id="S:0"><p>${pulseNoticeText}</p></div>`)
+  await expect(page.getByText(pulseNoticeText, { exact: true })).toHaveCount(2)
+  await expect(pulseNotice(page)).toHaveCount(1)
+  await expect(pulseNotice(page)).toBeVisible()
+  await page.setContent(`<main><p>${pulseNoticeText}</p><p>${pulseNoticeText}</p></main>`)
+  await expect(pulseNotice(page)).toHaveCount(2)
+  await page.setContent(`<main></main><div hidden id="S:0"><p>${pulseNoticeText}</p></div>`)
+  await expect(pulseNotice(page)).toHaveCount(0)
+})
 
 test("home search submits the keyword without explanatory banners", async ({ page }, testInfo) => {
   await page.route("**/api/**", (route) => route.fulfill({ json: { user: null } }))
@@ -47,5 +63,6 @@ test("register keeps its privacy notice and Pulse keeps its example-data label",
   await expect(page.getByText(/你的身份信息不会向公司方公开/)).toBeVisible()
   await expect(page.getByText("成为指路人，分享真实体验")).toHaveCount(0)
   await page.goto("/pulse")
-  await expect(page.getByText("体验版 · 周报与公司趋势为示例数据", { exact: true })).toBeVisible()
+  await expect(pulseNotice(page)).toHaveCount(1)
+  await expect(pulseNotice(page)).toBeVisible()
 })

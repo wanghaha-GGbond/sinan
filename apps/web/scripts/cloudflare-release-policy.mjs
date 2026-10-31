@@ -34,7 +34,7 @@ export function releaseConfiguration(target, env, release) {
       DEPLOYMENT_REGION: "global", DATABASE_ADAPTER: "neon",
       NEXT_PUBLIC_APP_URL: appUrl, NEXT_PUBLIC_APP_ENV: target,
       NEXT_PUBLIC_API_ENABLED: "true", NEXT_PUBLIC_PULSE_ENABLED: production ? "false" : "true",
-      LAUNCH_SCOPE_ONLY: "true", INVITE_REQUIRED: "true",
+      LAUNCH_SCOPE_ONLY: "true", INVITE_REQUIRED: production ? "false" : "true",
       MAIL_PROVIDER: production ? "resend" : "disabled",
       MAIL_FROM_DOMAIN: mailDomain, SUPPORT_EMAIL: supportEmail,
       ERROR_REPORTING_MODE: "stdout", AUTH_TRUSTED_IP_HEADER: "cf-connecting-ip",

@@ -13,6 +13,7 @@ test("targets are explicit and secrets are never copied into Worker vars", () =>
   assert.equal(config.name, "zaichang-staging")
   assert.equal(config.vars.NEXT_PUBLIC_APP_ENV, "staging")
   assert.equal(config.vars.MAIL_PROVIDER, "disabled")
+  assert.equal(config.vars.INVITE_REQUIRED, "true")
   assert.equal(config.vars.NEXT_PUBLIC_PULSE_ENABLED, "true")
   assert.equal(JSON.stringify(config).includes("secret"), false)
 })
@@ -27,6 +28,7 @@ test("production uses the owned domain, retains the fallback, disables demo and 
   assert.equal(releaseConfiguration("staging", {}, sha).routes, undefined)
   assert.equal(config.vars.NEXT_PUBLIC_PULSE_ENABLED, "false")
   assert.equal(config.vars.MAIL_PROVIDER, "resend")
+  assert.equal(config.vars.INVITE_REQUIRED, "false")
   assert.equal(config.preview_urls, false)
 })
 test("release rejects dirty, validation-only, modified and wrong-environment artifacts", () => {
