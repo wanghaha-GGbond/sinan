@@ -1,6 +1,12 @@
 # 在场海外 Web 正式版推进记录
 
-范围：Cloudflare Workers + Neon，邀请制 Web。此次不开发或发布 iOS，不迁移阿里云，不启用正式 Pulse、社区、私聊或付费。
+## 当前结论（2026-10-31）
+
+**Web v0.0.1 已在 [zaichang.space](https://zaichang.space) 上线，开放邮箱验证码注册，不需要邀请码。** 朋友 UI 已通过 #7 整合，CI/运行时修复 #16/#17 已合并并部署。发布源 `bbaa599`，main 收口 `0bd382a`；详见 [首发验收](releases/web-v0.0.1.md) 和 [仓库状态](repository-status.md)。
+
+下面是按时间保留的推进记录，其中“尚未合并/尚未上线/邀请制”描述属于当时状态，不覆盖以上当前结论。
+
+范围：Cloudflare Workers + Neon 的海外 Web。此次不开发或发布 iOS，不迁移阿里云，不启用正式 Pulse、社区、私聊或付费。
 
 ## GitHub 同步批次（2026-10-20）
 
