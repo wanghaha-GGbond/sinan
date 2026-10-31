@@ -48,7 +48,7 @@ jobs:
       RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
       MAIL_TEST_RECIPIENT: ${{ secrets.MAIL_TEST_RECIPIENT }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v6
         with:
@@ -229,7 +229,7 @@ jobs:
       RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
       MAIL_TEST_RECIPIENT: ${{ secrets.MAIL_TEST_RECIPIENT }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v6
         with:
