@@ -10,7 +10,8 @@
     "deploy:cf": "node scripts/cloudflare-release.mjs deploy",
     "release:verify-cf": "node scripts/cloudflare-release.mjs verify",
     "release:check-rollback-cf": "node scripts/cloudflare-release.mjs check-rollback",
-    "test:release-cf": "node --test scripts/cloudflare-release.test.mjs",
+    "test:release-cf": "node --test scripts/cloudflare-release.test.mjs scripts/release-network.test.mjs scripts/isolated-pool.test.mjs",
+    "test:runtime-cf": "node scripts/check-cloudflare-runtime.mjs",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
@@ -110,7 +111,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@opennextjs/cloudflare": "1.20.6",
+    "@opennextjs/cloudflare": "1.20.15",
     "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
@@ -123,6 +124,6 @@
     "shadcn": "^4.8.0",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "wrangler": "4.132.0"
+    "wrangler": "4.156.0"
   }
 }

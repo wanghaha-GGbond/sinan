@@ -12,7 +12,10 @@ const [command, target, previousPath] = process.argv.slice(2)
 const git = (...args) => execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim()
 const readJson = (file) => JSON.parse(readFileSync(file, "utf8"))
 function run(binary, args, env = process.env) {
-  const result = spawnSync(path.join(root, "node_modules/.bin", binary), args, { cwd: root, stdio: "inherit", env })
+  const executable = [root, path.resolve(root, "../..")]
+    .map(directory => path.join(directory, "node_modules/.bin", binary)).find(existsSync)
+  if (!executable) throw new Error(`Missing project binary: ${binary}; run npm ci`)
+  const result = spawnSync(executable, args, { cwd: root, stdio: "inherit", env })
   if (result.error || result.status !== 0) throw new Error(`${binary} failed (${result.status ?? "not started"})`)
 }
 function bundleDigest() {

@@ -4,6 +4,7 @@ import { drizzle as drizzleNodePostgres } from "drizzle-orm/node-postgres"
 import { Pool as NodePostgresPool } from "pg"
 
 import * as schema from "./schema"
+import { withIsolatedPool } from "./isolated-pool.mjs"
 
 /**
  * Drizzle PostgreSQL client.
@@ -28,7 +29,10 @@ import * as schema from "./schema"
  * Connection-cache strategy:
  *   `poolQueryViaFetch = true` lets the Neon Pool send non-listenening
  *   queries through Neon's HTTP cache endpoint (lower latency). Pool-
- *   bound transactions still go over WebSocket.
+ *   bound transactions still go over WebSocket. Each transaction owns a NEW
+ *   pool and closes it before returning: Workers cannot reuse a WebSocket
+ *   created by a previous request. The shared pool below handles only stateless
+ *   HTTP queries; never acquire a WebSocket client from it in application code.
  *
  * Lazy-throw on missing DATABASE_URL:
  *   Module load throws if `DATABASE_URL` is unset, but service code uses
@@ -69,9 +73,21 @@ const pool = useNodePostgres
 // the application. Mainland production uses node-postgres for RDS sessions,
 // transactions, row locks and advisory locks. Neon remains an explicit
 // optional adapter for non-mainland environments.
-export const db = (
+const database = (
   useNodePostgres
     ? drizzleNodePostgres(pool as NodePostgresPool, { schema })
     : drizzleNeon(pool as Pool, { schema })
 ) as unknown as NeonDatabase<typeof schema>
+
+if (!useNodePostgres) {
+  // Drizzle passes the transaction callback a session-bound client, retaining
+  // real BEGIN/COMMIT/ROLLBACK, row locks and nested transactions. Do not replace
+  // this with neon-http transaction batching or a cross-request pooled socket.
+  database.transaction = (transaction, config) => withIsolatedPool(
+    () => new Pool({ connectionString: databaseUrl }),
+    transactionPool => drizzleNeon(transactionPool, { schema }).transaction(transaction, config),
+  )
+}
+
+export const db = database
 export { pool }

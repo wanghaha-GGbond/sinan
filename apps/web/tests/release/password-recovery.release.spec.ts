@@ -6,11 +6,10 @@ import { users } from "../../src/db/schema/users"
 import { passwordResetTokens } from "../../src/db/schema/password-reset-tokens"
 import { hashPassword, signToken } from "../../src/lib/server/auth"
 import { createPasswordResetToken, hashPasswordResetToken } from "../../src/lib/server/password-recovery-policy"
+import { releaseTestProxyHeaders } from "../../scripts/release-network.mjs"
 
 const testClientId = randomUUID().replaceAll("-", "")
-test.use({ viewport: { width: 390, height: 844 }, extraHTTPHeaders: {
-  "cf-connecting-ip": `2001:db8:${testClientId.slice(0, 4)}:${testClientId.slice(4, 8)}::1`,
-} })
+test.use({ viewport: { width: 390, height: 844 }, extraHTTPHeaders: releaseTestProxyHeaders(testClientId, process.env.RELEASE_BASE_URL) })
 
 test("password recovery works in the browser and revokes old sessions", async ({ page }, testInfo) => {
   const request = authorizedReleaseRequest(page.request)
