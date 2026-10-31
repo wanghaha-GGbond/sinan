@@ -1,4 +1,5 @@
 import { mailConfigurationErrors } from "../src/lib/server/mail-configuration.mjs"
+import { registrationConfigurationErrors } from "../src/lib/server/registration-configuration.mjs"
 
 const required = [
   "AUTH_SECRET",
@@ -19,9 +20,7 @@ if (!new Set(["global", "mainland"]).has(deploymentRegion)) {
 }
 
 if (missing.length) errors.push(`Missing: ${missing.join(", ")}`)
-if (process.env.INVITE_REQUIRED !== "true") {
-  errors.push("INVITE_REQUIRED must be true for the invite-only Beta")
-}
+errors.push(...registrationConfigurationErrors(process.env))
 if (!process.env.DATABASE_ADAPTER) {
   errors.push("DATABASE_ADAPTER is required")
 } else if (!new Set(["pg", "neon"]).has(process.env.DATABASE_ADAPTER)) {

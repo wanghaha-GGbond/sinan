@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm"
 import { NextResponse } from "next/server"
 import { readinessContract, verifyReadinessSchema } from "@/lib/server/readiness-schema"
 import { mailConfigurationErrors } from "@/lib/server/mail-configuration.mjs"
+import { registrationConfigurationErrors } from "@/lib/server/registration-configuration.mjs"
 
 export const dynamic = "force-dynamic"
 
@@ -43,7 +44,7 @@ function hasValidRuntimeConfiguration() {
   return (
     requiredRuntimeVariables.every((name) => Boolean(process.env[name]?.trim())) &&
     (process.env.AUTH_SECRET?.trim().length ?? 0) >= 32 &&
-    process.env.INVITE_REQUIRED === "true" &&
+    registrationConfigurationErrors(process.env).length === 0 &&
     process.env.NEXT_PUBLIC_API_ENABLED === "true" &&
     process.env.LAUNCH_SCOPE_ONLY === "true" &&
     (process.env.DATABASE_ADAPTER === "pg" || process.env.DATABASE_ADAPTER === "neon") &&
