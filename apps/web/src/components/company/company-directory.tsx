@@ -7,32 +7,17 @@ import { CompanyCard } from "@/components/company/company-card"
 import { CompanyListSkeleton } from "@/components/company/company-list-skeleton"
 import { SolidSearchInput } from "@/components/ui/solid-search-input"
 import { useCompanySearch } from "@/lib/queries/company-search"
-
-type SortMode = "reviews" | "score" | "recommendation"
+import { filterAndSortCompanies, type DirectorySort } from "@/lib/company-directory"
 
 export function CompanyDirectory() {
   const [query, setQuery] = useState("")
   const [city, setCity] = useState("全部")
-  const [sort, setSort] = useState<SortMode>("reviews")
+  const [sort, setSort] = useState<DirectorySort>("reviews")
+  const [ratedOnly, setRatedOnly] = useState(false)
   const { data: companies = [], isPending: loading, error, refetch } = useCompanySearch()
   const cities = ["全部", ...Array.from(new Set(companies.map((company) => company.city)))]
 
-  const filteredCompanies = useMemo(() => {
-    const keyword = query.trim().toLowerCase()
-    return companies
-      .filter((company) => city === "全部" || company.city === city)
-      .filter((company) => {
-        if (!keyword) return true
-        return [company.name, company.shortName, company.industry, company.city]
-          .filter(Boolean)
-          .some((value) => String(value).toLowerCase().includes(keyword))
-      })
-      .sort((a, b) => {
-        if (sort === "recommendation") return (b.recommendationRate ?? -1) - (a.recommendationRate ?? -1)
-        if (sort === "score") return (b.directionScore ?? 0) - (a.directionScore ?? 0)
-        return (b.reviewCount ?? 0) - (a.reviewCount ?? 0)
-      })
-  }, [city, companies, query, sort])
+  const filteredCompanies = useMemo(() => filterAndSortCompanies(companies, { query, city, sort, ratedOnly }), [city, companies, query, sort, ratedOnly])
 
   if (loading) {
     return <CompanyListSkeleton variant="directory" />
@@ -61,13 +46,18 @@ export function CompanyDirectory() {
           排序
           <select
             value={sort}
-            onChange={(event) => setSort(event.target.value as SortMode)}
+            onChange={(event) => setSort(event.target.value as DirectorySort)}
             className="h-12 rounded-lg border border-input bg-card px-3 font-medium text-foreground focus-visible:outline-2 focus-visible:outline-ring"
           >
             <option value="reviews">评价最多</option>
             <option value="score">评分最高</option>
             <option value="recommendation">推荐率最高</option>
+            <option value="recent">最近收录</option>
           </select>
+        </label>
+        <label className="inline-flex min-h-11 items-center gap-2 text-foreground">
+          <input type="checkbox" className="size-4 accent-primary" checked={ratedOnly} onChange={(event) => setRatedOnly(event.target.checked)} />
+          只看有评价
         </label>
         </div>
       </div>
@@ -83,7 +73,7 @@ export function CompanyDirectory() {
         <div className="border-y border-border py-12 text-center">
           <Building2 className="mx-auto size-8 text-muted-foreground" />
           <p className="mt-3 font-semibold text-foreground">没有匹配的公司</p>
-          <button type="button" className="mt-2 min-h-11 px-3 font-medium text-primary-deep underline" onClick={() => { setQuery(""); setCity("全部") }}>清除筛选</button>
+          <button type="button" className="mt-2 min-h-11 px-3 font-medium text-primary-deep underline" onClick={() => { setQuery(""); setCity("全部"); setRatedOnly(false) }}>清除筛选</button>
         </div>
       )}
     </div>

@@ -97,6 +97,31 @@ test("integrated community has a real empty state, never demo discussions", asyn
   await expect(page.locator("body")).not.toContainText("产品演示讨论")
 })
 
+for (const width of [375, 1280]) {
+  test(`PR5 filters integrate with existing real-data directory ${width}px`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.route("**/api/companies/search**", (route) => route.fulfill({ json: { companies: [
+      { id: "empty", name: "新收录公司", city: "杭州", industry: "科技", reviewCount: 0, directionScore: 10, recommendationRate: 100, createdAt: "2026-10-31", aliases: ["新星"], englishName: "New Star" },
+      { id: "rated", name: "真实零分公司", city: "杭州", industry: "科技", reviewCount: 1, directionScore: 0, recommendationRate: 0, createdAt: "2026-01-01" },
+    ] } }))
+    await page.goto("/companies")
+    await page.getByLabel("排序", { exact: false }).selectOption("score")
+    await expect(page.getByTestId("company-directory-item").first()).toContainText("真实零分公司")
+    await page.getByLabel("排序", { exact: false }).selectOption("recent")
+    await expect(page.getByTestId("company-directory-item").first()).toContainText("新收录公司")
+    await page.getByRole("checkbox", { name: "只看有评价" }).check()
+    await expect(page.getByTestId("company-directory-item")).toHaveCount(1)
+    await page.getByRole("textbox", { name: "搜索公司", exact: true }).fill("不存在")
+    await page.getByRole("button", { name: "清除筛选", exact: true }).click()
+    await expect(page.getByRole("checkbox", { name: "只看有评价" })).not.toBeChecked()
+    await expect(page.getByTestId("company-directory-item")).toHaveCount(2)
+    await page.getByRole("textbox", { name: "搜索公司", exact: true }).fill("新星")
+    await expect(page.getByTestId("company-directory-item")).toHaveCount(1)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    await page.screenshot({ path: testInfo.outputPath(`directory-integrated-${width}.png`), fullPage: true })
+  })
+}
+
 test("restored ratings preserve the selected draft and company through login", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 })
   const response = await page.goto("/company/northstar-tech/ratings")
