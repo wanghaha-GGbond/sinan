@@ -13,10 +13,11 @@ import { reviewUsefulVotes } from "../../src/db/schema/review-useful-votes"
 import { users } from "../../src/db/schema/users"
 import { hashPassword, signToken } from "../../src/lib/server/auth"
 import { issueRegistrationCode } from "../../src/lib/server/registration-codes"
+import { releaseTestProxyHeaders } from "../../scripts/release-network.mjs"
 
 // Simulate a trusted proxy on the local test server; each run owns its bucket.
 const testClientId = randomUUID().replaceAll("-", "")
-test.use({ extraHTTPHeaders: { "cf-connecting-ip": `2001:db8:${testClientId.slice(0, 4)}:${testClientId.slice(4, 8)}::1` } })
+test.use({ extraHTTPHeaders: releaseTestProxyHeaders(testClientId, process.env.RELEASE_BASE_URL) })
 
 let inviterId = ""
 let moderatorId = ""

@@ -16,6 +16,8 @@ PR #16 已合并为 `f2d9aa1`，审批数已恢复为 1；合并后 Vercel stagi
 
 本地验证：旧构建被新增门禁稳定拒绝；升级后的 staging workerd 检查通过，96 项单测、类型检查通过，lint 0 错误（2 条既有警告），Web/iOS 生产审计均为 0 high/critical（仍有 low/moderate）。npm 10 可通过新 lockfile 的 `npm ci --dry-run` 一致性校验；完整 CI 和远端验收仍是合并/发布前置条件。锁文件由 npm 11 重算，包含构建依赖升级与 hoisting 路径变化；两端 CI 均须执行。构建脚本同时兼容工作区和仓库根目录的本地工具位置。
 
+正式环境本地 workerd 验收也已通过。隔离远端版本 `e29e0507-2e86-4fb6-823f-f3b9030e3634` 的 live/ready 返回 200，报告 `0022_email_registration`、认证契约 2。公网 E2E 还发现原测试把模拟 `CF-Connecting-IP` 发给 Cloudflare，导致边缘返回 403/error 1000；只允许 loopback 测试模拟代理头，远端使用真实边缘 IP，不降低任何限流或安全配置。核心远端 E2E 仍须重跑。
+
 所有者已确认海外正式站改为 `INVITE_REQUIRED=false`，通过真实邮箱验证码注册，不再要求邀请码；staging 和大陆部署继续邀请制。此决策覆盖下文历史准备记录中的“正式站邀请制”要求，不代表已经发布。
 
 发布前检查和 runtime readiness 共用注册配置校验，拒绝缺失/拼错的开关和非海外正式环境开放注册。邮箱验证、验证码限流、生产禁止测试收件人、Pulse 关闭和首发功能范围不变。
