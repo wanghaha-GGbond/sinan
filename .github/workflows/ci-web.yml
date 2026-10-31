@@ -67,7 +67,7 @@ jobs:
       - run: npm run typecheck --workspace=@sinan/web
       - run: npm run test:unit --workspace=@sinan/web
       - name: Preview access and staging mail policies
-        run: node --test apps/web/scripts/vercel-access.test.mjs apps/web/scripts/release-vercel-auth.test.mjs apps/web/scripts/staging-mail.test.mjs
+        run: node --test apps/web/scripts/vercel-access.test.mjs apps/web/scripts/vercel-install.test.mjs apps/web/scripts/release-vercel-auth.test.mjs apps/web/scripts/staging-mail.test.mjs
       - run: npm run research:test:algorithm --workspace=@sinan/web
       - run: npm run build --workspace=@sinan/web
 

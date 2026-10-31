@@ -17,6 +17,7 @@
 1. Git 仓库连接到 `wanghaha-GGbond/sinan`。
 2. Root Directory 使用 `apps/web`（沿用已有项目链接）。
 3. Framework 选择 Next.js。
+   依赖安装由 `apps/web/vercel.json` 固定为从仓库根目录执行 `npm ci --include=dev --include-workspace-root`。不能只安装 Web workspace：根目录的 `postinstall` 需要 `patch-package`，并必须应用已审计的兼容性补丁。使用 lockfile 的干净安装，避免复用旧安装结果；不要通过禁用安装脚本绕过补丁。
 4. Preview 由 `.github/workflows/preview-vercel.yml` 的 Pull Request 事件触发；`main` 更新稳定 staging 地址。不要使用 `vercel --prod` 做测试。
 5. 为 Preview 配置一个稳定的 `NEXT_PUBLIC_APP_URL`。如果暂时没有 DNS，可使用本次部署的 `*.vercel.app` 地址；正式测试建议绑定 `staging.sinanapp.cn`。
 
