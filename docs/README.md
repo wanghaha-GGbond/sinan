@@ -1,11 +1,14 @@
-# 司南 (Sinan) 产品文档系列
+# 在场产品与工程文档
 
-> 代号「阶层」。本系列从 PRD v0.1 出发，结合代码库现状（2026-06），构成从当前状态到目标产品形态的完整文档链。
+当前发布状态以 [仓库状态](repository-status.md) 和 [Web v0.0.1 发布记录](releases/web-v0.0.1.md) 为准。下方早期产品规格保留历史命名和规划，不代表所有功能已经开放。
 
 ## 阅读顺序
 
-当前海外 Web 上线进度与验收：[web-release-progress.md](web-release-progress.md)。
-当前固化的前端基线：[UI v0.0.1](archive/ui-v0.0.1.md)（UI 已冻结，生产尚未发布）。
+当前完整网站版本：**Web v0.0.1**，已部署到 [zaichang.space](https://zaichang.space)，开放邮箱验证码注册。
+版本、分支、朋友 UI PR 与审批状态：[repository-status.md](repository-status.md)。
+首发验收与安全回退记录：[releases/web-v0.0.1.md](releases/web-v0.0.1.md)。
+历史前端设计基线：[UI v0.0.1](archive/ui-v0.0.1.md)；后续视觉移植：[UI 整合记录](archive/ui-v0.0.2-integration.md)。两者不作为完整网站的发布版本号。
+历史海外上线推进过程：[web-release-progress.md](web-release-progress.md)。
 邮箱验证码注册及个人主页增量：[邮箱注册验收](email-registration.md)。
 形成过程与详细规格：[初版 PRD](archive/frontend-v1/PRD.md)（保留历史 RC1 命名）。
 

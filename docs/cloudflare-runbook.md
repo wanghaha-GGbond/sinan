@@ -2,6 +2,12 @@
 
 范围：海外 Web、Next.js + OpenNext + Cloudflare Workers + Neon；保留 monorepo，iOS 不随 Web 发布。
 
+## 当前生产（2026-10-31）
+
+**Web v0.0.1 已上线**：`https://zaichang.space`；源码 `bbaa59905595ead3ece6695d36b0dc5626ff9c65`，Worker version `9e17e5f1-83a5-4d09-b5a2-edba2c28a5b0`（100%），迁移 `0022_email_registration`、认证契约 2。真实注册创建及注册后会话、验证码和密码设置邮件投递已核验；所有者私人密码登录仍待本人完成。
+
+正式记录以 [Web v0.0.1](releases/web-v0.0.1.md) 为准。下面带日期的兼容修复、域名接入和准备段落保留历史过程；其中“未切换/未迁移/待审批”不代表当前状态。后续发布操作仍需遵循环境、密钥、迁移和认证兼容约束，不能仅因旧记录完成就跳过新版本门禁。
+
 ## 2026-10-31 公开注册决策
 
 ### Cloudflare 运行时兼容修复
