@@ -91,7 +91,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
             ["评价", `/company/${company.id}/reviews`],
             ["评分", `/company/${company.id}/ratings`],
             ["承诺", `/company/${company.id}/promises`],
-          ].map(([label, href]) => (
+          ].filter(([label]) => label !== "评分" || process.env.LAUNCH_SCOPE_ONLY !== "true").map(([label, href]) => (
             <Link key={href} href={href} aria-current={label === "概览" ? "page" : undefined} className={`inline-flex min-h-12 shrink-0 items-center border-b-2 px-1 text-sm font-semibold ${label === "概览" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
               {label}
             </Link>

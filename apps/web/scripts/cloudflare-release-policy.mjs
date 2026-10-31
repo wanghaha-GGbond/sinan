@@ -6,7 +6,7 @@ export function releaseConfiguration(target, env, release) {
   if (!["staging", "production"].includes(target)) throw new Error("Choose staging or production explicitly")
   if (!/^[a-f0-9]{40}$/.test(release)) throw new Error("A full Git SHA is required")
   const production = target === "production"
-  const appUrl = production ? "https://zaichang.zaichang.workers.dev" : "https://zaichang-staging.zaichang.workers.dev"
+  const appUrl = production ? "https://zaichang.space" : "https://zaichang-staging.zaichang.workers.dev"
   const mailDomain = env.CF_MAIL_FROM_DOMAIN?.trim() || (production ? "" : "example.invalid")
   const supportEmail = env.CF_SUPPORT_EMAIL?.trim() || (production ? "" : "support@example.invalid")
   if (!/^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/i.test(mailDomain)) {
@@ -27,6 +27,7 @@ export function releaseConfiguration(target, env, release) {
     compatibility_flags: ["nodejs_compat", "global_fetch_strictly_public"],
     workers_dev: true,
     preview_urls: false,
+    ...(production ? { routes: [{ pattern: "zaichang.space", custom_domain: true, zone_name: "zaichang.space" }] } : {}),
     assets: { directory: "../.open-next/assets", binding: "ASSETS" },
     observability: { enabled: true, logs: { enabled: true, head_sampling_rate: 1 }, traces: { enabled: true, head_sampling_rate: 0.01 } },
     vars: {

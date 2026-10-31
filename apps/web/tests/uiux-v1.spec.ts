@@ -31,6 +31,7 @@ for (const width of [375, 390, 768, 1280, 1440]) {
         await expect(page.getByRole("link", { name: /查看北辰/ })).toBeVisible()
         await expect(page.getByRole("link", { name: "搜索公司", exact: true })).toHaveCount(0)
       } else {
+        await expect(page.getByRole("navigation", { name: "公司信息导航" }).getByRole("link", { name: "评分", exact: true })).toHaveCount(0)
         await expect(page.getByRole("navigation", { name: "公司信息导航" }).getByRole("link", { name: "概览" })).toHaveAttribute("aria-current", "page")
         await expect(page.getByText("★★★★☆")).toHaveCount(0)
         await expect(page.getByRole("button", { name: "关注公司" })).toHaveCount(0)
@@ -90,6 +91,41 @@ test("integrated UI keeps demo community behind the launch gate", async ({ page 
   expect(response?.status()).toBe(404)
   await expect(page.getByRole("heading", { name: "社区", exact: true })).toHaveCount(0)
   await expect(page.getByRole("link", { name: "社区", exact: true })).toHaveCount(0)
+})
+
+test("public help is reachable, honest about contact configuration, and keyboard accessible", async ({ page }) => {
+  await page.goto("/support")
+  await page.keyboard.press("Tab")
+  await expect(page.getByRole("link", { name: "跳到主要内容" })).toBeFocused()
+  await page.keyboard.press("Enter")
+  await expect(page.locator("#main-content")).toBeFocused()
+  await expect(page.getByRole("contentinfo").getByRole("link", { name: "帮助与反馈" })).toHaveAttribute("href", "/support")
+  await expect(page.locator('a[href="mailto:support@sinanapp.cn"]')).toHaveCount(0)
+  await expect(page.getByRole("main").getByRole("link", { name: "账号与数据" })).toHaveAttribute("href", "/settings/account")
+  await page.goto("/legal/privacy")
+  await expect(page.locator('a[href="mailto:support@sinanapp.cn"]')).toHaveCount(0)
+})
+
+test("directory loading matches responsive cards and keeps short-page footer at the bottom", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 1100 })
+  let release!: () => void
+  const pending = new Promise<void>((resolve) => { release = resolve })
+  await page.route("**/api/companies/search**", async (route) => {
+    await pending
+    await route.fulfill({ json: { companies: [] } })
+  })
+  try {
+    await page.goto("/companies")
+    await expect(page.getByRole("status", { name: "正在加载公司" })).toBeVisible()
+    const grid = page.getByTestId("directory-loading-grid")
+    expect(await grid.evaluate((node) => getComputedStyle(node).gridTemplateColumns.split(" ").length)).toBe(2)
+    await page.setViewportSize({ width: 375, height: 812 })
+    expect(await grid.evaluate((node) => getComputedStyle(node).gridTemplateColumns.split(" ").length)).toBe(1)
+  } finally { release() }
+  await expect(page.getByRole("button", { name: "清除筛选" })).toBeVisible()
+  await page.setViewportSize({ width: 1280, height: 1100 })
+  const footer = await page.getByRole("contentinfo").boundingBox()
+  expect(footer!.y + footer!.height).toBeGreaterThanOrEqual(1099)
 })
 
 test("failed catalog has a working retry, not fabricated companies", async ({ page }) => {

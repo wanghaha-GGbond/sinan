@@ -2,7 +2,19 @@
 
 范围：海外 Web、Next.js + OpenNext + Cloudflare Workers + Neon；保留 monorepo，iOS 不随 Web 发布。
 
-## 当前状态（2026-10-03）
+## 域名接入进度（2026-10-31）
+
+- 自有域名 `zaichang.space` 已在账号中激活，并绑定到现有 `zaichang` Worker；未开启公开版本预览，也未购买额外套餐。
+- `https://zaichang.space` 首页 HTTPS 返回 200，`/api/health/live` 返回 `{"status":"ok","service":"zaichang"}`。这仅证明旧站已接入新域名，不代表新 UI 或邮箱注册已发布。
+- 线上仍为版本 `ea4117e2-094a-495f-9ab7-3694e006a6cb`（`copy-cleanup-f318506`）。旧 `workers.dev` 地址保留。
+- 新发布配置将 `NEXT_PUBLIC_APP_URL` 和自定义域名路由统一为 `https://zaichang.space`，保留 `workers_dev` 兜底；不能只改控制台变量，因为公开 URL 也会进入客户端构建。
+- 新 UI 的 30 项页面/注册交互回归在正式构建下全部通过，96 项单测、类型检查及发布策略测试通过，lint 无错误。页面测试不再依赖开发服务器 HMR，未删除或弱化业务断言。
+- 新域名配置的 OpenNext 打包、Wrangler upload dry-run 与绑定类型生成通过；本次使用 `CF_VALIDATION_ONLY=true` 的不可发布制品，没有上传新版或修改线上变量。
+- PR #7 尚未合并：上一提交的 iOS 审计被 `decode-uri-component <=0.5.0` 高危漏洞阻断，另有 Preview 审批和合并审批未完成。不能以 Web 本地通过代替这些门禁。
+- 正式库只读检查确认缺少 `registration_codes`、`password_reset_tokens`、`users.session_version` 和 `users.email_verified_at`。未执行正式迁移；先备份，验证全部当前迁移，再进行兼容升级。
+- Resend 登录、发信域名验证、正式发送凭据、支持邮箱和真实投递仍待完成。注册尚不可用；不能将配置齐备等同于收件成功。
+
+## 历史准备状态（2026-10-03）
 
 现有入口保留为 `https://zaichang.zaichang.workers.dev`。本次只完成本地构建、检查脚本和 CI 配置，**没有上传 Worker、创建 staging Worker、修改线上变量或执行线上迁移**。邮件账号、域名和真实发信仍未验收。目标配置不等于已上线状态。
 

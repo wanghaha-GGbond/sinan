@@ -35,7 +35,7 @@ export function CompanyDirectory() {
   }, [city, companies, query, sort])
 
   if (loading) {
-    return <CompanyListSkeleton />
+    return <CompanyListSkeleton variant="directory" />
   }
 
   if (error && !companies.length) {

@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 export const metadata: Metadata = { title: "隐私政策 | 在场" }
 
 export default function PrivacyPage() {
-  const supportEmail = process.env.SUPPORT_EMAIL?.trim() || "support@sinanapp.cn"
+  const supportEmail = process.env.SUPPORT_EMAIL?.trim()
   return (
     <article className="mx-auto max-w-3xl space-y-8 px-4 py-10 leading-7 sm:px-6">
       <header>

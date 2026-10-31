@@ -16,12 +16,15 @@ test("targets are explicit and secrets are never copied into Worker vars", () =>
   assert.equal(config.vars.NEXT_PUBLIC_PULSE_ENABLED, "true")
   assert.equal(JSON.stringify(config).includes("secret"), false)
 })
-test("production retains existing entry, disables demo and requires real mail configuration", () => {
+test("production uses the owned domain, retains the fallback, disables demo and requires real mail configuration", () => {
   assert.throws(() => releaseConfiguration("production", {}, sha))
   assert.throws(() => releaseConfiguration("production", { ...fixture, CF_VALIDATION_ONLY: "false" }, sha))
   const config = releaseConfiguration("production", fixture, sha)
   assert.equal(config.name, "zaichang")
-  assert.equal(config.vars.NEXT_PUBLIC_APP_URL, "https://zaichang.zaichang.workers.dev")
+  assert.equal(config.vars.NEXT_PUBLIC_APP_URL, "https://zaichang.space")
+  assert.equal(config.workers_dev, true)
+  assert.deepEqual(config.routes, [{ pattern: "zaichang.space", custom_domain: true, zone_name: "zaichang.space" }])
+  assert.equal(releaseConfiguration("staging", {}, sha).routes, undefined)
   assert.equal(config.vars.NEXT_PUBLIC_PULSE_ENABLED, "false")
   assert.equal(config.vars.MAIL_PROVIDER, "resend")
   assert.equal(config.preview_urls, false)
