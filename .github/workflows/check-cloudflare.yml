@@ -29,7 +29,7 @@ jobs:
       CF_MAIL_FROM_DOMAIN: mail.example.invalid
       CF_SUPPORT_EMAIL: support@example.invalid
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
         with:
           node-version: 22
