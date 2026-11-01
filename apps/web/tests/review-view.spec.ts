@@ -90,3 +90,8 @@ test("public questionnaire output drops unknown legacy fields", () => {
   )
   expect(view.questionnaire).toEqual({ salaryScore: 8, tags: ["成长快"] })
 })
+
+test("optional dimensions remain missing, never fabricated as zero or three", () => {
+  expect(toPublicReviewView(reviewRow()).ratingDimensions).toBeNull()
+  expect(toPublicReviewView(reviewRow({ ratingDimensions: { growth: 4 } })).ratingDimensions).toEqual({ growth: 4 })
+})

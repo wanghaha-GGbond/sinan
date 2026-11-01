@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { BadgeCheck, ChevronRight, MapPin, PenLine, ShieldCheck } from "lucide-react"
+import { ArrowUpRight, BadgeCheck, ChevronRight, MapPin, PenLine, ShieldCheck } from "lucide-react"
 import { notFound } from "next/navigation"
 
 import { CompanyDecisionInsights } from "@/components/company/company-decision-insights"
@@ -17,6 +17,7 @@ import type { CompanyListItem } from "@/lib/types"
 import { getDepartmentInsights, type DepartmentInsight } from "@/lib/server/department-insights"
 import { getPublicCompanyDetail, getPublicCompanyReviews } from "@/lib/server/public-company-data"
 import { mapPublicReview } from "@/lib/review-mappers"
+import { publicCompanyWebsite } from "@/lib/company-identity"
 
 export default async function CompanyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -38,6 +39,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
   const mappedReviews = reviewItems.map(mapPublicReview)
   const reviewCount = company.reviewCount ?? 0
   const displayScore = companyDisplayScore(company.directionScore, reviewCount)
+  const website = publicCompanyWebsite(company.website)
 
   if (company.reviewStatus === "pending_review") {
     return (
@@ -61,7 +63,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
         <span>{company.name}</span>
       </nav>
 
-      <header className="rounded-lg border border-border bg-card px-5 pt-5 shadow-sm sm:px-7 sm:pt-7">
+      <header className="rounded-lg border border-border bg-card px-5 pt-6 shadow-[0_2px_8px_rgba(20,29,34,0.04)] sm:px-8 sm:pt-8">
         <div className="flex flex-col gap-6 pb-6 lg:flex-row lg:items-start lg:justify-between lg:gap-10">
           <div className="flex min-w-0 items-start gap-4 sm:gap-5">
             <div className="grid size-14 shrink-0 place-items-center rounded-lg border border-primary-surface-border bg-primary-tint text-xl font-semibold text-primary-deep sm:size-16" aria-hidden="true">
@@ -75,6 +77,8 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
                 {company.size ? <span>{company.size}</span> : null}
                 {company.claimedStatus === "claimed" ? <span className="inline-flex items-center gap-1 text-primary-deep"><BadgeCheck className="size-3.5" />企业已认证</span> : null}
               </p>
+              {company.description ? <p className="mt-4 max-w-2xl break-words text-sm leading-6 text-foreground/80">{company.description}</p> : null}
+              {website ? <a href={website} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex min-h-11 items-center gap-1 text-sm font-medium text-primary-deep hover:underline">公司官网<ArrowUpRight className="size-4" aria-hidden="true" /></a> : null}
             </div>
           </div>
           <div className="flex flex-wrap items-end justify-between gap-5 border-t border-border pt-5 sm:justify-start lg:shrink-0 lg:justify-end lg:border-0 lg:pt-0">
@@ -85,11 +89,11 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
             <WebButton asChild variant="primary"><Link href={`/submit/review?companyId=${encodeURIComponent(company.id)}`}><PenLine className="size-4" aria-hidden="true" />写评价</Link></WebButton>
           </div>
         </div>
-        <p className="inline-flex items-center gap-1.5 pb-5 text-xs text-muted-foreground"><ShieldCheck className="size-4 shrink-0" aria-hidden="true" />匿名评价 · 人工审核 · {company.verifiedIdentityCount ?? 0} 位验证贡献者</p>
+        <p className="inline-flex items-center gap-1.5 pb-5 text-xs text-muted-foreground"><ShieldCheck className="size-4 shrink-0" aria-hidden="true" />{reviewCount > 0 ? `匿名评价 · 人工审核 · ${company.verifiedIdentityCount ?? 0} 位验证贡献者` : "公司公开资料 · 站内评价独立收集"}</p>
         <CompanySectionNav id={company.id} active="概览" />
       </header>
 
-      <div className="mt-8"><CompanyDecisionInsights company={company} /></div>
+      {reviewCount > 0 ? <div className="mt-8"><CompanyDecisionInsights company={company} /></div> : null}
 
       <div className="mt-8 grid gap-8 min-[1200px]:grid-cols-[minmax(0,1fr)_280px]">
         <div className="min-w-0 rounded-lg border border-border bg-card p-5 sm:p-7">
@@ -97,14 +101,14 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
           {mappedReviews.length === 0 ? (
             <div className="border-y border-border py-10">
               <h3 className="text-lg font-semibold">暂无评价</h3>
-              <p className="mt-2 text-sm text-muted-foreground">审核通过后展示。</p>
+              <Link href={`/submit/review?companyId=${encodeURIComponent(company.id)}`} className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary-deep hover:underline">分享你的经历<ArrowUpRight className="size-4" aria-hidden="true" /></Link>
             </div>
           ) : <div data-testid="company-review-feed" className="min-w-0"><CompanyReviewFeed companyId={company.id} reviews={mappedReviews} reviewCount={company.reviewCount ?? mappedReviews.length} previewLimit={1} /></div>}
-          <div className="mt-8">
+          {reviewCount > 0 ? <div className="mt-8">
             <DepartmentInsights insights={departmentInsights} />
             <PromiseRecords companyId={company.id} />
             <SentimentTrend companyId={company.id} companyName={company.name} />
-          </div>
+          </div> : null}
         </div>
         <CompanyEvidenceRail company={company} />
       </div>

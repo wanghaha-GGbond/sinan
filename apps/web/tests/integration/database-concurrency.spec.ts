@@ -13,6 +13,8 @@ import { moderationEvents } from "../../src/db/schema/moderation-events"
 import { reviews } from "../../src/db/schema/reviews"
 import { reviewUsefulVotes } from "../../src/db/schema/review-useful-votes"
 import { users } from "../../src/db/schema/users"
+import { departments } from "../../src/db/schema/departments"
+import { getDepartmentInsights } from "../../src/lib/server/department-insights"
 import {
   exerciseHeartPick,
   settleByHighestBid,
@@ -31,6 +33,7 @@ const createdCompanyIds: string[] = []
 const createdVerificationIds: string[] = []
 const createdAuctionIds: string[] = []
 const createdReviewIds: string[] = []
+const createdDepartmentIds: string[] = []
 
 async function createUser(label: string) {
   const [user] = await db
@@ -56,6 +59,10 @@ test.afterEach(async () => {
     createdAuctionIds.length = 0
   }
   if (createdCompanyIds.length > 0) {
+    if (createdDepartmentIds.length) {
+      await db.delete(departments).where(inArray(departments.id, createdDepartmentIds))
+      createdDepartmentIds.length = 0
+    }
     if (createdVerificationIds.length > 0) {
       await db
         .delete(emailVerificationCodes)
@@ -78,6 +85,26 @@ test.afterEach(async () => {
     await db.delete(users).where(inArray(users.id, createdUserIds))
     createdUserIds.length = 0
   }
+})
+
+test("quick reviews do not lower department rating anonymity or invent zero averages", async () => {
+  const [company] = await db.insert(companies).values({ name: `Quick ${randomUUID()}`, city: "上海", industry: "软件" }).returning()
+  createdCompanyIds.push(company.id)
+  const [department] = await db.insert(departments).values({ companyId: company.id, name: "工程", status: "active" }).returning()
+  createdDepartmentIds.push(department.id)
+  const complete = { pay_worth: 4, growth: 4, leader: 4, overtime_truth: 4, promise_delivery: 4 }
+  for (let index = 0; index < 6; index++) {
+    const authorUserId = await createUser(`quick-dimension-${index}`)
+    await db.update(users).set({ trustLevel: 1 }).where(eq(users.id, authorUserId))
+    const [review] = await db.insert(reviews).values({ companyId: company.id, departmentId: department.id, authorUserId,
+      authorLabel: "匿名同事", title: "测试标题", content: "隔离评分测试", status: "visible", directionScore: "8",
+      ratingDimensions: index < 4 ? complete : index === 4 ? { growth: 1 } : null,
+    }).returning()
+    createdReviewIds.push(review.id)
+  }
+  expect(await getDepartmentInsights(company.id)).toEqual([])
+  await db.update(reviews).set({ ratingDimensions: complete }).where(eq(reviews.id, createdReviewIds[4]))
+  expect(await getDepartmentInsights(company.id)).toMatchObject([{ verifiedAuthorCount: 5, reviewCount: 5, ratings: complete }])
 })
 
 test("an invite can be consumed by only one concurrent registration", async () => {
