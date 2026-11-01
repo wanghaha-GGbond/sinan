@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useMemo, useState } from "react"
+import { useMemo, useState, useSyncExternalStore } from "react"
 import { ArrowUpRight, ClipboardList, PenLine, ShieldCheck, Sparkles, UserRound } from "lucide-react"
 
 import { WebButton } from "@/components/ui/web-button"
@@ -11,7 +11,12 @@ import { CompanyCard } from "./company-card"
 import { CompanyListSkeleton } from "./company-list-skeleton"
 import { filterAndSortCompanies } from "@/lib/company-directory"
 
+const subscribeToHydration = () => () => {}
+const clientReady = () => true
+const serverReady = () => false
+
 export function HomeCompanyFeed() {
+  const hydrated = useSyncExternalStore(subscribeToHydration, clientReady, serverReady)
   const { data, isPending, error, refetch } = useCompanySearch()
   const [visibleCount, setVisibleCount] = useState(6)
   const [activeTab, setActiveTab] = useState<"recommended" | "latest">("recommended")
@@ -25,12 +30,12 @@ export function HomeCompanyFeed() {
 
   return (
     <div>
-      <div role="tablist" aria-label="推荐信息流" className="grid grid-cols-2 border-b border-border">
+      <div role="tablist" aria-label="推荐信息流" aria-busy={!hydrated} className="grid grid-cols-2 border-b border-border">
         {([["recommended", "推荐"], ["latest", "最新"]] as const).map(([value, label]) => (
           <button key={value} type="button" role="tab" id={`feed-tab-${value}`} aria-controls="company-feed-panel"
-            aria-selected={activeTab === value}
+            aria-selected={activeTab === value} disabled={!hydrated}
             onClick={() => { setActiveTab(value); setVisibleCount(6) }}
-            className={`relative min-h-12 text-sm font-semibold hover:bg-muted-hover focus-visible:outline-2 focus-visible:outline-ring ${activeTab === value ? "text-foreground after:absolute after:inset-x-[calc(50%-1.5rem)] after:bottom-0 after:h-0.5 after:bg-primary" : "text-muted-foreground"}`}>
+            className={`relative min-h-12 text-sm font-semibold hover:bg-muted-hover disabled:cursor-wait disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-ring ${activeTab === value ? "text-foreground after:absolute after:inset-x-[calc(50%-1.5rem)] after:bottom-0 after:h-0.5 after:bg-primary" : "text-muted-foreground"}`}>
             {label}
           </button>
         ))}

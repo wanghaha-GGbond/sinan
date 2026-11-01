@@ -70,6 +70,27 @@ test("quick review skips detailed ratings without submitting fabricated defaults
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
 })
 
+test("feed tabs cannot silently swallow clicks before hydration on a slow connection", async ({ page }) => {
+  let releaseScripts!: () => void
+  const scriptsReady = new Promise<void>((resolve) => { releaseScripts = resolve })
+  await page.route("**/_next/static/**/*.js", async (route) => {
+    await scriptsReady
+    await route.continue()
+  })
+  try {
+    await page.goto("/", { waitUntil: "commit" })
+    const latest = page.getByRole("tab", { name: "最新", exact: true })
+    await expect(latest).toBeVisible()
+    await expect(latest).toBeDisabled()
+    await expect(page.getByRole("tablist", { name: "推荐信息流" })).toHaveAttribute("aria-busy", "true")
+    releaseScripts()
+    await expect(latest).toBeEnabled()
+    await latest.click()
+    await expect(latest).toHaveAttribute("aria-selected", "true")
+    await expect(page.getByRole("tablist", { name: "推荐信息流" })).toHaveAttribute("aria-busy", "false")
+  } finally { releaseScripts() }
+})
+
 for (const width of [375, 390, 768, 1280, 1440]) {
   for (const [name, path, heading] of [
     ["home", "/", "找公司"],
