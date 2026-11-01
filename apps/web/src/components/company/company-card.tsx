@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowRight, MessageCircle } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 
 import { CompanyRating, companyDisplayScore } from "./company-rating"
 
@@ -19,7 +19,7 @@ export function CompanyCard({ company, variant = "directory" }: { company: Compa
     <Link
       href={`/company/${company.id}`}
       data-testid={isFeed ? "company-feed-item" : "company-directory-item"}
-      className={`group flex min-w-0 flex-col bg-card transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${isFeed ? "border-b border-border px-4 py-6 hover:bg-muted-hover sm:px-6" : "rounded-lg border border-border p-5 shadow-sm hover:border-primary-surface-border sm:p-6"}`}
+      className={`group flex min-w-0 flex-col bg-card transition-[border-color,box-shadow] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${isFeed ? "border-b border-border px-4 py-6 hover:bg-muted-hover sm:px-6" : "rounded-lg border border-border p-5 shadow-[0_2px_8px_rgba(20,29,34,0.04)] hover:border-primary-surface-border hover:shadow-sm sm:p-6"}`}
       aria-label={`查看${displayName}，${score === null ? "暂无评分" : `方向评分 ${score.toFixed(1)} 分（满分 10 分）`}，${reviewCount} 条评价`}
     >
       <div className="flex min-w-0 items-start gap-3 sm:gap-4">
@@ -27,7 +27,10 @@ export function CompanyCard({ company, variant = "directory" }: { company: Compa
           {displayName.slice(0, 1)}
         </span>
         <div className="min-w-0 flex-1">
-          <h3 className="break-words text-base font-semibold leading-snug text-foreground sm:text-lg">{displayName}</h3>
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+            <h3 className="min-w-0 max-w-full text-base font-semibold leading-snug text-foreground [overflow-wrap:anywhere] group-hover:underline sm:text-lg">{displayName}</h3>
+            <CompanyRating score={score} />
+          </div>
           <p className="mt-1 flex flex-wrap gap-x-2 text-xs text-muted-foreground sm:text-sm">
             <span>{company.industry}</span>
             <span aria-hidden="true">·</span>
@@ -37,10 +40,12 @@ export function CompanyCard({ company, variant = "directory" }: { company: Compa
         </div>
       </div>
       {summary ? <p className={`mt-4 break-words text-sm leading-6 text-foreground/80 ${isFeed ? "line-clamp-2" : "line-clamp-1"}`}>{summary}</p> : null}
-      <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-3 pt-5 text-xs text-muted-foreground">
-        <CompanyRating score={score} />
-        <span className="inline-flex items-center gap-1.5"><MessageCircle className="size-4" aria-hidden="true" />{reviewCount.toLocaleString()} 条评价</span>
-        <span className="ml-auto inline-flex min-h-11 items-center gap-1 rounded-full border border-border px-3 text-sm font-medium text-foreground group-hover:border-primary group-hover:text-primary-deep">查看公司<ArrowRight className="size-4" aria-hidden="true" /></span>
+      <div className="mt-auto flex flex-wrap items-end justify-between gap-4 pt-5">
+        <div className="flex items-start gap-6 text-foreground sm:gap-8">
+          <div><strong className="block text-base font-semibold tabular-nums">{reviewCount.toLocaleString()}</strong><span className="text-xs text-muted-foreground">条评价</span></div>
+          <div><strong className="block text-base font-semibold tabular-nums">{score === null ? "—" : score.toFixed(1)}</strong><span className="text-xs text-muted-foreground">综合评分 / 10</span></div>
+        </div>
+        <span className="inline-flex min-h-11 items-center gap-2 rounded-full border border-foreground px-4 text-sm font-semibold text-foreground group-hover:bg-foreground group-hover:text-background">查看公司<ArrowRight className="size-4" aria-hidden="true" /></span>
       </div>
     </Link>
   )

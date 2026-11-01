@@ -46,6 +46,8 @@ test.beforeAll(async () => {
     city: "上海",
     industry: "软件服务",
     reviewStatus: "reviewable",
+    website: "https://example.test/official",
+    description: "隔离公司资料展示验收，不代表真实公司。",
   }).returning({ id: companies.id })
   companyId = company.id
 })
@@ -127,13 +129,13 @@ test("邀请注册、评价审核公开和账号注销形成真实数据库闭�
       content: "这是一条用于 staging 发布验收的真实数据库评价，验证提交、审核、公开与注销流程。",
       directionScore: 8,
       jobTitle: "测试工程师",
-      ratingDimensions: { pay_worth: 4, growth: 4, leader: 4, overtime_truth: 3, promise_delivery: 4 },
     },
   })
   expect(reviewResponse.status()).toBe(201)
   const submitted = await reviewResponse.json()
   reviewId = submitted.review.id
   expect(submitted.review.status).toBe("pending_review")
+  expect(submitted.review.ratingDimensions).toBeNull()
 
   const queueResponse = await request.get("/api/moderation/reviews", {
     headers: { Authorization: `Bearer ${moderatorToken}`, "X-Sinan-Client": "ios" },

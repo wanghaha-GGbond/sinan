@@ -42,7 +42,10 @@ export async function getDepartmentInsights(
         and(
           eq(reviews.departmentId, departments.id),
           inArray(reviews.status, ["visible", "limited_visible"]),
-          isNull(reviews.deletedAt)
+          isNull(reviews.deletedAt),
+          // Optional quick reviews must not manufacture zero averages or
+          // lower the five-author privacy threshold for any dimension.
+          sql`${reviews.ratingDimensions} ?& array['pay_worth', 'growth', 'leader', 'overtime_truth', 'promise_delivery']`
         )
       )
       .innerJoin(

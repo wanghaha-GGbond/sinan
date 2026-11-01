@@ -2,6 +2,7 @@ import Link from "next/link"
 import { ArrowUpRight, BrainCircuit, ShieldCheck } from "lucide-react"
 
 import type { CompanyListItem } from "@/lib/types"
+import { CompanyIdentityFacts } from "./company-identity-facts"
 
 export function CompanyEvidenceRail({ company }: { company: CompanyListItem }) {
   const distribution = company.scoreDistribution ?? []
@@ -13,6 +14,7 @@ export function CompanyEvidenceRail({ company }: { company: CompanyListItem }) {
 
   return (
     <aside className="min-w-0 self-start border-t border-border min-[1200px]:border-l min-[1200px]:border-t-0 min-[1200px]:pl-6" aria-label="公司证据摘要">
+      <CompanyIdentityFacts company={company} />
       <section className="border-b border-border py-6 min-[1200px]:pt-0">
         <h2 className="text-lg font-semibold">评分分布</h2>
         {hasDistribution ? (

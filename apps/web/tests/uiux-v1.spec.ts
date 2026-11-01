@@ -15,6 +15,61 @@ test("Zaichang uses Z across navigation and install icons without publishing the
   }
 })
 
+for (const width of [390, 1440]) {
+  test(`friend PR6 homepage retains feed tabs, original cards and newly listed rail ${width}px`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.route("**/api/companies/search**", (route) => route.fulfill({ json: { companies: [
+      { id: "old-rated", name: "评价最多公司", city: "上海", industry: "软件", reviewCount: 20, directionScore: 8, createdAt: "2026-01-01" },
+      { id: "new-unrated", name: "最新收录公司", city: "北京", industry: "科技", reviewCount: 0, directionScore: 9, createdAt: "2026-11-01" },
+    ] } }))
+    await page.goto("/")
+    const feed = page.getByRole("tabpanel")
+    await expect(feed.getByTestId("company-feed-item").first()).toContainText("评价最多公司")
+    await expect(feed.getByTestId("company-feed-item").first()).toContainText("综合评分 / 10")
+    await page.getByRole("tab", { name: "最新", exact: true }).click()
+    await expect(page.getByRole("tab", { name: "最新", exact: true })).toHaveAttribute("aria-selected", "true")
+    await expect(feed.getByTestId("company-feed-item").first()).toContainText("最新收录公司")
+    await expect(feed.getByTestId("company-feed-item").first()).toContainText("暂无评分")
+    await page.getByRole("tab", { name: "推荐", exact: true }).click()
+    await expect(feed.getByTestId("company-feed-item").first()).toContainText("评价最多公司")
+    if (width >= 1024) {
+      const rail = page.getByRole("region", { name: "新收录公司", exact: true })
+      await expect(rail.getByRole("link", { name: /最新收录公司/ })).toBeVisible()
+      await expect(rail.getByRole("link", { name: /评价最多公司/ })).toHaveCount(0)
+    }
+    await expect(page.getByRole("heading", { name: "公司速览" })).toHaveCount(0)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    await page.screenshot({ path: testInfo.outputPath(`friend-home-${width}.png`), fullPage: true })
+  })
+}
+
+test("quick review skips detailed ratings without submitting fabricated defaults", async ({ page }) => {
+  const company = { id: "quick-company", name: "快速评价公司", city: "北京", industry: "软件", reviewStatus: "reviewable" }
+  let submitted: Record<string, unknown> | undefined
+  await page.route("**/api/auth/me", (route) => route.fulfill({ json: { user: { id: "fixture", role: "user", displayName: "测试" } } }))
+  await page.route("**/api/companies/quick-company", (route) => route.fulfill({ json: { company } }))
+  await page.route("**/api/companies/quick-company/departments", (route) => route.fulfill({ json: { departments: [] } }))
+  await page.route("**/api/reviews", (route) => {
+    submitted = route.request().postDataJSON()
+    return route.fulfill({ status: 503, json: { error: "隔离测试提交失败" } })
+  })
+  await page.goto("/submit/review?companyId=quick-company&directionScore=0")
+  await page.getByLabel("岗位", { exact: false }).fill("工程师")
+  await page.getByLabel("工作城市", { exact: false }).fill("杭州")
+  await page.getByTestId("company-step-next-button").click()
+  await expect(page.getByText("补充分项评分（选填）", { exact: true })).toBeVisible()
+  await expect(page.getByLabel("薪酬值得", { exact: true })).toBeHidden()
+  await page.getByTestId("review-next").click()
+  await page.getByTestId("review-title-input").fill("这是一条真实经历的标题")
+  await page.getByLabel("评价内容", { exact: false }).fill("这是一条足够长的隔离测试评价，验证快速评价不会把没有回答的分项评分或者面试难度默认为真实评分。")
+  await page.getByRole("button", { name: /匿名安全检查/ }).click()
+  await page.getByTestId("submit-review-button").click()
+  await expect(page.locator("form").getByRole("alert")).toContainText("隔离测试提交失败")
+  expect(submitted).toMatchObject({ directionScore: 0, city: "杭州", ratingDimensions: {} })
+  expect(submitted?.questionnaire).not.toHaveProperty("interviewDifficulty")
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+})
+
 for (const width of [375, 390, 768, 1280, 1440]) {
   for (const [name, path, heading] of [
     ["home", "/", "找公司"],
@@ -28,7 +83,7 @@ for (const width of [375, 390, 768, 1280, 1440]) {
       await page.goto(path)
       await expect(page.getByRole("heading", { name: heading, exact: true })).toBeVisible()
       if (name !== "detail") {
-        await expect(page.getByRole("link", { name: /查看北辰/ })).toBeVisible()
+        await expect(page.getByTestId(name === "home" ? "company-feed-item" : "company-directory-item").filter({ hasText: "北辰" }).first()).toBeVisible()
         await expect(page.getByRole("link", { name: "搜索公司", exact: true })).toHaveCount(0)
       } else {
         await expect(page.getByRole("navigation", { name: "公司信息导航" }).getByRole("link", { name: "评分", exact: true })).toHaveAttribute("href", "/company/northstar-tech/ratings")

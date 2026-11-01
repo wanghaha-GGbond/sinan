@@ -62,7 +62,7 @@ export function CompanyDirectory() {
         </div>
       </div>
 
-      <p className="py-5 text-sm text-muted-foreground" aria-live="polite">找到 {filteredCompanies.length} 家公司</p>
+      <p className="py-5 text-sm text-muted-foreground" aria-live="polite">找到 {filteredCompanies.length} 家公司 · {filteredCompanies.filter((company) => (company.reviewCount ?? 0) > 0).length} 家有评价</p>
       {filteredCompanies.length ? (
         <div data-testid="company-directory-grid" className="grid gap-3 sm:gap-4 lg:grid-cols-2">
           {filteredCompanies.map((company) => (
