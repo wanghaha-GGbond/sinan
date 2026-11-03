@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test"
 
-const pulseNoticeText = "体验版 · 周报与公司趋势为示例数据"
+const pulseNoticeText = "个人记录仅自己可见；日期按北京时间，每天可更新。"
 // Streaming can temporarily leave a duplicate in a hidden React S:* container
 // outside the app shell. Assert the real main landmark, not that transport copy.
 const pulseNotice = (page: Page) => page.getByRole("main").getByText(pulseNoticeText, { exact: true })
@@ -55,14 +55,22 @@ test("research lists come first while methodology remains expandable", async ({ 
   await expect(details.getByText(/不代表每个部门、城市或岗位的实际体验/)).toBeVisible()
 })
 
-test("register keeps its privacy notice and Pulse keeps its example-data label", async ({ page }) => {
+test("register and real personal Pulse retain their privacy notices without sample statistics", async ({ page }) => {
   await page.route("**/api/**", (route) => route.fulfill({ json: { user: null, inviteRequired: true } }))
   await page.goto("/register")
   await expect(page.getByRole("heading", { name: "注册在场" })).toBeVisible()
   await expect(page.getByLabel("邀请码", { exact: false })).toBeVisible()
   await expect(page.getByText(/你的身份信息不会向公司方公开/)).toBeVisible()
   await expect(page.getByText("成为指路人，分享真实体验")).toHaveCount(0)
+  await page.route("**/api/auth/me", route => route.fulfill({ json: { user: { id: "privacy-fixture", role: "user" } } }))
+  await page.route("**/api/me/pulse", route => route.fulfill({ json: {
+    today: "2026-11-03", records: [], summary: { days: 0, score: null, workMinutes: null },
+  } }))
   await page.goto("/pulse")
   await expect(pulseNotice(page)).toHaveCount(1)
   await expect(pulseNotice(page)).toBeVisible()
+  await expect(page.getByText("还没有记录", { exact: true })).toBeVisible()
+  await expect(page.getByRole("button", { name: "分享我的周报" })).toBeDisabled()
+  await expect(page.getByText("体验版 · 周报与公司趋势为示例数据", { exact: true })).toHaveCount(0)
+  await expect(page.getByText("47.5h", { exact: true })).toHaveCount(0)
 })
