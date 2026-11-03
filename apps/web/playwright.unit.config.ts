@@ -24,6 +24,7 @@ export default defineConfig({
     "launch-scope.spec.ts",
     "launch-scope-response.spec.ts",
     "pulse-feature.spec.ts",
+    "pulse-data.spec.ts",
     "production-boundary.spec.ts",
     "navigation.spec.ts",
     "research-report.spec.ts",

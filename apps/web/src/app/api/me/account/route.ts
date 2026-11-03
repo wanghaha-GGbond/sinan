@@ -2,6 +2,7 @@ import { and, count, eq, inArray, or } from "drizzle-orm"
 import { NextRequest, NextResponse } from "next/server"
 
 import { users } from "@/db/schema/users"
+import { pulseCheckins } from "@/db/schema/pulse-checkins"
 import { passwordResetTokens } from "@/db/schema/password-reset-tokens"
 import { anonymousProfiles } from "@/db/schema/anonymous-profiles"
 import { auctionBids, auctions } from "@/db/schema/auctions"
@@ -54,6 +55,7 @@ export async function DELETE(request: NextRequest) {
     const deletedUser = await db.transaction(async (tx) => {
       await tx.select({ id: users.id }).from(users).where(eq(users.id, authUser.userId)).for("update")
       await tx.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, authUser.userId))
+      await tx.delete(pulseCheckins).where(eq(pulseCheckins.userId, authUser.userId))
       const profileRows = await tx
         .select({ id: anonymousProfiles.id })
         .from(anonymousProfiles)
