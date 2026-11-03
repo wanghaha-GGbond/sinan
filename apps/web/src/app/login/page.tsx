@@ -95,9 +95,9 @@ export default function LoginPage() {
   }
 
   const inputBase =
-    "w-full rounded-2xl border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-all focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+    "w-full rounded-2xl border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-all focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
   const inputNormal = "border-border focus-visible:border-primary"
-  const inputError = "border-destructive-bright focus-visible:border-destructive-bright focus-visible:ring-destructive-bright/30"
+  const inputError = "border-destructive-bright focus-visible:border-destructive-bright focus-visible:ring-destructive-bright/30 dark:border-destructive dark:focus-visible:border-destructive dark:focus-visible:ring-destructive/30"
 
   return (
     <div className="flex min-h-[80vh] items-center justify-center px-4">
@@ -121,7 +121,7 @@ export default function LoginPage() {
             aria-pressed={mode === "email"}
             className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition-all ${
               mode === "email"
-                ? "bg-white text-foreground shadow-[0_2px_0_rgba(17,24,39,0.06)]"
+                ? "bg-card text-foreground shadow-[0_2px_0_rgba(17,24,39,0.06)]"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -137,7 +137,7 @@ export default function LoginPage() {
             aria-pressed={mode === "phone"}
             className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition-all ${
               mode === "phone"
-                ? "bg-white text-foreground shadow-[0_2px_0_rgba(17,24,39,0.06)]"
+                ? "bg-card text-foreground shadow-[0_2px_0_rgba(17,24,39,0.06)]"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -169,7 +169,7 @@ export default function LoginPage() {
                 className={`${inputBase} ${emailError ? inputError : inputNormal}`}
               />
               {emailError ? (
-                <p id="login-email-error" className="mt-1.5 text-xs text-destructive-bright">
+                <p id="login-email-error" className="mt-1.5 text-xs text-destructive-bright dark:text-destructive">
                   {emailError}
                 </p>
               ) : null}
@@ -197,7 +197,7 @@ export default function LoginPage() {
                 className={`${inputBase} ${phoneError ? inputError : inputNormal}`}
               />
               {phoneError ? (
-                <p id="login-phone-error" className="mt-1.5 text-xs text-destructive-bright">
+                <p id="login-phone-error" className="mt-1.5 text-xs text-destructive-bright dark:text-destructive">
                   {phoneError}
                 </p>
               ) : null}
@@ -226,7 +226,7 @@ export default function LoginPage() {
               className={`${inputBase} ${passwordError ? inputError : inputNormal}`}
             />
             {passwordError ? (
-              <p id="login-password-error" className="mt-1.5 text-xs text-destructive-bright">
+              <p id="login-password-error" className="mt-1.5 text-xs text-destructive-bright dark:text-destructive">
                 {passwordError}
               </p>
             ) : null}
@@ -237,7 +237,7 @@ export default function LoginPage() {
           </div>
 
           {error ? (
-            <p id="login-error" role="alert" className="rounded-xl bg-destructive-bright/10 px-4 py-2.5 text-sm text-destructive-bright">
+            <p id="login-error" role="alert" className="rounded-xl bg-destructive-bright/10 px-4 py-2.5 text-sm text-destructive-bright dark:bg-destructive/10 dark:text-destructive">
               {error}
             </p>
           ) : null}
