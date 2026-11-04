@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test"
 for (const theme of ["light", "dark"]) {
   test(`Pulse company switching preserves privacy gaps and fits mobile in ${theme}`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 375, height: 850 })
-    await page.addInitScript(theme => localStorage.setItem("theme", theme), theme)
+    await page.addInitScript(theme => localStorage.setItem("sinan:theme", theme), theme)
     await page.route("**/api/auth/me", route => route.fulfill({ json: { user: { id: "pulse-ui", role: "user" } } }))
     const summary = { days: 0, score: null, workMinutes: null, energyScore: null, calmScore: null, averageEndMinute: null, latestEndMinute: null }
     await page.route("**/api/me/pulse", route => route.fulfill({ json: { today: "2026-11-04", records: [], summary, week: summary, month: summary, eligibleCompanies: [] } }))
@@ -15,6 +15,7 @@ for (const theme of ["light", "dark"]) {
       return route.fulfill({ json: { company: { id: second ? "second" : "first" }, from: "2026-10-21", through: "2026-11-03", minimumParticipants: 30, points: second ? [{ day: "2026-11-01", score: 75, participants: "30–49" }, { day: "2026-11-03", score: 80, participants: "30–49" }] : [] } })
     })
     await page.goto("/pulse")
+    await expect.poll(() => page.locator("html").evaluate(element => element.classList.contains("dark"))).toBe(theme === "dark")
     await expect(page.getByText("样本积累中")).toBeVisible()
     await page.getByLabel("查看公司").selectOption("second")
     const panel = page.getByTestId("company-pulse-panel")
