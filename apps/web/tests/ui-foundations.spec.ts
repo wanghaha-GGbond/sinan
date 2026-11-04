@@ -51,7 +51,7 @@ test("directory filters and handles missing scores without inventing stars", asy
   const empty = page.getByRole("link", { name: /查看暂无样本科技/ })
   await expect(empty).toContainText("暂无评分")
   await expect(empty.locator("svg.lucide-star")).toHaveCount(0)
-  await expect(page.getByRole("link", { name: /查看已评价科技/ })).toContainText("4.0")
+  await expect(page.getByRole("link", { name: /查看已评价科技/ })).toContainText("8.0")
   await page.getByLabel("城市", { exact: false }).selectOption("杭州")
   await expect(page.getByRole("link", { name: /查看已评价科技/ })).toHaveCount(0)
   await page.getByRole("textbox", { name: "搜索公司", exact: true }).fill("不存在")
@@ -64,6 +64,12 @@ test("directory filters and handles missing scores without inventing stars", asy
 
 test("recommendation timeline switches order and opens a company", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
+  // Dates are explicit: current sorting no longer invents recency from IDs.
+  await page.route("**/api/companies/search**", route => route.fulfill({ json: { companies: [
+    { id: "northstar-tech", name: "北辰智造科技", shortName: "北辰智造", city: "上海", industry: "软件", reviewCount: 20, directionScore: 8, createdAt: "2026-01-01" },
+    { id: "jiangliu-tech", name: "江流数科", city: "北京", industry: "软件", reviewCount: 1, directionScore: 7, createdAt: "2026-11-01" },
+    { id: "other-fixture", name: "测试公司", city: "深圳", industry: "软件", reviewCount: 2, directionScore: 6, createdAt: "2026-02-01" },
+  ] } }))
   await page.goto("/")
   const feed = page.getByTestId("home-recommend-feed")
   await expect(feed.getByTestId("company-feed-item")).toHaveCount(3)

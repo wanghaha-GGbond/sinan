@@ -94,5 +94,6 @@ __pycache__/
 # cloudflare workers build output (opennextjs adapter)
 /apps/web/.open-next/
 /apps/web/.wrangler/
+/apps/web/.release/
 **/.dev.vars
 **/.dev.vars.*

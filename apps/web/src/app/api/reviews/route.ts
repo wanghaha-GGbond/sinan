@@ -134,7 +134,7 @@ const reviewSubmissionSchema = z.object({
   city: z.string().trim().max(120).nullable().optional(),
   departmentHint: z.string().trim().max(120).nullable().optional(),
   questionnaire: questionnaireSchema.nullable().optional(),
-  ratingDimensions: reviewRatingDimensionsSchema,
+  ratingDimensions: reviewRatingDimensionsSchema.optional(),
   officeExperienceScore: score10.nullable().optional(),
 }).strict()
 

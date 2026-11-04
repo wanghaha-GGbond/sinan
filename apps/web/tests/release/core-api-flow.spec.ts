@@ -1,16 +1,23 @@
 import { randomUUID } from "node:crypto"
 
-import { expect, test } from "@playwright/test"
+import { expect, test } from "../release-fixture"
 import { eq, inArray } from "drizzle-orm"
 
-import { db, pool } from "../../src/db/client"
+import { db } from "../../src/db/client"
 import { anonymousProfiles } from "../../src/db/schema/anonymous-profiles"
 import { companies } from "../../src/db/schema/companies"
 import { invites } from "../../src/db/schema/invites"
 import { moderationEvents } from "../../src/db/schema/moderation-events"
 import { reviews } from "../../src/db/schema/reviews"
+import { reviewUsefulVotes } from "../../src/db/schema/review-useful-votes"
 import { users } from "../../src/db/schema/users"
 import { hashPassword, signToken } from "../../src/lib/server/auth"
+import { issueRegistrationCode } from "../../src/lib/server/registration-codes"
+import { releaseTestProxyHeaders } from "../../scripts/release-network.mjs"
+
+// Simulate a trusted proxy on the local test server; each run owns its bucket.
+const testClientId = randomUUID().replaceAll("-", "")
+test.use({ extraHTTPHeaders: releaseTestProxyHeaders(testClientId, process.env.RELEASE_BASE_URL) })
 
 let inviterId = ""
 let moderatorId = ""
@@ -39,32 +46,61 @@ test.beforeAll(async () => {
     city: "上海",
     industry: "软件服务",
     reviewStatus: "reviewable",
+    website: "https://example.test/official",
+    description: "隔离公司资料展示验收，不代表真实公司。",
   }).returning({ id: companies.id })
   companyId = company.id
 })
 
 test.afterAll(async () => {
   if (reviewId) await db.delete(moderationEvents).where(eq(moderationEvents.entityId, reviewId))
+  if (reviewId) await db.delete(reviewUsefulVotes).where(eq(reviewUsefulVotes.reviewId, reviewId))
   if (reviewId) await db.delete(reviews).where(eq(reviews.id, reviewId))
   if (registeredUserId) await db.delete(anonymousProfiles).where(eq(anonymousProfiles.userId, registeredUserId))
   await db.delete(invites).where(eq(invites.code, inviteCode))
   if (companyId) await db.delete(companies).where(eq(companies.id, companyId))
   const ids = [inviterId, moderatorId, registeredUserId].filter(Boolean)
   if (ids.length) await db.delete(users).where(inArray(users.id, ids))
-  await pool.end()
 })
 
 test("邀请注册、评价审核公开和账号注销形成真实数据库闭环", async ({ request }) => {
+  // This story performs many sequential API/DB round trips. Remote Neon
+  // latency is not comparable with CI's loopback PostgreSQL container.
+  if (process.env.DATABASE_ADAPTER === "neon") test.setTimeout(180_000)
   const email = `release-user-${randomUUID()}@integration.sinan.test`
+  let verificationCode = ""
+  // Isolated release fixtures capture delivery in memory; production delivery
+  // remains enabled only through the actual provider, never a fixed-code bypass.
+  await issueRegistrationCode(email, async (message) => { verificationCode = message.text.match(/\d{6}/)![0] })
   const registerResponse = await request.post("/api/auth/register", {
     headers: { "X-Sinan-Client": "ios" },
-    data: { email, password: "ReleaseTest123!", inviteCode },
+    data: { email, verificationCode, password: "ReleaseTest123!", inviteCode },
   })
   expect(registerResponse.status()).toBe(201)
   const registration = await registerResponse.json()
   registeredUserId = registration.user.id
   const userToken = registration.token as string
   expect(userToken).toBeTruthy()
+  const [verified] = await db.select({ emailVerifiedAt: users.emailVerifiedAt, trustLevel: users.trustLevel })
+    .from(users).where(eq(users.id, registeredUserId))
+  expect(verified.emailVerifiedAt).not.toBeNull()
+  expect(verified.trustLevel).toBe(0)
+
+  const profileResponse = await request.patch("/api/me/profile", {
+    headers: { Authorization: `Bearer ${userToken}`, "X-Sinan-Client": "ios" },
+    data: { displayName: "测试昵称", jobBand: null, yearsOfExperience: null, highlightMoment: "仅本人可见的待审核高光", declinedOffer: null },
+  })
+  expect(profileResponse.status()).toBe(200)
+  const ownProfile = await request.get("/api/me", { headers: { Authorization: `Bearer ${userToken}` } })
+  expect(ownProfile.status()).toBe(200)
+  const ownData = await ownProfile.json()
+  expect(ownData.user.displayName).toBe("测试昵称")
+  expect(ownData.user.highlightMoment).toBe("仅本人可见的待审核高光")
+  const publicProfile = await request.get(`/api/users/${registeredUserId}`)
+  expect(publicProfile.status()).toBe(200)
+  const publicData = await publicProfile.json()
+  expect(publicData.highlightMoment).toBeNull()
+  expect(publicData).not.toHaveProperty("email")
 
   const loginResponse = await request.post("/api/auth/login", {
     headers: { "X-Sinan-Client": "ios" },
@@ -93,13 +129,13 @@ test("邀请注册、评价审核公开和账号注销形成真实数据库闭�
       content: "这是一条用于 staging 发布验收的真实数据库评价，验证提交、审核、公开与注销流程。",
       directionScore: 8,
       jobTitle: "测试工程师",
-      ratingDimensions: { pay_worth: 4, growth: 4, leader: 4, overtime_truth: 3, promise_delivery: 4 },
     },
   })
   expect(reviewResponse.status()).toBe(201)
   const submitted = await reviewResponse.json()
   reviewId = submitted.review.id
   expect(submitted.review.status).toBe("pending_review")
+  expect(submitted.review.ratingDimensions).toBeNull()
 
   const queueResponse = await request.get("/api/moderation/reviews", {
     headers: { Authorization: `Bearer ${moderatorToken}`, "X-Sinan-Client": "ios" },

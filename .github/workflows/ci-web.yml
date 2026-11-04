@@ -1,13 +1,8 @@
 name: Web CI
 
 on:
+  # Required checks must report on every PR, including iOS/docs-only changes.
   pull_request:
-    paths:
-      - "apps/web/**"
-      - "packages/shared/**"
-      - "package.json"
-      - "package-lock.json"
-      - ".github/workflows/ci-web.yml"
   push:
     branches: [main]
     paths:
@@ -15,6 +10,7 @@ on:
       - "packages/shared/**"
       - "package.json"
       - "package-lock.json"
+      - "patches/**"
       - ".github/workflows/ci-web.yml"
 
 permissions:
@@ -64,8 +60,35 @@ jobs:
       - run: npm run lint --workspace=@sinan/web
       - run: npm run typecheck --workspace=@sinan/web
       - run: npm run test:unit --workspace=@sinan/web
+      - name: Preview access and staging mail policies
+        run: node --test apps/web/scripts/vercel-access.test.mjs apps/web/scripts/vercel-install.test.mjs apps/web/scripts/release-vercel-auth.test.mjs apps/web/scripts/staging-mail.test.mjs apps/web/scripts/registration-configuration.test.mjs
       - run: npm run research:test:algorithm --workspace=@sinan/web
       - run: npm run build --workspace=@sinan/web
+
+  uiux:
+    name: Web UIUX V1 regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Isolated fixture UI and navigation checks (not a deployed Preview)
+        run: npm run test:uiux --workspace=@sinan/web
+      - name: Community API interactions (isolated fixtures only)
+        run: npm exec --workspace=@sinan/web -- playwright test --config=playwright.community-ui.config.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: uiux-v1-${{ github.sha }}
+          path: |
+            apps/web/test-results/uiux-v1
+            apps/web/test-results/community-ui
+          retention-days: 30
 
   postgres:
     name: PostgreSQL 16 migrations and core flows
@@ -104,4 +127,6 @@ jobs:
         run: npm run db:migrate --workspace=@sinan/web
       - run: npm run test:integration --workspace=@sinan/web
       - run: npx playwright install --with-deps chromium
+      - name: Preview routed request teardown regression
+        run: npm exec --workspace=@sinan/web -- playwright test --config=playwright.preview-lifecycle.config.ts
       - run: npm run test:e2e:release --workspace=@sinan/web

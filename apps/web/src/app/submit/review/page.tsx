@@ -24,6 +24,7 @@ import { buildQuestionnaireSession } from "@/lib/questionnaire/question-bank"
 import { searchCompanies, getCompany } from "@/lib/api/companies"
 import { useAuth } from "@/lib/auth-context"
 import { withNext } from "@/lib/navigation"
+import { ratingDraftScore } from "@/lib/rating-navigation"
 import type { Company, CompanyListItem } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -40,18 +41,19 @@ const reviewSchema = z.object({
   companyName: z.string().min(2, "请填写公司名称"),
   relation: z.enum(relations),
   role: z.string().min(2, "请填写岗位"),
+  baseCity: z.string().trim().max(120).optional(),
   departmentId: z.string().optional(),
   departmentHint: z.string().max(60, "部门名称不能超过 60 字").optional(),
   title: z.string().min(6, "标题至少 6 个字"),
   content: z.string().min(30, "评价至少 30 个字，避免过短结论"),
   salaryRange: z.string().optional(),
   directionScore: z.number().min(0).max(10),
-  payWorth: z.number().int().min(1).max(5),
-  growthRating: z.number().int().min(1).max(5),
-  leaderRating: z.number().int().min(1).max(5),
-  overtimeTruth: z.number().int().min(1).max(5),
-  promiseDelivery: z.number().int().min(1).max(5),
-  interviewDifficulty: z.number().min(0).max(10),
+  payWorth: z.number().int().min(1).max(5).optional(),
+  growthRating: z.number().int().min(1).max(5).optional(),
+  leaderRating: z.number().int().min(1).max(5).optional(),
+  overtimeTruth: z.number().int().min(1).max(5).optional(),
+  promiseDelivery: z.number().int().min(1).max(5).optional(),
+  interviewDifficulty: z.number().min(0).max(10).optional(),
   salaryScore: z.number().min(1).max(10).optional(),
   growthScore: z.number().min(1).max(10).optional(),
   workLifeBalanceScore: z.number().min(1).max(10).optional(),
@@ -306,18 +308,13 @@ function SubmitReviewForm() {
       companyName: "",
       relation: "离职员工",
       role: "",
+      baseCity: "",
       departmentId: "",
       departmentHint: "",
       title: "",
       content: "",
       salaryRange: "",
-      directionScore: 7,
-      payWorth: 3,
-      growthRating: 3,
-      leaderRating: 3,
-      overtimeTruth: 3,
-      promiseDelivery: 3,
-      interviewDifficulty: 5,
+      directionScore: ratingDraftScore(searchParams.get("directionScore")) ?? 7,
       safetyChecked: false,
     },
   })
@@ -584,7 +581,8 @@ function SubmitReviewForm() {
         jobTitle: values.role,
         departmentId: values.departmentId || undefined,
         departmentHint: values.departmentId ? undefined : values.departmentHint,
-        city: companySelection.selectedCompany.city,
+        city: values.baseCity || companySelection.selectedCompany.city,
+        employmentStatus: values.relation,
         ratingDimensions: {
           pay_worth: values.payWorth,
           growth: values.growthRating,
@@ -922,6 +920,10 @@ function SubmitReviewForm() {
                     />
                     {errors.role ? <p className="text-sm text-destructive">{errors.role.message}</p> : null}
                   </div> : null}
+                  {!addCompanyMode ? <div className="flex flex-col gap-2">
+                    <Label htmlFor="baseCity">工作城市（选填）</Label>
+                    <Input id="baseCity" placeholder="例如：上海" {...register("baseCity")} />
+                  </div> : null}
                   {companySelection.mode === "adding" ? (
                     <Card className="md:col-span-2 web-surface web-surface-base border border-border/60">
                       <CardHeader>
@@ -1115,7 +1117,9 @@ function SubmitReviewForm() {
                       />
                     )}
                   />
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  <details className="rounded-lg border border-border p-4">
+                  <summary className="min-h-11 cursor-pointer text-sm font-semibold">补充分项评分（选填）</summary>
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
                     <div className="flex flex-col gap-2">
                       <Label htmlFor="departmentId">部门</Label>
                       <select
@@ -1156,10 +1160,11 @@ function SubmitReviewForm() {
                           <label className="flex flex-col gap-2 text-sm font-medium text-foreground">
                             {label}
                             <select
-                              value={field.value}
-                              onChange={(event) => field.onChange(Number(event.target.value))}
+                              value={field.value ?? ""}
+                              onChange={(event) => field.onChange(event.target.value === "" ? undefined : Number(event.target.value))}
                               className="h-11 border border-input bg-card px-3 text-sm outline-none focus-visible:border-ring"
                             >
+                              <option value="">跳过</option>
                               {[1, 2, 3, 4, 5].map((score) => (
                                 <option key={score} value={score}>
                                   {score} / 5
@@ -1171,22 +1176,17 @@ function SubmitReviewForm() {
                       />
                     ))}
                   </div>
-                  <Controller
-                    control={control}
-                    name="interviewDifficulty"
-                    render={({ field }) => (
-                      <RatingSlider
-                        label="面试难度"
-                        description="0 代表轻松，10 代表高强度或流程复杂。"
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
-                    )}
-                  />
+                  <label className="flex flex-col gap-2 text-sm font-medium">面试难度
+                    <select className="min-h-11 border border-input bg-card px-3" {...register("interviewDifficulty", { setValueAs: (value: string) => value === "" ? undefined : Number(value) })}>
+                      <option value="">跳过</option>
+                      {Array.from({ length: 11 }, (_, score) => <option key={score} value={score}>{score} / 10</option>)}
+                    </select>
+                  </label>
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="salaryRange">薪资区间，可跳过</Label>
                     <Input id="salaryRange" placeholder="例如：25k-35k x 14" {...register("salaryRange")} />
                   </div>
+                  </details>
                 </>
               ) : null}
 

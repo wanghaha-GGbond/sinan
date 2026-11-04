@@ -4,6 +4,11 @@
 
 ## 阅读顺序
 
+当前海外 Web 上线进度与验收：[web-release-progress.md](web-release-progress.md)。
+当前固化的前端基线：[UI v0.0.1](archive/ui-v0.0.1.md)（UI 已冻结，生产尚未发布）。
+邮箱验证码注册及个人主页增量：[邮箱注册验收](email-registration.md)。
+形成过程与详细规格：[初版 PRD](archive/frontend-v1/PRD.md)（保留历史 RC1 命名）。
+
 | # | 文档 | 内容 | 读者 |
 |---|---|---|---|
 | 01 | [01-vision.md](01-vision.md) | 产品定位、核心循环、取舍逻辑、已拍板决议 | 所有人，先读 |

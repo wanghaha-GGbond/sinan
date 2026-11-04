@@ -1,6 +1,22 @@
 import { expect, test } from "@playwright/test"
 
 import { submitReviewData } from "../src/lib/data/reviews"
+import { reviewRatingDimensionsSchema } from "../src/lib/review-ratings"
+import { publicCompanyWebsite } from "../src/lib/company-identity"
+
+test("quick ratings accept missing dimensions without inventing scores and reject invalid values", () => {
+  expect(reviewRatingDimensionsSchema.parse({})).toEqual({})
+  expect(reviewRatingDimensionsSchema.parse({ growth: 4 })).toEqual({ growth: 4 })
+  for (const value of [0, 6, 2.5, "3", null]) expect(reviewRatingDimensionsSchema.safeParse({ growth: value }).success).toBe(false)
+  expect(reviewRatingDimensionsSchema.safeParse({ growth: 4, privateNote: "hidden" }).success).toBe(false)
+})
+
+test("company identity links reject scripts and embedded credentials", () => {
+  expect(publicCompanyWebsite("https://example.test/about")).toBe("https://example.test/about")
+  for (const value of [null, "", "invalid", "javascript:alert(1)", "data:text/html,test", "https://user:password@example.test"]) {
+    expect(publicCompanyWebsite(value)).toBeNull()
+  }
+})
 
 test("review submission never reports local success after a network failure", async () => {
   const originalFetch = globalThis.fetch

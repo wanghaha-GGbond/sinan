@@ -383,17 +383,14 @@ function MeContent({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">我的</h1>
+          <h1 className="text-2xl font-semibold text-foreground">个人主页</h1>
           <p className="mt-1 flex flex-wrap gap-x-2.5 gap-y-1 text-sm text-muted-foreground">
-            <span>{displayName}</span>
+            <span>{cardData.displayName ?? displayName}</span>
             <span>{trustLevel > 0 ? "身份已核验" : "身份待核验"}</span>
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="hidden items-center gap-1 rounded-full bg-muted px-4 py-2 text-sm font-medium text-muted-foreground sm:flex">
-            指路人
-            <ChevronRight className="size-3.5" />
-          </div>
+          <WebButton asChild variant="secondary" size="sm"><Link href="/settings/account">账号与数据</Link></WebButton>
           <WebButton type="button" variant="ghost" size="sm" onClick={() => void logout()} aria-label="退出登录">
             <LogOut className="size-4" aria-hidden="true" />
             <span className="hidden sm:inline">退出</span>
@@ -406,9 +403,17 @@ function MeContent({
       </div>
 
       <ProfileEditor
+        key={identity.displayName}
         initial={cardData}
         onSaved={(next) => setCardData((current) => ({ ...current, ...next }))}
       />
+
+      <nav aria-label="个人功能" className="flex flex-wrap gap-2 border-b border-border pb-5">
+        <WebButton asChild variant="secondary"><Link href="#my-reviews">我的评价</Link></WebButton>
+        <WebButton asChild variant="secondary"><Link href="/me/skills">我的技能</Link></WebButton>
+        <WebButton asChild variant="secondary"><Link href="/me/highlights">我的高光</Link></WebButton>
+        <WebButton asChild variant="secondary"><Link href="/company-verification">身份认证</Link></WebButton>
+      </nav>
 
       {isNewUser ? (
         <section className="flex flex-col gap-4 border-y border-border py-6 sm:flex-row sm:items-center sm:justify-between">
@@ -623,7 +628,7 @@ function MeContent({
       {/* My reviews */}
       <section className="border-t border-border pt-6">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-foreground">我的评价</h2>
+          <h2 id="my-reviews" className="text-base font-semibold text-foreground">我的评价</h2>
           <Link href="/submit/review" className="inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline">
             写新评价 →
           </Link>
@@ -800,6 +805,7 @@ function ProfileEditor({
   onSaved: (data: Partial<IdentityCardData>) => void
 }) {
   const [open, setOpen] = useState(false)
+  const [displayName, setDisplayName] = useState(initial.displayName ?? "")
   const [jobBand, setJobBand] = useState(initial.jobBand ?? "")
   const [years, setYears] = useState(
     initial.yearsOfExperience == null ? "" : String(initial.yearsOfExperience)
@@ -818,6 +824,7 @@ function ProfileEditor({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          displayName: displayName.trim(),
           jobBand: jobBand.trim() || null,
           yearsOfExperience: years === "" ? null : Number(years),
           highlightMoment: highlight.trim() || null,
@@ -827,6 +834,7 @@ function ProfileEditor({
       const result = await response.json()
       if (!response.ok) throw new Error(result.error ?? "保存失败")
       onSaved({
+        displayName: displayName.trim(),
         jobBand: jobBand.trim() || undefined,
         yearsOfExperience: years === "" ? undefined : Number(years),
       })
@@ -851,7 +859,7 @@ function ProfileEditor({
         aria-expanded={open}
       >
         <span>
-          <span className="block text-sm font-semibold text-foreground">身份资料</span>
+          <span className="block text-sm font-semibold text-foreground">编辑个人资料</span>
           <span className="mt-1 block text-xs text-muted-foreground">
             高光与拒绝陈列审核通过后公开
           </span>
@@ -860,6 +868,11 @@ function ProfileEditor({
       </button>
       {open ? (
         <form onSubmit={save} className="mt-4 grid gap-4 sm:grid-cols-2">
+          <label className="text-sm font-medium text-foreground sm:col-span-2">
+            昵称
+            <input value={displayName} onChange={(event) => setDisplayName(event.target.value)} minLength={2} maxLength={40} required
+              className="mt-1.5 h-11 w-full border border-input bg-card px-3 font-normal outline-none focus-visible:border-ring" />
+          </label>
           <label className="text-sm font-medium text-foreground">
             职级带
             <input

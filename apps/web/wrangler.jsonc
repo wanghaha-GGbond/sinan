@@ -1,4 +1,7 @@
 // 在场 Web · Cloudflare Workers 海外 Beta 部署配置
+// 历史配置，仅作迁移参考。新构建须明确选择 staging/production：
+// npm run build:cf -- <target>；使用生成的 .release/wrangler.json。
+// 不要直接用本文件部署，以免覆盖新正式环境的公开变量。
 //
 // 部署模型（见 docs/cloudflare-runbook.md）：
 //   - 数据库走 Neon（DATABASE_ADAPTER=neon，WebSocket 驱动，Workers 原生兼容），
@@ -6,7 +9,7 @@
 //   - 敏感变量（AUTH_SECRET / DATABASE_URL / CRON_SECRET 等）不写在文件里，
 //     用 `npx wrangler secret put <NAME>` 注入；vars 只放非敏感默认值。
 //   - 初期按 staging 语义发布（NEXT_PUBLIC_APP_ENV=staging、邮件 disabled、
-//     Pulse 开启）；当前大陆 production 发布规则仍使用阿里云。
+//     Pulse 开启）；阿里云现改为仅人工启用，海外主线使用 Workers。
 //   - NEXT_PUBLIC_APP_URL 必须在构建和部署时设为账号的真实 Worker URL。
 {
   "$schema": "node_modules/wrangler/config-schema.json",

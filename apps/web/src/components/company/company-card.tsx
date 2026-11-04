@@ -1,7 +1,8 @@
 import Link from "next/link"
-import { ArrowUpRight, MessageCircle } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 
 import { CompanyRating, companyDisplayScore } from "./company-rating"
+import { CompanyLogo } from "./company-logo"
 
 import type { CompanyListItem } from "@/lib/api/types"
 import type { Company } from "@/lib/types"
@@ -19,38 +20,31 @@ export function CompanyCard({ company, variant = "directory" }: { company: Compa
     <Link
       href={`/company/${company.id}`}
       data-testid={isFeed ? "company-feed-item" : "company-directory-item"}
-      className={`group flex min-w-0 gap-3 border-b border-border transition-colors hover:bg-muted-hover focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring sm:gap-4 ${isFeed ? "px-4 py-5 sm:px-6" : "py-5 sm:px-3 sm:py-6"}`}
-      aria-label={`查看${displayName}，${score === null ? "暂无评分" : `方向评分 ${score.toFixed(1)} 分（满分 5 分）`}，${reviewCount} 条评价`}
+      className={`group flex min-w-0 flex-col bg-card transition-[border-color,box-shadow] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${isFeed ? "border-b border-border px-4 py-6 hover:bg-muted-hover sm:px-6" : "rounded-lg border border-border p-5 shadow-[0_2px_8px_rgba(20,29,34,0.04)] hover:border-primary-surface-border hover:shadow-sm sm:p-6"}`}
+      aria-label={`查看${displayName}，${score === null ? "暂无评分" : `方向评分 ${score.toFixed(1)} 分（满分 10 分）`}，${reviewCount} 条评价`}
     >
-      <span className="grid size-11 shrink-0 place-items-center rounded-lg border border-input bg-muted text-base font-semibold text-foreground sm:size-12" aria-hidden="true">
-        {displayName.slice(0, 1)}
-      </span>
-      <div className="min-w-0 flex-1">
-        <div className="flex min-w-0 items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h3 className="text-base font-semibold leading-snug text-foreground sm:text-lg">{displayName}</h3>
-            <p className="mt-1 flex flex-wrap gap-x-2 text-xs text-muted-foreground sm:text-sm">
-              <span>{company.industry}</span>
-              <span aria-hidden="true">·</span>
-              <span>{company.city}</span>
-              {company.size ? <><span aria-hidden="true">·</span><span>{company.size}</span></> : null}
-            </p>
-          </div>
-          {!isFeed ? (
-            <div className="shrink-0 text-right">
-              <CompanyRating score={score} />
-              <p className="mt-1 text-xs tabular-nums text-muted-foreground">{reviewCount.toLocaleString()} 条评价</p>
-            </div>
-          ) : <ArrowUpRight className="mt-1 size-4 shrink-0 text-muted-foreground group-hover:text-foreground" aria-hidden="true" />}
-        </div>
-        {summary ? <p className={`mt-3 text-sm leading-6 text-foreground/80 ${isFeed ? "line-clamp-3" : "line-clamp-1"}`}>{summary}</p> : null}
-        {isFeed ? (
-          <div className="mt-4 flex items-center gap-5 text-xs text-muted-foreground">
+      <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+        <CompanyLogo company={company} />
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+            <h3 className="min-w-0 max-w-full text-base font-semibold leading-snug text-foreground [overflow-wrap:anywhere] group-hover:underline sm:text-lg">{displayName}</h3>
             <CompanyRating score={score} />
-            <span className="inline-flex items-center gap-1.5"><MessageCircle className="size-4" aria-hidden="true" />{reviewCount.toLocaleString()} 条评价</span>
-            <span className="ml-auto hidden text-sm font-medium text-foreground group-hover:underline sm:inline">查看公司</span>
           </div>
-        ) : null}
+          <p className="mt-1 flex flex-wrap gap-x-2 text-xs text-muted-foreground sm:text-sm">
+            <span>{company.industry}</span>
+            <span aria-hidden="true">·</span>
+            <span>{company.city}</span>
+            {company.size ? <><span aria-hidden="true">·</span><span>{company.size}</span></> : null}
+          </p>
+        </div>
+      </div>
+      {summary ? <p className={`mt-4 break-words text-sm leading-6 text-foreground/80 ${isFeed ? "line-clamp-2" : "line-clamp-1"}`}>{summary}</p> : null}
+      <div className="mt-auto flex flex-wrap items-end justify-between gap-4 pt-5">
+        <div className="flex items-start gap-6 text-foreground sm:gap-8">
+          <div><strong className="block text-base font-semibold tabular-nums">{reviewCount.toLocaleString()}</strong><span className="text-xs text-muted-foreground">条评价</span></div>
+          <div><strong className="block text-base font-semibold tabular-nums">{score === null ? "—" : score.toFixed(1)}</strong><span className="text-xs text-muted-foreground">综合评分 / 10</span></div>
+        </div>
+        <span className="inline-flex min-h-11 items-center gap-2 rounded-full border border-foreground px-4 text-sm font-semibold text-foreground group-hover:bg-foreground group-hover:text-background">查看公司<ArrowRight className="size-4" aria-hidden="true" /></span>
       </div>
     </Link>
   )

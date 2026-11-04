@@ -1,11 +1,11 @@
 import { z } from "zod"
 
 export const reviewRatingDimensionsSchema = z.object({
-  pay_worth: z.number().int().min(1).max(5),
-  growth: z.number().int().min(1).max(5),
-  leader: z.number().int().min(1).max(5),
-  overtime_truth: z.number().int().min(1).max(5),
-  promise_delivery: z.number().int().min(1).max(5),
+  pay_worth: z.number().int().min(1).max(5).optional(),
+  growth: z.number().int().min(1).max(5).optional(),
+  leader: z.number().int().min(1).max(5).optional(),
+  overtime_truth: z.number().int().min(1).max(5).optional(),
+  promise_delivery: z.number().int().min(1).max(5).optional(),
 }).strict()
 
 export type ReviewRatingDimensions = z.infer<typeof reviewRatingDimensionsSchema>
