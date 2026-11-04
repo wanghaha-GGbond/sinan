@@ -1,46 +1,13 @@
-# Rating Page Spec
+# 公司评分流程（2026-11-04）
 
-Route: `/company/[id]/ratings`
+当前实现取代旧的“本地假提交 MVP”说明；发布状态见 docs/scoring-ui-review-20261104.md。
 
-Primary example: `/company/northstar-tech/ratings`
-
-## Current Direction
-
-The rating route is no longer a report-style dashboard. It should behave like a company-specific review feed with a light scoring entry.
-
-The primary user behavior is reading real anonymous reviews.
-
-## Required Modules
-
-- Compact company header
-- Direction score as secondary context
-- Review feed as the primary surface
-- 0-10 score picker
-- One-line short note input after selecting a score
-- Anonymous safety reminder
-- One complete-review entry point
-
-## Score Meaning
-
-- 9-10: 强烈推荐，较少明显风险
-- 8-8.9: 整体较好，适合重点考虑
-- 7-7.9: 可以考虑，但要看具体岗位
-- 6-6.9: 机会与风险并存
-- 5-5.9: 不确定性较高
-- 4-4.9: 风险较明显
-- 0-3.9: 高风险，建议谨慎
-
-## Interaction Rules
-
-- Selecting a score must show a clear selected state.
-- Selecting a score reveals the short note input.
-- Short note has a visible character count.
-- Submission opens success feedback without page refresh.
-- No real API call in MVP.
-- Safety copy must remind users not to include personally identifiable information.
-
-## Tone
-
-The page can have participation, but should stay restrained, useful, anonymous, and career-decision oriented.
-
-Avoid turning this route into a company analysis report with too many charts, summary modules, and repeated CTAs.
+- /company/[id]/ratings：公开查看总分、分布、多维评分、C-BTI；选择 0–10 方向分继续评价。
+- /submit/review：选择公司与身份/岗位 → 明确方向分与可选七维 → 写经历和安全确认 → 调用真实 API。
+- 未登录先登录，保留原公司和方向分；切换问卷不得重新加载文档或丢失表单。
+- 分项默认未答，不默认 0/7，不自动把旧 1–5 分换算成 0–10。
+- 工作方式四题与办公体验八题完整保留，可跳过、返回修改，回答随评价提交审核。
+- 草稿按账号隔离；不恢复安全确认；成功提交后清除。
+- 新公司必须真实提交且审核通过，不能在客户端造 company ID 并宣称成功。
+- 公开均分仅来自已公开、未删除评价；无样本显示暂无评分。
+- C-BTI 四轴每轴至少五份回答且非平票才生成类型；样本不足保留问卷入口，不使用 mock 类型。

@@ -7,6 +7,7 @@ import { companies as mockCompanies } from "@/lib/mock-data"
 import { toPublicCompanyView } from "@/lib/server/company-view"
 import { toPublicReviewView } from "@/lib/server/review-view"
 import { inferPublicCBTI } from "@/lib/server/company-cbti"
+import { summarizeCompanyDimensions } from "@/lib/server/company-dimensions"
 import { extractPublicDimensionScores } from "@/lib/review-questionnaire"
 import { getAuthUser } from "@/lib/server/auth"
 import {
@@ -204,6 +205,7 @@ export async function getPublicCompanyDetail(
       { score: "8-10", count: Number(aggregate?.score8to10 ?? 0) },
     ],
     cbti: inferPublicCBTI(signalRows),
+    dimensionSummary: summarizeCompanyDimensions(signalRows),
   }
 }
 

@@ -13,7 +13,7 @@ import { companies as mockCompanies, searchCompanies as mockSearch } from "../mo
 
 const API_ENABLED =
   typeof process !== "undefined" &&
-  process.env.NEXT_PUBLIC_API_ENABLED === "true"
+  (process.env.NEXT_PUBLIC_API_ENABLED === "true" || process.env.NEXT_PUBLIC_APP_ENV === "production")
 
 // ---------------------------------------------------------------------------
 // Search

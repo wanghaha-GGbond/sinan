@@ -44,6 +44,7 @@ export type CompanyListItem = {
   highlights?: string[]
   scoreDistribution?: { score: string; count: number }[]
   cbti?: CBTIProfile
+  dimensionSummary?: import("./company-score-dimensions").CompanyDimensionSummary[]
   vibeTag?: CompanyVibeTag
 }
 

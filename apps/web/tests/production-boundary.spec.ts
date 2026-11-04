@@ -6,6 +6,12 @@ import path from "node:path"
 import { GET as searchCompanies } from "../src/app/api/companies/search/route"
 import { GET as getCommunity } from "../src/app/api/community/route"
 import { proxy } from "../src/proxy"
+import { POST as submitCompany } from "../src/app/api/companies/community-submissions/route"
+
+test("company submission rejects invalid credentials before accepting company data", async () => {
+  const response = await submitCompany(new NextRequest("https://sinan.test/api/companies/community-submissions", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer invalid-test-token" }, body: "{}" }))
+  expect(response.status).toBe(401)
+})
 
 function checkRelease(overrides: Record<string, string>) {
   return spawnSync(process.execPath, [path.join(process.cwd(), "scripts/check-release-env.mjs")], {
