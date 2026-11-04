@@ -1,14 +1,23 @@
+"use client"
+
+import { useRouter } from "next/navigation"
 import { Search } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
 import { WebButton } from "@/components/ui/web-button"
 
 export function HomeCompanySearch() {
+  const router = useRouter()
   return (
     <form
       role="search"
       action="/search"
       method="get"
+      onSubmit={(event) => {
+        event.preventDefault()
+        const query = String(new FormData(event.currentTarget).get("q") ?? "").trim()
+        router.push(query ? `/search?q=${encodeURIComponent(query)}` : "/search")
+      }}
       className="mt-6 flex w-full items-center gap-2 rounded-xl border border-input bg-card p-1.5 focus-within:outline-2 focus-within:outline-ring"
     >
       <Search className="ml-3 size-5 shrink-0 text-muted-foreground" aria-hidden="true" />

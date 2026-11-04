@@ -3,6 +3,15 @@ import { defineConfig } from "@playwright/test"
 export default defineConfig({
   testDir: "./tests",
   testMatch: [
+    "curated-company-source.spec.ts",
+    "company-logo.spec.ts",
+    "mail-configuration.spec.ts",
+    "registration-code.spec.ts",
+    "company-rating.spec.ts",
+    "company-directory.spec.ts",
+    "rating-navigation.spec.ts",
+    "readiness-schema.spec.ts",
+    "password-recovery.spec.ts",
     "account-deletion.spec.ts",
     "api-contract.spec.ts",
     "anonymity.spec.ts",
@@ -27,5 +36,6 @@ export default defineConfig({
   ],
   timeout: 10_000,
   workers: 1,
+  outputDir: "./test-results/unit",
   reporter: "line",
 })

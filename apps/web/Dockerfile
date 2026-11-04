@@ -2,6 +2,7 @@ FROM node:22-bookworm-slim AS dependencies
 WORKDIR /app
 
 COPY package.json package-lock.json ./
+COPY patches ./patches
 COPY apps/web/package.json apps/web/package.json
 COPY apps/ios/package.json apps/ios/package.json
 COPY packages/shared/package.json packages/shared/package.json

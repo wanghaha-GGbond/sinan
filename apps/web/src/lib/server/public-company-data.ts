@@ -4,7 +4,6 @@ import { companies } from "@/db/schema/companies"
 import { reviews } from "@/db/schema/reviews"
 import type { Company, CompanyListItem, Review, ReviewListItem } from "@/lib/types"
 import { companies as mockCompanies } from "@/lib/mock-data"
-import { getCuratedCompany } from "@/lib/curated-companies"
 import { toPublicCompanyView } from "@/lib/server/company-view"
 import { toPublicReviewView } from "@/lib/server/review-view"
 import { inferPublicCBTI } from "@/lib/server/company-cbti"
@@ -131,7 +130,7 @@ export async function getPublicCompanyDetail(
 ): Promise<CompanyListItem | null> {
   if (!process.env.DATABASE_URL && process.env.NEXT_PUBLIC_APP_ENV !== "production") {
     const company = getMockCompany(companyId)
-    return company ? mockCompanyToPublicView(company) : getCuratedCompany(companyId)
+    return company ? mockCompanyToPublicView(company) : null
   }
 
   const { db } = await import("@/db/client")

@@ -212,6 +212,8 @@ export default function LoginPage() {
               ref={passwordRef}
               id="login-password"
               type="password"
+              autoComplete="current-password"
+              maxLength={4096}
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value)
@@ -228,6 +230,10 @@ export default function LoginPage() {
                 {passwordError}
               </p>
             ) : null}
+          </div>
+
+          <div className="text-right text-sm">
+            <Link href="/forgot-password" className="text-primary hover:underline">忘记密码？</Link>
           </div>
 
           {error ? (

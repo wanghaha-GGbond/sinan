@@ -13,7 +13,7 @@ export const webButtonVariants = cva(
   {
     variants: {
       variant: {
-        primary: "border-primary bg-primary text-primary-foreground hover:bg-primary-hover hover:border-primary-hover",
+        primary: "border-primary-hover bg-primary-hover text-primary-foreground hover:bg-primary-deep hover:border-primary-deep",
         secondary: "border-input bg-card text-foreground hover:bg-muted-hover",
         quiet: "border-transparent bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
         danger: "border-risk-border bg-risk-surface text-destructive hover:bg-risk-surface-strong",

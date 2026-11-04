@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { and, eq, isNull, or } from "drizzle-orm"
 import { users } from "@/db/schema/users"
 import { verifyPassword, setAuthCookie } from "@/lib/server/auth"
-import { checkRateLimit, getRateLimitKey } from "@/lib/server/rate-limit"
+import { checkAuthAccountLimit, checkAuthIpLimit } from "@/lib/server/auth-rate-limit"
 import { isDevAuthEnabled } from "@/lib/server/dev-auth"
 
 export async function POST(request: NextRequest) {
@@ -10,6 +10,7 @@ export async function POST(request: NextRequest) {
   let body: Record<string, unknown>
   try {
     body = await request.json()
+    if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Invalid body")
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
   }
@@ -32,15 +33,31 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  // Legacy passwords may be longer than the new-password policy; do not truncate.
+  if (password.length > 4096 || (email?.length ?? 0) > 254 || (phone?.length ?? 0) > 32) {
+    return NextResponse.json({ error: "Invalid credentials" }, { status: 400 })
+  }
+
   // Rate limit only actual login attempts (after validation passes),
   // so typos and format errors don't consume the quota.
-  const rlKey = `login:${getRateLimitKey(request, "/api/auth/login")}`
-  const rl = checkRateLimit(rlKey, { maxRequests: 5, windowSeconds: 60 })
+  const rl = await checkAuthIpLimit(request, "login")
   if (!rl.allowed) {
+    if (rl.unavailable) return NextResponse.json({ error: "Service unavailable" }, { status: 503 })
     return NextResponse.json(
       { error: "Too many login attempts", retryAfter: rl.retryAfter },
-      { status: 429 }
+      { status: 429, headers: { "Retry-After": String(rl.retryAfter) } }
     )
+  }
+
+  // If a client supplies both identifiers, both need limits; otherwise an
+  // attacker could vary the email while targeting a fixed phone via OR lookup.
+  for (const identity of [email, phone].filter((value): value is string => Boolean(value))) {
+    const accountLimit = await checkAuthAccountLimit("login", identity)
+    if (!accountLimit.allowed) {
+      if (accountLimit.unavailable) return NextResponse.json({ error: "Service unavailable" }, { status: 503 })
+      return NextResponse.json({ error: "Too many login attempts", retryAfter: accountLimit.retryAfter },
+        { status: 429, headers: { "Retry-After": String(accountLimit.retryAfter) } })
+    }
   }
 
   // Explicit local-only preview mode. Missing production configuration must
@@ -127,7 +144,7 @@ export async function POST(request: NextRequest) {
       .set({ lastLoginAt: new Date() })
       .where(eq(users.id, user.id))
 
-    const token = await setAuthCookie({ userId: user.id, role: user.role })
+    const token = await setAuthCookie({ userId: user.id, role: user.role, sessionVersion: user.sessionVersion })
 
     return NextResponse.json({
       user: {
@@ -136,8 +153,8 @@ export async function POST(request: NextRequest) {
         role: user.role,
       }, ...(nativeClient ? { token } : {}),
     })
-  } catch (error) {
-    console.error("POST /api/auth/login failed:", error)
+  } catch {
+    console.error(JSON.stringify({ event: "login_failed", release: process.env.APP_RELEASE }))
     return NextResponse.json(
       { error: "Database not configured" },
       { status: 503 }

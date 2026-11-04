@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
-import { and, eq, inArray, isNull, or, sql } from "drizzle-orm"
+import { and, eq, isNull, or, sql } from "drizzle-orm"
 import { companies } from "@/db/schema/companies"
-import { reviews } from "@/db/schema/reviews"
+import { companyStatistics } from "@/lib/server/company-statistics"
 import { toPublicCompanyView } from "@/lib/server/company-view"
 import { inferPublicCBTI } from "@/lib/server/company-cbti"
 import { mockCompanyToPublicView } from "@/lib/server/public-company-data"
 import { companies as mockCompanies } from "@/lib/mock-data"
-import { curatedCompanyFacts, getCuratedCompany } from "@/lib/curated-companies"
 
 const publicCacheHeaders = {
   "Cache-Control": "public, max-age=60, stale-while-revalidate=300",
@@ -31,12 +30,8 @@ export async function GET(request: NextRequest) {
       }
 
       const normalizedQuery = q.toLowerCase()
-      const publicCompanies = [
-        ...mockCompanies.map(mockCompanyToPublicView),
-        ...curatedCompanyFacts.map((fact) => getCuratedCompany(fact.id)!),
-      ]
-      const matchingCompanies = publicCompanies.filter((company) => {
-        const matchesQuery = !normalizedQuery || [company.name, company.shortName, company.englishName, ...(company.aliases ?? [])]
+      const matchingCompanies = mockCompanies.filter((company) => {
+        const matchesQuery = !normalizedQuery || [company.name, company.shortName, company.englishName, ...(company.alias ?? [])]
           .filter(Boolean)
           .some((value) => value?.toLowerCase().includes(normalizedQuery))
         const matchesCity = !city || company.city === city
@@ -44,7 +39,7 @@ export async function GET(request: NextRequest) {
         return matchesQuery && matchesCity && matchesIndustry
       })
       return NextResponse.json(
-        { companies: matchingCompanies },
+        { companies: matchingCompanies.map(mockCompanyToPublicView) },
         { headers: publicCacheHeaders },
       )
     }
@@ -76,7 +71,7 @@ export async function GET(request: NextRequest) {
     }
 
     const rows = await db
-      .select()
+      .select({ company: companies, statistics: companyStatistics() })
       .from(companies)
       .where(and(...conditions))
       .orderBy(sql`${companies.createdAt} DESC`)
@@ -84,47 +79,9 @@ export async function GET(request: NextRequest) {
 
     if (!rows.length) return NextResponse.json({ companies: [] }, { headers: publicCacheHeaders })
 
-    const companyIds = rows.map((row) => row.id)
-    const [aggregates, signalRows] = await Promise.all([
-      db
-        .select({
-          companyId: reviews.companyId,
-          avgDirection: sql<number>`round(avg(${reviews.directionScore})::numeric, 1)`,
-          recommendCount: sql<number>`count(*) filter (where ${reviews.recommendToJoin} = true)`,
-          totalCount: sql<number>`count(*)`,
-        })
-        .from(reviews)
-        .where(
-          and(
-            inArray(reviews.companyId, companyIds),
-            inArray(reviews.status, ["visible", "limited_visible"]),
-            isNull(reviews.deletedAt),
-          ),
-        )
-        .groupBy(reviews.companyId),
-      db
-        .select({ companyId: reviews.companyId, directionScore: reviews.directionScore, questionnaire: reviews.questionnaire })
-        .from(reviews)
-        .where(
-          and(
-            inArray(reviews.companyId, companyIds),
-            inArray(reviews.status, ["visible", "limited_visible"]),
-            isNull(reviews.deletedAt),
-          ),
-        ),
-    ])
-    const aggregateByCompany = new Map(aggregates.map((item) => [item.companyId, item]))
-    const signalsByCompany = new Map<string, typeof signalRows>()
-    for (const signal of signalRows) {
-      const companySignals = signalsByCompany.get(signal.companyId)
-      if (companySignals) companySignals.push(signal)
-      else signalsByCompany.set(signal.companyId, [signal])
-    }
-
     return NextResponse.json(
       {
-        companies: rows.map((row) => {
-          const aggregate = aggregateByCompany.get(row.id)
+        companies: rows.map(({ company: row, statistics: aggregate }) => {
           const reviewCount = Number(aggregate?.totalCount ?? 0)
           return {
             ...toPublicCompanyView(row),
@@ -133,7 +90,7 @@ export async function GET(request: NextRequest) {
               ? Math.round((Number(aggregate?.recommendCount ?? 0) / reviewCount) * 100)
               : 0,
             reviewCount,
-            cbti: inferPublicCBTI(signalsByCompany.get(row.id) ?? []),
+            cbti: inferPublicCBTI(aggregate.signals),
           }
         }),
       },

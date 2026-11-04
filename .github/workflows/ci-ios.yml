@@ -1,13 +1,8 @@
 name: iOS CI
 
 on:
+  # This check is required by main protection, even for Web/docs-only PRs.
   pull_request:
-    paths:
-      - "apps/ios/**"
-      - "packages/shared/**"
-      - "package.json"
-      - "package-lock.json"
-      - ".github/workflows/ci-ios.yml"
   push:
     branches: [main]
     paths:
@@ -15,6 +10,7 @@ on:
       - "packages/shared/**"
       - "package.json"
       - "package-lock.json"
+      - "patches/**"
       - ".github/workflows/ci-ios.yml"
 
 permissions:
@@ -42,6 +38,8 @@ jobs:
       - run: npm ci
       - name: Reject high or critical iOS production vulnerabilities
         run: npm audit --workspace=@sinan/ios --omit=dev --audit-level=high
+      - name: Expo security override compatibility
+        run: node --test apps/ios/scripts/expo-dependency-compat.test.mjs
       - run: npm run typecheck --workspace=@sinan/shared
       - run: npm run typecheck --workspace=@sinan/ios
       - run: npm run release:check-config:ci --workspace=@sinan/ios

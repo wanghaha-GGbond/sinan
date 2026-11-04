@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { Bell, Leaf, Menu, Search } from "lucide-react"
+import Image from "next/image"
+import { Menu, Search } from "lucide-react"
 import type { ReactNode } from "react"
 
 import {
@@ -10,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { WebButton, webButtonVariants } from "@/components/ui/web-button"
+import { webButtonVariants } from "@/components/ui/web-button"
 import { cn } from "@/lib/utils"
 
 export type WebNavLink = { href: string; label: string; active?: boolean }
@@ -19,12 +20,14 @@ export function WebNav({
   brand = "在场",
   links = [],
   searchHref = "/search",
+  showSearch = true,
   rightSlot,
   className,
 }: {
   brand?: string
   links?: WebNavLink[]
   searchHref?: string
+  showSearch?: boolean
   rightSlot?: ReactNode
   className?: string
 }) {
@@ -32,14 +35,14 @@ export function WebNav({
     <header className={cn("web-nav", className)}>
       <div className="web-nav-inner">
         <Link href="/" className="web-brand" aria-label="返回在场首页">
-          <span className="web-brand-mark" aria-hidden="true"><Leaf className="size-[1.15rem]" strokeWidth={2.2} /></span>
+          <Image src="/brand-z.svg" alt="" width={32} height={32} className="rounded-lg" unoptimized />
           <span>{brand}</span>
         </Link>
 
-        <Link href={searchHref} className="web-nav-search" aria-label="搜索公司">
+        {showSearch ? <Link href={searchHref} className="web-nav-search" aria-label="搜索公司">
           <Search className="size-4" aria-hidden="true" />
           <span>搜索公司</span>
-        </Link>
+        </Link> : null}
 
         <nav className="web-nav-links" aria-label="主导航">
           {links.map((link) => (
@@ -50,10 +53,6 @@ export function WebNav({
         </nav>
 
         <div className="web-nav-actions">
-          <WebButton variant="quiet" size="icon" className="relative" aria-label="通知">
-            <Bell className="size-[1.15rem]" aria-hidden="true" />
-            <span className="absolute right-2.5 top-2 size-1.5 rounded-full bg-primary" aria-hidden="true" />
-          </WebButton>
           {rightSlot}
           <DropdownMenu>
             <DropdownMenuTrigger
@@ -62,7 +61,7 @@ export function WebNav({
                 // Responsive utilities replace the old .web-mobile-menu CSS:
                 // that rule needed !important to beat these same utilities on
                 // desktop, which in turn made the button invisible on mobile.
-                "hidden max-[1200px]:inline-flex min-[1200px]:hidden",
+                "hidden max-lg:inline-flex",
               )}
               aria-label="打开菜单"
             >
@@ -75,7 +74,7 @@ export function WebNav({
                     href={link.href}
                     aria-current={link.active ? "page" : undefined}
                     className={cn(
-                      "flex min-h-11 w-full items-center rounded-lg px-3 py-2 text-sm",
+                      "flex w-full items-center rounded-md px-2.5 py-2 text-sm",
                       link.active ? "font-semibold text-primary-deep" : "text-foreground",
                     )}
                   >

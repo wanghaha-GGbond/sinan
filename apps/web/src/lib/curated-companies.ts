@@ -1,4 +1,5 @@
 import type { CompanyListItem } from "@/lib/types"
+import { publicCompanyWebsite } from "@/lib/company-identity"
 
 type CompanyFact = {
   id: string
@@ -78,7 +79,13 @@ export function getCuratedCompany(id: string): CompanyListItem | null {
   }
 }
 
-export function getCompanyFactSource(id: string) {
-  const fact = curatedCompanyFacts.find((item) => item.id === id)
+export function getCompanyFactSource(id: string, name: string) {
+  // A reused ID must not attribute another company's public information.
+  const fact = curatedCompanyFacts.find((item) => item.id === id && item.name === name)
   return fact?.sourceUrl ?? fact?.website ?? null
+}
+
+export function publicCompanyFactSource(company: { id: string; name: string; website?: string | null }) {
+  return publicCompanyWebsite(getCompanyFactSource(company.id, company.name))
+    ?? publicCompanyWebsite(company.website)
 }

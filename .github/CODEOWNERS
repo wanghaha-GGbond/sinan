@@ -1,11 +1,16 @@
-# CODEOWNERS records responsibility. Branch protection requires one approval,
-# but does not require Code Owner approval so a two-person team cannot deadlock.
+# Responsibility only, not a write restriction or required human approval.
+# Main requires CI/strict synchronization; required human approvals = 0.
+# More specific matches below override broad UI responsibility.
 
 * @wanghaha-GGbond
 
-/apps/web/ @wanghaha-GGbond @g2561845325-debug
+/apps/web/src/app/ @wanghaha-GGbond @g2561845325-debug
+/apps/web/src/components/ @wanghaha-GGbond @g2561845325-debug
+/apps/web/src/app/api/ @wanghaha-GGbond
+/apps/web/src/lib/ @wanghaha-GGbond
+/apps/web/src/db/ @wanghaha-GGbond
 /apps/ios/ @wanghaha-GGbond
-/packages/shared/ @wanghaha-GGbond @g2561845325-debug
+/packages/shared/ @wanghaha-GGbond
 /.github/ @wanghaha-GGbond
 /deploy/ @wanghaha-GGbond
 /docs/ @wanghaha-GGbond @g2561845325-debug

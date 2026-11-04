@@ -12,6 +12,7 @@ import { SignJWT, jwtVerify } from "jose"
 import crypto from "node:crypto"
 import type { NextRequest } from "next/server"
 import { isDevAuthEnabled } from "@/lib/server/dev-auth"
+import { isCurrentSession } from "@/lib/server/password-recovery-policy"
 
 // ---------------------------------------------------------------------------
 // Config
@@ -109,10 +110,11 @@ export async function verifyPassword(
 export type AuthUser = {
   userId: string
   role: string
+  sessionVersion?: number
 }
 
 export async function signToken(user: AuthUser): Promise<string> {
-  return new SignJWT({ sub: user.userId, role: user.role })
+  return new SignJWT({ sub: user.userId, role: user.role, sv: user.sessionVersion ?? 0 })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(`${TOKEN_MAX_AGE}s`)
@@ -123,9 +125,12 @@ export async function verifyToken(token: string): Promise<AuthUser | null> {
   try {
     const { payload } = await jwtVerify(token, getSecretKey())
     if (typeof payload.sub !== "string" || payload.sub.length === 0) return null
+    if (payload.sv !== undefined &&
+      (typeof payload.sv !== "number" || !Number.isSafeInteger(payload.sv) || payload.sv < 0)) return null
     return {
       userId: payload.sub,
       role: (payload.role as string) ?? "user",
+      sessionVersion: (payload.sv as number | undefined) ?? 0,
     }
   } catch {
     return null
@@ -171,14 +176,16 @@ async function validateActiveAuthUser(user: AuthUser | null): Promise<AuthUser |
     const { db } = await import("@/db/client")
     const { users } = await import("@/db/schema/users")
     const [active] = await db
-      .select({ id: users.id, role: users.role })
+      .select({ id: users.id, role: users.role, sessionVersion: users.sessionVersion })
       .from(users)
       .where(and(eq(users.id, user.userId), eq(users.status, "active"), isNull(users.deletedAt)))
       .limit(1)
     // Roles are intentionally read from the database on every request. A JWT
     // can remain valid for 30 days, but a role change must take effect
     // immediately (especially moderator/admin demotions).
-    return active ? { ...user, role: active.role } : null
+    return active && isCurrentSession(user.sessionVersion, active.sessionVersion)
+      ? { ...user, role: active.role }
+      : null
   } catch {
     return null
   }
