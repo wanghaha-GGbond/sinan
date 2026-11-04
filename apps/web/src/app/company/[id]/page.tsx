@@ -3,6 +3,7 @@ import { ArrowUpRight, BadgeCheck, ChevronRight, MapPin, PenLine, ShieldCheck } 
 import { notFound } from "next/navigation"
 
 import { CompanyDecisionInsights } from "@/components/company/company-decision-insights"
+import { CompanyLogo } from "@/components/company/company-logo"
 import { CompanyEvidenceRail } from "@/components/company/company-evidence-rail"
 import { CompanySectionNav } from "@/components/company/company-section-nav"
 import { CompanyReviewFeed } from "@/components/company/company-review-feed"
@@ -66,9 +67,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
       <header className="rounded-lg border border-border bg-card px-5 pt-6 shadow-[0_2px_8px_rgba(20,29,34,0.04)] sm:px-8 sm:pt-8">
         <div className="flex flex-col gap-6 pb-6 lg:flex-row lg:items-start lg:justify-between lg:gap-10">
           <div className="flex min-w-0 items-start gap-4 sm:gap-5">
-            <div className="grid size-14 shrink-0 place-items-center rounded-lg border border-primary-surface-border bg-primary-tint text-xl font-semibold text-primary-deep sm:size-16" aria-hidden="true">
-              {(company.shortName ?? company.name).slice(0, 1)}
-            </div>
+            <CompanyLogo company={company} className="size-14 text-xl sm:size-16" />
             <div className="min-w-0">
               <h1 className="break-words text-2xl font-semibold leading-tight text-foreground sm:text-3xl">{company.name}</h1>
               <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">

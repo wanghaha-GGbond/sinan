@@ -1,0 +1,152 @@
+[
+  {
+    "id": "10000000-0000-4000-8000-000000000001",
+    "name": "字节跳动",
+    "sourcePage": "https://www.bytedance.com",
+    "source": "https://lf3-static.bytednsdoc.com/obj/eden-cn/shjpmmv_ljuhklafi/ljhwZthlaukjlkulzlp/images/Pn04bTfD5oKbB3x1NFLcQ3Bxn1b-20261029135132-20261029150506.png",
+    "asset": "/company-logos/1-2b523fa8b75d.png",
+    "sha256": "2b523fa8b75dee9f77de898de6c72fa15d83d04446d6777d7f7761ba1a4e89f8",
+    "bytes": 3502,
+    "collectedOn": "2026-11-03"
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000002",
+    "name": "腾讯",
+    "sourcePage": "https://www.tencent.com",
+    "source": "https://www.tencent.com/wp-content/themes/tencent-web/assets/favicon/apple-touch-icon.png",
+    "asset": "/company-logos/2-a4f9bdeedcbc.png",
+    "sha256": "a4f9bdeedcbc3851f15a234da08ed2bd34e84f384e597e59175677601106c924",
+    "bytes": 1798,
+    "collectedOn": "2026-11-03"
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000004",
+    "name": "美团",
+    "sourcePage": "https://www.meituan.com",
+    "source": "https://s3plus.meituan.net/v1/mss_e2821d7f0cfe4ac1bf9202ecf9590e67/cdn-prod/file:1040877d/favicon-mt.ico",
+    "asset": "/company-logos/4-a6f4dd99edf8.ico",
+    "sha256": "a6f4dd99edf8c49563be4c90ed0b509adb6b890d1a3c35caaa6d799a21c022de",
+    "bytes": 15086,
+    "collectedOn": "2026-11-03"
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000005",
+    "name": "拼多多",
+    "sourcePage": "https://www.pinduoduo.com",
+    "source": "https://www.pinduoduo.com/favicon.png",
+    "asset": "/company-logos/5-b4f29e73875c.png",
+    "sha256": "b4f29e73875ca7d6aa5d1bfcfdb2aa5893cd3602a4f3fd873c59acf1d49cbe53",
+    "bytes": 2741,
+    "collectedOn": "2026-11-03"
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000006",
+    "name": "京东",
+    "sourcePage": "https://www.jd.com",
+    "source": "https://storage.360buyimg.com/retail-mall/mall-common-component/favicon.ico",
+    "asset": "/company-logos/6-d71bcae7214e.ico",
+    "sha256": "d71bcae7214e3401d42af8b8f4a288da25fdc72601e7592586e5596e45f481ba",
+    "bytes": 2817,
+    "collectedOn": "2026-11-03"
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000007",
+    "name": "百度",
+    "sourcePage": "https://www.baidu.com",
+    "source": "https://www.baidu.com/favicon.ico",
+    "asset": "/company-logos/7-c70088079fe9.ico",
+    "sha256": "c70088079fe9441a726c66ce0e73ae38315ec80051d3dd542c41b82fa0a1993a",
+    "bytes": 16958,
+    "collectedOn": "2026-11-03"
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000008",
+    "name": "小米",
+    "sourcePage": "https://www.mi.com",
+    "source": "https://www.mi.com/favicon.ico",
+    "asset": "/company-logos/8-e59b4a96433a.ico",
+    "sha256": "e59b4a96433a0b039f223dd98100b9b0edcda6fe7d96f74808bc5fda41a44ca7",
+    "bytes": 4286,
+    "collectedOn": "2026-11-03"
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000009",
+    "name": "华为",
+    "sourcePage": "https://www.huawei.com",
+    "source": "https://www.huawei.com/-/media/htemplate-home/1.0.1.20251205144752/components/assets/img/apple-touch-icon-180.png",
+    "asset": "/company-logos/9-f56e1f0616fe.png",
+    "sha256": "f56e1f0616fe91c18416dea24ce30da8192c32eb82443ba1af412ad309dd8265",
+    "bytes": 14658,
+    "collectedOn": "2026-11-03"
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000011",
+    "name": "滴滴",
+    "sourcePage": "https://www.didiglobal.com",
+    "source": "https://website.didiglobal.com/DDlogo.ico",
+    "asset": "/company-logos/11-c948f3e8c878.ico",
+    "sha256": "c948f3e8c878fb3505d4327b1b32342641a20015e96ff70437b3921930031ad1",
+    "bytes": 8158,
+    "collectedOn": "2026-11-03"
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000012",
+    "name": "快手",
+    "sourcePage": "https://www.kuaishou.com",
+    "source": "https://www.kuaishou.com/favicon.ico",
+    "asset": "/company-logos/12-b41bf5fb2d4a.ico",
+    "sha256": "b41bf5fb2d4ac584399902bb5b342f4b41e48c875053d962d3fe3d8a95abb4b3",
+    "bytes": 4286,
+    "collectedOn": "2026-11-03"
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000014",
+    "name": "小红书",
+    "sourcePage": "https://www.xiaohongshu.com",
+    "source": "https://picasso-static.xiaohongshu.com/fe-platform/f43dc4a8baf03678996c62d8db6ebc01a82256ff.png",
+    "asset": "/company-logos/14-2912c4df1ab4.png",
+    "sha256": "2912c4df1ab479d734ef132e9c45b4f17afa80b2aa3eaf4438acd54afc70b20a",
+    "bytes": 2482,
+    "collectedOn": "2026-11-03"
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000015",
+    "name": "哔哩哔哩",
+    "sourcePage": "https://www.bilibili.com",
+    "source": "https://www.bilibili.com/favicon.ico",
+    "asset": "/company-logos/15-2681561eb24e.ico",
+    "sha256": "2681561eb24e7435fea1acf26f3af95e4efc9f7d451587b58bef62f030f337e9",
+    "bytes": 4286,
+    "collectedOn": "2026-11-03"
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000016",
+    "name": "携程集团",
+    "sourcePage": "https://group.trip.com",
+    "source": "https://dimg04.tripcdn.com/images/0x93s12000ixcf9k36A64.png",
+    "asset": "/company-logos/16-caf0c7b4963f.png",
+    "sha256": "caf0c7b4963f236eba74b90d9afe1f0eab064c0611c3d45934b4e5488276a7a4",
+    "bytes": 889,
+    "collectedOn": "2026-11-03"
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000018",
+    "name": "理想汽车",
+    "sourcePage": "https://www.lixiang.com",
+    "source": "https://www.lixiang.com/favicon.ico",
+    "asset": "/company-logos/18-f7dc3f95e1df.ico",
+    "sha256": "f7dc3f95e1dfbd1044daa5784ac84eee6da60699b46c630e742734bcff20abfa",
+    "bytes": 4286,
+    "collectedOn": "2026-11-03"
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000019",
+    "name": "小鹏汽车",
+    "sourcePage": "https://www.xiaopeng.com",
+    "source": "https://xps01.xiaopeng.com/domestic/_next/static/media/black-logo.d7e75b41.svg",
+    "asset": "/company-logos/19-b3c739e433b1.svg",
+    "sha256": "b3c739e433b12bc1587cd4caf23b1b4c485bd37f1ee684f1a8d5c6fd8084de3c",
+    "bytes": 2837,
+    "collectedOn": "2026-11-03"
+  }
+]
