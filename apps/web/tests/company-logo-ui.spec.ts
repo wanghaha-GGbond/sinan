@@ -2,8 +2,24 @@ import { expect, test } from "@playwright/test"
 import sources from "../src/data/company-logo-sources.json"
 
 const companies = sources.map(source => ({ id: source.id, name: source.name, city: "北京", industry: "科技", reviewCount: 0, directionScore: null }))
+const completed = sources.filter(source => [3, 10, 13, 17, 20].includes(Number(source.id.slice(-12))))
+
+test("completed logos survive homepage feed tab changes", async ({ page }) => {
+  await page.route("**/api/companies/search**", route => route.fulfill({ json: { companies: companies.filter(company => completed.some(source => source.id === company.id)) } }))
+  await page.goto("/")
+  for (const tab of ["推荐", "最新"]) {
+    await page.getByRole("tab", { name: tab, exact: true }).click()
+    for (const source of completed) {
+      const logo = page.getByRole("tabpanel").getByRole("img", { name: `${source.name} Logo`, exact: true })
+      await logo.scrollIntoViewIfNeeded()
+      await expect(logo).toHaveAttribute("src", source.asset)
+      await expect.poll(() => logo.evaluate(img => (img as HTMLImageElement).naturalWidth)).toBeGreaterThan(0)
+    }
+  }
+})
+
 for (const theme of ["light", "dark"]) for (const width of [390, 1280]) {
-  test(`official logos render locally in ${theme} at ${width}px`, async ({ page }, testInfo) => {
+  test(`reviewed logos render locally in ${theme} at ${width}px`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width, height: 1000 })
     await page.addInitScript(theme => localStorage.setItem("sinan:theme", theme), theme)
     const externalImages: string[] = []
@@ -12,6 +28,8 @@ for (const theme of ["light", "dark"]) for (const width of [390, 1280]) {
     })
     await page.route("**/api/companies/search**", route => route.fulfill({ json: { companies } }))
     await page.goto("/companies")
+    if (theme === "dark") await expect(page.locator("html")).toHaveClass(/\bdark\b/)
+    else await expect(page.locator("html")).not.toHaveClass(/\bdark\b/)
     for (const source of sources) {
       const logo = page.getByRole("img", { name: `${source.name} Logo`, exact: true })
       await logo.scrollIntoViewIfNeeded()

@@ -1,5 +1,58 @@
 [
   {
+    "id": "10000000-0000-4000-8000-000000000003",
+    "name": "阿里巴巴",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Alibaba_zh_logo.svg",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/0/03/Alibaba_zh_logo.svg",
+    "license": "PD-textlogo as labelled by Wikimedia Commons; trademark rights remain",
+    "asset": "/company-logos/3-c09c884c7e87.svg",
+    "sha256": "c09c884c7e8759484f8ad311da78c0d243a93d7a042eb46443f449af0aba21d5",
+    "bytes": 7471,
+    "collectedOn": "2026-11-04"
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000010",
+    "name": "网易",
+    "sourcePage": "https://hr.163.com/",
+    "source": "https://hr.163.com/favicon.ico",
+    "asset": "/company-logos/10-43c6594eb749.ico",
+    "sha256": "43c6594eb74940c6e0fb38d55c634425860093660f4eb0cb89334608dd9947eb",
+    "bytes": 318,
+    "collectedOn": "2026-11-04"
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000013",
+    "name": "蚂蚁集团",
+    "sourcePage": "https://www.antgroup.com/",
+    "source": "https://gw.alipayobjects.com/mdn/rms_27e257/afts/img/A*PLZaSZnCPAwAAAAAAAAAAAAAARQnAQ",
+    "asset": "/company-logos/13-67e25a97c4c0.png",
+    "sha256": "67e25a97c4c0b76436f5dab588adf2cd72b859332fa83981a7c4d97581af09be",
+    "bytes": 13083,
+    "collectedOn": "2026-11-04"
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000017",
+    "name": "蔚来",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:NIO_logo_emblem.svg",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/3/30/NIO_logo_emblem.svg",
+    "license": "PD-textlogo as labelled by Wikimedia Commons; trademark rights remain",
+    "asset": "/company-logos/17-44b82bb215dc.svg",
+    "sha256": "44b82bb215dc80472ae8353ebdc395f725239ff5c22f118c440b17643564826e",
+    "bytes": 640,
+    "collectedOn": "2026-11-04"
+  },
+  {
+    "id": "10000000-0000-4000-8000-000000000020",
+    "name": "宁德时代",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Contemporary_Amperex_Technology_2020_logo.svg",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/9/9b/Contemporary_Amperex_Technology_2020_logo.svg",
+    "license": "PD-shape as labelled by Wikimedia Commons; trademark rights remain",
+    "asset": "/company-logos/20-df17f884518f.svg",
+    "sha256": "df17f884518fe190356a449102393f1186d6896b4b2ce48301cb890b6d38a244",
+    "bytes": 1833,
+    "collectedOn": "2026-11-04"
+  },
+  {
     "id": "10000000-0000-4000-8000-000000000001",
     "name": "字节跳动",
     "sourcePage": "https://www.bytedance.com",

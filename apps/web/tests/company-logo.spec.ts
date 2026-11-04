@@ -3,9 +3,17 @@ import { readFileSync } from "node:fs"
 import { createHash } from "node:crypto"
 import sources from "../src/data/company-logo-sources.json"
 import { companyLogo } from "../src/lib/company-logo"
+import { curatedCompanyFacts } from "../src/lib/curated-companies"
+
+test("every company in the initial twenty-company catalog has a reviewed logo", () => {
+  // Additional curated suggestions are not yet published production companies.
+  const catalog = curatedCompanyFacts.filter(company => Number(company.id.slice(-12)) <= 20)
+  expect(catalog).toHaveLength(20)
+  for (const company of catalog) expect(companyLogo(company), company.name).not.toBeNull()
+})
 
 test("bundled logos match reviewed identities and source checksums", () => {
-  expect(sources.length).toBeGreaterThanOrEqual(15)
+  expect(sources.length).toBeGreaterThanOrEqual(20)
   expect(new Set(sources.map(source => source.id)).size).toBe(sources.length)
   for (const source of sources) {
     expect(source.source).toMatch(/^https:\/\//)
