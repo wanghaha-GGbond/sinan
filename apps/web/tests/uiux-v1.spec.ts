@@ -55,6 +55,7 @@ test("quick review skips detailed ratings without submitting fabricated defaults
   })
   await page.goto("/submit/review?companyId=quick-company&directionScore=0")
   await page.getByLabel("岗位", { exact: false }).fill("工程师")
+  await page.getByRole("button", { name: "在职员工", exact: true }).click()
   await page.getByLabel("工作城市", { exact: false }).fill("杭州")
   await page.getByTestId("company-step-next-button").click()
   await expect(page.getByText("补充分项评分（选填）", { exact: true })).toBeVisible()

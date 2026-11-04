@@ -1,5 +1,7 @@
 # AI Company Vibe + C-BTI API Contract (Draft)
 
+> 历史提案，不是已上线接口。2026-11-04 的生产实现使用公开评价结构化问卷在服务端规则推导 C-BTI，不调用下面的 AI endpoint，也不采用 mock 类型。每轴至少五份回答、无默认轴；当前实现与发布边界见 `docs/scoring-ui-review-20261104.md`。
+
 ## Positioning
 
 - 前台主展示：公司体感标签（例如：仓鼠笼公司、火箭发射台公司）。

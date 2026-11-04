@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { ArrowLeft, ArrowRight, PenLine } from "lucide-react"
 
 import { CompanyEvidenceRail } from "@/components/company/company-evidence-rail"
+import { CompanyDimensionSummaryPanel } from "@/components/company/company-dimension-summary"
 import { CompanyRating, companyDisplayScore } from "@/components/company/company-rating"
 import { CompanySectionNav } from "@/components/company/company-section-nav"
 import { WebButton } from "@/components/ui/web-button"
@@ -33,7 +34,8 @@ export function RatingsClient({ company }: { company: CompanyListItem }) {
         <CompanySectionNav id={company.id} active="评分" />
       </header>
       <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
-        <div className="min-w-0 self-start rounded-lg border border-border bg-card p-5 sm:p-7">
+        <div className="min-w-0 space-y-6">
+        <div className="self-start rounded-lg border border-border bg-card p-5 sm:p-7">
           <fieldset disabled={!hydrated} aria-busy={!hydrated}>
             <legend className="text-xl font-semibold">你会给几分？</legend>
             <p className="mt-2 text-sm text-muted-foreground">0–10 分</p>
@@ -55,6 +57,8 @@ export function RatingsClient({ company }: { company: CompanyListItem }) {
             <Link href={`/submit/review?companyId=${encodeURIComponent(company.id)}&questionnaire=1`} className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary-deep"><PenLine className="size-4" />问卷评分</Link>
             <Link href={`/company/${company.id}/reviews`} className="inline-flex min-h-11 items-center text-sm font-semibold text-primary-deep">查看评价</Link>
           </div>
+        </div>
+        <CompanyDimensionSummaryPanel dimensions={company.dimensionSummary} />
         </div>
         <CompanyEvidenceRail company={company} />
       </div>

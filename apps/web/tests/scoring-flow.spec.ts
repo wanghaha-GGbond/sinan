@@ -1,0 +1,137 @@
+import { expect, test, type Page } from "@playwright/test"
+
+const company = { id: "score-company", name: "评分测试公司", city: "上海", industry: "软件", reviewStatus: "reviewable" }
+async function fixture(page: Page, userId = "score-user") {
+  await page.route("**/api/auth/me", route => route.fulfill({ json: { user: { id: userId, role: "user", displayName: "测试用户" } } }))
+  await page.route("**/api/companies/score-company", route => route.fulfill({ json: { company } }))
+  await page.route("**/api/companies/score-company/departments", route => route.fulfill({ json: { departments: [] } }))
+  await page.route("**/api/companies/search**", route => route.fulfill({ json: { companies: [company] } }))
+}
+
+test("multi-dimensional review keeps company, zero scores and answers through questionnaire, back and retry", async ({ page }, testInfo) => {
+  await fixture(page)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.addInitScript(() => localStorage.setItem("sinan:theme", "dark"))
+  let payload: Record<string, unknown> | undefined
+  let fail = true
+  let documents = 0
+  page.on("request", req => { if (req.resourceType() === "document") documents++ })
+  await page.route("**/api/reviews", route => {
+    payload = route.request().postDataJSON()
+    return route.fulfill(fail ? { status: 503, json: { error: "暂时无法提交" } } : { status: 201, json: { review: { id: "fixture-review" }, message: "评价已提交" } })
+  })
+  await page.goto("/submit/review?companyId=score-company&directionScore=0")
+  await page.getByLabel("岗位", { exact: false }).fill("工程师")
+  await page.getByRole("button", { name: "在职员工", exact: true }).click()
+  await page.getByTestId("company-step-next-button").click()
+  await page.getByLabel("薪酬回报（选填）", { exact: true }).selectOption("0")
+  await page.getByLabel("成长空间（选填）", { exact: true }).selectOption("9")
+  await page.getByRole("button", { name: "补充工作方式与办公体验", exact: true }).click()
+  const dialog = page.getByRole("dialog")
+  await expect(dialog).toBeVisible()
+  await page.getByTestId("questionnaire-option-button").first().click()
+  await page.getByRole("button", { name: "下一题", exact: true }).click()
+  await page.keyboard.press("Escape")
+  await expect(dialog).not.toBeVisible()
+  await expect(page).toHaveURL(/companyId=score-company&directionScore=0$/)
+  await expect(page.getByLabel("成长空间（选填）", { exact: true })).toHaveValue("9")
+  await page.getByTestId("start-questionnaire-button").click()
+  await expect(dialog).toBeVisible()
+  await page.getByRole("button", { name: "上一题", exact: true }).click()
+  await expect(page.getByTestId("questionnaire-option-button").first()).toHaveAttribute("aria-pressed", "true")
+  await page.getByRole("button", { name: "下一题", exact: true }).click()
+  for (let i = 0; i < 3; i++) {
+    await page.getByTestId("questionnaire-option-button").first().click()
+    await page.getByRole("button", { name: "下一题", exact: true }).click()
+  }
+  for (let i = 0; i < 8; i++) await page.getByTestId("skip-question-button").click()
+  await expect(page.getByTestId("questionnaire-complete-card")).toContainText("已回答 4 题")
+  await expect(dialog).not.toContainText("方向值 +8")
+  await page.getByTestId("questionnaire-complete-return-button").click()
+  expect(documents).toBe(1)
+  await page.screenshot({ path: testInfo.outputPath("multidimensional-rating-dark-mobile.png"), fullPage: true })
+  await page.getByTestId("review-next").click()
+  await page.getByTestId("review-title-input").fill("工作节奏和成长机会的真实经历")
+  await page.getByTestId("review-content-input").fill("这是一条隔离测试评价，记录工作节奏、管理方式、成长空间和协作体验，用于验证每项回答都如实保留，不发送到正式数据库。")
+  await page.getByRole("button", { name: /匿名安全检查/ }).click()
+  await page.getByTestId("submit-review-button").click()
+  await expect(page.locator("form").getByRole("alert")).toContainText("暂时无法提交")
+  expect(payload).toMatchObject({ companyId: company.id, directionScore: 0, questionnaire: { salaryScore: 0, growthScore: 9, companyPace: "very_fast", managementStyle: "flexible", growthExperience: "very_fast", collaborationStyle: "cross_team" } })
+  expect(payload?.questionnaire).not.toHaveProperty("canteenScore")
+  expect(payload?.questionnaire).not.toHaveProperty("workLifeBalanceScore")
+  fail = false
+  await page.getByTestId("submit-review-button").click()
+  await expect(page.getByTestId("submit-review-success")).toBeVisible()
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("zaichang:review-draft:v2:score-user"))).toBeNull()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+})
+
+test("step validation never defaults to seven or traps a hidden role error", async ({ page }) => {
+  await fixture(page)
+  await page.goto("/submit/review?companyId=score-company")
+  await page.getByTestId("company-step-next-button").click()
+  await expect(page.getByText("请填写岗位", { exact: true })).toBeVisible()
+  await expect(page.getByText("请选择你与公司的关系", { exact: true })).toBeVisible()
+  await page.getByLabel("岗位", { exact: false }).fill("工程师")
+  await page.getByRole("button", { name: "在职员工", exact: true }).click()
+  await page.getByTestId("company-step-next-button").click()
+  await expect(page.locator('input[type="radio"]:checked')).toHaveCount(0)
+  await page.getByTestId("review-next").click()
+  await expect(page.locator("form").getByRole("alert")).toHaveText("请选择方向分后继续")
+  await page.getByRole("radio", { name: "方向分 7 分", exact: true }).check({ force: true })
+  await page.getByTestId("review-next").click()
+  await expect(page.getByTestId("review-title-input")).toBeVisible()
+})
+
+test("draft is not overwritten on arrival and restores the selected company without safety consent", async ({ page }) => {
+  await fixture(page)
+  await page.addInitScript(() => localStorage.setItem("zaichang:review-draft:v2:score-user", JSON.stringify({ savedAt: Date.now(), values: { companyId: "score-company", companyName: "评分测试公司", relation: "在职员工", role: "产品设计师", directionScore: 0, salaryScore: 0, title: "草稿标题需要保留", content: "这是之前输入的真实经历草稿内容，需要恢复公司和内容，不能被默认值覆盖。", safetyChecked: true } })))
+  await page.goto("/submit/review")
+  await expect(page.getByTestId("review-draft-restore")).toBeVisible()
+  await page.waitForTimeout(1200)
+  await expect(page.getByTestId("review-draft-restore")).toBeVisible()
+  await page.getByRole("button", { name: "恢复草稿", exact: true }).click()
+  await expect(page.getByTestId("selected-company-pill")).toContainText(company.name)
+  await expect(page.getByLabel("岗位", { exact: false })).toHaveValue("产品设计师")
+  await page.getByTestId("company-step-next-button").click()
+  await expect(page.getByRole("radio", { name: "方向分 0 分", exact: true })).toBeChecked()
+  await page.getByTestId("review-next").click()
+  await expect(page.getByTestId("review-title-input")).toHaveValue("草稿标题需要保留")
+  await expect(page.getByRole("button", { name: /匿名安全检查/ })).toHaveAttribute("aria-pressed", "false")
+})
+
+test("other account drafts stay private", async ({ page }) => {
+  await fixture(page, "another-user")
+  await page.addInitScript(() => localStorage.setItem("zaichang:review-draft:v2:score-user", JSON.stringify({ savedAt: Date.now(), values: { title: "不属于此账号的草稿" } })))
+  await page.goto("/submit/review")
+  await expect(page.getByTestId("company-search-input")).toBeVisible()
+  await expect(page.getByTestId("review-draft-restore")).toHaveCount(0)
+})
+
+test("unfinished draft strings can be restored and anonymous company writes fail", async ({ page, request }) => {
+  const response = await request.post("/api/companies/community-submissions", { data: {} })
+  expect(response.status()).toBe(401)
+  await fixture(page)
+  await page.addInitScript(() => localStorage.setItem("zaichang:review-draft:v2:score-user", JSON.stringify({ savedAt: Date.now(), values: { companyId: "score-company", companyName: "评分测试公司", relation: "在职员工", role: "", title: "", content: "未写完" } })))
+  await page.goto("/submit/review")
+  await expect(page.getByTestId("review-draft-restore")).toBeVisible()
+  await page.getByRole("button", { name: "恢复草稿", exact: true }).click()
+  await expect(page.getByTestId("selected-company-pill")).toContainText(company.name)
+})
+
+test("company query is debounced and selecting another company is not reset by URL preselection", async ({ page }) => {
+  await fixture(page)
+  const queries: string[] = []
+  await page.route("**/api/companies/search**", route => {
+    queries.push(new URL(route.request().url()).searchParams.get("q") ?? "")
+    return route.fulfill({ json: { companies: [{ ...company, id: "second-company", name: "另一家公司" }] } })
+  })
+  await page.goto("/submit/review?companyId=score-company")
+  await expect(page.getByTestId("selected-company-pill")).toContainText(company.name)
+  await page.getByTestId("company-search-input").fill("另一家公司")
+  await page.getByTestId("company-result-option").click()
+  await expect(page.getByTestId("selected-company-pill")).toContainText("另一家公司")
+  await page.waitForTimeout(400)
+  await expect(page.getByTestId("selected-company-pill")).not.toContainText(company.name)
+  expect(queries).toEqual(["另一家公司"])
+})
