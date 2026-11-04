@@ -51,7 +51,7 @@ function SearchResults({ initialQuery }: { initialQuery: string }) {
   }
 
   return (
-    <section className="mx-auto flex w-full max-w-page flex-col gap-7 px-4 py-8 sm:px-6 lg:py-10">
+    <section className="mx-auto flex w-full max-w-4xl flex-col gap-7 px-4 py-8 sm:px-6 lg:py-10">
       <div>
         <h1 className="text-3xl font-semibold tracking-tight text-foreground">搜索公司</h1>
       </div>
@@ -79,7 +79,7 @@ function SearchResults({ initialQuery }: { initialQuery: string }) {
         />
       ) : null}
       {results.length > 0 && (
-        <div aria-busy={loading} className="grid gap-4" style={{ gridTemplateColumns: "var(--container-card-grid)" }}>
+        <div aria-busy={loading} className="border-t border-border">
           {results.map((company) => (
             <CompanyCard key={company.id} company={company} />
           ))}

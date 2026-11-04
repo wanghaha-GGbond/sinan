@@ -2,6 +2,7 @@ import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 
 import { CompanyRating, companyDisplayScore } from "./company-rating"
+import { CompanyLogo } from "./company-logo"
 
 import type { CompanyListItem } from "@/lib/api/types"
 import type { Company } from "@/lib/types"
@@ -23,9 +24,7 @@ export function CompanyCard({ company, variant = "directory" }: { company: Compa
       aria-label={`查看${displayName}，${score === null ? "暂无评分" : `方向评分 ${score.toFixed(1)} 分（满分 10 分）`}，${reviewCount} 条评价`}
     >
       <div className="flex min-w-0 items-start gap-3 sm:gap-4">
-        <span className="grid size-12 shrink-0 place-items-center rounded-lg border border-primary-surface-border bg-primary-tint text-lg font-semibold text-primary-deep sm:size-14" aria-hidden="true">
-          {displayName.slice(0, 1)}
-        </span>
+        <CompanyLogo company={company} />
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
             <h3 className="min-w-0 max-w-full text-base font-semibold leading-snug text-foreground [overflow-wrap:anywhere] group-hover:underline sm:text-lg">{displayName}</h3>
