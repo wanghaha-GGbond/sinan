@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 
 import { CompanyDecisionInsights } from "@/components/company/company-decision-insights"
 import { CompanyLogo } from "@/components/company/company-logo"
+import { CompanyDimensionSummaryPanel } from "@/components/company/company-dimension-summary"
 import { CompanyEvidenceRail } from "@/components/company/company-evidence-rail"
 import { CompanySectionNav } from "@/components/company/company-section-nav"
 import { CompanyReviewFeed } from "@/components/company/company-review-feed"
@@ -103,6 +104,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
               <Link href={`/submit/review?companyId=${encodeURIComponent(company.id)}`} className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary-deep hover:underline">分享你的经历<ArrowUpRight className="size-4" aria-hidden="true" /></Link>
             </div>
           ) : <div data-testid="company-review-feed" className="min-w-0"><CompanyReviewFeed companyId={company.id} reviews={mappedReviews} reviewCount={company.reviewCount ?? mappedReviews.length} previewLimit={1} /></div>}
+          <div className="mt-6"><CompanyDimensionSummaryPanel dimensions={company.dimensionSummary} /></div>
           {reviewCount > 0 ? <div className="mt-8">
             <DepartmentInsights insights={departmentInsights} />
             <PromiseRecords companyId={company.id} />

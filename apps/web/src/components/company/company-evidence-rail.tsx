@@ -61,7 +61,8 @@ export function CompanyEvidenceRail({ company }: { company: CompanyListItem }) {
             <span>成长 · {company.cbti.axes.growth === "G" ? "成长" : "稳定"}</span>
             <span>协作 · {company.cbti.axes.collaboration === "C" ? "协作" : "独立"}</span>
           </div>
-        ) : null}
+        ) : <p className="mt-3 text-sm text-muted-foreground">节奏、管理、成长、协作各需至少 5 份有效回答，样本不足不推断类型。</p>}
+        <Link href={`/submit/review?companyId=${encodeURIComponent(company.id)}&questionnaire=1`} className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-primary-deep hover:underline">补充工作方式问卷</Link>
       </section>
 
       <section className="py-6">

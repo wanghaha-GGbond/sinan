@@ -109,7 +109,7 @@ export function buildQuestionnaireSession(options?: {
   includeOfficeExperience?: boolean
   includeCBTIQuestions?: boolean
 }): QuestionnaireSession {
-  const maxQuestions = options?.maxQuestions ?? 10
+  const maxQuestions = options?.maxQuestions ?? 12
   const includeOffice = options?.includeOfficeExperience ?? true
   const includeCbti = options?.includeCBTIQuestions ?? true
   const pool: QuestionnaireQuestion[] = []

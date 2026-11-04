@@ -47,6 +47,7 @@ export function sanitizePublicQuestionnaire(input: unknown): PublicReviewQuestio
 
   for (const key of NUMERIC_KEYS) {
     if (source[key] === null || source[key] === undefined) continue
+    if (typeof source[key] !== "number" && (typeof source[key] !== "string" || !source[key].trim())) continue
     const value = typeof source[key] === "number" ? source[key] : Number(source[key])
     if (Number.isFinite(value) && value >= 0 && value <= 10) result[key] = value
   }

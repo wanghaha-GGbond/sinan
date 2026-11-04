@@ -3,13 +3,25 @@ import { eq, isNull, and } from "drizzle-orm"
 import { companies } from "@/db/schema/companies"
 import { validateCompanySubmission } from "@/lib/content-guard"
 import { toPublicCompanyView } from "@/lib/server/company-view"
+import { getAuthUserFromRequest } from "@/lib/server/auth"
+import { checkPersistentRateLimit } from "@/lib/server/persistent-rate-limit"
+import { getAuthClientKey } from "@/lib/server/auth-rate-limit"
 
 const CREDIT_CODE_RE = /^[0-9A-Z]{18}$/
 
 export async function POST(request: NextRequest) {
+  const user = await getAuthUserFromRequest(request)
+  if (!user) return NextResponse.json({ error: "请先登录" }, { status: 401 })
+  const limits = await Promise.all([
+    checkPersistentRateLimit(`company-submit:user:${user.userId}`, { maxRequests: 5, windowSeconds: 86400 }),
+    checkPersistentRateLimit(`company-submit:ip:${getAuthClientKey(request)}`, { maxRequests: 20, windowSeconds: 86400 }),
+  ])
+  const blocked = limits.find(limit => !limit.allowed)
+  if (blocked && !blocked.allowed) return NextResponse.json({ error: "暂时无法提交，请稍后重试", retryAfter: blocked.retryAfter }, { status: blocked.unavailable ? 503 : 429 })
   let body: Record<string, unknown>
   try {
     body = await request.json()
+    if (!body || typeof body !== "object" || Array.isArray(body)) return NextResponse.json({ error: "请求格式错误" }, { status: 400 })
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
   }
@@ -103,7 +115,7 @@ export async function POST(request: NextRequest) {
         source: "user_added",
         reviewStatus: "pending_review",
         claimedStatus: "unclaimed",
-        // submittedByUserId / submittedByAnonymousProfileId left null until auth is in place
+        submittedByUserId: user.userId,
       })
       .returning()
 
