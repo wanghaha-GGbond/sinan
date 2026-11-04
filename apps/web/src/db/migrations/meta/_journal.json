@@ -169,6 +169,13 @@
       "when": 1793664000000,
       "tag": "0023_pulse_checkins",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1793750400000,
+      "tag": "0024_pulse_company_privacy",
+      "breakpoints": true
     }
   ]
 }

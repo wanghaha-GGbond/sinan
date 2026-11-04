@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { eq, isNull, and } from "drizzle-orm"
+import { eq, isNull, and, or } from "drizzle-orm"
 import { companies } from "@/db/schema/companies"
 import { validateCompanySubmission } from "@/lib/content-guard"
 import { toPublicCompanyView } from "@/lib/server/company-view"
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Extra credit code format check
-  if (!CREDIT_CODE_RE.test(unifiedSocialCreditCode)) {
+  if (unifiedSocialCreditCode && !CREDIT_CODE_RE.test(unifiedSocialCreditCode)) {
     return NextResponse.json(
       { error: "统一社会信用代码格式不正确，需要 18 位大写字母或数字" },
       { status: 400 }
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
       .from(companies)
       .where(
         and(
-          eq(companies.unifiedSocialCreditCode, unifiedSocialCreditCode),
+          or(eq(companies.registeredName, registeredName), unifiedSocialCreditCode ? eq(companies.unifiedSocialCreditCode, unifiedSocialCreditCode) : undefined),
           isNull(companies.deletedAt)
         )
       )
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
 
     if (existing.length > 0) {
       return NextResponse.json(
-        { error: "该统一社会信用代码已被提交" },
+        { error: "这家公司已被提交，请选择已有公司" },
         { status: 409 }
       )
     }
@@ -99,9 +99,9 @@ export async function POST(request: NextRequest) {
         registeredName,
         shortName,
         englishName,
-        unifiedSocialCreditCode,
-        registeredAddress,
-        legalRepresentative,
+        unifiedSocialCreditCode: unifiedSocialCreditCode || null,
+        registeredAddress: registeredAddress || null,
+        legalRepresentative: legalRepresentative || null,
         city,
         industry,
         website,

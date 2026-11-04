@@ -11,6 +11,7 @@ import { moderationEvents } from "../../src/db/schema/moderation-events"
 import { reviews } from "../../src/db/schema/reviews"
 import { reviewUsefulVotes } from "../../src/db/schema/review-useful-votes"
 import { users } from "../../src/db/schema/users"
+import { pulseCheckins } from "../../src/db/schema/pulse-checkins"
 import { hashPassword, signToken } from "../../src/lib/server/auth"
 import { issueRegistrationCode } from "../../src/lib/server/registration-codes"
 import { releaseTestProxyHeaders } from "../../scripts/release-network.mjs"
@@ -109,6 +110,19 @@ test("邀请注册、评价审核公开和账号注销形成真实数据库闭�
   expect(loginResponse.status()).toBe(200)
   expect((await loginResponse.json()).user.id).toBe(registeredUserId)
 
+  const pulseHeaders = { Authorization: `Bearer ${userToken}` }
+  const checkIn = await request.post("/api/me/pulse", { headers: pulseHeaders, data: { energy: 10, pressure: 1, workMinutes: 480, endMinute: 1080 } })
+  expect(checkIn.status()).toBe(200)
+  const personalPulse = await request.get("/api/me/pulse", { headers: pulseHeaders })
+  expect(personalPulse.status()).toBe(200)
+  expect(personalPulse.headers()["cache-control"]).toBe("private, no-store")
+  expect((await personalPulse.json()).summary).toMatchObject({ days: 1, score: 100, workMinutes: 480 })
+  const unverifiedOptIn = await request.post("/api/me/pulse", { headers: pulseHeaders, data: { energy: 10, pressure: 1, companyId, shareWithCompany: true } })
+  expect(unverifiedOptIn.status()).toBe(403)
+  const companyPulse = await request.get(`/api/companies/${companyId}/pulse`)
+  expect(companyPulse.status()).toBe(200)
+  expect((await companyPulse.json()).points).toEqual([])
+
   const searchResponse = await request.get(
     `/api/companies/search?q=${encodeURIComponent(`Release Company`)}`,
   )
@@ -200,6 +214,7 @@ test("邀请注册、评价审核公开和账号注销形成真实数据库闭�
     data: { confirmation: "DELETE" },
   })
   expect(deleteResponse.status()).toBe(200)
+  expect(await db.select().from(pulseCheckins).where(eq(pulseCheckins.userId, registeredUserId))).toEqual([])
 
   const [reviewAfterDeletion] = await db
     .select({ authorUserId: reviews.authorUserId, anonymousProfileId: reviews.anonymousProfileId })

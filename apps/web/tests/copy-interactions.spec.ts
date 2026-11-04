@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test"
 
-const pulseNoticeText = "个人记录仅自己可见；日期按北京时间，每天可更新。"
+const pulseNoticeText = "每天可更新；不默认选分，不公开个人工时和下班时间。"
 // Streaming can temporarily leave a duplicate in a hidden React S:* container
 // outside the app shell. Assert the real main landmark, not that transport copy.
 const pulseNotice = (page: Page) => page.getByRole("main").getByText(pulseNoticeText, { exact: true })

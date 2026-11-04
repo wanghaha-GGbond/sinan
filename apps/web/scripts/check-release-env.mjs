@@ -42,8 +42,8 @@ if (process.env.ERROR_REPORTING_MODE === "webhook" && !process.env.ERROR_REPORTI
 if (process.env.NEXT_PUBLIC_API_ENABLED !== "true") {
   errors.push("NEXT_PUBLIC_API_ENABLED must be true; production cannot use mock fallbacks")
 }
-if (process.env.NEXT_PUBLIC_APP_ENV === "production" && process.env.NEXT_PUBLIC_PULSE_ENABLED !== "false") {
-  errors.push("NEXT_PUBLIC_PULSE_ENABLED must be false until the server-side Pulse feature is released")
+if (!["true", "false"].includes(process.env.NEXT_PUBLIC_PULSE_ENABLED ?? "")) {
+  errors.push("NEXT_PUBLIC_PULSE_ENABLED must explicitly be true or false")
 }
 if (process.env.NEXT_PUBLIC_APP_ENV === "staging" && process.env.NEXT_PUBLIC_PULSE_ENABLED !== "true") {
   errors.push("NEXT_PUBLIC_PULSE_ENABLED must be true in staging so the Pulse experience can be reviewed")

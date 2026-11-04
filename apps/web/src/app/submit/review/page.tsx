@@ -906,22 +906,22 @@ function SubmitReviewForm() {
                           <FieldError message={companySubmissionErrors.companyName} />
                         </label>
                         <label className="grid gap-1 text-sm font-medium text-foreground">
-                          统一社会信用代码 *
+                          统一社会信用代码（选填）
                           <Input data-testid="new-company-credit-code-input" value={companySelection.newCompanyDraft.unifiedSocialCreditCode} onChange={(event) => updateNewCompanyDraft({ unifiedSocialCreditCode: event.target.value })} placeholder="例如：91310000XXXXXXXXXX" className="rounded-[18px] border-border/60 bg-card shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
                           <FieldError message={companySubmissionErrors.unifiedSocialCreditCode} />
                         </label>
                         <label className="grid gap-1 text-sm font-medium text-foreground">
-                          注册地址 *
+                          注册地址（选填）
                           <Input data-testid="new-company-address-input" value={companySelection.newCompanyDraft.registeredAddress} onChange={(event) => updateNewCompanyDraft({ registeredAddress: event.target.value })} placeholder="公司注册登记地址" className="rounded-[18px] border-border/60 bg-card shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
                           <FieldError message={companySubmissionErrors.registeredAddress} />
                         </label>
                         <label className="grid gap-1 text-sm font-medium text-foreground">
-                          法定代表人 *
+                          法定代表人（选填）
                           <Input data-testid="new-company-legal-representative-input" value={companySelection.newCompanyDraft.legalRepresentative} onChange={(event) => updateNewCompanyDraft({ legalRepresentative: event.target.value })} placeholder="法定代表人姓名" className="rounded-[18px] border-border/60 bg-card shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
                           <FieldError message={companySubmissionErrors.legalRepresentative} />
                         </label>
                         <label className="grid gap-1 text-sm font-medium text-foreground">
-                          注册城市 *
+                          主要城市 *
                           <Input data-testid="new-company-city-input" value={companySelection.newCompanyDraft.city} onChange={(event) => updateNewCompanyDraft({ city: event.target.value })} placeholder="注册城市" className="rounded-[18px] border-border/60 bg-card shadow-[0_3px_0_rgba(17,24,39,0.035)]" />
                           <FieldError message={companySubmissionErrors.city} />
                         </label>

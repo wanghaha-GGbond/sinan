@@ -2,6 +2,12 @@
 
 范围：海外 Web、Next.js + OpenNext + Cloudflare Workers + Neon；保留 monorepo，iOS 不随 Web 发布。
 
+## 2026-11-04 Pulse 升级补充
+
+以下 10 月记录保留作历史，不作为当前状态。当前基线为 web-v0.0.6，main 为 0 强制人工审批、保留全部 CI 与 staging 保护。PR7 已合并。下一次 PR25/原始 PR3 升级包含 `0023`、`0024` 和真实 Pulse，具体规则见 [Pulse 发布说明](pulse-release-20261104.md)。
+
+发布后生产 Pulse 可开启，不再沿用“永远 404”的旧检查。请先准备同源码、同 `0024` 迁移和认证契约的 `CF_PULSE_ENABLED=false` 关闭版本；新打卡产生后不能退回不含打卡注销清理的 v0.0.6。保留旧回退校验，不通过关闭门禁解决跨迁移回退。
+
 ## 2026-10-31 公开注册决策
 
 ### Cloudflare 运行时兼容修复

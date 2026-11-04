@@ -74,7 +74,9 @@ try {
     assert.match(page.headers.get("content-type") ?? "", /text\/html/)
     assert.match(await page.text(), /在场/)
   }
-  assert.equal((await request("/pulse")).status, target === "production" ? 404 : 200)
+  const pulseEnabled = config.vars.NEXT_PUBLIC_PULSE_ENABLED === "true"
+  assert.equal((await request("/pulse")).status, pulseEnabled ? 200 : 404)
+  assert.equal((await request("/api/me/pulse")).status, pulseEnabled ? 401 : 404)
   assert.equal((await request("/community")).status, 200)
   const community = await request("/api/community")
   assert.equal(community.status, 503, "Missing database must not return demonstration discussions")

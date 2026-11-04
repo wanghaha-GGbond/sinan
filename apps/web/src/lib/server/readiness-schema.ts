@@ -13,7 +13,7 @@ export async function verifyReadinessSchema(execute: (query: SQL) => Promise<{ r
   await execute(sql`
     select u.session_version, u.email_verified_at, t.token_hash, t.session_version, t.expires_at,
       r.count, r.reset_at, c.code_hash, c.attempts, c.delivered_at, c.expires_at,
-      p.day, p.energy, p.pressure, p.work_minutes
+      p.day, p.energy, p.pressure, p.work_minutes, p.company_id, p.end_minute
     from users u, password_reset_tokens t, security_rate_limits r, registration_codes c, pulse_checkins p where false
   `)
 }
