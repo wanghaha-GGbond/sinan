@@ -4,7 +4,7 @@
 
 ## 已确认基线
 
-- 2026-11-04 正式站只读核验：源码 `93ef6def7a3a49f121479d03611829aaed76c1dd`，迁移 `0022_email_registration`，ready；对应 Web v0.0.4 基线。PR4/PR6 原始历史合并与 Logo 新增仍在本地验证阶段，不属于已上线版本。见 [原始 PR4/PR6 整合验收](original-pr4-pr6-integration-20261104.md)。
+- 2026-11-04 正式站只读核验：源码 `93ef6def7a3a49f121479d03611829aaed76c1dd`，迁移 `0022_email_registration`，ready；对应 Web v0.0.4 基线。PR6（包含 PR4 原始业务提交和 15 家 Logo）已通过全部 CI/Preview 合入 main `8d11efb`，尚未切换正式站；PR4 本身的说明文件仍待合并。见 [原始 PR4/PR6 整合验收](original-pr4-pr6-integration-20261104.md)。
 - 历史正式版 [Web v0.0.3](https://github.com/wanghaha-GGbond/sinan/releases/tag/web-v0.0.3)，源码 `fbcd9a4466672e930a463e09966daf8189fc0831`，包含 PR21/22；下面的 v0.0.2 也是历史基线。
 - 此前“已移植视觉”不等于忠实还原原稿：推荐/最新、新收录栏、卡片层级和部分资料未完整保留。新一轮补齐范围与未完成边界见 [朋友 UI 原稿补齐](friend-ui-completion-20261101.md)，实际发布前不当作已上线。
 

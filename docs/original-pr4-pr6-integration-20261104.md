@@ -2,13 +2,14 @@
 
 ## 状态边界
 
-这是本地整合记录，不是上线公告。2026-11-04 只读检查正式站：
+这是整合与验收记录，不是上线公告。2026-11-04 只读检查正式站：
 
 - `/api/health/ready` 为 ready，源码 `93ef6def7a3a49f121479d03611829aaed76c1dd`，迁移 `0022_email_registration`，认证契约 2。
 - 注册配置：无需邀请码、必须邮箱验证、邮件发送配置可用。本次没有发送邮件或创建生产用户，不能据此声称重新完成了真实注册验收。
-- PR4、PR6 仍未合入 main；PR6 远端 base 仍为 PR5 分支，推送并改为 main 后需完整 CI/Preview。
+- PR6 已改为 main，并在 Web/iOS/数据库/UI/Cloudflare 与隔离 Preview 全部通过后，于 2026-11-04 11:29 UTC 正常 merge-commit 合并为 `8d11efbabf7faf654b52970c5d9dcbe9afe75e80`；未绕过检查。PR4 原始业务提交随 PR6 保留进 main，PR4 本身的来源维护说明仍待独立 CI/Preview 与合并。
 - PR4 本地整合提交 `738c3fc`，保留原始 head `f694562` 为父提交，并合入 main `3968d5c`。PR6 以原始 head `f7c003e` 合入该 PR4 提交，保留朋友的历史，不 squash 或 force push。
 - 推送两次返回 `fatal error in commit_refs_rules` / `Internal Server Error`。GitHub 官方同日通报 Git Operations / Pull Requests / Actions 故障。失败不是通过 CI，也不是完成发布。
+- 重试后 PR4 与 PR6 推送成功。PR4 曾持续没有新检查、mergeable 为 UNKNOWN；因此先合入已完成门禁、包含原始 PR4 业务提交的 PR6，再同步 PR4 与最新 main。PR4 新增的 README 和这份进度记录不改变业务代码。
 
 ## 原稿到整合版的对应关系
 
@@ -39,12 +40,14 @@
 - PR6 整合版：107 单测、66 页面回归、typecheck、lint（相同 2 个已有 warning）及生产构建通过。
 - 所有页面回归使用 loopback 测试站、虚拟测试数据和禁用邮件；未连接生产数据库。
 - 原始测试中要求“5 分制”“演示讨论”的断言按当前生产契约更新，保留布局与筛选断言，不删除整个测试规避失败。
-- CI/隔离 Preview、Cloudflare 构建和正式站验收仍待执行。不得将本地通过写成线上完成。
+- PR6 `604f1f2` 远端 Web CI `41819727633`、iOS `41819727648`、Cloudflare 双环境 `41819727689` 和隔离 Preview `41819727712` 全部成功；Preview 包括全量迁移/重复执行、公开页面和真实隔离库 E2E。
+- 本地 10 项 Cloudflare 发布策略测试和 production workerd 运行测试通过。制品为 validation-only，不能直接上传。
+- 合并后 main staging、PR4 剩余说明的门禁和正式站发布验收仍待完成。不得将 GitHub 合并写成线上完成。
 
 ## 后续门禁与未完成范围
 
-1. GitHub 恢复后推送原始 PR4/PR6 分支，PR6 base 改为 main。
-2. 在用户已授权的 staging 范围内运行 CI/隔离 Preview。PR4 先 merge-commit 合并，再同步 PR6 与最新 main、重新验证后合并；不绕过检查。
+1. PR6 已正常合并；PR4 同步最新 main 后推送，只剩来源说明与进度记录。
+2. 在用户已授权的 staging 范围内运行 PR4 CI/隔离 Preview，通过后正常合并，不绕过检查。
 3. 合并后的 main staging 验收，通过 Cloudflare 发布门禁后发布新版本并核对实际线上 SHA。
 4. PR26 深色登录修复仍是独立 PR，不在本次整合中；其 staging 还需批准。
 5. PR25 真实个人 Pulse 仍为 draft，不能称公司匿名趋势/30 人阈值已完成；生产保持关闭。
