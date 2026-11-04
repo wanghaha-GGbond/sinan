@@ -1,8 +1,8 @@
 export type CompanySubmissionInput = {
   companyName: string
-  unifiedSocialCreditCode: string
-  registeredAddress: string
-  legalRepresentative: string
+  unifiedSocialCreditCode?: string
+  registeredAddress?: string
+  legalRepresentative?: string
   city: string
   industry: string
   note?: string
@@ -44,9 +44,9 @@ export function validateCompanySubmission(input: CompanySubmissionInput): Compan
   const errors: Record<string, string> = {}
   const warnings: Record<string, string> = {}
   const name = input.companyName.trim()
-  const code = input.unifiedSocialCreditCode.trim().toUpperCase()
-  const address = input.registeredAddress.trim()
-  const legalRepresentative = input.legalRepresentative.trim()
+  const code = input.unifiedSocialCreditCode?.trim().toUpperCase() ?? ""
+  const address = input.registeredAddress?.trim() ?? ""
+  const legalRepresentative = input.legalRepresentative?.trim() ?? ""
   const city = input.city.trim()
   const industry = input.industry.trim()
 
@@ -56,24 +56,24 @@ export function validateCompanySubmission(input: CompanySubmissionInput): Compan
     errors.companyName = "公司名称包含不适合公开展示的表达，请改为正式注册名称。"
   }
 
-  if (!creditCodePattern.test(code)) {
+  if (code && !creditCodePattern.test(code)) {
     errors.unifiedSocialCreditCode = "请输入 18 位统一社会信用代码。"
   }
 
-  if (address.length < 5 || address.length > 120) {
+  if (address && (address.length < 5 || address.length > 120)) {
     errors.registeredAddress = "注册地址需要填写 5-120 个字符。"
   } else if (hasSensitive(address) || hasAttackWord(address)) {
     errors.registeredAddress = "注册地址包含不适合公开展示的内容，请使用正式注册地址。"
   }
 
-  if (legalRepresentative.length < 2 || legalRepresentative.length > 20) {
+  if (legalRepresentative && (legalRepresentative.length < 2 || legalRepresentative.length > 20)) {
     errors.legalRepresentative = "法定代表人需要填写 2-20 个字符。"
   } else if (hasSensitive(legalRepresentative) || hasAttackWord(legalRepresentative)) {
     errors.legalRepresentative = "法定代表人字段包含不适合公开展示的内容。"
   }
 
   if (city.length < 2 || city.length > 30) {
-    errors.city = "注册城市需要填写 2-30 个字符。"
+    errors.city = "主要城市需要填写 2-30 个字符。"
   }
   if (industry.length < 2 || industry.length > 30) {
     errors.industry = "所属行业需要填写 2-30 个字符。"

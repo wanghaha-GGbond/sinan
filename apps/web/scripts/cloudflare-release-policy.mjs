@@ -6,6 +6,8 @@ export function releaseConfiguration(target, env, release) {
   if (!["staging", "production"].includes(target)) throw new Error("Choose staging or production explicitly")
   if (!/^[a-f0-9]{40}$/.test(release)) throw new Error("A full Git SHA is required")
   const production = target === "production"
+  const pulseEnabled = env.CF_PULSE_ENABLED ?? "true"
+  if (!["true", "false"].includes(pulseEnabled)) throw new Error("CF_PULSE_ENABLED must be true or false")
   const appUrl = production ? "https://zaichang.space" : "https://staging.zaichang.space"
   const mailDomain = env.CF_MAIL_FROM_DOMAIN?.trim() || (production ? "" : "example.invalid")
   const supportEmail = env.CF_SUPPORT_EMAIL?.trim() || (production ? "" : "support@example.invalid")
@@ -33,7 +35,7 @@ export function releaseConfiguration(target, env, release) {
     vars: {
       DEPLOYMENT_REGION: "global", DATABASE_ADAPTER: "neon",
       NEXT_PUBLIC_APP_URL: appUrl, NEXT_PUBLIC_APP_ENV: target,
-      NEXT_PUBLIC_API_ENABLED: "true", NEXT_PUBLIC_PULSE_ENABLED: production ? "false" : "true",
+      NEXT_PUBLIC_API_ENABLED: "true", NEXT_PUBLIC_PULSE_ENABLED: pulseEnabled,
       LAUNCH_SCOPE_ONLY: "true", INVITE_REQUIRED: production ? "false" : "true",
       MAIL_PROVIDER: production ? "resend" : "disabled",
       MAIL_FROM_DOMAIN: mailDomain, SUPPORT_EMAIL: supportEmail,

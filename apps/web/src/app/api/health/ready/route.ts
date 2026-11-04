@@ -31,10 +31,7 @@ function hasValidErrorReportingConfiguration() {
 
 function hasValidRuntimeConfiguration() {
   const appEnvironment = process.env.NEXT_PUBLIC_APP_ENV
-  const pulseReady =
-    appEnvironment === "production"
-      ? process.env.NEXT_PUBLIC_PULSE_ENABLED === "false"
-      : process.env.NEXT_PUBLIC_PULSE_ENABLED === "true"
+  const pulseReady = ["true", "false"].includes(process.env.NEXT_PUBLIC_PULSE_ENABLED ?? "")
   const region = process.env.DEPLOYMENT_REGION ?? "mainland"
   const filingReady =
     appEnvironment === "production" && region === "mainland"

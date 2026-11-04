@@ -1,5 +1,6 @@
 export * from "./enums"
 export * from "./users"
+export * from "./pulse-checkins"
 export * from "./password-reset-tokens"
 export * from "./registration-codes"
 export * from "./anonymous-profiles"

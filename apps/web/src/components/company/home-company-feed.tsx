@@ -10,6 +10,7 @@ import { useCompanySearch } from "@/lib/queries/company-search"
 import { CompanyCard } from "./company-card"
 import { CompanyListSkeleton } from "./company-list-skeleton"
 import { filterAndSortCompanies } from "@/lib/company-directory"
+import { isPulseEnabled } from "@/lib/pulse-feature"
 
 const subscribeToHydration = () => () => {}
 const clientReady = () => true
@@ -60,6 +61,7 @@ export function HomeCompanySidebar() {
     query: "", city: "全部", ratedOnly: false, sort: "recent",
   }).slice(0, 5), [data])
   const items = [
+    ...(isPulseEnabled({ NEXT_PUBLIC_APP_ENV: process.env.NEXT_PUBLIC_APP_ENV, NEXT_PUBLIC_PULSE_ENABLED: process.env.NEXT_PUBLIC_PULSE_ENABLED }) ? [{ href: "/pulse", label: "打卡与工作周报", icon: Sparkles }] : []),
     { href: "/submit/review", label: "评分与评价", icon: PenLine },
     { href: "/submit/review?questionnaire=1", label: "问卷评分", icon: ClipboardList },
     { href: "/company-verification", label: "职业身份认证", icon: ShieldCheck },

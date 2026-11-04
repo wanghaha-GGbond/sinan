@@ -8,8 +8,9 @@ export default function PrivacyPage() {
     <article className="mx-auto max-w-3xl space-y-8 px-4 py-10 leading-7 sm:px-6">
       <header>
         <h1 className="text-3xl font-bold">在场隐私政策</h1>
-        <p className="mt-2 text-sm text-muted-foreground">生效日期：2026 年 7 月 5 日</p>
+        <p className="mt-2 text-sm text-muted-foreground">更新日期：2026 年 11 月 4 日</p>
       </header>
+      <section><h2 className="text-xl font-semibold">工作打卡与公司趋势</h2><p className="mt-2">Pulse 保存你主动填写的精力、压力、可选工时和下班时间，个人明细仅自己可见。仅在你主动勾选参与并具有有效公司认证时，将当天精力和压力纳入该公司的统计。每个已结束日期至少有 30 个有效认证账号参与才展示结果，不公开个人明细、精确人数、个人工时或下班时间，不提供部门或岗位筛选。</p><p className="mt-2">你可在 Pulse 页面清除全部记录并撤回统计参与，注销也会清除个人打卡。公开统计会随有效记录变化而更新；已由他人保存的公开汇总或你主动分享的摘要无法撤回。参与人数门槛和取整降低识别风险，但不承诺绝对匿名。</p></section>
       <section><h2 className="text-xl font-semibold">我们收集的信息</h2><p className="mt-2">账号注册时收集邮箱或手机号及加密后的密码；发布评价时收集评分、文本和必要的反滥用信息；申请在职认证时仅处理完成认证所必需的凭证。</p></section>
       <section><h2 className="text-xl font-semibold">使用目的</h2><p className="mt-2">这些信息用于提供登录、匿名评价、内容审核、账号安全、反作弊和客户支持。在场不会向企业披露评价作者的身份，也不会出售个人信息。</p></section>
       <section><h2 className="text-xl font-semibold">匿名与公开内容</h2><p className="mt-2">公开页面使用匿名身份展示评价。为降低身份反推风险，样本不足时会合并部门或模糊职级。请勿在公开内容中填写姓名、联系方式等可识别信息。</p></section>

@@ -28,7 +28,7 @@ test("production uses the owned domain, retains the fallback, disables demo and 
   const staging = releaseConfiguration("staging", {}, sha)
   assert.deepEqual(staging.routes, [{ pattern: "staging.zaichang.space", custom_domain: true, zone_name: "zaichang.space" }])
   assert.equal(staging.vars.NEXT_PUBLIC_APP_URL, "https://staging.zaichang.space")
-  assert.equal(config.vars.NEXT_PUBLIC_PULSE_ENABLED, "false")
+  assert.equal(config.vars.NEXT_PUBLIC_PULSE_ENABLED, "true")
   assert.equal(config.vars.MAIL_PROVIDER, "resend")
   assert.equal(config.vars.INVITE_REQUIRED, "false")
   assert.equal(config.preview_urls, false)
@@ -49,4 +49,11 @@ test("rollback rejects pre-password-recovery releases and cross-migration/enviro
 test("file digests change with contents", () => {
   assert.equal(digest("config"), digest(Buffer.from("config")))
   assert.notEqual(digest("config"), digest("changed"))
+})
+test("Pulse kill switch is explicit and does not alter authentication or routes", () => {
+  const active = releaseConfiguration("production", fixture, sha)
+  const paused = releaseConfiguration("production", { ...fixture, CF_PULSE_ENABLED: "false" }, sha)
+  assert.equal(paused.vars.NEXT_PUBLIC_PULSE_ENABLED, "false")
+  assert.deepEqual({ ...paused, vars: { ...paused.vars, NEXT_PUBLIC_PULSE_ENABLED: "true" } }, active)
+  assert.throws(() => releaseConfiguration("production", { ...fixture, CF_PULSE_ENABLED: "yes" }, sha))
 })
