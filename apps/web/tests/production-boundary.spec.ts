@@ -5,8 +5,24 @@ import path from "node:path"
 
 import { GET as searchCompanies } from "../src/app/api/companies/search/route"
 import { GET as getCommunity } from "../src/app/api/community/route"
+import { GET as getPromises } from "../src/app/api/promise-records/route"
 import { proxy } from "../src/proxy"
 import { POST as submitCompany } from "../src/app/api/companies/community-submissions/route"
+
+test("promise records reject invalid company IDs and fail closed without a database", async () => {
+  expect((await getPromises(new Request("https://sinan.test/api/promise-records?companyId=invalid"))).status).toBe(400)
+  const previous = process.env.DATABASE_URL
+  process.env.DATABASE_URL = ""
+  try {
+    const response = await getPromises(new Request("https://sinan.test/api/promise-records?companyId=10000000-0000-4000-8000-000000000003"))
+    expect(response.status).toBe(503)
+    expect(response.headers.get("cache-control")).toBe("no-store")
+    expect(await response.json()).toEqual({ error: "承诺记录暂时无法加载" })
+  } finally {
+    if (previous === undefined) delete process.env.DATABASE_URL
+    else process.env.DATABASE_URL = previous
+  }
+})
 
 test("company submission rejects invalid credentials before accepting company data", async () => {
   const response = await submitCompany(new NextRequest("https://sinan.test/api/companies/community-submissions", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer invalid-test-token" }, body: "{}" }))
