@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import { useSearchParams } from "next/navigation"
 import { Suspense, useEffect, useMemo, useState } from "react"
 import { Search, TrendingUp, ArrowRight } from "lucide-react"
 
@@ -10,19 +9,22 @@ import { WebButton } from "@/components/ui/web-button"
 import { WebEmptyState } from "@/components/ui/web-empty-state"
 import { WebSearchField } from "@/components/ui/web-search-field"
 import { useCompanySearch } from "@/lib/queries/company-search"
+import { replaceUrlSearchParams, useUrlSearchParams } from "@/lib/use-url-search-params"
 
 export default function SearchPage() {
   return <Suspense fallback={<p role="status" className="p-6 text-sm text-muted-foreground">加载中…</p>}><SearchContent /></Suspense>
 }
 
 function SearchContent() {
-  const searchParams = useSearchParams()
-  return <SearchResults key={searchParams.get("q") ?? ""} initialQuery={searchParams.get("q") ?? ""} />
-}
-
-function SearchResults({ initialQuery }: { initialQuery: string }) {
-  const [query, setQuery] = useState(initialQuery)
-  const [debouncedQuery, setDebouncedQuery] = useState(initialQuery)
+  const searchParams = useUrlSearchParams()
+  const query = searchParams.get("q") ?? ""
+  const [debouncedQuery, setDebouncedQuery] = useState(query)
+  function setQuery(value: string) {
+    const next = new URLSearchParams(window.location.search)
+    if (value) next.set("q", value)
+    else next.delete("q")
+    replaceUrlSearchParams(next)
+  }
   const catalogQuery = useCompanySearch()
   const searchQuery = useCompanySearch(
     { q: debouncedQuery },
@@ -43,7 +45,7 @@ function SearchResults({ initialQuery }: { initialQuery: string }) {
 
   const hasQuery = Boolean(debouncedQuery.trim())
   const results = hasQuery ? searchQuery.data ?? [] : []
-  const loading = hasQuery && searchQuery.isFetching
+  const loading = query !== debouncedQuery || (hasQuery && searchQuery.isFetching)
   const error = hasQuery && searchQuery.error instanceof Error ? searchQuery.error.message : null
 
   function submitSearch() {
@@ -70,7 +72,7 @@ function SearchResults({ initialQuery }: { initialQuery: string }) {
       </div>
 
       {loading && <p role="status" className="text-sm text-muted-foreground">{results.length ? "正在更新搜索结果…" : "搜索中..."}</p>}
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <div role="alert" className="flex flex-wrap items-center gap-3 text-sm text-destructive"><span>搜索暂时不可用</span><WebButton variant="secondary" onClick={() => void searchQuery.refetch()}>重试</WebButton></div>}
       {!loading && !error && results.length === 0 && debouncedQuery.trim() ? (
         <SmartEmptyState
           query={debouncedQuery.trim()}
@@ -79,7 +81,7 @@ function SearchResults({ initialQuery }: { initialQuery: string }) {
         />
       ) : null}
       {results.length > 0 && (
-        <div aria-busy={loading} className="border-t border-border">
+        <div aria-busy={loading} className="grid gap-4 sm:grid-cols-2">
           {results.map((company) => (
             <CompanyCard key={company.id} company={company} />
           ))}

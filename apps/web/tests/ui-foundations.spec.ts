@@ -12,6 +12,9 @@ for (const width of widths) {
     test(`${entry.name} fits ${width}px`, async ({ page }, testInfo) => {
       test.setTimeout(60_000)
       await page.setViewportSize({ width, height: 900 })
+      // This layout fixture has no database and uses a non-UUID company ID.
+      // API error/retry behavior is exercised separately in company-ux.spec.ts.
+      await page.route("**/api/promise-records?**", route => route.fulfill({ json: { records: [] } }))
       const errors: string[] = []
       page.on("pageerror", (error) => errors.push(error.message))
       page.on("console", (message) => {

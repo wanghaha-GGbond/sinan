@@ -8,7 +8,7 @@ import { companies } from "@/db/schema/companies"
 import { departments } from "@/db/schema/departments"
 import { promiseRecords } from "@/db/schema/promise-records"
 import { users } from "@/db/schema/users"
-import { getAuthUser, requireAuthUser } from "@/lib/server/auth"
+import { requireAuthUser } from "@/lib/server/auth"
 import { getOrCreateAnonymousProfile } from "@/lib/server/anonymous-profile"
 import { toPublicPromiseRecord } from "@/lib/server/promise-record-view"
 
@@ -110,8 +110,7 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   const companyId = new URL(request.url).searchParams.get("companyId")
-  if (!companyId) return NextResponse.json({ error: "companyId is required" }, { status: 400 })
-  await getAuthUser()
+  if (!companyId || !z.uuid().safeParse(companyId).success) return NextResponse.json({ error: "公司编号无效" }, { status: 400 })
 
   try {
     const { db } = await import("@/db/client")
@@ -132,6 +131,6 @@ export async function GET(request: Request) {
       { headers: { "Cache-Control": "public, max-age=60, stale-while-revalidate=300" } },
     )
   } catch {
-    return NextResponse.json({ records: [] })
+    return NextResponse.json({ error: "承诺记录暂时无法加载" }, { status: 503, headers: { "Cache-Control": "no-store" } })
   }
 }

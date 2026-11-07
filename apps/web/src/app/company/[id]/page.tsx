@@ -1,14 +1,12 @@
 import Link from "next/link"
-import { ArrowUpRight, BadgeCheck, ChevronRight, MapPin, PenLine, ShieldCheck } from "lucide-react"
+import { ArrowUpRight } from "lucide-react"
 import { notFound } from "next/navigation"
 
 import { CompanyDecisionInsights } from "@/components/company/company-decision-insights"
-import { CompanyLogo } from "@/components/company/company-logo"
+import { CompanyPageHeader } from "@/components/company/company-page-header"
 import { CompanyDimensionSummaryPanel } from "@/components/company/company-dimension-summary"
 import { CompanyEvidenceRail } from "@/components/company/company-evidence-rail"
-import { CompanySectionNav } from "@/components/company/company-section-nav"
 import { CompanyReviewFeed } from "@/components/company/company-review-feed"
-import { CompanyRating, companyDisplayScore } from "@/components/company/company-rating"
 import { DepartmentInsights } from "@/components/company/department-insights"
 import { PromiseRecords } from "@/components/company/promise-records"
 import { SentimentTrend } from "@/components/company/sentiment-trend"
@@ -19,7 +17,6 @@ import type { CompanyListItem } from "@/lib/types"
 import { getDepartmentInsights, type DepartmentInsight } from "@/lib/server/department-insights"
 import { getPublicCompanyDetail, getPublicCompanyReviews } from "@/lib/server/public-company-data"
 import { mapPublicReview } from "@/lib/review-mappers"
-import { publicCompanyWebsite } from "@/lib/company-identity"
 
 export default async function CompanyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -40,8 +37,6 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
   if (!company) notFound()
   const mappedReviews = reviewItems.map(mapPublicReview)
   const reviewCount = company.reviewCount ?? 0
-  const displayScore = companyDisplayScore(company.directionScore, reviewCount)
-  const website = publicCompanyWebsite(company.website)
 
   if (company.reviewStatus === "pending_review") {
     return (
@@ -59,39 +54,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
   return (
     <section className="min-h-[calc(100vh-160px)] bg-muted px-4 pb-12 pt-4 sm:px-8 sm:pt-6">
       <div className="mx-auto w-full max-w-page">
-      <nav aria-label="面包屑" className="mb-4 flex items-center gap-1.5 text-sm text-muted-foreground">
-        <Link href="/companies" className="inline-flex min-h-11 items-center hover:text-foreground">找公司</Link>
-        <ChevronRight className="size-3.5" aria-hidden="true" />
-        <span>{company.name}</span>
-      </nav>
-
-      <header className="rounded-lg border border-border bg-card px-5 pt-6 shadow-[0_2px_8px_rgba(20,29,34,0.04)] sm:px-8 sm:pt-8">
-        <div className="flex flex-col gap-6 pb-6 lg:flex-row lg:items-start lg:justify-between lg:gap-10">
-          <div className="flex min-w-0 items-start gap-4 sm:gap-5">
-            <CompanyLogo company={company} className="size-14 text-xl sm:size-16" />
-            <div className="min-w-0">
-              <h1 className="break-words text-2xl font-semibold leading-tight text-foreground sm:text-3xl">{company.name}</h1>
-              <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
-                <span>{company.industry}</span>
-                <span className="inline-flex items-center gap-1"><MapPin className="size-3.5" />{company.city}</span>
-                {company.size ? <span>{company.size}</span> : null}
-                {company.claimedStatus === "claimed" ? <span className="inline-flex items-center gap-1 text-primary-deep"><BadgeCheck className="size-3.5" />企业已认证</span> : null}
-              </p>
-              {company.description ? <p className="mt-4 max-w-2xl break-words text-sm leading-6 text-foreground/80">{company.description}</p> : null}
-              {website ? <a href={website} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex min-h-11 items-center gap-1 text-sm font-medium text-primary-deep hover:underline">公司官网<ArrowUpRight className="size-4" aria-hidden="true" /></a> : null}
-            </div>
-          </div>
-          <div className="flex flex-wrap items-end justify-between gap-5 border-t border-border pt-5 sm:justify-start lg:shrink-0 lg:justify-end lg:border-0 lg:pt-0">
-            <div>
-              <CompanyRating score={displayScore} prominent />
-              <Link href={`/company/${company.id}/reviews`} className="mt-1 block text-sm text-muted-foreground hover:text-foreground hover:underline">{reviewCount.toLocaleString()} 条公开评价</Link>
-            </div>
-            <WebButton asChild variant="primary"><Link href={`/submit/review?companyId=${encodeURIComponent(company.id)}`}><PenLine className="size-4" aria-hidden="true" />写评价</Link></WebButton>
-          </div>
-        </div>
-        <p className="inline-flex items-center gap-1.5 pb-5 text-xs text-muted-foreground"><ShieldCheck className="size-4 shrink-0" aria-hidden="true" />{reviewCount > 0 ? `匿名评价 · 人工审核 · ${company.verifiedIdentityCount ?? 0} 位验证贡献者` : "公司公开资料 · 站内评价独立收集"}</p>
-        <CompanySectionNav id={company.id} active="概览" />
-      </header>
+      <CompanyPageHeader company={company} active="概览" />
 
       {reviewCount > 0 ? <div className="mt-8"><CompanyDecisionInsights company={company} /></div> : null}
 

@@ -3,12 +3,11 @@
 import Link from "next/link"
 import { useState, useSyncExternalStore } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, ArrowRight, PenLine } from "lucide-react"
+import { ArrowRight, PenLine } from "lucide-react"
 
 import { CompanyEvidenceRail } from "@/components/company/company-evidence-rail"
 import { CompanyDimensionSummaryPanel } from "@/components/company/company-dimension-summary"
-import { CompanyRating, companyDisplayScore } from "@/components/company/company-rating"
-import { CompanySectionNav } from "@/components/company/company-section-nav"
+import { CompanyPageHeader } from "@/components/company/company-page-header"
 import { WebButton } from "@/components/ui/web-button"
 import { ratingReviewHref } from "@/lib/rating-navigation"
 import type { CompanyListItem } from "@/lib/types"
@@ -21,19 +20,10 @@ export function RatingsClient({ company }: { company: CompanyListItem }) {
   const router = useRouter()
   const hydrated = useSyncExternalStore(subscribeToHydration, clientReady, serverReady)
   const [score, setScore] = useState<number | null>(null)
-  const reviewCount = company.reviewCount ?? 0
   return (
-    <section className="mx-auto w-full max-w-page px-4 py-6 sm:px-6">
-      <Link href={`/company/${company.id}`} className="inline-flex min-h-11 items-center gap-2 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" />返回公司</Link>
-      <header className="mt-3 rounded-lg border border-border bg-card px-5 pt-5 sm:px-7">
-        <p className="text-sm text-muted-foreground">{company.name}</p>
-        <div className="flex flex-wrap items-end justify-between gap-4 py-4">
-          <h1 className="text-2xl font-semibold">公司评分</h1>
-          <div className="flex items-baseline gap-3"><CompanyRating score={companyDisplayScore(company.directionScore, reviewCount)} prominent /><span className="text-sm text-muted-foreground">{reviewCount} 条公开评价</span></div>
-        </div>
-        <CompanySectionNav id={company.id} active="评分" />
-      </header>
-      <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
+    <section className="min-h-[calc(100vh-160px)] bg-muted px-4 py-4 sm:px-8 sm:py-6"><div className="mx-auto w-full max-w-page">
+      <CompanyPageHeader company={company} active="评分" />
+      <div className="mt-6 grid gap-6 min-[1200px]:grid-cols-[minmax(0,1fr)_280px]">
         <div className="min-w-0 space-y-6">
         <div className="self-start rounded-lg border border-border bg-card p-5 sm:p-7">
           <fieldset disabled={!hydrated} aria-busy={!hydrated}>
@@ -62,6 +52,6 @@ export function RatingsClient({ company }: { company: CompanyListItem }) {
         </div>
         <CompanyEvidenceRail company={company} />
       </div>
-    </section>
+    </div></section>
   )
 }

@@ -244,7 +244,8 @@ test("directory loading matches responsive cards and keeps short-page footer at 
     await page.setViewportSize({ width: 375, height: 812 })
     expect(await grid.evaluate((node) => getComputedStyle(node).gridTemplateColumns.split(" ").length)).toBe(1)
   } finally { release() }
-  await expect(page.getByRole("button", { name: "清除筛选" })).toBeVisible()
+  await expect(page.getByText("还没有收录的公司")).toBeVisible()
+  await expect(page.getByRole("button", { name: "清除筛选" })).toHaveCount(0)
   await page.setViewportSize({ width: 1280, height: 1100 })
   const footer = await page.getByRole("contentinfo").boundingBox()
   expect(footer!.y + footer!.height).toBeGreaterThanOrEqual(1099)
