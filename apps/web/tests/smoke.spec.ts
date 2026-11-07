@@ -18,7 +18,8 @@ test("研报 HTML 列表与详情可访问", async ({ page }) => {
   await report.click()
   await expect(page).toHaveURL(/\/research\//)
   await expect(page.getByRole("heading", { name: "研究指数", exact: true })).toBeVisible()
-  await expect(page.getByText("阅读边界")).toBeVisible()
+  await expect(page.getByText("公司整体判断，不代表具体岗位。", { exact: false })).toBeVisible()
+  await expect(page.getByTestId("research-notes")).not.toHaveAttribute("open", "")
 })
 
 test("合规页面与账号数据入口可访问", async ({ page }) => {
