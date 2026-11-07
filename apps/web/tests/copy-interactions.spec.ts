@@ -41,18 +41,20 @@ test("home search submits the keyword without explanatory banners", async ({ pag
   await expect(page.getByText("先找到你真正想了解的公司。", { exact: true })).toHaveCount(0)
 })
 
-test("research lists come first while methodology remains expandable", async ({ page }, testInfo) => {
+test("research results come first while notes stay collapsed at the end", async ({ page }, testInfo) => {
   await page.route("**/api/**", (route) => route.fulfill({ json: { user: null } }))
   await page.goto("/research")
   await expect(page.getByRole("heading", { name: "公司研究", exact: true })).toBeVisible()
   await expect(page.locator('a[href^="/research/"]').first()).toBeVisible()
+  await expect(page.locator('a[href^="/research/"]')).toHaveCount(10)
+  await expect(page.getByText(/可信度/)).toHaveCount(0)
   const details = page.locator("details")
   await expect(details).not.toHaveAttribute("open", "")
   await page.screenshot({ path: testInfo.outputPath("research.png"), fullPage: true })
   await details.locator("summary").focus()
   await page.keyboard.press("Enter")
   await expect(details).toHaveAttribute("open", "")
-  await expect(details.getByText(/不代表每个部门、城市或岗位的实际体验/)).toBeVisible()
+  await expect(details.getByText(/每份研究底部可查看依据/)).toBeVisible()
 })
 
 test("register and real personal Pulse retain their privacy notices without sample statistics", async ({ page }) => {
