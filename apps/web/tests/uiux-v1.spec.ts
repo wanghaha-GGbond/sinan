@@ -240,9 +240,13 @@ test("directory loading matches responsive cards and keeps short-page footer at 
     await page.goto("/companies")
     await expect(page.getByRole("status", { name: "正在加载公司" })).toBeVisible()
     const grid = page.getByTestId("directory-loading-grid")
-    expect(await grid.evaluate((node) => getComputedStyle(node).gridTemplateColumns.split(" ").length)).toBe(2)
+    // The streamed Suspense skeleton can be visible before its stylesheet is
+    // applied. Keep the exact desktop/mobile assertions, but wait for layout
+    // rather than taking one non-retrying computed-style snapshot.
+    await expect(grid).toHaveCSS("display", "grid")
+    await expect.poll(() => grid.evaluate((node) => getComputedStyle(node).gridTemplateColumns.split(" ").length)).toBe(2)
     await page.setViewportSize({ width: 375, height: 812 })
-    expect(await grid.evaluate((node) => getComputedStyle(node).gridTemplateColumns.split(" ").length)).toBe(1)
+    await expect.poll(() => grid.evaluate((node) => getComputedStyle(node).gridTemplateColumns.split(" ").length)).toBe(1)
   } finally { release() }
   await expect(page.getByText("还没有收录的公司")).toBeVisible()
   await expect(page.getByRole("button", { name: "清除筛选" })).toHaveCount(0)
