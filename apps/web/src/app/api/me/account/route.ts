@@ -2,6 +2,7 @@ import { and, count, eq, inArray, or } from "drizzle-orm"
 import { NextRequest, NextResponse } from "next/server"
 
 import { users } from "@/db/schema/users"
+import { forumPosts, forumReplies, forumVotes, forumFollows, forumReports } from "@/db/schema/forum"
 import { pulseCheckins } from "@/db/schema/pulse-checkins"
 import { passwordResetTokens } from "@/db/schema/password-reset-tokens"
 import { anonymousProfiles } from "@/db/schema/anonymous-profiles"
@@ -56,6 +57,14 @@ export async function DELETE(request: NextRequest) {
       await tx.select({ id: users.id }).from(users).where(eq(users.id, authUser.userId)).for("update")
       await tx.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, authUser.userId))
       await tx.delete(pulseCheckins).where(eq(pulseCheckins.userId, authUser.userId))
+      await tx.delete(forumFollows).where(eq(forumFollows.userId, authUser.userId))
+      await tx.delete(forumVotes).where(eq(forumVotes.userId, authUser.userId))
+      await tx.update(forumReports).set({ reporterUserId: null }).where(eq(forumReports.reporterUserId, authUser.userId))
+      // Purge private submissions, preserve approved content without attribution.
+      await tx.delete(forumPosts).where(and(eq(forumPosts.authorUserId, authUser.userId), inArray(forumPosts.status, ["pending_review", "hidden", "rejected", "deleted"])))
+      await tx.delete(forumReplies).where(and(eq(forumReplies.authorUserId, authUser.userId), inArray(forumReplies.status, ["pending_review", "hidden", "rejected", "deleted"])))
+      await tx.update(forumPosts).set({ authorUserId: null }).where(eq(forumPosts.authorUserId, authUser.userId))
+      await tx.update(forumReplies).set({ authorUserId: null }).where(eq(forumReplies.authorUserId, authUser.userId))
       const profileRows = await tx
         .select({ id: anonymousProfiles.id })
         .from(anonymousProfiles)

@@ -7,7 +7,7 @@ import { WebButton } from "@/components/ui/web-button"
 import { publicCompanyWebsite } from "@/lib/company-identity"
 import type { CompanyListItem } from "@/lib/types"
 
-export function CompanyPageHeader({ company, active }: { company: CompanyListItem; active: "概览" | "评价" | "评分" | "承诺" }) {
+export function CompanyPageHeader({ company, active }: { company: CompanyListItem; active: "概览" | "评价" | "评分" | "承诺" | "论坛" }) {
   const count = company.reviewCount ?? 0
   const base = `/company/${encodeURIComponent(company.id)}`
   const website = publicCompanyWebsite(company.website)

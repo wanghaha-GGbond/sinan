@@ -380,6 +380,7 @@ function MeContent({
 
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6">
+      <nav aria-label="我的社区" className="flex flex-wrap gap-4 text-sm"><Link className="inline-flex min-h-11 items-center text-primary-deep" href="/community?feed=mine">我的帖子</Link><Link className="inline-flex min-h-11 items-center text-primary-deep" href="/community?feed=following">关注的公司动态</Link></nav>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
