@@ -44,6 +44,19 @@ export function ForumHub({ company }: { company?: CompanyListItem }) {
   const rows = Array.from(new Map((posts.data?.pages.flatMap(p => p.posts) ?? []).map(p => [p.id, p])).values())
   const matching = companies.filter(c => `${c.name} ${c.shortName ?? ""}`.toLowerCase().includes(search.toLowerCase()))
   function filter(key: string, value: string) { const next = new URLSearchParams(params); if (value) next.set(key, value); else next.delete(key); replaceUrlSearchParams(next) }
+  function companyHref(id?: string) {
+    const next = new URLSearchParams()
+    for (const key of ["feed", "category", "sort"]) {
+      const value = params.get(key)
+      if (value) next.set(key, value)
+    }
+    return `${id ? `/company/${id}/community` : "/community"}${next.size ? `?${next}` : ""}`
+  }
+  function clearFilters() {
+    const next = new URLSearchParams(params)
+    next.delete("category"); next.delete("companyId"); next.delete("cursor")
+    replaceUrlSearchParams(next)
+  }
   async function follow() {
     if (!selected || !user || followLock.current || !follows.data) return
     followLock.current = true; setFollowingBusy(true); setFollowError("")
@@ -67,8 +80,8 @@ export function ForumHub({ company }: { company?: CompanyListItem }) {
         <h2 className="font-semibold">公司论坛</h2>
         <label className="sr-only" htmlFor="forum-company-search">查找公司论坛</label><input id="forum-company-search" value={search} onChange={e => setSearch(e.target.value)} placeholder="查找公司" className="my-3 min-h-11 w-full rounded-lg border border-input bg-card px-3 text-sm outline-none focus-visible:outline-2 focus-visible:outline-ring" />
         <div className="flex gap-2 overflow-x-auto pb-1 min-[1200px]:flex-col">
-          <Link href="/community" className="inline-flex min-h-11 shrink-0 items-center rounded-lg px-2 text-sm hover:bg-muted">全部公司</Link>
-          {(expanded || search ? matching : matching.slice(0, 8)).map(c => <Link key={c.id} href={`/company/${c.id}/community`} aria-current={companyId === c.id ? "page" : undefined} className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg px-2 text-sm hover:bg-muted ${companyId === c.id ? "bg-primary-tint font-medium text-primary-deep" : ""}`}><CompanyLogo company={c} className="size-7 rounded-md p-1 text-xs sm:size-7" /><span>{c.shortName || c.name}</span></Link>)}
+          <Link href={companyHref()} className="inline-flex min-h-11 shrink-0 items-center rounded-lg px-2 text-sm hover:bg-muted">全部公司</Link>
+          {(expanded || search ? matching : matching.slice(0, 8)).map(c => <Link key={c.id} href={companyHref(c.id)} aria-current={companyId === c.id ? "page" : undefined} className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg px-2 text-sm hover:bg-muted ${companyId === c.id ? "bg-primary-tint font-medium text-primary-deep" : ""}`}><CompanyLogo company={c} className="size-7 rounded-md p-1 text-xs sm:size-7" /><span>{c.shortName || c.name}</span></Link>)}
         </div>
         {catalog.isPending && <p role="status" className="py-2 text-xs text-muted-foreground">正在加载公司…</p>}
         {catalog.isError && <button type="button" className="min-h-11 text-sm underline" onClick={() => void catalog.refetch()}>重新加载公司</button>}
@@ -88,7 +101,7 @@ export function ForumHub({ company }: { company?: CompanyListItem }) {
         {feed !== "all" && !user && !loading ? <div className="rounded-xl border border-border bg-card p-6"><WebButton asChild variant="secondary"><Link href={withNext("/login", returnTo)}>登录后查看{feed === "mine" ? "我的发布" : "关注动态"}</Link></WebButton></div>
           : posts.isPending ? <p role="status" className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">正在加载论坛…</p>
           : posts.isError && !posts.isFetchNextPageError ? <div role="alert" className="rounded-xl border border-border bg-card p-6"><p className="text-sm">论坛暂时无法加载</p><WebButton variant="secondary" size="sm" className="mt-3" onClick={() => void posts.refetch()}>重试论坛</WebButton></div>
-          : rows.length === 0 ? <div className="rounded-xl border border-border bg-card px-5 py-10 text-center"><MessageCircle className="mx-auto size-7 text-muted-foreground" aria-hidden="true" /><h2 className="mt-3 font-semibold">{feed === "mine" ? "你还没有发布帖子" : feed === "following" ? "关注的公司还没有新帖子" : "还没有公开帖子"}</h2><p className="mt-2 text-sm text-muted-foreground">来聊聊面试、工作和职业选择。</p></div>
+          : rows.length === 0 ? <div className="rounded-xl border border-border bg-card px-5 py-10 text-center"><MessageCircle className="mx-auto size-7 text-muted-foreground" aria-hidden="true" /><h2 className="mt-3 font-semibold">{feed === "following" && follows.data?.companyIds.length === 0 ? "你还没有关注公司" : category || (!company && companyId) ? "没有符合筛选的帖子" : feed === "mine" ? "你还没有发布帖子" : feed === "following" ? "关注的公司还没有新帖子" : "还没有公开帖子"}</h2><div className="mt-4 flex flex-wrap justify-center gap-2">{category || (!company && companyId) ? <WebButton variant="secondary" onClick={clearFilters}>清除筛选</WebButton> : null}{feed === "following" ? <WebButton asChild variant="secondary"><Link href="/community">发现公司论坛</Link></WebButton> : <WebButton asChild variant="secondary"><a href="#forum-composer">发起讨论</a></WebButton>}</div></div>
           : rows.map(post => <ForumPostCard key={post.id} post={post} />)}
         {posts.isFetchNextPageError && <p role="alert" className="text-sm text-destructive">后续帖子加载失败，已加载内容保留。</p>}
         {posts.hasNextPage && <WebButton variant="secondary" disabled={posts.isFetchingNextPage} className="w-full" onClick={() => void posts.fetchNextPage()}>{posts.isFetchingNextPage ? "正在加载…" : posts.isFetchNextPageError ? "重试更多帖子" : "更多帖子"}</WebButton>}

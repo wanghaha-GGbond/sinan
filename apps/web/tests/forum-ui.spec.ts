@@ -1,6 +1,29 @@
 import { expect, test, type Page } from "@playwright/test"
 const companyId = "10000000-0000-4000-8000-000000000001", postId = "20000000-0000-4000-8000-000000000001"
 const post = { id: postId, companyId, companyName: "测试公司", category: "question", title: "团队协作怎样进行？", content: "希望了解跨团队协作与工作节奏的真实情况。", status: "visible", authorLabel: "匿名成员", isMine: false, usefulCount: 0, replyCount: 0, isUseful: false, createdAt: "2026-11-07T12:00:00Z" }
+test("company switching preserves feed, topic and sorting", async ({ page }) => {
+  await fixture(page, true)
+  await page.goto("/community?feed=mine&category=interview&sort=useful")
+  const directory = page.getByRole("complementary", { name: "公司论坛目录" })
+  await expect(directory.getByRole("link", { name: "测试公司" })).toHaveAttribute("href", `/company/${companyId}/community?feed=mine&category=interview&sort=useful`)
+  await expect(directory.getByRole("link", { name: "全部公司" })).toHaveAttribute("href", "/community?feed=mine&category=interview&sort=useful")
+})
+test("empty following feed provides company discovery instead of a dead end", async ({ page }) => {
+  await fixture(page, true)
+  await page.route("**/api/forum/posts?**", r => r.fulfill({ json: { posts: [], nextCursor: null } }))
+  await page.goto("/community?feed=following")
+  await expect(page.getByRole("heading", { name: "你还没有关注公司" })).toBeVisible()
+  await expect(page.getByRole("link", { name: "发现公司论坛" })).toHaveAttribute("href", "/community")
+})
+test("clearing empty-result filters preserves my feed and sort", async ({ page }) => {
+  await fixture(page, true)
+  await page.route("**/api/forum/posts?**", r => r.fulfill({ json: { posts: [], nextCursor: null } }))
+  await page.goto(`/community?feed=mine&category=interview&sort=useful&companyId=${companyId}`)
+  await expect(page.getByRole("heading", { name: "没有符合筛选的帖子" })).toBeVisible()
+  await page.getByRole("button", { name: "清除筛选" }).click()
+  await expect(page).toHaveURL(url => url.searchParams.get("feed") === "mine" && url.searchParams.get("sort") === "useful" && !url.searchParams.has("category") && !url.searchParams.has("companyId"))
+  await expect(page.getByRole("heading", { name: "你还没有发布帖子" })).toBeVisible()
+})
 async function fixture(page: Page, signedIn = false) {
   await page.route("**/api/auth/me", r => r.fulfill({ json: { user: signedIn ? { id: "forum-fixture", role: "user" } : null } }))
   await page.route("**/api/companies/search**", r => r.fulfill({ json: { companies: [{ id: companyId, name: "测试公司", industry: "软件", city: "上海", reviewCount: 0 }] } }))
