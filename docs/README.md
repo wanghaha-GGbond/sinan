@@ -7,6 +7,7 @@
 当前海外 Web 上线进度与验收：[web-release-progress.md](web-release-progress.md)。
 当前固化的前端基线：[UI v0.0.1](archive/ui-v0.0.1.md)（UI 已冻结，生产尚未发布）。
 邮箱验证码注册及个人主页增量：[邮箱注册验收](email-registration.md)。
+公司论坛开发与发布边界：[公司论坛 V1](company-forums-v1.md)（待 PR / Preview 验收，未发布生产）。
 形成过程与详细规格：[初版 PRD](archive/frontend-v1/PRD.md)（保留历史 RC1 命名）。
 
 | # | 文档 | 内容 | 读者 |

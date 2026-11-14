@@ -4,7 +4,7 @@ const releaseBaseURL = process.env.RELEASE_BASE_URL?.trim() || "http://127.0.0.1
 
 export default defineConfig({
   testDir: "./tests/release",
-  testMatch: ["core-api-flow.spec.ts", "password-recovery.release.spec.ts", "owner-registration.mail.spec.ts"],
+  testMatch: ["forum.release.spec.ts", "core-api-flow.spec.ts", "password-recovery.release.spec.ts", "owner-registration.mail.spec.ts"],
   timeout: 60_000,
   workers: 1,
   outputDir: "./test-results/release",
@@ -18,10 +18,13 @@ export default defineConfig({
     ? {}
     : {
         webServer: {
-          command: "npm run dev -- --hostname 127.0.0.1 --port 3000",
+          // Test the actual production bundle. Dev HMR can reload repeatedly
+          // while a new company route is compiling, hiding real interactions.
+          command: "npm run build && npm run start -- --hostname 127.0.0.1 --port 3000",
           url: "http://127.0.0.1:3000/api/health/live",
           reuseExistingServer: false,
-          timeout: 120_000,
+          timeout: 240_000,
+          env: { NEXT_PUBLIC_APP_ENV: "staging", NEXT_PUBLIC_API_ENABLED: "true", NEXT_PUBLIC_PULSE_ENABLED: "true" },
         },
       }),
 })

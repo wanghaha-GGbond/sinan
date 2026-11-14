@@ -42,8 +42,18 @@ test("password recovery works in the browser and revokes old sessions", async ({
     const oldSession = await request.get("/api/auth/me", { headers: { authorization: `Bearer ${oldJwt}` } })
     expect((await oldSession.json()).user).toBeNull()
     expect((await request.post("/api/auth/login", { data: { email, password: "BeforeReset123!" } })).status()).toBe(401)
-    expect((await request.post("/api/auth/login", { data: { email, password: "AfterReset123!" } })).status()).toBe(200)
-    expect((await (await request.get("/api/auth/me")).json()).user.id).toBe(user.id)
+    // Exercise the browser's secure-cookie session, not APIRequestContext's
+    // HTTP-only cookie policy on the loopback production-bundle test server.
+    // Production cookie flags remain unchanged.
+    await page.getByRole("link", { name: "返回登录", exact: true }).click()
+    await page.getByLabel("邮箱", { exact: true }).fill(email)
+    await page.getByLabel("密码", { exact: true }).fill("AfterReset123!")
+    await page.getByRole("button", { name: "登录", exact: true }).click()
+    await expect(page).toHaveURL(url => url.pathname === "/")
+    await expect.poll(async () => page.evaluate(async () => (await fetch("/api/auth/me").then(r => r.json())).user?.id)).toBe(user.id)
+    const sessionCookie = (await page.context().cookies()).find(cookie => cookie.name === "auth_token")
+    expect(sessionCookie?.httpOnly).toBe(true)
+    expect(sessionCookie?.secure).toBe(true)
   } finally {
     await db.delete(users).where(eq(users.id, user.id))
   }

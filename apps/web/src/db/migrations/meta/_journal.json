@@ -176,6 +176,13 @@
       "when": 1793750400000,
       "tag": "0024_pulse_company_privacy",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1794009600000,
+      "tag": "0025_company_forums",
+      "breakpoints": true
     }
   ]
 }
