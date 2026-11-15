@@ -1,6 +1,28 @@
 import { expect, test, type Page } from "@playwright/test"
 const companyId = "10000000-0000-4000-8000-000000000001", postId = "20000000-0000-4000-8000-000000000001"
 const post = { id: postId, companyId, companyName: "测试公司", category: "question", title: "团队协作怎样进行？", content: "希望了解跨团队协作与工作节奏的真实情况。", status: "visible", authorLabel: "匿名成员", isMine: false, usefulCount: 0, replyCount: 0, isUseful: false, createdAt: "2026-11-07T12:00:00Z" }
+test("search submits to API, persists across reload and company links, and clears", async ({ page }) => {
+  await fixture(page, true)
+  await page.goto("/community?feed=mine")
+  await page.getByRole("searchbox", { name: "搜索帖子" }).fill("团队")
+  const response = page.waitForRequest(r => r.url().includes("/api/forum/posts?") && new URL(r.url()).searchParams.get("q") === "团队")
+  await page.getByRole("button", { name: "搜索", exact: true }).click()
+  await response
+  await page.reload()
+  await expect(page.getByRole("searchbox", { name: "搜索帖子" })).toHaveValue("团队")
+  const link = page.getByRole("complementary", { name: "公司论坛目录" }).getByRole("link", { name: "测试公司" })
+  await expect(link).toHaveAttribute("href", `/company/${companyId}/community?feed=mine&q=%E5%9B%A2%E9%98%9F`)
+  await page.getByRole("button", { name: "清除搜索" }).click()
+  await expect(page).toHaveURL(url => !url.searchParams.has("q") && url.searchParams.get("feed") === "mine")
+})
+test("empty forum compose button opens and focuses the real composer", async ({ page }) => {
+  await fixture(page, true)
+  await page.route("**/api/forum/posts?**", r => r.fulfill({ json: { posts: [], nextCursor: null } }))
+  await page.goto("/community")
+  await page.getByRole("button", { name: "发起讨论", exact: true }).click()
+  await expect(page.locator("details#forum-composer")).toHaveAttribute("open", "")
+  await expect(page.getByLabel("发帖公司")).toBeFocused()
+})
 test("company switching preserves feed, topic and sorting", async ({ page }) => {
   await fixture(page, true)
   await page.goto("/community?feed=mine&category=interview&sort=useful")

@@ -1,7 +1,15 @@
 import { expect, test } from "@playwright/test"
 import { NextRequest } from "next/server"
 import { randomUUID } from "node:crypto"
-import { forumCursor, parseForumCursor, forumFiltersSchema, forumPostInput } from "../src/lib/forum"
+import { forumCursor, parseForumCursor, forumFiltersSchema, forumPostInput, forumSearchPattern } from "../src/lib/forum"
+test("search is bounded and literal, and cursors cannot cross search scopes", () => {
+  expect(forumFiltersSchema.parse({ q: "  面试  " }).q).toBe("面试")
+  expect(forumFiltersSchema.safeParse({ q: "x".repeat(81) }).success).toBe(false)
+  expect(forumSearchPattern("50%_\\")).toBe("%50\\%\\_\\\\%")
+  const filters = forumFiltersSchema.parse({ q: "面试" })
+  const cursor = forumCursor(filters, { id: randomUUID(), createdAt: new Date(), usefulCount: 0 })
+  expect(() => parseForumCursor({ ...filters, q: "工作", cursor })).toThrow()
+})
 import { forumRoute, readForumJson, forumOriginAllowed } from "../src/lib/server/forum-http"
 import { GET, POST } from "../src/app/api/forum/posts/route"
 import { PUT as vote } from "../src/app/api/forum/posts/[postId]/useful/route"

@@ -24,6 +24,22 @@ async function fixture() {
   const filters: ForumFilters = { companyId: company.id, feed: "all", sort: "latest" }
   return { company, owner, reader, moderator, input, filters }
 }
+test("global and company search respect literal text, moderation and followed-company scope", async () => {
+  const f = await fixture(), g = await fixture(), token = randomUUID()
+  const [first] = await db.insert(forumPosts).values({ ...f.input, title: token + " 工作讨论", content: `${token} 50%_\\ 的真实工作经历。`, authorUserId: f.owner.id, status: "visible" }).returning()
+  const [second] = await db.insert(forumPosts).values({ ...g.input, title: token + " 面试交流", authorUserId: g.owner.id, status: "visible" }).returning()
+  await createForumPost(f.owner.id, { ...f.input, requestId: randomUUID(), title: token + " 待审内容" })
+  const all = { feed: "all" as const, sort: "latest" as const, q: token }
+  expect(new Set((await getForumFeed(all)).posts.map(p => p.id))).toEqual(new Set([first.id, second.id]))
+  expect((await getForumFeed({ ...all, companyId: f.company.id })).posts.map(p => p.id)).toEqual([first.id])
+  expect((await getForumFeed({ ...all, companyId: f.company.id, q: "50%_\\" })).posts.map(p => p.id)).toEqual([first.id])
+  expect((await getForumFeed({ ...all, feed: "mine" }, f.owner.id)).posts).toHaveLength(2)
+  expect((await getForumFeed({ ...all, feed: "following" }, f.reader.id)).posts).toHaveLength(0)
+  await followForum(f.reader.id, f.company.id, true)
+  expect((await getForumFeed({ ...all, feed: "following" }, f.reader.id)).posts.map(p => p.id)).toEqual([first.id])
+  await db.insert(reviewAuthorBlocks).values({ blockerUserId: f.reader.id, blockedAuthorUserId: f.owner.id })
+  expect((await getForumFeed({ ...all, companyId: f.company.id }, f.reader.id)).posts).toHaveLength(0)
+})
 test("forum moderation protects pending content, identity and parent visibility", async () => {
   const f = await fixture(), post = await createForumPost(f.owner.id, f.input)
   expect((await getForumFeed(f.filters)).posts).toEqual([])

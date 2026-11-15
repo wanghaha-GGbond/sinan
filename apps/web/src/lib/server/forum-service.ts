@@ -1,8 +1,8 @@
-import { and, or, eq, inArray, notInArray, isNull, desc, asc, lt, gt, sql, type SQL } from "drizzle-orm"
+import { and, or, eq, inArray, notInArray, isNull, desc, asc, lt, gt, ilike, sql, type SQL } from "drizzle-orm"
 import { forumPosts, forumReplies, forumVotes, forumFollows, forumReports, forumModerationEvents } from "@/db/schema/forum"
 import { companies } from "@/db/schema/companies"
 import { users } from "@/db/schema/users"
-import { ForumError, forumCursor, parseForumCursor, type ForumFilters, type ForumPost, type ForumReply } from "@/lib/forum"
+import { ForumError, forumCursor, parseForumCursor, forumSearchPattern, type ForumFilters, type ForumPost, type ForumReply } from "@/lib/forum"
 import { hasSensitive, hasAttackWord } from "@/lib/content-guard"
 import { getBlockedReviewAuthorKeys } from "./public-review-query"
 import type { z } from "zod"
@@ -57,6 +57,10 @@ export async function getForumFeed(filters: ForumFilters, viewer?: string) {
   const conditions: (SQL | undefined)[] = [companyVisible, isNull(forumPosts.deletedAt), await blockedCondition(viewer)]
   if (filters.companyId) conditions.push(eq(forumPosts.companyId, filters.companyId))
   if (filters.category) conditions.push(eq(forumPosts.category, filters.category))
+  if (filters.q) {
+    const pattern = forumSearchPattern(filters.q)
+    conditions.push(or(ilike(forumPosts.title, pattern), ilike(forumPosts.content, pattern)))
+  }
   conditions.push(filters.feed === "mine" ? eq(forumPosts.authorUserId, viewer!) : eq(forumPosts.status, "visible"))
   if (filters.feed === "following") conditions.push(inArray(forumPosts.companyId, db.select({ id: forumFollows.companyId }).from(forumFollows).where(eq(forumFollows.userId, viewer!))))
   if (cursor) {
