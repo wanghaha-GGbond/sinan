@@ -8,7 +8,7 @@ export const forumPostInput = z.object({ requestId: z.uuid(), companyId: z.uuid(
 export const forumReplyInput = z.object({ requestId: z.uuid(), content: z.string().trim().min(2, "回复至少 2 个字").max(1000) }).strict()
 export const forumFiltersSchema = z.object({ companyId: z.uuid().optional(), category: forumCategorySchema.optional(),
   feed: z.enum(["all", "following", "mine"]).default("all"), sort: z.enum(["latest", "useful"]).default("latest"),
-  cursor: z.string().max(1024).optional(),
+  cursor: z.string().max(1024).optional(), q: z.string().trim().max(80).optional(),
 }).strict()
 export type ForumFilters = z.infer<typeof forumFiltersSchema>
 export type ForumPost = {
@@ -24,7 +24,11 @@ export class ForumError extends Error {
   constructor(public status: number, message: string) { super(message) }
 }
 const cursorSchema = z.object({ scope: z.string().max(300), id: z.uuid(), date: z.iso.datetime(), useful: z.number().int().nonnegative() }).strict()
-function scope(filters: ForumFilters) { return JSON.stringify([filters.companyId ?? "", filters.category ?? "", filters.feed, filters.sort]) }
+function scope(filters: ForumFilters) {
+  const base = [filters.companyId ?? "", filters.category ?? "", filters.feed, filters.sort]
+  return JSON.stringify(filters.q ? [...base, filters.q] : base)
+}
+export function forumSearchPattern(query: string) { return `%${query.replace(/[\\%_]/g, "\\$&")}%` }
 export function forumCursor(filters: ForumFilters, row: { id: string; createdAt: Date; usefulCount: number }) {
   return Buffer.from(JSON.stringify({ scope: scope(filters), id: row.id, date: row.createdAt.toISOString(), useful: row.usefulCount })).toString("base64url")
 }

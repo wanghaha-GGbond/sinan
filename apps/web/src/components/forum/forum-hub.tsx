@@ -24,19 +24,20 @@ export function ForumHub({ company }: { company?: CompanyListItem }) {
   const companies = useMemo(() => company && !catalog.data?.some(c => c.id === company.id) ? [company, ...(catalog.data ?? [])] : catalog.data ?? [], [catalog.data, company])
   const companyId = company?.id ?? params.get("companyId") ?? "", selected = companies.find(c => c.id === companyId)
   const feed = params.get("feed") === "mine" ? "mine" : params.get("feed") === "following" ? "following" : "all"
-  const sort = params.get("sort") === "useful" ? "useful" : "latest", category = params.get("category") ?? ""
+  const sort = params.get("sort") === "useful" ? "useful" : "latest", category = params.get("category") ?? "", q = params.get("q") ?? ""
   const legacy = !company && params.get("view") === "reviews"
   const [search, setSearch] = useState(""), [expanded, setExpanded] = useState(false)
   const [followError, setFollowError] = useState(""), [followingBusy, setFollowingBusy] = useState(false), followLock = useRef(false)
   const returnTo = `${company ? `/company/${company.id}/community` : "/community"}${params.size ? `?${params}` : ""}`
   const follows = useQuery({ queryKey: ["forum", "follows", user?.id], enabled: !loading && Boolean(user), queryFn: () => forumFetch<{ companyIds: string[] }>("/api/forum/follows"), staleTime: 0, gcTime: 0, retry: false })
   const posts = useInfiniteQuery({
-    queryKey: ["forum", "posts", user?.id ?? "anonymous", companyId, feed, sort, category], initialPageParam: "",
+    queryKey: ["forum", "posts", user?.id ?? "anonymous", companyId, feed, sort, category, q], initialPageParam: "",
     enabled: !loading && !legacy && (feed === "all" || Boolean(user)),
     queryFn: ({ pageParam, signal }) => {
       const query = new URLSearchParams({ feed, sort })
       if (companyId) query.set("companyId", companyId)
       if (category) query.set("category", category)
+      if (q) query.set("q", q)
       if (pageParam) query.set("cursor", pageParam)
       return forumFetch<ForumPage>(`/api/forum/posts?${query}`, { signal })
     }, getNextPageParam: page => page.nextCursor ?? undefined, staleTime: 0, gcTime: 0, retry: false,
@@ -46,7 +47,7 @@ export function ForumHub({ company }: { company?: CompanyListItem }) {
   function filter(key: string, value: string) { const next = new URLSearchParams(params); if (value) next.set(key, value); else next.delete(key); replaceUrlSearchParams(next) }
   function companyHref(id?: string) {
     const next = new URLSearchParams()
-    for (const key of ["feed", "category", "sort"]) {
+    for (const key of ["feed", "category", "sort", "q"]) {
       const value = params.get(key)
       if (value) next.set(key, value)
     }
@@ -54,8 +55,14 @@ export function ForumHub({ company }: { company?: CompanyListItem }) {
   }
   function clearFilters() {
     const next = new URLSearchParams(params)
-    next.delete("category"); next.delete("companyId"); next.delete("cursor")
+    next.delete("category"); next.delete("companyId"); next.delete("cursor"); next.delete("q")
     replaceUrlSearchParams(next)
+  }
+  function compose() {
+    const element = document.getElementById("forum-composer")
+    if (element instanceof HTMLDetailsElement) element.open = true
+    element?.scrollIntoView({ block: "center", behavior: "instant" })
+    element?.querySelector<HTMLElement>("input, select, a")?.focus()
   }
   async function follow() {
     if (!selected || !user || followLock.current || !follows.data) return
@@ -93,6 +100,7 @@ export function ForumHub({ company }: { company?: CompanyListItem }) {
         {follows.isError && user && <p role="alert" className="text-sm text-destructive">关注列表暂不可用。<button type="button" onClick={() => void follows.refetch()} className="ml-2 min-h-11 underline">重试关注列表</button></p>}
         {followError && <p role="alert" className="text-sm text-destructive">{followError}</p>}
         <PostComposer companies={companies} companyId={companyId} returnTo={returnTo} />
+        <ForumSearch key={q} query={q} onSearch={value => filter("q", value)} />
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap gap-1" aria-label="动态范围">{([["all", "全部动态"], ["following", "关注的公司"], ["mine", "我的发布"]] as const).map(([v, label]) => <button key={v} type="button" aria-pressed={feed === v} onClick={() => filter("feed", v === "all" ? "" : v)} className={`min-h-11 rounded-lg px-3 text-sm ${feed === v ? "bg-primary-tint font-medium text-primary-deep" : "text-muted-foreground hover:bg-muted"}`}>{label}</button>)}</div>
           <select aria-label="论坛排序" value={sort} onChange={e => filter("sort", e.target.value === "latest" ? "" : e.target.value)} className="min-h-11 rounded-lg border border-border bg-card px-3 text-sm"><option value="latest">最新发布</option><option value="useful">最多赞同</option></select>
@@ -101,7 +109,7 @@ export function ForumHub({ company }: { company?: CompanyListItem }) {
         {feed !== "all" && !user && !loading ? <div className="rounded-xl border border-border bg-card p-6"><WebButton asChild variant="secondary"><Link href={withNext("/login", returnTo)}>登录后查看{feed === "mine" ? "我的发布" : "关注动态"}</Link></WebButton></div>
           : posts.isPending ? <p role="status" className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">正在加载论坛…</p>
           : posts.isError && !posts.isFetchNextPageError ? <div role="alert" className="rounded-xl border border-border bg-card p-6"><p className="text-sm">论坛暂时无法加载</p><WebButton variant="secondary" size="sm" className="mt-3" onClick={() => void posts.refetch()}>重试论坛</WebButton></div>
-          : rows.length === 0 ? <div className="rounded-xl border border-border bg-card px-5 py-10 text-center"><MessageCircle className="mx-auto size-7 text-muted-foreground" aria-hidden="true" /><h2 className="mt-3 font-semibold">{feed === "following" && follows.data?.companyIds.length === 0 ? "你还没有关注公司" : category || (!company && companyId) ? "没有符合筛选的帖子" : feed === "mine" ? "你还没有发布帖子" : feed === "following" ? "关注的公司还没有新帖子" : "还没有公开帖子"}</h2><div className="mt-4 flex flex-wrap justify-center gap-2">{category || (!company && companyId) ? <WebButton variant="secondary" onClick={clearFilters}>清除筛选</WebButton> : null}{feed === "following" ? <WebButton asChild variant="secondary"><Link href="/community">发现公司论坛</Link></WebButton> : <WebButton asChild variant="secondary"><a href="#forum-composer">发起讨论</a></WebButton>}</div></div>
+          : rows.length === 0 ? <div className="rounded-xl border border-border bg-card px-5 py-10 text-center"><MessageCircle className="mx-auto size-7 text-muted-foreground" aria-hidden="true" /><h2 className="mt-3 font-semibold">{feed === "following" && follows.data?.companyIds.length === 0 ? "你还没有关注公司" : q || category || (!company && companyId) ? "没有符合筛选的帖子" : feed === "mine" ? "你还没有发布帖子" : feed === "following" ? "关注的公司还没有新帖子" : "还没有公开帖子"}</h2><div className="mt-4 flex flex-wrap justify-center gap-2">{q || category || (!company && companyId) ? <WebButton variant="secondary" onClick={clearFilters}>清除筛选</WebButton> : null}{feed === "following" ? <WebButton asChild variant="secondary"><Link href="/community">发现公司论坛</Link></WebButton> : <WebButton variant="secondary" onClick={compose}>发起讨论</WebButton>}</div></div>
           : rows.map(post => <ForumPostCard key={post.id} post={post} />)}
         {posts.isFetchNextPageError && <p role="alert" className="text-sm text-destructive">后续帖子加载失败，已加载内容保留。</p>}
         {posts.hasNextPage && <WebButton variant="secondary" disabled={posts.isFetchingNextPage} className="w-full" onClick={() => void posts.fetchNextPage()}>{posts.isFetchingNextPage ? "正在加载…" : posts.isFetchNextPageError ? "重试更多帖子" : "更多帖子"}</WebButton>}
@@ -109,6 +117,10 @@ export function ForumHub({ company }: { company?: CompanyListItem }) {
       <aside className="hidden rounded-xl border border-border bg-card p-5 min-[1200px]:block" aria-label="社区快捷入口"><h2 className="font-semibold">在场社区</h2><div className="mt-3 grid gap-1"><Link href="/community?feed=following" className="inline-flex min-h-11 items-center text-sm">关注的公司</Link><Link href="/community?feed=mine" className="inline-flex min-h-11 items-center text-sm">我的发布</Link><Link href="/companies" className="inline-flex min-h-11 items-center text-sm">公司评分</Link><Link href="/research" className="inline-flex min-h-11 items-center text-sm">公司研究</Link></div><p className="mt-5 border-t border-border pt-4 text-xs leading-6 text-muted-foreground">讨论具体经历，不公开他人隐私。</p></aside>
     </div>}
   </div></section>
+}
+function ForumSearch({ query, onSearch }: { query: string; onSearch: (value: string) => void }) {
+  const [value, setValue] = useState(query)
+  return <form role="search" aria-label="论坛帖子搜索" className="flex gap-2" onSubmit={event => { event.preventDefault(); onSearch(value.trim()) }}><label className="sr-only" htmlFor="forum-post-search">搜索帖子</label><input id="forum-post-search" type="search" maxLength={80} value={value} onChange={event => setValue(event.target.value)} placeholder="搜索讨论内容" className="min-h-11 min-w-0 flex-1 rounded-lg border border-input bg-card px-3 text-sm" /><WebButton type="submit" variant="secondary">搜索</WebButton>{query ? <WebButton type="button" variant="quiet" onClick={() => onSearch("")}>清除搜索</WebButton> : null}</form>
 }
 function ForumPostCard({ post }: { post: ForumPost }) {
   return <article data-testid="forum-post" className="rounded-xl border border-border bg-card p-5 sm:p-6">
