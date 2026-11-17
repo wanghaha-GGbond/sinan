@@ -56,8 +56,8 @@ function PersonalReport({ userId }: { userId: string }) {
   async function share() {
     const summary = report.data?.summary
     if (!summary || summary.score === null) return
-    const text = "我的在场 Pulse：近 7 天记录 " + summary.days + " 天，平均 " + summary.score + "/100。"
-    try { if (navigator.share) await navigator.share({ title: "我的 Pulse", text }); else { await navigator.clipboard.writeText(text); setMessage("周报摘要已复制") } }
+    const text = "我的在场工作周报：近 7 天记录 " + summary.days + " 天，工作状态 " + summary.score + "/100。"
+    try { if (navigator.share) await navigator.share({ title: "我的工作周报", text }); else { await navigator.clipboard.writeText(text); setMessage("周报摘要已复制") } }
     catch (error) { if (!(error instanceof DOMException && error.name === "AbortError")) setMessage("分享失败，请重试") }
   }
   async function clear() {
@@ -73,8 +73,8 @@ function PersonalReport({ userId }: { userId: string }) {
   if (report.isError) return <div role="alert" className="rounded-lg border border-border p-5">记录加载失败 <button className="min-h-11 underline" onClick={() => void report.refetch()}>重试</button></div>
   const data = report.data
   return <>
-    <SolidCard className="overflow-hidden p-0" data-testid="pulse-share-card"><div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-primary/10 px-5 py-4"><div><p className="text-xs font-semibold text-primary-deep">MY PULSE</p><h2 className="mt-1 text-xl font-semibold">我的工作周报</h2></div><SolidButton type="button" variant="secondary" disabled={!data.records.length} onClick={() => void share()}><Share2 className="size-4" />分享我的周报</SolidButton></div>
-      <div className="grid gap-6 p-5 lg:grid-cols-[minmax(0,1fr)_320px]"><div><div className="grid grid-cols-3 gap-2"><PulseRing value={data.summary.score} label="近 7 天 Pulse" color="var(--primary)" /><PulseRing value={data.summary.energyScore} label="精力" color="var(--chart-2)" /><PulseRing value={data.summary.calmScore} label="低压感" color="var(--chart-3)" /></div><p className="mt-5 text-center text-sm text-muted-foreground">{data.summary.days} 天记录 · 已记录工时 {hoursText(data.summary.workMinutes)}</p>{!data.records.length && <p className="mt-2 text-center text-sm">还没有记录</p>}</div>
+    <SolidCard className="overflow-hidden p-0" data-testid="pulse-share-card"><div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-primary/10 px-5 py-4"><div><p className="text-xs font-semibold text-primary-deep">最近一周</p><h2 className="mt-1 text-xl font-semibold">我的工作周报</h2></div><SolidButton type="button" variant="secondary" disabled={!data.records.length} onClick={() => void share()}><Share2 className="size-4" />分享我的周报</SolidButton></div>
+      <div className="grid gap-6 p-5 lg:grid-cols-[minmax(0,1fr)_320px]"><div><div className="grid grid-cols-3 gap-2"><PulseRing value={data.summary.score} label="近 7 天状态" color="var(--primary)" /><PulseRing value={data.summary.energyScore} label="精力" color="var(--chart-2)" /><PulseRing value={data.summary.calmScore} label="低压感" color="var(--chart-3)" /></div><p className="mt-5 text-center text-sm text-muted-foreground">{data.summary.days} 天记录 · 已记录工时 {hoursText(data.summary.workMinutes)}</p>{!data.records.length && <p className="mt-2 text-center text-sm">还没有记录</p>}</div>
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border">{[["本周工时",hoursText(data.week?.workMinutes)],["本月工时",hoursText(data.month?.workMinutes)],["平均下班",formatPulseTime(data.summary.averageEndMinute)],["最晚下班",formatPulseTime(data.summary.latestEndMinute)]].map(([label,value],index) => <div key={label} className="bg-card p-4">{index < 2 ? <CalendarDays className="size-4 text-primary-deep" /> : <Clock3 className="size-4 text-primary-deep" />}<p className="mt-3 text-xs text-muted-foreground">{label}</p><p className="mt-1 text-xl font-semibold tabular-nums">{value}</p></div>)}</div></div>
       <details className="border-t border-border px-5"><summary className="min-h-12 cursor-pointer py-3 text-sm font-medium">查看我的近 7 天记录</summary><ul className="divide-y divide-border">{data.records.map(row => <li key={row.day} className="flex flex-wrap justify-between gap-2 py-3 text-sm"><span>{row.day}</span><span>{pulseScore(row.energy,row.pressure)} / 100 · {hoursText(row.workMinutes)}</span></li>)}</ul></details>
     </SolidCard>

@@ -22,7 +22,7 @@ export default async function ResearchPage() {
 
   return (
     <section className="break-normal bg-muted px-4 py-8 sm:px-6 sm:py-10">
-      <div className="mx-auto w-full max-w-hero">
+      <div className="mx-auto w-full max-w-5xl">
         <header className="mb-6">
           <h1 className="text-3xl font-semibold tracking-tight">公司研究</h1>
           <p className="mt-2 text-sm text-muted-foreground">{indices.length} 家公司 · 更新于 {generatedAt.slice(0, 10)}</p>

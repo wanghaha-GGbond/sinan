@@ -29,6 +29,13 @@ import { useAuth } from "@/lib/auth-context"
 import { getFavoritedCompanyIds } from "@/lib/favorites-storage"
 import { getMeDashboard } from "@/lib/api/me"
 import { IdentityCard, type IdentityCardData } from "@/components/identity/identity-card"
+import { PersonalTools } from "@/components/layout/personal-tools"
+import { isPulseEnabled } from "@/lib/pulse-feature"
+
+const pulseEnabled = isPulseEnabled({
+  NEXT_PUBLIC_APP_ENV: process.env.NEXT_PUBLIC_APP_ENV,
+  NEXT_PUBLIC_PULSE_ENABLED: process.env.NEXT_PUBLIC_PULSE_ENABLED,
+})
 
 // Types matching /api/me response contract
 type DailyTask = {
@@ -190,8 +197,10 @@ export default function MePage() {
   // ── Not logged in ──────────────────────────────────────────────────────
   if (!authLoading && !authUser) {
     return (
-      <section className="mx-auto flex w-full max-w-5xl flex-col items-center px-4 py-20">
-        <WebSurface variant="elevated" className="w-full max-w-card p-10 text-center">
+      <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6">
+        <h1 className="text-2xl font-semibold tracking-tight">我的</h1>
+        <PersonalTools pulseEnabled={pulseEnabled} />
+        <WebSurface variant="elevated" className="mx-auto w-full max-w-card p-8 text-center">
           <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-2xl bg-muted">
             <Navigation className="size-8 text-muted-foreground" />
           </div>
@@ -380,9 +389,8 @@ function MeContent({
 
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6">
-      <nav aria-label="我的社区" className="flex flex-wrap gap-4 text-sm"><Link className="inline-flex min-h-11 items-center text-primary-deep" href="/community?feed=mine">我的帖子</Link><Link className="inline-flex min-h-11 items-center text-primary-deep" href="/community?feed=following">关注的公司动态</Link></nav>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">个人主页</h1>
           <p className="mt-1 flex flex-wrap gap-x-2.5 gap-y-1 text-sm text-muted-foreground">
@@ -398,6 +406,12 @@ function MeContent({
           </WebButton>
         </div>
       </div>
+
+      <PersonalTools pulseEnabled={pulseEnabled} />
+      <nav aria-label="我的社区" className="flex flex-wrap gap-2 text-sm">
+        <WebButton asChild variant="secondary"><Link href="/community?feed=mine">我的帖子</Link></WebButton>
+        <WebButton asChild variant="secondary"><Link href="/community?feed=following">关注的公司动态</Link></WebButton>
+      </nav>
 
       <div className="flex justify-center border-y border-border py-6 sm:justify-start">
         <IdentityCard data={cardData} />
@@ -462,7 +476,7 @@ function MeContent({
         <WebSurface variant="default" className="p-5">
           <div className="mb-3 flex items-center gap-2">
             <div className="flex size-9 items-center justify-center rounded-xl bg-foreground">
-              <Award className="size-4 text-white" />
+              <Award className="size-4 text-background" />
             </div>
             <span className="text-sm font-medium text-muted-foreground">指路等级</span>
           </div>
@@ -649,7 +663,7 @@ function MeContent({
               <Link
                 key={review.id}
                 href={`/company/${review.companyId}`}
-                className="block rounded-2xl border border-border/60 bg-card p-4 transition hover:border-primary/50 hover:bg-white"
+                className="block rounded-2xl border border-border/60 bg-card p-4 transition hover:border-primary/50 hover:bg-muted-hover"
               >
                 <div className="flex items-center justify-between gap-3">
                   <p className="truncate text-sm font-semibold text-foreground">{review.companyName}</p>
@@ -707,7 +721,7 @@ function MeContent({
                   <Link
                     key={fav.companyId}
                     href={`/company/${fav.companyId}`}
-                    className="flex items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card p-4 transition hover:border-primary/50 hover:bg-white"
+                    className="flex items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card p-4 transition hover:border-primary/50 hover:bg-muted-hover"
                   >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-foreground">{fav.companyName}</p>

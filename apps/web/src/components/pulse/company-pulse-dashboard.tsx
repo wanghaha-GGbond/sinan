@@ -36,7 +36,7 @@ export function CompanyPulseDashboard() {
 
   return <SolidCard className="min-w-0 p-5 sm:p-7" data-testid="company-pulse-panel">
     <div className="flex flex-wrap items-start justify-between gap-4">
-      <div><p className="text-xs font-semibold text-primary-deep">COMPANY PULSE</p><h2 className="mt-1 text-xl font-semibold">公司匿名趋势</h2></div>
+      <div><p className="text-xs font-semibold text-primary-deep">近十四天</p><h2 className="mt-1 text-xl font-semibold">公司匿名趋势</h2></div>
       <Link className="inline-flex min-h-11 items-center text-sm font-semibold text-primary-deep underline" href="/companies">公司广场</Link>
     </div>
     {catalog.isPending ? <p role="status" className="mt-5">正在加载公司…</p> : catalog.error && !catalog.data ? <p role="alert">公司加载失败 <button className="min-h-11 underline" onClick={() => void catalog.refetch()}>重试</button></p> : !catalog.data?.length ? <p className="mt-5">暂无已收录公司</p> : <>
@@ -44,7 +44,7 @@ export function CompanyPulseDashboard() {
       {report.isPending ? <p role="status" className="py-8">正在加载趋势…</p> : report.isError ? <p role="alert" className="py-8">公司趋势暂时无法加载 <button className="min-h-11 underline" onClick={() => void report.refetch()}>重试</button></p> : <>
         <div className="my-5 flex items-end justify-between gap-4"><div><p className="text-sm text-muted-foreground">{report.data.from} — {report.data.through}</p><p className="mt-2 text-3xl font-semibold tabular-nums">{last?.score ?? "—"}<span className="ml-1 text-sm text-muted-foreground">/ 100</span></p></div>{last && <p className="text-xs text-muted-foreground">最近有效日 {last.day}<br />{last.participants} 人参与</p>}</div>
         {!points.length ? <div className="rounded-lg border border-dashed border-border bg-muted/30 px-4 py-10 text-center"><p className="font-medium">样本积累中</p><p className="mt-2 text-sm text-muted-foreground">每天至少 30 位有效参与者才展示当天结果。</p></div> : <>
-          <svg role="img" aria-label="近十四天公司 Pulse 趋势，缺失日期不连线" viewBox="0 0 482 200" className="mt-4 w-full text-primary-deep">
+          <svg role="img" aria-label="近十四天公司工作状态趋势，缺失日期不连线" viewBox="0 0 482 200" className="mt-4 w-full text-primary-deep">
             {[0, 50, 100].map(value => <g key={value}><line x1="20" x2="462" y1={170-value*1.5} y2={170-value*1.5} stroke="var(--border)" strokeDasharray="4 4" /><text x="0" y={174-value*1.5} fontSize="10" fill="var(--muted-foreground)">{value}</text></g>)}
             <path d={path} fill="none" stroke="currentColor" strokeWidth="3" />
             {days.map((day,index) => { const point = points.find(point => point.day === day); return point ? <circle key={day} cx={20+index*34} cy={170-point.score*1.5} r="4" fill="currentColor"><title>{day}: {point.score}/100，{point.participants} 人</title></circle> : null })}

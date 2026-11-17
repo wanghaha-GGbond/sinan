@@ -30,7 +30,7 @@ test("home search submits the keyword without explanatory banners", async ({ pag
   await expect(page.getByRole("heading", { name: "测试科技" })).toBeVisible()
   await expect(page.getByText("职场决策工具", { exact: false })).toHaveCount(0)
   await expect(page.getByRole("link", { name: "隐私政策" })).toBeVisible()
-  await expect(page.getByRole("link", { name: "公司研究", exact: true })).toBeVisible()
+  await expect(page.getByTestId("home-recommend-feed").locator("header").getByRole("link", { name: "公司讨论", exact: true })).toBeVisible()
   await page.screenshot({ path: testInfo.outputPath("home.png"), fullPage: true })
   await page.getByRole("search").getByLabel("公司名称").fill("测试科技")
   await page.getByRole("search").getByRole("button", { name: "搜索", exact: true }).click()

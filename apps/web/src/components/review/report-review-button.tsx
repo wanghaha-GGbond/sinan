@@ -80,7 +80,7 @@ export function ReportReviewButton({ reviewId, compact = false }: { reviewId: st
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="rounded-full p-1 text-muted-foreground hover:bg-white hover:text-muted-foreground"
+          className="grid size-11 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
           aria-label="关闭举报"
         >
           <X className="size-4" />
@@ -103,7 +103,7 @@ export function ReportReviewButton({ reviewId, compact = false }: { reviewId: st
               className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-left text-xs transition ${
                 selected
                   ? "border-risk bg-risk-surface text-destructive"
-                  : "border-border bg-white text-foreground hover:border-risk/40"
+                  : "border-border bg-card text-foreground hover:border-risk/40"
               }`}
             >
               <span

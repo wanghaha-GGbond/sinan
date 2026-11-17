@@ -31,11 +31,10 @@ for (const width of widths) {
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
       await expect(page.locator("body")).toHaveCSS("background-color", "rgb(255, 255, 255)")
-      if (width < 1200) {
-        await page.getByRole("button", { name: "打开菜单" }).click()
-        await expect(page.getByRole("menu").getByRole("link", { name: "写评价" })).toBeVisible()
-        await page.keyboard.press("Escape")
-        await expect(page.getByRole("menu")).toBeHidden()
+      if (width < 1024) {
+        const nav = page.getByRole("navigation", { name: "快捷导航" })
+        await expect(nav.getByRole("link")).toHaveCount(4)
+        await expect(nav.getByRole("link", { name: "评分" })).toBeVisible()
       } else {
         await expect(page.getByRole("navigation", { name: "主导航" })).toBeVisible()
       }
