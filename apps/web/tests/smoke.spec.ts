@@ -112,17 +112,13 @@ test("登录后回到原页面并可从个人中心退出", async ({ page }) => 
   await expect(page.getByRole("link", { name: "登录" })).toBeVisible()
 })
 
-test("移动端通过菜单按钮访问主导航", async ({ page }, testInfo) => {
+test("移动端通过四项快捷导航访问公司", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile-chrome")
 
   await page.goto("/")
-  const menuButton = page.getByRole("button", { name: "打开菜单" })
-  await expect(menuButton).toBeVisible()
-
-  await menuButton.click()
-  const menu = page.getByRole("menu")
-  await expect(menu).toBeVisible()
-  await menu.getByRole("menuitem").filter({ hasText: "公司" }).click()
+  const nav = page.getByRole("navigation", { name: "快捷导航" })
+  await expect(nav.getByRole("link")).toHaveCount(4)
+  await nav.getByRole("link", { name: "公司", exact: true }).click()
   await expect(page).toHaveURL("/companies")
 })
 

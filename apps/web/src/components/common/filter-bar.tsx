@@ -45,7 +45,7 @@ export function FilterBar<TIndustry extends string, TCity extends string, TSort 
 
   return (
     <div
-      className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-white p-3 sm:flex-row sm:flex-wrap sm:items-center"
+      className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-card p-3 sm:flex-row sm:flex-wrap sm:items-center"
       data-testid="intelligence-filter-bar"
     >
       <div className="flex items-center gap-1 text-xs font-semibold text-muted-foreground">

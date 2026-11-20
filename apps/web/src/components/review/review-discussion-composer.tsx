@@ -83,7 +83,7 @@ export function ReviewDiscussionComposer({
   return (
     <div className="space-y-3">
       <Textarea
-        className="min-h-24 rounded-[22px] border border-border/70 bg-white px-4 py-3 text-sm leading-7 text-foreground shadow-[0_3px_0_rgba(17,24,39,0.035)] placeholder:text-muted-foreground focus-visible:ring-primary/35"
+        className="min-h-24 rounded-xl border border-border/70 bg-card px-4 py-3 text-sm leading-7 text-foreground placeholder:text-muted-foreground focus-visible:ring-primary/35"
         data-testid="discussion-content-input"
         maxLength={300}
         onChange={(event) => {

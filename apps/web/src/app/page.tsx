@@ -11,7 +11,7 @@ export default function HomePage() {
         <HomeCompanySearch />
         <div className="mt-4 flex gap-5 text-sm font-medium text-primary-deep">
           <Link href="/companies" className="inline-flex min-h-11 items-center hover:underline">全部公司</Link>
-          <Link href="/research" className="inline-flex min-h-11 items-center hover:underline">公司研究</Link>
+          <Link href="/community" className="inline-flex min-h-11 items-center hover:underline">公司讨论</Link>
           <Link href="/submit/review" className="inline-flex min-h-11 items-center hover:underline">匿名评分</Link>
         </div>
       </header>

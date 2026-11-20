@@ -16,9 +16,9 @@ export default function CompanyPulsePage() {
   }
 
   return (
-    <section className="mx-auto w-full max-w-page px-4 py-6 sm:px-6">
+    <section className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6">
       <header className="mb-6 border-b border-border pb-6">
-        <h1 className="text-3xl font-semibold text-foreground">Pulse</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">打卡与周报</h1>
       </header>
 
       <PersonalPulseDashboard />

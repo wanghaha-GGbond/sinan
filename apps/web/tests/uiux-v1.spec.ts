@@ -125,10 +125,8 @@ for (const width of [375, 390, 768, 1280, 1440]) {
       }
       if (width < 1024) {
         await expect(page.getByRole("navigation", { name: "快捷导航" }).getByRole("link", { name: "评分", exact: true })).toBeVisible()
-        await page.getByRole("button", { name: "打开菜单" }).click()
-        await expect(page.getByRole("menu").getByRole("link", { name: "公司", exact: true })).toBeVisible()
-        await page.keyboard.press("Escape")
-        await expect(page.getByRole("menu")).toBeHidden()
+        await expect(page.getByRole("navigation", { name: "快捷导航" }).getByRole("link", { name: "公司", exact: true })).toBeVisible()
+        await expect(page.getByRole("navigation", { name: "快捷导航" }).getByRole("link")).toHaveCount(4)
       } else {
         await expect(page.getByRole("navigation", { name: "主导航" })).toBeVisible()
       }

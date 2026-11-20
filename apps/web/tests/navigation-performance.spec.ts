@@ -20,8 +20,7 @@ test("homepage, directory, and search reuse one catalog request on client naviga
   await page.goto("/")
   await expect(page.getByRole("heading", { name: "测试公司甲" })).toBeVisible()
 
-  if (isMobile) await page.getByRole("button", { name: "打开菜单" }).click()
-  await page.getByRole("link", { name: "公司", exact: true }).filter({ visible: true }).click()
+  await page.getByRole("navigation", { name: isMobile ? "快捷导航" : "主导航" }).getByRole("link", { name: "公司", exact: true }).click()
   await expect(page.getByTestId("company-directory")).toBeVisible()
   await expect(page.getByRole("heading", { name: "测试公司甲" })).toBeVisible()
   expect(catalogRequests).toBe(1)
