@@ -1,5 +1,13 @@
 import { test, expect } from "@playwright/test"
 
+test.beforeEach(async ({ page }) => {
+  await page.route("**/api/me", route => route.fulfill({ json: {
+    user: { id: "pulse-ui", displayName: "测试用户", role: "user", trustLevel: 0 },
+    stats: { directionPoints: 0, nextLevelPoints: 100, streakDays: 0, helpedCount: 0 },
+    dailyTasks: [], badges: [], myReviews: [], favoriteCompanies: [], verifications: [], invites: { total: 0, used: 0, unused: [] },
+  } }))
+})
+
 for (const theme of ["light", "dark"]) {
   test(`Pulse company switching preserves privacy gaps and fits mobile in ${theme}`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 375, height: 850 })
@@ -16,6 +24,7 @@ for (const theme of ["light", "dark"]) {
     })
     await page.goto("/pulse")
     await expect.poll(() => page.locator("html").evaluate(element => element.classList.contains("dark"))).toBe(theme === "dark")
+    await page.locator("summary").filter({ hasText: "公司匿名趋势" }).click()
     await expect(page.getByText("样本积累中")).toBeVisible()
     await page.getByLabel("查看公司").selectOption("second")
     const panel = page.getByTestId("company-pulse-panel")

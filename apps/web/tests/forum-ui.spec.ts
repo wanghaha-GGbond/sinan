@@ -4,6 +4,7 @@ const post = { id: postId, companyId, companyName: "测试公司", category: "qu
 test("search submits to API, persists across reload and company links, and clears", async ({ page }) => {
   await fixture(page, true)
   await page.goto("/community?feed=mine")
+  await page.getByTestId("community-filters").locator("summary").click()
   await page.getByRole("searchbox", { name: "搜索帖子" }).fill("团队")
   const response = page.waitForRequest(r => r.url().includes("/api/forum/posts?") && new URL(r.url()).searchParams.get("q") === "团队")
   await page.getByRole("button", { name: "搜索", exact: true }).click()
@@ -59,6 +60,7 @@ for (const width of [390, 1280]) for (const theme of ["light", "dark"]) test(`fo
   await expect(page.getByRole("heading", { name: "社区", exact: true })).toBeVisible()
   await expect(page.getByTestId("forum-post")).toHaveCount(1)
   await expect(page.getByRole("link", { name: "登录后发帖" })).toHaveAttribute("href", "/login?next=%2Fcommunity")
+  await page.getByTestId("community-filters").locator("summary").click()
   await page.getByRole("button", { name: "面试交流", exact: true }).click()
   await expect(page).toHaveURL(url => url.searchParams.get("category") === "interview")
   await page.reload(); await expect(page.getByRole("button", { name: "面试交流", exact: true })).toHaveAttribute("aria-pressed", "true")

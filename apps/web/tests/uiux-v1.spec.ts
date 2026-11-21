@@ -124,9 +124,9 @@ for (const width of [375, 390, 768, 1280, 1440]) {
         expect(columns).toBe(width >= 1024 ? 2 : 1)
       }
       if (width < 1024) {
-        await expect(page.getByRole("navigation", { name: "快捷导航" }).getByRole("link", { name: "评分", exact: true })).toBeVisible()
         await expect(page.getByRole("navigation", { name: "快捷导航" }).getByRole("link", { name: "公司", exact: true })).toBeVisible()
-        await expect(page.getByRole("navigation", { name: "快捷导航" }).getByRole("link")).toHaveCount(4)
+        await expect(page.getByRole("navigation", { name: "快捷导航" }).getByRole("link", { name: "公司", exact: true })).toBeVisible()
+        await expect(page.getByRole("navigation", { name: "快捷导航" }).getByRole("link")).toHaveCount(3)
       } else {
         await expect(page.getByRole("navigation", { name: "主导航" })).toBeVisible()
       }
@@ -163,8 +163,10 @@ test("directory retains filters, ten-point scores, clearing and keyboard navigat
 })
 
 test("integrated community has a real empty state, never demo discussions", async ({ page }) => {
+  await page.route("**/api/reviews?**", route => route.fulfill({ json: { reviews: [], nextCursor: null } }))
   await page.route("**/api/community**", (route) => route.fulfill({ json: { discussions: [], limit: 50 } }))
   const response = await page.goto("/community?view=reviews")
+  await page.getByTestId("legacy-review-discussions").locator("summary").click()
   expect(response?.status()).toBe(200)
   await expect(page.getByRole("heading", { name: "社区", exact: true })).toBeVisible()
   await expect(page.getByText("没有匹配的社区讨论", { exact: true })).toBeVisible()

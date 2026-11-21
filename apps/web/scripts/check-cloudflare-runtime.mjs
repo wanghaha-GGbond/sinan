@@ -75,7 +75,10 @@ try {
     assert.match(await page.text(), /在场/)
   }
   const pulseEnabled = config.vars.NEXT_PUBLIC_PULSE_ENABLED === "true"
-  assert.equal((await request("/pulse")).status, pulseEnabled ? 200 : 404)
+  const oldPulse = await request("/pulse")
+  assert.equal(oldPulse.status, pulseEnabled ? 307 : 404)
+  if (pulseEnabled) assert.equal(new URL(oldPulse.headers.get("location")).pathname + new URL(oldPulse.headers.get("location")).hash, "/me#work-records")
+  for (const path of ["/research", "/research/bytedance", "/api/research", "/api/research/bytedance"]) assert.equal((await request(path)).status, 404)
   assert.equal((await request("/api/me/pulse")).status, pulseEnabled ? 401 : 404)
   assert.equal((await request("/community")).status, 200)
   const community = await request("/api/community")

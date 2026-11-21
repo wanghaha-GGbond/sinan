@@ -1,4 +1,6 @@
 import type { Metadata } from "next"
+import { notFound } from "next/navigation"
+import { researchIsInternal } from "@/lib/research-visibility"
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 
@@ -14,6 +16,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic"
 
 export default async function ResearchPage() {
+  if (researchIsInternal()) notFound()
   const published = await getPublishedResearchSnapshot()
   const indices = mergeCompanyIndices(published?.companies)
   const sorted = [...indices].sort((a, b) => (b.overallScore ?? -1) - (a.overallScore ?? -1))

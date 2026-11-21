@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { researchIsInternal } from "@/lib/research-visibility"
 import { ArrowLeft, ArrowUpRight } from "lucide-react"
 
 import { companyIndices, componentLabels, funIndexLabels, getCompanySlug, getResearchCompany, type ScoreDetail } from "@/lib/research-report"
@@ -10,16 +11,19 @@ import { getPublishedResearchCompany } from "@/lib/server/published-research"
 export const dynamic = "force-dynamic"
 
 export function generateStaticParams() {
+  if (researchIsInternal()) return []
   return companyIndices.map(company => ({ slug: getCompanySlug(company.name) }))
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  if (researchIsInternal()) return {}
   const { slug } = await params
   const result = getResearchCompany(slug)
   return result ? { title: `${result.card.name}研究报告 | 在场`, description: researchHeadline(result.card) } : {}
 }
 
 export default async function CompanyResearchPage({ params }: { params: Promise<{ slug: string }> }) {
+  if (researchIsInternal()) notFound()
   const { slug } = await params
   const result = getResearchCompany(slug)
   if (!result) notFound()
