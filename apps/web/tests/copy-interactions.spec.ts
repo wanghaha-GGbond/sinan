@@ -41,20 +41,11 @@ test("home search submits the keyword without explanatory banners", async ({ pag
   await expect(page.getByText("先找到你真正想了解的公司。", { exact: true })).toHaveCount(0)
 })
 
-test("research results come first while notes stay collapsed at the end", async ({ page }, testInfo) => {
-  await page.route("**/api/**", (route) => route.fulfill({ json: { user: null } }))
-  await page.goto("/research")
-  await expect(page.getByRole("heading", { name: "公司研究", exact: true })).toBeVisible()
-  await expect(page.locator('a[href^="/research/"]').first()).toBeVisible()
-  await expect(page.locator('a[href^="/research/"]')).toHaveCount(10)
-  await expect(page.getByText(/可信度/)).toHaveCount(0)
-  const details = page.locator("details")
-  await expect(details).not.toHaveAttribute("open", "")
-  await page.screenshot({ path: testInfo.outputPath("research.png"), fullPage: true })
-  await details.locator("summary").focus()
-  await page.keyboard.press("Enter")
-  await expect(details).toHaveAttribute("open", "")
-  await expect(details.getByText(/每份研究底部可查看依据/)).toBeVisible()
+test("internal research does not appear in public navigation or fallback pages", async ({ page }) => {
+  const response = await page.goto("/research")
+  expect(response?.status()).toBe(404)
+  await expect(page.locator('a[href^="/research"]')).toHaveCount(0)
+  await expect(page.getByRole("heading", { name: "公司研究", exact: true })).toHaveCount(0)
 })
 
 test("register and real personal Pulse retain their privacy notices without sample statistics", async ({ page }) => {
@@ -65,6 +56,11 @@ test("register and real personal Pulse retain their privacy notices without samp
   await expect(page.getByText(/你的身份信息不会向公司方公开/)).toBeVisible()
   await expect(page.getByText("成为指路人，分享真实体验")).toHaveCount(0)
   await page.route("**/api/auth/me", route => route.fulfill({ json: { user: { id: "privacy-fixture", role: "user" } } }))
+  await page.route("**/api/me", route => route.fulfill({ json: {
+    user: { id: "privacy-fixture", displayName: "测试用户", role: "user", trustLevel: 0 },
+    stats: { directionPoints: 0, nextLevelPoints: 100, streakDays: 0, helpedCount: 0 },
+    dailyTasks: [], badges: [], myReviews: [], favoriteCompanies: [], verifications: [], invites: { total: 0, used: 0, unused: [] },
+  } }))
   await page.route("**/api/me/pulse", route => route.fulfill({ json: {
     today: "2026-11-03", records: [], summary: { days: 0, score: null, workMinutes: null },
   } }))

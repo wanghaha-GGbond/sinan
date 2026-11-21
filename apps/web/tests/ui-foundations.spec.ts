@@ -33,8 +33,8 @@ for (const width of widths) {
       await expect(page.locator("body")).toHaveCSS("background-color", "rgb(255, 255, 255)")
       if (width < 1024) {
         const nav = page.getByRole("navigation", { name: "快捷导航" })
-        await expect(nav.getByRole("link")).toHaveCount(4)
-        await expect(nav.getByRole("link", { name: "评分" })).toBeVisible()
+        await expect(nav.getByRole("link")).toHaveCount(3)
+        await expect(nav.getByRole("link", { name: "公司" })).toBeVisible()
       } else {
         await expect(page.getByRole("navigation", { name: "主导航" })).toBeVisible()
       }

@@ -124,9 +124,9 @@ for (const width of [375, 390, 768, 1280, 1440]) {
         expect(columns).toBe(width >= 1024 ? 2 : 1)
       }
       if (width < 1024) {
-        await expect(page.getByRole("navigation", { name: "快捷导航" }).getByRole("link", { name: "评分", exact: true })).toBeVisible()
         await expect(page.getByRole("navigation", { name: "快捷导航" }).getByRole("link", { name: "公司", exact: true })).toBeVisible()
-        await expect(page.getByRole("navigation", { name: "快捷导航" }).getByRole("link")).toHaveCount(4)
+        await expect(page.getByRole("navigation", { name: "快捷导航" }).getByRole("link", { name: "公司", exact: true })).toBeVisible()
+        await expect(page.getByRole("navigation", { name: "快捷导航" }).getByRole("link")).toHaveCount(3)
       } else {
         await expect(page.getByRole("navigation", { name: "主导航" })).toBeVisible()
       }
