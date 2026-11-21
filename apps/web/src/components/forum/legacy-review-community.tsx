@@ -47,7 +47,7 @@ export function LegacyReviewCommunity({ embedded = false }: { embedded?: boolean
   })
 
   return (
-    <section className={embedded ? "mt-6" : "min-h-[calc(100vh-160px)] bg-muted px-4 py-8 sm:px-8 sm:py-12"}>
+    <section className={embedded ? "px-4 py-5 sm:px-6" : "min-h-[calc(100vh-160px)] bg-background px-4 py-8 sm:px-8 sm:py-12"}>
       <div className="mx-auto w-full max-w-5xl">
         {!embedded && <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -81,8 +81,8 @@ export function LegacyReviewCommunity({ embedded = false }: { embedded?: boolean
 
         {selectedCompany ? <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-b border-border py-3 text-sm"><span>正在看 <strong>{selectedCompany.name}</strong> 的讨论</span><Link href="/community" className="font-medium text-primary-deep hover:underline">查看全部讨论</Link></div> : null}
 
-        <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_240px]">
-          <div className="min-w-0 overflow-hidden rounded-lg border border-border bg-card">
+        <div className="mt-5">
+          <div className="min-w-0 border-t border-border">
             {isPending ? <p className="p-6 text-sm text-muted-foreground" role="status">正在加载讨论…</p> : isError ? <div className="p-6"><WebEmptyState title="讨论暂时无法加载" action={<WebButton variant="secondary" onClick={() => void refetch()}>重试</WebButton>} /></div> : filtered.length === 0 ? (
               <div className="p-6"><WebEmptyState title={selectedCompany ? "这家公司还没有公开讨论" : "没有匹配的社区讨论"} description="试试其他行业、城市或讨论类型。" action={<WebButton asChild variant="primary" size="sm"><Link href="/submit/review">分享经历</Link></WebButton>} /></div>
             ) : filtered.map((item) => (
@@ -103,10 +103,6 @@ export function LegacyReviewCommunity({ embedded = false }: { embedded?: boolean
               </article>
             ))}
           </div>
-          <aside className="hidden self-start lg:block" aria-label="探索更多">
-            <h2 className="text-base font-semibold">探索更多</h2>
-            <Link href="/companies" className="mt-4 inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary-deep hover:underline">浏览公司<ArrowRight className="size-4" aria-hidden="true" /></Link>
-          </aside>
         </div>
       </div>
     </section>

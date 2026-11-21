@@ -1,6 +1,17 @@
 import { expect, test } from "@playwright/test"
 import { NextRequest } from "next/server"
 import { randomUUID } from "node:crypto"
+import { readFileSync } from "node:fs"
+import { resolve } from "node:path"
+
+test("original SVG assets stay same-origin, vector-only and script-free", () => {
+  for (const name of ["conversation", "review", "company", "reply", "agree", "quiet"]) {
+    const svg = readFileSync(resolve(process.cwd(), `public/brand/${name}.svg`), "utf8")
+    expect(svg).toContain('id="art"')
+    expect(svg).toContain("currentColor")
+    expect(svg).not.toMatch(/<script|foreignObject|<image|\bon\w+=|href=|https?:\/\/(?!www\.w3\.org\/2000\/svg)/i)
+  }
+})
 import { forumCursor, parseForumCursor, forumFiltersSchema, forumPostInput, forumSearchPattern } from "../src/lib/forum"
 test("search is bounded and literal, and cursors cannot cross search scopes", () => {
   expect(forumFiltersSchema.parse({ q: "  面试  " }).q).toBe("面试")

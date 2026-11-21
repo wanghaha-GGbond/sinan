@@ -7,6 +7,7 @@ const discussions = [
 
 test.beforeEach(async ({ page }) => {
   await page.route("**/api/auth/me", (route) => route.fulfill({ json: { user: null } }))
+  await page.route("**/api/reviews?**", route => route.fulfill({ json: { reviews: [], nextCursor: null } }))
 })
 
 for (const width of [375, 1280]) {
@@ -20,6 +21,7 @@ for (const width of [375, 1280]) {
       return route.fulfill({ json: { discussions: discussions.filter((item) => !type || item.type === type), limit: 50 } })
     })
     await page.goto("/community?view=reviews")
+    await page.getByTestId("legacy-review-discussions").locator("summary").click()
     await expect(page.getByRole("heading", { name: "社区", exact: true })).toBeVisible()
     await expect(page.getByText("以下为产品演示讨论，非实时用户发言")).toHaveCount(0)
     await expect(page.locator("article").first()).toBeVisible()
@@ -44,6 +46,7 @@ test("community reports API failure and can retry without fabricating content", 
     ? route.fulfill({ json: { discussions: [], limit: 50 } })
     : route.fulfill({ status: 503, json: { error: "Unavailable" } }))
   await page.goto("/community?view=reviews")
+  await page.getByTestId("legacy-review-discussions").locator("summary").click()
   await expect(page.getByText("讨论暂时无法加载", { exact: true })).toBeVisible()
   await expect(page.locator("article")).toHaveCount(0)
   healthy = true

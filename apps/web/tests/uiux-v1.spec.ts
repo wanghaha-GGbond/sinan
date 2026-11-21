@@ -163,8 +163,10 @@ test("directory retains filters, ten-point scores, clearing and keyboard navigat
 })
 
 test("integrated community has a real empty state, never demo discussions", async ({ page }) => {
+  await page.route("**/api/reviews?**", route => route.fulfill({ json: { reviews: [], nextCursor: null } }))
   await page.route("**/api/community**", (route) => route.fulfill({ json: { discussions: [], limit: 50 } }))
   const response = await page.goto("/community?view=reviews")
+  await page.getByTestId("legacy-review-discussions").locator("summary").click()
   expect(response?.status()).toBe(200)
   await expect(page.getByRole("heading", { name: "社区", exact: true })).toBeVisible()
   await expect(page.getByText("没有匹配的社区讨论", { exact: true })).toBeVisible()

@@ -2,7 +2,7 @@
 import { useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { PenLine } from "lucide-react"
+import { ZaichangIcon } from "@/components/ui/zaichang-icon"
 import { WebButton } from "@/components/ui/web-button"
 import { Textarea } from "@/components/ui/textarea"
 import { useAuth } from "@/lib/auth-context"
@@ -13,8 +13,8 @@ import { forumFetch, forumBody } from "./forum-client"
 
 export function PostComposer({ companies, companyId = "", returnTo }: { companies: CompanyListItem[]; companyId?: string; returnTo: string }) {
   const { user, loading } = useAuth()
-  if (loading) return <p role="status" className="rounded-xl border border-border bg-card p-5 text-sm text-muted-foreground">正在检查登录状态…</p>
-  if (!user) return <div id="forum-composer" className="rounded-xl border border-border bg-card p-5"><WebButton asChild className="w-full" variant="secondary"><Link href={withNext("/login", returnTo)}>登录后发帖</Link></WebButton></div>
+  if (loading) return <p role="status" className="border-b border-border p-5 text-sm text-muted-foreground">正在检查登录状态…</p>
+  if (!user) return <div id="forum-composer" className="flex items-center gap-3 border-b border-border px-4 py-4 sm:px-6"><span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary-tint text-primary-deep"><ZaichangIcon name="conversation" /></span><span className="flex-1 text-sm text-muted-foreground">今天想聊点什么？</span><WebButton asChild variant="secondary" size="sm"><Link href={withNext("/login", returnTo)}>登录后发帖</Link></WebButton></div>
   return <ComposerForm key={user.id + ":" + companyId} companies={companies} initialCompanyId={companyId} />
 }
 function ComposerForm({ companies, initialCompanyId }: { companies: CompanyListItem[]; initialCompanyId: string }) {
@@ -39,8 +39,8 @@ function ComposerForm({ companies, initialCompanyId }: { companies: CompanyListI
     finally { busy.current = false; setSaving(false) }
   }
   const field = "min-h-11 w-full rounded-lg border border-input bg-card px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-ring"
-  return <details id="forum-composer" className="scroll-mt-24 rounded-xl border border-border bg-card">
-    <summary className="flex min-h-16 cursor-pointer items-center gap-3 p-5 text-sm font-medium text-muted-foreground focus-visible:outline-2 focus-visible:outline-ring"><PenLine className="size-5 text-primary-deep" aria-hidden="true" />发起一场讨论</summary>
+  return <details id="forum-composer" className="scroll-mt-24 border-b border-border">
+    <summary className="flex min-h-20 cursor-pointer list-none items-center gap-3 px-4 py-4 text-sm text-muted-foreground focus-visible:outline-2 focus-visible:outline-ring sm:px-6"><span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary-tint text-primary-deep"><ZaichangIcon name="conversation" /></span><span className="flex-1">今天想聊点什么？</span><span className="text-xs text-primary-deep">发帖</span></summary>
     <form onSubmit={submit} className="grid gap-4 border-t border-border p-5">
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="grid gap-2 text-sm">公司<select aria-label="发帖公司" className={field} value={companyId} onChange={e => setCompanyId(e.target.value)} required><option value="">选择公司</option>{companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>

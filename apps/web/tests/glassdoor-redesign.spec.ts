@@ -20,7 +20,9 @@ for (const width of [390, 1440]) {
       type: "question", authorLabel: "匿名同事", content: "团队协作如何？", usefulCount: 1,
       tags: [], createdAt: "2026-11-01T00:00:00Z",
     }], limit: 50 } }))
+    await page.route("**/api/reviews?**", route => route.fulfill({ json: { reviews: [], nextCursor: null } }))
     await page.goto("/community?view=reviews")
+    await page.getByTestId("legacy-review-discussions").locator("summary").click()
     await expect(page.getByText("以下为产品演示讨论，非实时用户发言")).toHaveCount(0)
     await expect(page.locator("article").first()).toBeVisible()
     await page.getByRole("button", { name: "追问" }).click()
