@@ -15,7 +15,7 @@ test("readiness validates auth tables even when the migration journal exists", a
 test("ready schema exposes only release compatibility metadata", async () => {
   let calls = 0
   await verifyReadinessSchema(async () => ({ rows: ++calls === 1 ? [{ id: 1 }] : [] }))
-  expect(calls).toBe(3)
+  expect(calls).toBe(4)
   expect(readinessContract.authContract).toBe(2)
   expect(readinessContract.migration).toMatch(/^\d+_/)
 })

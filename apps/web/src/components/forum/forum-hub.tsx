@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context"
 import { useCompanySearch } from "@/lib/queries/company-search"
 import { replaceUrlSearchParams, useUrlSearchParams } from "@/lib/use-url-search-params"
 import { withNext } from "@/lib/navigation"
+import { dialogueEnabled } from "@/lib/dialogue"
 import { forumCategories, type ForumPage, type ForumPost } from "@/lib/forum"
 import { WebButton } from "@/components/ui/web-button"
 import { CompanyLogo } from "@/components/company/company-logo"
@@ -105,7 +106,7 @@ export function ForumHub({ company, directory = false }: { company?: CompanyList
   }
   const reviewHref = `/submit/review${companyId ? `?companyId=${encodeURIComponent(companyId)}` : ""}`
   return <section data-testid="forum-hub" className={`${company ? "mt-5" : "bg-background sm:px-6"} break-normal`}><div className="mx-auto w-full max-w-5xl sm:border-x sm:border-border">
-    {!company && <header className="flex items-center justify-between gap-3 px-4 py-5 sm:px-6"><div className="flex items-center gap-2.5"><ZaichangIcon name="conversation" className="size-7 text-primary-deep" /><h1 className="text-xl font-semibold tracking-tight">社区</h1></div><WebButton asChild variant="secondary" size="sm"><Link href={reviewHref}><ZaichangIcon name="review" />写评价</Link></WebButton></header>}
+    {!company && <header className="flex flex-wrap items-center justify-between gap-3 px-4 py-5 sm:px-6"><div className="flex items-center gap-2.5"><ZaichangIcon name="conversation" className="size-7 text-primary-deep" /><h1 className="text-xl font-semibold tracking-tight">社区</h1></div><div className="flex items-center gap-2">{dialogueEnabled({ NEXT_PUBLIC_DIALOGUE_ENABLED: process.env.NEXT_PUBLIC_DIALOGUE_ENABLED }) ? <WebButton asChild variant="quiet" size="sm"><Link href="/community/dialogues">对话</Link></WebButton> : null}<WebButton asChild variant="secondary" size="sm"><Link href={reviewHref}><ZaichangIcon name="review" />写评价</Link></WebButton></div></header>}
     {!company && <nav aria-label="社区板块" className="flex flex-wrap gap-x-4 border-b border-border px-4 text-sm font-semibold sm:gap-x-6 sm:px-6">
       <Link className={`inline-flex min-h-12 items-center gap-2 border-b-2 focus-visible:outline-2 focus-visible:outline-ring ${!legacy && !finding ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`} href={boardHref("")} onNavigate={directory ? undefined : event => { event.preventDefault(); switchBoard("") }} aria-current={!legacy && !finding ? "page" : undefined}><ZaichangIcon name="conversation" className="size-4" />聊工作</Link>
       <Link className={`inline-flex min-h-12 items-center gap-2 border-b-2 focus-visible:outline-2 focus-visible:outline-ring ${legacy ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`} href={boardHref("reviews")} onNavigate={directory ? undefined : event => { event.preventDefault(); switchBoard("reviews") }} aria-current={legacy ? "page" : undefined}><ZaichangIcon name="review" className="size-4" />公司评价</Link>

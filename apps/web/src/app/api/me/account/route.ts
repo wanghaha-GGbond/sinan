@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { users } from "@/db/schema/users"
 import { forumPosts, forumReplies, forumVotes, forumFollows, forumReports } from "@/db/schema/forum"
 import { pulseCheckins } from "@/db/schema/pulse-checkins"
+import { dialogueApplications, dialogueSessions, dialogueAuditEvents } from "@/db/schema/dialogues"
 import { passwordResetTokens } from "@/db/schema/password-reset-tokens"
 import { anonymousProfiles } from "@/db/schema/anonymous-profiles"
 import { auctionBids, auctions } from "@/db/schema/auctions"
@@ -57,6 +58,9 @@ export async function DELETE(request: NextRequest) {
       await tx.select({ id: users.id }).from(users).where(eq(users.id, authUser.userId)).for("update")
       await tx.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, authUser.userId))
       await tx.delete(pulseCheckins).where(eq(pulseCheckins.userId, authUser.userId))
+      await tx.delete(dialogueApplications).where(eq(dialogueApplications.userId, authUser.userId))
+      await tx.update(dialogueSessions).set({ createdBy: null }).where(eq(dialogueSessions.createdBy, authUser.userId))
+      await tx.update(dialogueAuditEvents).set({ actorUserId: null }).where(eq(dialogueAuditEvents.actorUserId, authUser.userId))
       await tx.delete(forumFollows).where(eq(forumFollows.userId, authUser.userId))
       await tx.delete(forumVotes).where(eq(forumVotes.userId, authUser.userId))
       await tx.update(forumReports).set({ reporterUserId: null }).where(eq(forumReports.reporterUserId, authUser.userId))

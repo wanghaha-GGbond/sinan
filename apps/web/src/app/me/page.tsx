@@ -30,6 +30,7 @@ import { getFavoritedCompanyIds } from "@/lib/favorites-storage"
 import { getMeDashboard } from "@/lib/api/me"
 import { IdentityCard, type IdentityCardData } from "@/components/identity/identity-card"
 import { MyWorkRecords, useWorkRecordsRequested } from "@/components/pulse/my-work-records"
+import { dialogueEnabled } from "@/lib/dialogue"
 import { withNext } from "@/lib/navigation"
 import { isPulseEnabled } from "@/lib/pulse-feature"
 
@@ -412,6 +413,7 @@ function MeContent({
       <nav aria-label="我的社区" className="flex flex-wrap gap-2 text-sm">
         <WebButton asChild variant="secondary"><Link href="/community?feed=mine">我的帖子</Link></WebButton>
         <WebButton asChild variant="secondary"><Link href="/community?feed=following">关注的公司动态</Link></WebButton>
+        {dialogueEnabled({ NEXT_PUBLIC_DIALOGUE_ENABLED: process.env.NEXT_PUBLIC_DIALOGUE_ENABLED }) ? <WebButton asChild variant="secondary"><Link href="/me/dialogues">我的对话报名</Link></WebButton> : null}
       </nav>
 
       <div className="flex justify-center border-y border-border py-6 sm:justify-start">
