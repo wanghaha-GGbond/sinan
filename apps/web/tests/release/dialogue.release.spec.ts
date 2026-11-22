@@ -1,15 +1,17 @@
 import { randomUUID } from "node:crypto"
-import { eq, inArray } from "drizzle-orm"
+import { eq, inArray, or } from "drizzle-orm"
 import { expect, test } from "../release-fixture"
 import { db } from "../../src/db/client"
 import { users } from "../../src/db/schema/users"
 import { dialogueApplications, dialogueAuditEvents, dialogueSessions } from "../../src/db/schema/dialogues"
 import { signToken } from "../../src/lib/server/auth"
 
-const people: string[] = [], events: string[] = []
+const people: string[] = [], events: string[] = [], creationRequests: string[] = []
 test.afterAll(async () => {
-  if (events.length) await db.delete(dialogueSessions).where(inArray(dialogueSessions.id, events))
+  // Wait for any in-flight create holding its actor lock, then remove exactly
+  // this test's request IDs, even if the subsequent UI assertion failed.
   if (people.length) await db.delete(users).where(inArray(users.id, people))
+  if (events.length || creationRequests.length) await db.delete(dialogueSessions).where(or(events.length ? inArray(dialogueSessions.id, events) : undefined, creationRequests.length ? inArray(dialogueSessions.requestId, creationRequests) : undefined))
 })
 
 test("real dialogue story: draft, publish, private question, selection, withdrawal and account deletion", async ({ page, request, baseURL }) => {
@@ -36,12 +38,27 @@ test("real dialogue story: draft, publish, private question, selection, withdraw
   await page.getByLabel("开始时间（本机时区）").fill(localDate(4))
   await page.getByLabel("报名截止（本机时区）").fill(localDate(2))
   await page.getByRole("checkbox", { name: /已核对嘉宾身份/ }).check()
+  const createForm = page.locator("form").filter({ has: page.getByRole("button", { name: "保存草稿", exact: true }) })
+  await expect(createForm.locator(":invalid")).toHaveCount(0)
+  const createPath = "/api/moderation/dialogues"
+  page.on("request", request => {
+    if (new URL(request.url()).pathname === createPath && request.method() === "POST") {
+      const id = request.postDataJSON()?.requestId
+      if (typeof id === "string" && /^[a-f0-9-]{36}$/.test(id)) creationRequests.push(id)
+    }
+  })
+  const createdResponse = page.waitForResponse(response => new URL(response.url()).pathname === createPath && response.request().method() === "POST", { timeout: 60_000 })
   await page.getByRole("button", { name: "保存草稿", exact: true }).click()
+  const response = await createdResponse
+  const saved = await response.json().catch(() => null)
+  const error = typeof saved?.error === "string" ? saved.error.slice(0, 160) : "no API error message"
+  expect(response.status(), "Draft creation must return a real successful response: " + error).toBe(201)
+  expect(saved?.session).toMatchObject({ id: expect.any(String), status: "draft" })
+  events.push(saved.session.id)
+  const [stored] = await db.select().from(dialogueSessions).where(eq(dialogueSessions.id, saved.session.id))
+  expect(stored).toMatchObject({ title, status: "draft", createdBy: moderator.id })
   const card = page.getByTestId("managed-dialogue").filter({ has: page.getByRole("heading", { name: title, exact: true }) })
-  await expect(card).toBeVisible()
-  const [stored] = await db.select().from(dialogueSessions).where(eq(dialogueSessions.title, title))
-  expect(stored).toBeTruthy(); events.push(stored.id)
-  expect(stored.status).toBe("draft")
+  await expect(card).toBeVisible({ timeout: 20_000 })
   expect((await request.get(`/api/dialogues/${stored.id}`)).status()).toBe(404)
   expect((await request.patch(`/api/moderation/dialogues/${stored.id}`, { headers: headers(applicantToken), data: { action: "publish" } })).status()).toBe(403)
   await card.getByRole("button", { name: "发布活动", exact: true }).click()
