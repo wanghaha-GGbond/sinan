@@ -77,7 +77,15 @@ try {
   const pulseEnabled = config.vars.NEXT_PUBLIC_PULSE_ENABLED === "true"
   const oldPulse = await request("/pulse")
   assert.equal(oldPulse.status, pulseEnabled ? 307 : 404)
-  if (pulseEnabled) assert.equal(new URL(oldPulse.headers.get("location")).pathname + new URL(oldPulse.headers.get("location")).hash, "/me#work-records")
+  if (pulseEnabled) {
+    const location = oldPulse.headers.get("location")
+    assert.ok(location, "Legacy Pulse redirect must include Location")
+    // workerd can return a relative Location, while Next's Node runtime can
+    // return an absolute one. Both must resolve to the same local destination.
+    const destination = new URL(location, origin)
+    assert.equal(destination.origin, origin)
+    assert.equal(destination.pathname + destination.search + destination.hash, "/me#work-records")
+  }
   for (const path of ["/research", "/research/bytedance", "/api/research", "/api/research/bytedance"]) assert.equal((await request(path)).status, 404)
   assert.equal((await request("/api/me/pulse")).status, pulseEnabled ? 401 : 404)
   assert.equal((await request("/community")).status, 200)
