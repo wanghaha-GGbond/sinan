@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test"
 
 for (const width of [320, 390, 768, 1280]) for (const theme of ["light", "dark"]) {
-  test(`three destinations and legacy personal links at ${width}px ${theme}`, async ({ page }, info) => {
+  test(`two destinations and legacy personal links at ${width}px ${theme}`, async ({ page }, info) => {
     await page.setViewportSize({ width, height: 900 })
     await page.addInitScript(theme => localStorage.setItem("sinan:theme", theme), theme)
     await page.route("**/api/auth/me", route => route.fulfill({ json: { user: null } }))
@@ -9,7 +9,7 @@ for (const width of [320, 390, 768, 1280]) for (const theme of ["light", "dark"]
     page.on("pageerror", error => errors.push(error.message))
     await page.goto("/me")
     const nav = page.getByRole("navigation", { name: width < 1024 ? "快捷导航" : "主导航" })
-    await expect(nav.getByRole("link")).toHaveCount(3)
+    await expect(nav.getByRole("link")).toHaveCount(2)
     await expect(nav.getByRole("link", { name: "我的", exact: true })).toHaveAttribute("aria-current", "page")
     await expect(nav.getByRole("link", { name: /研究|Pulse|打卡|评分/ })).toHaveCount(0)
     await expect(page.locator('a[href^="/research"]')).toHaveCount(0)

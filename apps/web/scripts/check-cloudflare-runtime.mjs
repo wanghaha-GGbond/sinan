@@ -81,6 +81,11 @@ try {
   for (const path of ["/research", "/research/bytedance", "/api/research", "/api/research/bytedance"]) assert.equal((await request(path)).status, 404)
   assert.equal((await request("/api/me/pulse")).status, pulseEnabled ? 401 : 404)
   assert.equal((await request("/community")).status, 200)
+  for (const path of ["/", "/community?view=companies", "/companies"]) {
+    const page = await request(path)
+    assert.equal(page.status, 200, `${path} must render inside the community`)
+    assert.match(await page.text(), /社区/)
+  }
   const community = await request("/api/community")
   assert.equal(community.status, 503, "Missing database must not return demonstration discussions")
   assert.deepEqual(await community.json(), { error: "讨论暂时无法加载，请重试" })

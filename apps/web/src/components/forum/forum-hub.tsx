@@ -19,6 +19,8 @@ import { forumFetch, forumBody } from "./forum-client"
 
 const LegacyReviewCommunity = dynamic(() => import("./legacy-review-community").then(m => m.LegacyReviewCommunity))
 const CompanyReviewFeed = dynamic(() => import("./company-review-feed").then(m => m.CompanyReviewFeed))
+const CompanyDiscovery = dynamic(() => import("@/components/company/company-discovery").then(m => m.CompanyDiscovery), { loading: () => <p role="status" className="p-6 text-sm text-muted-foreground">正在加载公司…</p> })
+const CompanyDirectoryPanel = dynamic(() => import("@/components/company/company-directory-panel").then(m => m.CompanyDirectoryPanel), { loading: () => <p role="status" className="p-6 text-sm text-muted-foreground">正在加载公司目录…</p> })
 
 function ReviewDiscussions() {
   const [opened, setOpened] = useState(false)
@@ -28,29 +30,32 @@ function ReviewDiscussions() {
   </details>
 }
 
-export function ForumHub({ company }: { company?: CompanyListItem }) {
+export function ForumHub({ company, directory = false }: { company?: CompanyListItem; directory?: boolean }) {
   const { user, loading } = useAuth(), params = useUrlSearchParams(), client = useQueryClient()
   const catalog = useCompanySearch()
   const companies = useMemo(() => company && !catalog.data?.some(c => c.id === company.id) ? [company, ...(catalog.data ?? [])] : catalog.data ?? [], [catalog.data, company])
   const companyId = company?.id ?? params.get("companyId") ?? "", selected = companies.find(c => c.id === companyId)
   const feed = params.get("feed") === "mine" ? "mine" : params.get("feed") === "following" ? "following" : "all"
   const sort = params.get("sort") === "useful" ? "useful" : "latest", category = params.get("category") ?? "", q = params.get("q") ?? ""
-  const legacy = !company && params.get("view") === "reviews"
+  const finding = !company && (directory || params.get("view") === "companies")
+  const legacy = !finding && !company && params.get("view") === "reviews"
   const [search, setSearch] = useState(""), [expanded, setExpanded] = useState(false)
   const [directoryOpen, setDirectoryOpen] = useState(false)
   const [followError, setFollowError] = useState(""), [followingBusy, setFollowingBusy] = useState(false), followLock = useRef(false)
   const returnTo = `${company ? `/company/${company.id}/community` : "/community"}${params.size ? `?${params}` : ""}`
-  const follows = useQuery({ queryKey: ["forum", "follows", user?.id], enabled: !loading && Boolean(user), queryFn: () => forumFetch<{ companyIds: string[] }>("/api/forum/follows"), staleTime: 0, gcTime: 0, retry: false })
+  const follows = useQuery({ queryKey: ["forum", "follows", user?.id], enabled: !loading && Boolean(user) && !finding, queryFn: () => forumFetch<{ companyIds: string[] }>("/api/forum/follows"), staleTime: 0, gcTime: 0, retry: false })
   const posts = useInfiniteQuery({
     queryKey: ["forum", "posts", user?.id ?? "anonymous", companyId, feed, sort, category, q], initialPageParam: "",
-    enabled: !loading && !legacy && (feed === "all" || Boolean(user)),
-    queryFn: ({ pageParam, signal }) => {
+    enabled: !loading && !legacy && !finding && (feed === "all" || Boolean(user)),
+    queryFn: async ({ pageParam, signal }) => {
       const query = new URLSearchParams({ feed, sort })
       if (companyId) query.set("companyId", companyId)
       if (category) query.set("category", category)
       if (q) query.set("q", q)
       if (pageParam) query.set("cursor", pageParam)
-      return forumFetch<ForumPage>(`/api/forum/posts?${query}`, { signal })
+      const result = await forumFetch<ForumPage>(`/api/forum/posts?${query}`, { signal })
+      if (!Array.isArray(result.posts)) throw new Error("帖子返回格式不正确")
+      return result
     }, getNextPageParam: page => page.nextCursor ?? undefined, staleTime: 0, gcTime: 0, retry: false,
   })
   const rows = Array.from(new Map((posts.data?.pages.flatMap(p => p.posts) ?? []).map(p => [p.id, p])).values())
@@ -58,12 +63,12 @@ export function ForumHub({ company }: { company?: CompanyListItem }) {
   function filter(key: string, value: string) { const next = new URLSearchParams(params); if (value) next.set(key, value); else next.delete(key); replaceUrlSearchParams(next) }
   function switchBoard(value: string) {
     if ((params.get("view") ?? "") === value) return
-    const next = new URLSearchParams(params)
+    const next = value === "companies" ? new URLSearchParams() : new URLSearchParams(params)
     if (value) next.set("view", value); else next.delete("view")
     replaceUrlSearchParams(next, "push")
   }
   function boardHref(value: string) {
-    const next = new URLSearchParams(params)
+    const next = directory || value === "companies" ? new URLSearchParams() : new URLSearchParams(params)
     if (value) next.set("view", value); else next.delete("view")
     if (company) next.set("companyId", company.id)
     return `/community${next.size ? `?${next}` : ""}`
@@ -101,12 +106,13 @@ export function ForumHub({ company }: { company?: CompanyListItem }) {
   const reviewHref = `/submit/review${companyId ? `?companyId=${encodeURIComponent(companyId)}` : ""}`
   return <section data-testid="forum-hub" className={`${company ? "mt-5" : "bg-background sm:px-6"} break-normal`}><div className="mx-auto w-full max-w-5xl sm:border-x sm:border-border">
     {!company && <header className="flex items-center justify-between gap-3 px-4 py-5 sm:px-6"><div className="flex items-center gap-2.5"><ZaichangIcon name="conversation" className="size-7 text-primary-deep" /><h1 className="text-xl font-semibold tracking-tight">社区</h1></div><WebButton asChild variant="secondary" size="sm"><Link href={reviewHref}><ZaichangIcon name="review" />写评价</Link></WebButton></header>}
-    <nav aria-label="社区板块" className="flex gap-6 border-b border-border px-4 text-sm font-semibold sm:px-6">
-      <Link className={`inline-flex min-h-12 items-center gap-2 border-b-2 focus-visible:outline-2 focus-visible:outline-ring ${!legacy ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`} href={company ? `/company/${company.id}/community` : boardHref("")} onNavigate={company ? undefined : event => { event.preventDefault(); switchBoard("") }} aria-current={!legacy ? "page" : undefined}><ZaichangIcon name="conversation" className="size-4" />聊工作</Link>
-      <Link className={`inline-flex min-h-12 items-center gap-2 border-b-2 focus-visible:outline-2 focus-visible:outline-ring ${legacy ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`} href={boardHref("reviews")} onNavigate={company ? undefined : event => { event.preventDefault(); switchBoard("reviews") }} aria-current={legacy ? "page" : undefined}><ZaichangIcon name="review" className="size-4" />公司评价</Link>
+    {!company && <nav aria-label="社区板块" className="flex flex-wrap gap-x-4 border-b border-border px-4 text-sm font-semibold sm:gap-x-6 sm:px-6">
+      <Link className={`inline-flex min-h-12 items-center gap-2 border-b-2 focus-visible:outline-2 focus-visible:outline-ring ${!legacy && !finding ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`} href={boardHref("")} onNavigate={directory ? undefined : event => { event.preventDefault(); switchBoard("") }} aria-current={!legacy && !finding ? "page" : undefined}><ZaichangIcon name="conversation" className="size-4" />聊工作</Link>
+      <Link className={`inline-flex min-h-12 items-center gap-2 border-b-2 focus-visible:outline-2 focus-visible:outline-ring ${legacy ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`} href={boardHref("reviews")} onNavigate={directory ? undefined : event => { event.preventDefault(); switchBoard("reviews") }} aria-current={legacy ? "page" : undefined}><ZaichangIcon name="review" className="size-4" />公司评价</Link>
+      <Link className={`inline-flex min-h-12 items-center gap-2 border-b-2 focus-visible:outline-2 focus-visible:outline-ring ${finding ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`} href={boardHref("companies")} onNavigate={directory ? undefined : event => { event.preventDefault(); switchBoard("companies") }} aria-current={finding ? "page" : undefined}><ZaichangIcon name="company" className="size-4" />找公司</Link>
       {user && ["admin", "moderator"].includes(user.role) && <Link className="ml-auto inline-flex min-h-12 items-center" href="/moderation/forum">审核队列</Link>}
-    </nav>
-    {legacy ? <><CompanyReviewFeed companyId={companyId} companies={companies} /><ReviewDiscussions /></> : <div className="grid items-start lg:grid-cols-[minmax(0,1fr)_260px]">
+    </nav>}
+    {finding ? directory ? <CompanyDirectoryPanel /> : <CompanyDiscovery /> : legacy ? <><CompanyReviewFeed companyId={companyId} companies={companies} /><ReviewDiscussions /></> : <div className="grid items-start lg:grid-cols-[minmax(0,1fr)_260px]">
       <aside className="order-first min-w-0 border-b border-border px-4 lg:sticky lg:top-20 lg:order-last lg:border-b-0 lg:p-5" aria-label="公司论坛目录">
         <button type="button" aria-expanded={directoryOpen} aria-controls="community-company-directory" onClick={() => setDirectoryOpen(value => !value)} className="flex min-h-11 w-full items-center justify-between text-sm text-muted-foreground lg:hidden"><span className="inline-flex items-center gap-2"><ZaichangIcon name="company" className="size-4" />找公司</span><ChevronDown className={`size-4 transition-transform ${directoryOpen ? "rotate-180" : ""}`} aria-hidden="true" /></button>
         <div id="community-company-directory" className={directoryOpen ? "pb-4 lg:pb-0" : "hidden lg:block"}>

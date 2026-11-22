@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Building2, MessageCircle, UserRound } from "lucide-react"
+import { MessageCircle, UserRound } from "lucide-react"
 
 import { WebButton } from "@/components/ui/web-button"
 import { WebNav } from "@/components/ui/web-nav"
@@ -18,7 +18,7 @@ function MainNav() {
   return (
     <WebNav
       links={isAuthRoute ? [] : mainNavigation(pathname)}
-      showSearch={!['/', '/companies', '/search'].includes(pathname)}
+      showSearch={!['/', '/community', '/companies', '/search'].includes(pathname)}
       rightSlot={
         <>
           <ThemeToggle />
@@ -45,10 +45,10 @@ function MainNav() {
 function MobileNav() {
   const pathname = usePathname()
   if (["/login", "/register", "/forgot-password", "/reset-password", "/invite/"].some((path) => pathname.startsWith(path))) return null
-  const icons = { "/companies": Building2, "/community": MessageCircle, "/me": UserRound }
+  const icons = { "/community": MessageCircle, "/me": UserRound }
   const links = mainNavigation(pathname)
   return (
-    <nav aria-label="快捷导航" className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-3 border-t border-border bg-card pb-[env(safe-area-inset-bottom)] lg:hidden">
+    <nav aria-label="快捷导航" className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-2 border-t border-border bg-card pb-[env(safe-area-inset-bottom)] lg:hidden">
       {links.map((link) => {
         const Icon = icons[link.href as keyof typeof icons]
         return <Link key={link.href} href={link.href} aria-current={link.active ? "page" : undefined}

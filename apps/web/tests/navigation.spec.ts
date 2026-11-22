@@ -4,18 +4,19 @@ import { getSafeNextPath, withNext } from "../src/lib/navigation"
 import { isPersonalArea, mainNavigation } from "../src/lib/app-navigation"
 import { isResearchPath, researchIsInternal } from "../src/lib/research-visibility"
 
-test("three primary destinations group check-ins under my and scoring under companies", () => {
+test("two primary destinations include companies and scoring inside community", () => {
   for (const path of ["/me", "/me/skills", "/settings/account", "/pulse"]) {
     expect(isPersonalArea(path)).toBe(true)
     const links = mainNavigation(path)
-    expect(links.map(link => link.href)).toEqual(["/community", "/companies", "/me"])
+    expect(links.map(link => link.href)).toEqual(["/community", "/me"])
     expect(links.filter(link => link.active).map(link => link.href)).toEqual(["/me"])
   }
-  expect(mainNavigation("/company/abc/community").filter(link => link.active).map(link => link.href)).toEqual(["/community"])
-  expect(mainNavigation("/company/abc/ratings").filter(link => link.active).map(link => link.href)).toEqual(["/companies"])
+  for (const path of ["/", "/community", "/companies", "/company/abc", "/company/abc/community", "/company/abc/ratings", "/search", "/submit/review"]) {
+    expect(mainNavigation(path).filter(link => link.active).map(link => link.href)).toEqual(["/community"])
+  }
   expect(isPersonalArea("/researcher")).toBe(false)
   expect(isPersonalArea("/research")).toBe(false)
-  expect(mainNavigation("/submit/review").filter(link => link.active).map(link => link.href)).toEqual(["/companies"])
+  expect(mainNavigation("/submit/review").filter(link => link.active).map(link => link.href)).toEqual(["/community"])
 })
 
 test("research routes are internal and do not match unrelated paths", () => {

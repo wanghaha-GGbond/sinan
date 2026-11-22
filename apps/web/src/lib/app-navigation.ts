@@ -5,10 +5,9 @@ export function isPersonalArea(pathname: string) {
 }
 
 export function mainNavigation(pathname: string) {
-  const community = within(pathname, "/community") || /^\/company\/[^/]+\/community(?:\/|$)/.test(pathname)
+  const community = pathname === "/" || ["/community", "/companies", "/company", "/search", "/submit"].some(root => within(pathname, root))
   return [
     { href: "/community", label: "社区", active: community },
-    { href: "/companies", label: "公司", active: !community && (pathname === "/" || ["/companies", "/company", "/search", "/submit"].some(root => within(pathname, root))) },
     { href: "/me", label: "我的", active: isPersonalArea(pathname) },
   ]
 }

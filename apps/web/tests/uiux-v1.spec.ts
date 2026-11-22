@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test"
 
 test("Zaichang uses Z across navigation and install icons without publishing the slogan", async ({ page, request }) => {
-  await page.goto("/")
+  await page.goto("/community?view=companies")
   await expect(page).toHaveTitle("在场")
   await expect(page.getByRole("link", { name: "返回在场首页" }).locator("img")).toHaveAttribute("src", "/brand-z.svg")
   await expect(page.locator("body")).not.toContainText("永远在场，永远连接")
@@ -22,7 +22,7 @@ for (const width of [390, 1440]) {
       { id: "old-rated", name: "评价最多公司", city: "上海", industry: "软件", reviewCount: 20, directionScore: 8, createdAt: "2026-01-01" },
       { id: "new-unrated", name: "最新收录公司", city: "北京", industry: "科技", reviewCount: 0, directionScore: 9, createdAt: "2026-11-01" },
     ] } }))
-    await page.goto("/")
+    await page.goto("/community?view=companies")
     const feed = page.getByRole("tabpanel")
     await expect(feed.getByTestId("company-feed-item").first()).toContainText("评价最多公司")
     await expect(feed.getByTestId("company-feed-item").first()).toContainText("综合评分 / 10")
@@ -79,7 +79,7 @@ test("feed tabs cannot silently swallow clicks before hydration on a slow connec
     await route.continue()
   })
   try {
-    await page.goto("/", { waitUntil: "commit" })
+    await page.goto("/community?view=companies", { waitUntil: "commit" })
     const latest = page.getByRole("tab", { name: "最新", exact: true })
     await expect(latest).toBeVisible()
     await expect(latest).toBeDisabled()
@@ -94,7 +94,7 @@ test("feed tabs cannot silently swallow clicks before hydration on a slow connec
 
 for (const width of [375, 390, 768, 1280, 1440]) {
   for (const [name, path, heading] of [
-    ["home", "/", "找公司"],
+    ["home", "/community?view=companies", "找公司"],
     ["companies", "/companies", "公司"],
     ["detail", "/company/northstar-tech", "北辰智造科技"],
   ]) {
@@ -124,9 +124,9 @@ for (const width of [375, 390, 768, 1280, 1440]) {
         expect(columns).toBe(width >= 1024 ? 2 : 1)
       }
       if (width < 1024) {
-        await expect(page.getByRole("navigation", { name: "快捷导航" }).getByRole("link", { name: "公司", exact: true })).toBeVisible()
-        await expect(page.getByRole("navigation", { name: "快捷导航" }).getByRole("link", { name: "公司", exact: true })).toBeVisible()
-        await expect(page.getByRole("navigation", { name: "快捷导航" }).getByRole("link")).toHaveCount(3)
+        await expect(page.getByRole("navigation", { name: "快捷导航" }).getByRole("link", { name: "社区", exact: true })).toBeVisible()
+        await expect(page.getByRole("navigation", { name: "快捷导航" }).getByRole("link", { name: "我的", exact: true })).toBeVisible()
+        await expect(page.getByRole("navigation", { name: "快捷导航" }).getByRole("link")).toHaveCount(2)
       } else {
         await expect(page.getByRole("navigation", { name: "主导航" })).toBeVisible()
       }

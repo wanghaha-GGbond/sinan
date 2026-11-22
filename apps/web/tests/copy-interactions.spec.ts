@@ -26,7 +26,7 @@ test("home search submits the keyword without explanatory banners", async ({ pag
       industry: "互联网", directionScore: 8, recommendationRate: 80, reviewCount: 10,
     }] } })
   })
-  await page.goto("/")
+  await page.goto("/community?view=companies")
   await expect(page.getByRole("heading", { name: "测试科技" })).toBeVisible()
   await expect(page.getByText("职场决策工具", { exact: false })).toHaveCount(0)
   await expect(page.getByRole("link", { name: "隐私政策" })).toBeVisible()

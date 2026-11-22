@@ -11,6 +11,7 @@ export function HomeCompanySearch() {
   return (
     <form
       role="search"
+      id="find-company"
       action="/search"
       method="get"
       onSubmit={(event) => {

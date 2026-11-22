@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test"
 
 const widths = [1440, 1280, 768, 390, 375]
 const pages = [
-  { path: "/", heading: "找公司", name: "home" },
+  { path: "/community?view=companies", heading: "找公司", name: "home" },
   { path: "/companies", heading: "公司", name: "companies" },
   { path: "/company/northstar-tech", heading: "北辰智造科技", name: "detail" },
 ]
@@ -33,8 +33,8 @@ for (const width of widths) {
       await expect(page.locator("body")).toHaveCSS("background-color", "rgb(255, 255, 255)")
       if (width < 1024) {
         const nav = page.getByRole("navigation", { name: "快捷导航" })
-        await expect(nav.getByRole("link")).toHaveCount(3)
-        await expect(nav.getByRole("link", { name: "公司" })).toBeVisible()
+        await expect(nav.getByRole("link")).toHaveCount(2)
+        await expect(nav.getByRole("link", { name: "社区" })).toBeVisible()
       } else {
         await expect(page.getByRole("navigation", { name: "主导航" })).toBeVisible()
       }
@@ -72,7 +72,7 @@ test("recommendation timeline switches order and opens a company", async ({ page
     { id: "jiangliu-tech", name: "江流数科", city: "北京", industry: "软件", reviewCount: 1, directionScore: 7, createdAt: "2026-11-01" },
     { id: "other-fixture", name: "测试公司", city: "深圳", industry: "软件", reviewCount: 2, directionScore: 6, createdAt: "2026-02-01" },
   ] } }))
-  await page.goto("/")
+  await page.goto("/community?view=companies")
   const feed = page.getByTestId("home-recommend-feed")
   await expect(feed.getByTestId("company-feed-item")).toHaveCount(3)
   await expect(feed.getByTestId("company-feed-item").first()).toContainText("北辰智造")

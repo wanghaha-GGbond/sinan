@@ -8,9 +8,10 @@ const catalog = [company("a", "测试公司甲"), company("b", "测试公司乙"
 
 async function isolateApis(page: Page) {
   await page.route("**/api/**", (route) => route.fulfill({ json: { user: null } }))
+  await page.route("**/api/forum/posts?**", route => route.fulfill({ json: { posts: [], nextCursor: null } }))
 }
 
-test("homepage, directory, and search reuse one catalog request on client navigation", async ({ page, isMobile }) => {
+test("community, company discovery, directory and search reuse one catalog request", async ({ page }) => {
   await isolateApis(page)
   let catalogRequests = 0
   await page.route("**/api/companies/search**", (route) => {
@@ -18,14 +19,17 @@ test("homepage, directory, and search reuse one catalog request on client naviga
     return route.fulfill({ json: { companies: catalog } })
   })
   await page.goto("/")
+  await expect(page.getByRole("heading", { name: "社区", exact: true })).toBeVisible()
+  await page.getByRole("navigation", { name: "社区板块" }).getByRole("link", { name: "找公司", exact: true }).click()
   await expect(page.getByRole("heading", { name: "测试公司甲" })).toBeVisible()
 
-  await page.getByRole("navigation", { name: isMobile ? "快捷导航" : "主导航" }).getByRole("link", { name: "公司", exact: true }).click()
+  await page.getByTestId("home-recommend-feed").getByRole("link", { name: "全部公司", exact: true }).click()
   await expect(page.getByTestId("company-directory")).toBeVisible()
   await expect(page.getByRole("heading", { name: "测试公司甲" })).toBeVisible()
   expect(catalogRequests).toBe(1)
 
   await page.getByRole("link", { name: "返回在场首页" }).click()
+  await page.getByRole("navigation", { name: "社区板块" }).getByRole("link", { name: "找公司", exact: true }).click()
   await page.getByRole("search").getByRole("button", { name: "搜索", exact: true }).click()
   await expect(page.getByRole("button", { name: "测试公司甲", exact: true })).toBeVisible()
   // An empty search must not show the entire catalog as search results.
