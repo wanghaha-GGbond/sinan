@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto"
+import type { Page } from "@playwright/test"
 import { eq, inArray, or } from "drizzle-orm"
 import { expect, test } from "../release-fixture"
 import { db } from "../../src/db/client"
@@ -7,6 +8,23 @@ import { dialogueApplications, dialogueAuditEvents, dialogueSessions } from "../
 import { signToken } from "../../src/lib/server/auth"
 
 const people: string[] = [], events: string[] = [], creationRequests: string[] = []
+const uiRefresh = { timeout: 20_000 }
+
+async function browserWrite(page: Page, step: string, method: "POST" | "PATCH" | "DELETE", path: string, trigger: () => Promise<unknown>, status: number, expected: Record<string, unknown>) {
+  const started = Date.now()
+  // Arm the observer before clicking. Never retry or ignore a failed write.
+  const [response] = await Promise.all([
+    page.waitForResponse(response => new URL(response.url()).pathname === path && response.request().method() === method, { timeout: 60_000 }),
+    trigger(),
+  ])
+  const result = await response.json().catch(() => null)
+  // Deliberately exclude bodies, headers, identities and private instructions.
+  console.info(JSON.stringify({ event: "dialogue_write_response", step, method, status: response.status(), elapsedMs: Date.now() - started }))
+  const error = typeof result?.error === "string" ? result.error.slice(0, 160) : "no API error message"
+  expect(response.status(), step + " must return a real successful response: " + error).toBe(status)
+  expect(result, step + " response contract").toMatchObject(expected)
+  return result
+}
 test.afterAll(async () => {
   // Wait for any in-flight create holding its actor lock, then remove exactly
   // this test's request IDs, even if the subsequent UI assertion failed.
@@ -47,34 +65,41 @@ test("real dialogue story: draft, publish, private question, selection, withdraw
       if (typeof id === "string" && /^[a-f0-9-]{36}$/.test(id)) creationRequests.push(id)
     }
   })
-  const createdResponse = page.waitForResponse(response => new URL(response.url()).pathname === createPath && response.request().method() === "POST", { timeout: 60_000 })
-  await page.getByRole("button", { name: "保存草稿", exact: true }).click()
-  const response = await createdResponse
-  const saved = await response.json().catch(() => null)
-  const error = typeof saved?.error === "string" ? saved.error.slice(0, 160) : "no API error message"
-  expect(response.status(), "Draft creation must return a real successful response: " + error).toBe(201)
-  expect(saved?.session).toMatchObject({ id: expect.any(String), status: "draft" })
+  const saved = await browserWrite(page, "save_draft", "POST", createPath,
+    () => page.getByRole("button", { name: "保存草稿", exact: true }).click(), 201,
+    { session: { id: expect.any(String), status: "draft" } })
   events.push(saved.session.id)
   const [stored] = await db.select().from(dialogueSessions).where(eq(dialogueSessions.id, saved.session.id))
   expect(stored).toMatchObject({ title, status: "draft", createdBy: moderator.id })
   const card = page.getByTestId("managed-dialogue").filter({ has: page.getByRole("heading", { name: title, exact: true }) })
-  await expect(card).toBeVisible({ timeout: 20_000 })
+  await expect(card).toBeVisible(uiRefresh)
   expect((await request.get(`/api/dialogues/${stored.id}`)).status()).toBe(404)
   expect((await request.patch(`/api/moderation/dialogues/${stored.id}`, { headers: headers(applicantToken), data: { action: "publish" } })).status()).toBe(403)
-  await card.getByRole("button", { name: "发布活动", exact: true }).click()
-  await expect(card.getByRole("button", { name: "结束报名", exact: true })).toBeVisible()
+  const managementPath = `/api/moderation/dialogues/${stored.id}`
+  await browserWrite(page, "publish", "PATCH", managementPath,
+    () => card.getByRole("button", { name: "发布活动", exact: true }).click(), 200,
+    { id: stored.id, status: "open" })
+  const [published] = await db.select().from(dialogueSessions).where(eq(dialogueSessions.id, stored.id))
+  expect(published).toMatchObject({ status: "open", guestConsentConfirmed: true })
+  expect(published.publishedAt).not.toBeNull()
+  await expect(card.getByRole("button", { name: "结束报名", exact: true })).toBeVisible(uiRefresh)
   await card.getByText("参与安排（仅入选者可见）", { exact: true }).click()
   const privateInstructions = `PRIVATE-MEETING-${randomUUID()}`
   await card.getByLabel("参与安排", { exact: true }).fill(privateInstructions)
-  const arrangementsSaved = page.waitForResponse(response => response.url().endsWith(`/api/moderation/dialogues/${stored.id}`) && response.request().method() === "PATCH" && response.ok())
-  await card.getByRole("button", { name: "保存参与安排", exact: true }).click(); await arrangementsSaved
+  await browserWrite(page, "arrangements", "PATCH", managementPath,
+    () => card.getByRole("button", { name: "保存参与安排", exact: true }).click(), 200,
+    { id: stored.id, status: "open" })
+  const [arranged] = await db.select().from(dialogueSessions).where(eq(dialogueSessions.id, stored.id))
+  expect(arranged.privateInstructions).toBe(privateInstructions)
   await login(applicantToken)
   await page.goto(`/community/dialogues/${stored.id}`)
-  await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible()
+  await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible(uiRefresh)
   const question = "我希望了解真实项目中跨团队协作的方式，PRIVATE-QUESTION。"
   await page.getByLabel("报名问题", { exact: true }).fill(question)
-  await page.getByRole("button", { name: "免费报名", exact: true }).click()
-  await expect(page.getByText("报名已提交，等待审核。", { exact: true })).toBeVisible()
+  await browserWrite(page, "apply", "POST", `/api/dialogues/${stored.id}/applications`,
+    () => page.getByRole("button", { name: "免费报名", exact: true }).click(), 201,
+    { application: { id: expect.any(String), sessionId: stored.id, status: "submitted" } })
+  await expect(page.getByText("报名已提交，等待审核。", { exact: true })).toBeVisible(uiRefresh)
   const [application] = await db.select().from(dialogueApplications).where(eq(dialogueApplications.userId, applicant.id))
   expect(application.question).toBe(question); expect(application.status).toBe("submitted")
   const publicResponse = await request.get(`/api/dialogues/${stored.id}`), publicText = await publicResponse.text()
@@ -86,15 +111,21 @@ test("real dialogue story: draft, publish, private question, selection, withdraw
   expect((await request.get(`/api/moderation/dialogues/${stored.id}/applications`, { headers: headers(applicantToken) })).status()).toBe(403)
   await login(modToken); await page.goto("/moderation/dialogues")
   await card.getByText("审核报名", { exact: true }).click()
-  await expect(card.getByText(question, { exact: true })).toBeVisible()
+  await expect(card.getByText(question, { exact: true })).toBeVisible(uiRefresh)
   await card.getByLabel("处理说明（报名者可见）").fill("提问适合本场交流，确认入选")
-  await card.getByRole("button", { name: "选为参与者", exact: true }).click()
-  await expect(card.getByText("已入选", { exact: true })).toBeVisible()
+  await browserWrite(page, "select", "PATCH", managementPath + `/applications/${application.id}`,
+    () => card.getByRole("button", { name: "选为参与者", exact: true }).click(), 200,
+    { id: application.id, status: "selected" })
+  const [selected] = await db.select().from(dialogueApplications).where(eq(dialogueApplications.id, application.id))
+  expect(selected.status).toBe("selected")
+  await expect(card.getByText("已入选", { exact: true })).toBeVisible(uiRefresh)
   await login(applicantToken); await page.goto("/me/dialogues")
-  await expect(page.getByText(privateInstructions, { exact: true })).toBeVisible()
+  await expect(page.getByText(privateInstructions, { exact: true })).toBeVisible(uiRefresh)
   await page.getByRole("button", { name: "撤回报名", exact: true }).click()
-  await page.getByRole("button", { name: "确认撤回报名", exact: true }).click()
-  await expect(page.getByText("报名问题已清除", { exact: true })).toBeVisible()
+  await browserWrite(page, "withdraw", "DELETE", `/api/me/dialogues/${application.id}`,
+    () => page.getByRole("button", { name: "确认撤回报名", exact: true }).click(), 200,
+    { id: application.id, status: "withdrawn" })
+  await expect(page.getByText("报名问题已清除", { exact: true })).toBeVisible(uiRefresh)
   await expect(page.getByText(privateInstructions, { exact: true })).toHaveCount(0)
   expect((await db.select().from(dialogueApplications).where(eq(dialogueApplications.id, application.id)))[0]).toMatchObject({ status: "withdrawn", question: "", decisionNote: null })
   // Real reapplication + account deletion must also purge private linkage.
@@ -103,11 +134,13 @@ test("real dialogue story: draft, publish, private question, selection, withdraw
   expect(await db.select().from(dialogueApplications).where(eq(dialogueApplications.userId, applicant.id))).toHaveLength(0)
   expect(await db.select().from(dialogueAuditEvents).where(eq(dialogueAuditEvents.actorUserId, applicant.id))).toHaveLength(0)
   expect((await request.get("/api/me/dialogues", { headers: headers(applicantToken) })).status()).toBe(401)
-  await login(outsiderToken); await page.goto("/moderation/dialogues"); await expect(page).toHaveURL(/\/community$/)
+  await login(outsiderToken); await page.goto("/moderation/dialogues"); await expect(page).toHaveURL(/\/community$/, uiRefresh)
   await login(modToken); await page.goto("/moderation/dialogues")
   await card.getByRole("button", { name: "取消活动", exact: true }).click()
   await card.getByLabel("取消原因（将公开展示）").fill("隔离测试活动结束")
-  await card.getByRole("button", { name: "确认取消活动", exact: true }).click()
-  await expect(card.getByText(/^已取消/)).toBeVisible()
+  await browserWrite(page, "cancel", "PATCH", managementPath,
+    () => card.getByRole("button", { name: "确认取消活动", exact: true }).click(), 200,
+    { id: stored.id, status: "cancelled" })
+  await expect(card.getByText(/^已取消/)).toBeVisible(uiRefresh)
   expect((await request.get(`/api/dialogues/${stored.id}`).then(response => response.json())).session).toMatchObject({ status: "cancelled", cancelReason: "隔离测试活动结束" })
 })
