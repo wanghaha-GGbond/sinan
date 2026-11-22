@@ -13,7 +13,9 @@ export function CompanyPageHeader({ company, active }: { company: CompanyListIte
   const website = publicCompanyWebsite(company.website)
   return <>
     <nav aria-label="面包屑" className="mb-3 flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground">
-      <Link href="/companies" className="inline-flex min-h-11 shrink-0 items-center hover:underline">找公司</Link>
+      <Link href="/community" className="inline-flex min-h-11 shrink-0 items-center hover:underline">社区</Link>
+      <ChevronRight className="size-3.5 shrink-0" aria-hidden="true" />
+      <Link href="/community?view=companies" className="inline-flex min-h-11 shrink-0 items-center hover:underline">找公司</Link>
       <ChevronRight className="size-3.5 shrink-0" aria-hidden="true" />
       {active === "概览" ? <span className="truncate">{company.name}</span> : <Link href={base} className="min-w-0 truncate hover:underline">{company.name}</Link>}
     </nav>

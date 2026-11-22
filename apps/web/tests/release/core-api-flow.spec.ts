@@ -201,13 +201,16 @@ test("邀请注册、评价审核公开和账号注销形成真实数据库闭�
   expect(reviewPageHtml).toContain("Release 真实闭环评价")
   expect(reviewPageHtml).toContain("首发 Beta 暂不开放公开追问")
 
-  const researchResponse = await request.get("/api/research")
-  expect(researchResponse.status()).toBe(200)
-  const research = await researchResponse.json()
-  expect(research.companies.length).toBeGreaterThan(0)
-  const reportResponse = await request.get(`/api/research/${research.companies[0].slug}`)
-  expect(reportResponse.status()).toBe(200)
-  expect((await reportResponse.json()).card.name).toBe(research.companies[0].name)
+  // Research is internal, not another personal account feature. Registration
+  // must not grant access to its database or published source records.
+  for (const token of [null, userToken]) {
+    for (const path of ["/api/research", "/api/research/bytedance"]) {
+      const response = await request.get(path, token ? { headers: { Authorization: `Bearer ${token}` } } : {})
+      expect(response.status()).toBe(404)
+      expect(response.headers()["cache-control"]).toContain("no-store")
+      expect(await response.json()).toEqual({ error: "Not found" })
+    }
+  }
 
   const deleteResponse = await request.delete("/api/me/account", {
     headers: { Authorization: `Bearer ${userToken}`, "X-Sinan-Client": "ios" },

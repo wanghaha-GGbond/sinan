@@ -29,7 +29,8 @@ import { useAuth } from "@/lib/auth-context"
 import { getFavoritedCompanyIds } from "@/lib/favorites-storage"
 import { getMeDashboard } from "@/lib/api/me"
 import { IdentityCard, type IdentityCardData } from "@/components/identity/identity-card"
-import { PersonalTools } from "@/components/layout/personal-tools"
+import { MyWorkRecords, useWorkRecordsRequested } from "@/components/pulse/my-work-records"
+import { withNext } from "@/lib/navigation"
 import { isPulseEnabled } from "@/lib/pulse-feature"
 
 const pulseEnabled = isPulseEnabled({
@@ -146,6 +147,7 @@ const DEFAULT_BADGES: Badge[] = [
 ]
 
 export default function MePage() {
+  const workRecordsRequested = useWorkRecordsRequested()
   const { user: authUser, loading: authLoading } = useAuth()
   const [dashboard, setDashboard] = useState<DashboardData | null>(null)
   const [dashboardLoading, setDashboardLoading] = useState(true)
@@ -199,16 +201,15 @@ export default function MePage() {
     return (
       <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6">
         <h1 className="text-2xl font-semibold tracking-tight">我的</h1>
-        <PersonalTools pulseEnabled={pulseEnabled} />
         <WebSurface variant="elevated" className="mx-auto w-full max-w-card p-8 text-center">
           <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-2xl bg-muted">
             <Navigation className="size-8 text-muted-foreground" />
           </div>
           <h2 className="text-lg font-semibold text-foreground">登录在场</h2>
           <WebButton asChild variant="primary" size="lg" className="mt-6 w-full">
-            <Link href="/login?next=%2Fme">
+            <Link href={withNext("/login", workRecordsRequested ? "/me#work-records" : "/me")}>
               <LogIn className="size-4" />
-              登录 / 注册
+              {workRecordsRequested ? "登录后记录今天" : "登录 / 注册"}
             </Link>
           </WebButton>
         </WebSurface>
@@ -407,7 +408,7 @@ function MeContent({
         </div>
       </div>
 
-      <PersonalTools pulseEnabled={pulseEnabled} />
+      {pulseEnabled ? <MyWorkRecords /> : null}
       <nav aria-label="我的社区" className="flex flex-wrap gap-2 text-sm">
         <WebButton asChild variant="secondary"><Link href="/community?feed=mine">我的帖子</Link></WebButton>
         <WebButton asChild variant="secondary"><Link href="/community?feed=following">关注的公司动态</Link></WebButton>

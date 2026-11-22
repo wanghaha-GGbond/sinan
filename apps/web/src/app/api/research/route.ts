@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { researchIsInternal } from "@/lib/research-visibility"
 
 import {
   companyCards,
@@ -10,6 +11,7 @@ import {
 import { getPublishedResearchSnapshot } from "@/lib/server/published-research"
 
 export async function GET() {
+  if (researchIsInternal()) return NextResponse.json({ error: "Not found" }, { status: 404, headers: { "Cache-Control": "private, no-store" } })
   const published = await getPublishedResearchSnapshot()
   const indices = mergeCompanyIndices(published?.companies)
   const cardsByName = new Map(companyCards.map((card) => [card.name, card]))

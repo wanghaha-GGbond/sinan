@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { isDeferredLaunchPath } from "@/lib/launch-scope"
 import { isPulseEnabled } from "@/lib/pulse-feature"
+import { isResearchPath, researchIsInternal } from "@/lib/research-visibility"
 
 const isProd = process.env.NODE_ENV === "production"
 
@@ -52,6 +53,13 @@ function withSecurityHeaders(response: NextResponse): NextResponse {
 }
 
 export function proxy(request: NextRequest) {
+  if (researchIsInternal() && isResearchPath(request.nextUrl.pathname)) {
+    const response = request.nextUrl.pathname.startsWith("/api/")
+      ? NextResponse.json({ error: "Not found" }, { status: 404 })
+      : NextResponse.rewrite(new URL("/__sinan_launch_not_found__", request.url), { status: 404 })
+    response.headers.set("Cache-Control", "private, no-store")
+    return withSecurityHeaders(response)
+  }
   const isPulsePath =
     request.nextUrl.pathname === "/pulse" ||
     request.nextUrl.pathname.startsWith("/pulse/")
@@ -69,6 +77,10 @@ export function proxy(request: NextRequest) {
         { status: 404 },
       ),
     )
+  }
+
+  if (isPulsePath) {
+    return withSecurityHeaders(NextResponse.redirect(new URL("/me#work-records", request.url), 307))
   }
 
   if (

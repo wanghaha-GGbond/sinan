@@ -6,7 +6,7 @@ const completed = sources.filter(source => [3, 10, 13, 17, 20].includes(Number(s
 
 test("completed logos survive homepage feed tab changes", async ({ page }) => {
   await page.route("**/api/companies/search**", route => route.fulfill({ json: { companies: companies.filter(company => completed.some(source => source.id === company.id)) } }))
-  await page.goto("/")
+  await page.goto("/community?view=companies")
   for (const tab of ["推荐", "最新"]) {
     await page.getByRole("tab", { name: tab, exact: true }).click()
     for (const source of completed) {

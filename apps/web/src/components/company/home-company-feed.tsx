@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useMemo, useState, useSyncExternalStore } from "react"
-import { ArrowUpRight, ClipboardList, PenLine, ShieldCheck, Sparkles, UserRound } from "lucide-react"
+import { ArrowUpRight, ShieldCheck, UserRound } from "lucide-react"
 
 import { WebButton } from "@/components/ui/web-button"
 import { useCompanySearch } from "@/lib/queries/company-search"
@@ -10,7 +10,6 @@ import { useCompanySearch } from "@/lib/queries/company-search"
 import { CompanyCard } from "./company-card"
 import { CompanyListSkeleton } from "./company-list-skeleton"
 import { filterAndSortCompanies } from "@/lib/company-directory"
-import { isPulseEnabled } from "@/lib/pulse-feature"
 
 const subscribeToHydration = () => () => {}
 const clientReady = () => true
@@ -61,12 +60,7 @@ export function HomeCompanySidebar() {
     query: "", city: "全部", ratedOnly: false, sort: "recent",
   }).slice(0, 5), [data])
   const items = [
-    ...(isPulseEnabled({ NEXT_PUBLIC_APP_ENV: process.env.NEXT_PUBLIC_APP_ENV, NEXT_PUBLIC_PULSE_ENABLED: process.env.NEXT_PUBLIC_PULSE_ENABLED }) ? [{ href: "/pulse", label: "打卡与工作周报", icon: Sparkles }] : []),
-    { href: "/submit/review", label: "评分与评价", icon: PenLine },
-    { href: "/submit/review?questionnaire=1", label: "问卷评分", icon: ClipboardList },
     { href: "/company-verification", label: "职业身份认证", icon: ShieldCheck },
-    { href: "/skills", label: "一技封神", icon: Sparkles },
-    { href: "/highlights", label: "高光馆", icon: Sparkles },
     { href: "/me", label: "个人主页", icon: UserRound },
   ]
   return <aside className="self-start border-t border-border p-4 sm:p-6 lg:sticky lg:top-20 lg:border-0" aria-label="新收录公司与功能">

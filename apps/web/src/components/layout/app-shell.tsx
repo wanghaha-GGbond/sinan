@@ -2,20 +2,13 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Building2, MessageCircle, PenLine, UserRound } from "lucide-react"
+import { MessageCircle, UserRound } from "lucide-react"
 
 import { WebButton } from "@/components/ui/web-button"
 import { WebNav } from "@/components/ui/web-nav"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
-import { PersonalNav } from "@/components/layout/personal-tools"
-import { isPersonalArea, mainNavigation } from "@/lib/app-navigation"
+import { mainNavigation } from "@/lib/app-navigation"
 import { useAuth } from "@/lib/auth-context"
-import { isPulseEnabled } from "@/lib/pulse-feature"
-
-const pulseEnabled = isPulseEnabled({
-  NEXT_PUBLIC_APP_ENV: process.env.NEXT_PUBLIC_APP_ENV,
-  NEXT_PUBLIC_PULSE_ENABLED: process.env.NEXT_PUBLIC_PULSE_ENABLED,
-})
 
 function MainNav() {
   const pathname = usePathname()
@@ -25,7 +18,7 @@ function MainNav() {
   return (
     <WebNav
       links={isAuthRoute ? [] : mainNavigation(pathname)}
-      showSearch={!['/', '/companies', '/search'].includes(pathname)}
+      showSearch={!['/', '/community', '/companies', '/search'].includes(pathname)}
       rightSlot={
         <>
           <ThemeToggle />
@@ -52,15 +45,15 @@ function MainNav() {
 function MobileNav() {
   const pathname = usePathname()
   if (["/login", "/register", "/forgot-password", "/reset-password", "/invite/"].some((path) => pathname.startsWith(path))) return null
-  const icons = { "/companies": Building2, "/community": MessageCircle, "/submit/review": PenLine, "/me": UserRound }
+  const icons = { "/community": MessageCircle, "/me": UserRound }
   const links = mainNavigation(pathname)
   return (
-    <nav aria-label="快捷导航" className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-border bg-card pb-[env(safe-area-inset-bottom)] lg:hidden">
+    <nav aria-label="快捷导航" className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-2 border-t border-border bg-card pb-[env(safe-area-inset-bottom)] lg:hidden">
       {links.map((link) => {
         const Icon = icons[link.href as keyof typeof icons]
         return <Link key={link.href} href={link.href} aria-current={link.active ? "page" : undefined}
           className={`flex min-h-16 min-w-0 flex-col items-center justify-center gap-1 px-1 text-xs font-medium focus-visible:outline-2 focus-visible:outline-ring ${link.active ? "text-primary-deep" : "text-muted-foreground"}`}>
-          <span className={`grid h-7 w-12 place-items-center rounded-full ${link.active ? "bg-primary-tint" : ""}`}><Icon className="size-5" aria-hidden="true" /></span>{link.href === "/submit/review" ? "评分" : link.label}
+          <span className={`grid h-7 w-12 place-items-center rounded-full ${link.active ? "bg-primary-tint" : ""}`}><Icon className="size-5" aria-hidden="true" /></span>{link.label}
         </Link>
       })}
     </nav>
@@ -68,7 +61,6 @@ function MobileNav() {
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname()
   const icpFilingNumber = process.env.NEXT_PUBLIC_ICP_FILING_NUMBER
 
   return (
@@ -76,7 +68,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-card focus:px-4 focus:py-3 focus:text-foreground focus:shadow-lg">跳到主要内容</a>
       <MainNav />
       <main id="main-content" tabIndex={-1} className="flex-1 scroll-mt-24">
-        {isPersonalArea(pathname) ? <PersonalNav pathname={pathname} pulseEnabled={pulseEnabled} /> : null}
         {children}
       </main>
       <footer className="border-t border-border">

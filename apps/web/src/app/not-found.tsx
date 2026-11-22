@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { BookOpen, Compass, Home, Search, PenLine, ArrowRight } from "lucide-react"
+import { Compass, Home, Search, PenLine, ArrowRight } from "lucide-react"
 
 import { WebButton } from "@/components/ui/web-button"
 import { WebSurface } from "@/components/ui/web-surface"
@@ -59,14 +59,6 @@ export default function NotFound() {
         >
           写一篇评价
           <PenLine className="size-3" />
-        </Link>
-        ,
-        <Link
-          href="/research"
-          className="ml-1 inline-flex items-center gap-0.5 font-medium text-foreground underline-offset-4 hover:underline"
-        >
-          浏览公司研报
-          <BookOpen className="size-3" />
         </Link>
       </p>
     </section>

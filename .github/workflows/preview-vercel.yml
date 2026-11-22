@@ -194,7 +194,7 @@ jobs:
           vc_curl /api/health/live | jq -e '.status == "ok"'
           vc_curl /api/health/ready | jq -e --arg release "$GITHUB_SHA" --arg migration "$migration" '.status == "ready" and .configuration == "valid" and .database == "reachable" and .schema == "compatible" and .authContract == 2 and .release == $release and .migration == $migration'
           vc_curl /api/config/register | jq -e --argjson delivery "$STAGING_MAIL_TEST_ENABLED" '.inviteRequired == true and .emailVerificationRequired == true and .emailDeliveryAvailable == $delivery'
-          for path in / /legal/privacy /pulse; do vc_curl "$path" >/dev/null; done
+          for path in / /legal/privacy /me; do vc_curl "$path" >/dev/null; done
 
       - name: Run release E2E against the isolated Preview
         env:
@@ -349,7 +349,7 @@ jobs:
           vc_curl /api/health/live | jq -e '.status == "ok"'
           vc_curl /api/health/ready | jq -e --arg release "$GITHUB_SHA" --arg migration "$migration" '.status == "ready" and .configuration == "valid" and .database == "reachable" and .schema == "compatible" and .authContract == 2 and .release == $release and .migration == $migration'
           vc_curl /api/config/register | jq -e --argjson delivery "$STAGING_MAIL_TEST_ENABLED" '.inviteRequired == true and .emailVerificationRequired == true and .emailDeliveryAvailable == $delivery'
-          for path in / /legal/privacy /pulse; do vc_curl "$path" >/dev/null; done
+          for path in / /legal/privacy /me; do vc_curl "$path" >/dev/null; done
 
       - name: Run release E2E against stable staging candidate
         env:

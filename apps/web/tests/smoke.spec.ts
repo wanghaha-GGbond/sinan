@@ -2,24 +2,19 @@ import { expect, test } from "@playwright/test"
 
 test("首发首页与核心导航可访问", async ({ page }) => {
   await page.goto("/")
-  await expect(page.getByRole("heading", { name: "找公司", exact: true })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "社区", exact: true })).toBeVisible()
+  await page.getByRole("navigation", { name: "社区板块" }).getByRole("link", { name: "找公司", exact: true }).click()
   const hero = page.locator("main").first()
   await expect(hero.getByRole("search").getByRole("button", { name: "搜索", exact: true })).toBeVisible()
-  await expect(hero.getByRole("link", { name: "公司研究" })).toBeVisible()
+  await expect(hero.getByRole("link", { name: "公司讨论" })).toBeVisible()
   await expect(page.getByRole("link", { name: "隐私政策" })).toBeVisible()
   await expect(page.getByRole("link", { name: "用户协议" })).toBeVisible()
 })
 
-test("研报 HTML 列表与详情可访问", async ({ page }) => {
-  await page.goto("/research")
-  await expect(page.getByRole("heading", { name: "公司研究", exact: true })).toBeVisible()
-  const report = page.locator('a[href^="/research/"]').first()
-  await expect(report).toBeVisible()
-  await report.click()
-  await expect(page).toHaveURL(/\/research\//)
-  await expect(page.getByRole("heading", { name: "研究指数", exact: true })).toBeVisible()
-  await expect(page.getByText("公司整体判断，不代表具体岗位。", { exact: false })).toBeVisible()
-  await expect(page.getByTestId("research-notes")).not.toHaveAttribute("open", "")
+test("内部研究不向用户开放", async ({ page, request }) => {
+  expect((await page.goto("/research"))?.status()).toBe(404)
+  await expect(page.locator('a[href^="/research"]')).toHaveCount(0)
+  expect((await request.get("/api/research")).status()).toBe(404)
 })
 
 test("合规页面与账号数据入口可访问", async ({ page }) => {
@@ -33,7 +28,7 @@ test("合规页面与账号数据入口可访问", async ({ page }) => {
 })
 
 test("无数据库时真实数据入口明确降级而非展示 mock", async ({ page }) => {
-  await page.goto("/")
+  await page.goto("/community?view=companies")
   await expect(page.getByText("公司数据暂时不可用，请稍后再试")).toBeVisible()
   await expect(page.getByText("北辰智造科技")).toHaveCount(0)
 
@@ -112,13 +107,15 @@ test("登录后回到原页面并可从个人中心退出", async ({ page }) => 
   await expect(page.getByRole("link", { name: "登录" })).toBeVisible()
 })
 
-test("移动端通过四项快捷导航访问公司", async ({ page }, testInfo) => {
+test("移动端从社区内部访问公司", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile-chrome")
 
   await page.goto("/")
   const nav = page.getByRole("navigation", { name: "快捷导航" })
-  await expect(nav.getByRole("link")).toHaveCount(4)
-  await nav.getByRole("link", { name: "公司", exact: true }).click()
+  await expect(nav.getByRole("link")).toHaveCount(2)
+  await expect(nav.getByRole("link", { name: "社区", exact: true })).toHaveAttribute("aria-current", "page")
+  await page.getByRole("navigation", { name: "社区板块" }).getByRole("link", { name: "找公司", exact: true }).click()
+  await page.getByTestId("home-recommend-feed").getByRole("link", { name: "全部公司", exact: true }).click()
   await expect(page).toHaveURL("/companies")
 })
 

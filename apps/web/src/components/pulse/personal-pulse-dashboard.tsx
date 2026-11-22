@@ -15,6 +15,14 @@ type Report = { today: string; records: PulseRecord[]; summary: Summary; week: S
 const fieldClass = "block min-h-11 w-full rounded-lg border border-input bg-card px-3 text-foreground focus-visible:outline-2 focus-visible:outline-ring"
 const hoursText = (minutes: number | null | undefined) => minutes == null ? "—" : (minutes / 60).toFixed(1) + "h"
 
+function CompanyTrendDisclosure() {
+  const [opened, setOpened] = useState(false)
+  return <details className="rounded-lg border border-border p-4" onToggle={event => { if (event.currentTarget.open) setOpened(true) }}>
+    <summary className="min-h-11 cursor-pointer text-sm font-medium">公司匿名趋势</summary>
+    {opened ? <CompanyPulseDashboard /> : null}
+  </details>
+}
+
 function PulseRing({ value, label, color }: { value: number | null | undefined; label: string; color: string }) {
   return <div className="flex min-w-0 flex-col items-center text-center"><div className="grid size-20 place-items-center rounded-full sm:size-28" style={{ background: "conic-gradient(" + color + " " + ((value ?? 0) * 3.6) + "deg, var(--muted) 0deg)" }}><div className="grid size-14 place-items-center rounded-full bg-card sm:size-20"><p className="text-2xl font-semibold tabular-nums">{value ?? "—"}<span className="block text-[11px] font-normal text-muted-foreground">/ 100</span></p></div></div><p className="mt-3 text-sm font-medium">{label}</p></div>
 }
@@ -78,13 +86,14 @@ function PersonalReport({ userId }: { userId: string }) {
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border">{[["本周工时",hoursText(data.week?.workMinutes)],["本月工时",hoursText(data.month?.workMinutes)],["平均下班",formatPulseTime(data.summary.averageEndMinute)],["最晚下班",formatPulseTime(data.summary.latestEndMinute)]].map(([label,value],index) => <div key={label} className="bg-card p-4">{index < 2 ? <CalendarDays className="size-4 text-primary-deep" /> : <Clock3 className="size-4 text-primary-deep" />}<p className="mt-3 text-xs text-muted-foreground">{label}</p><p className="mt-1 text-xl font-semibold tabular-nums">{value}</p></div>)}</div></div>
       <details className="border-t border-border px-5"><summary className="min-h-12 cursor-pointer py-3 text-sm font-medium">查看我的近 7 天记录</summary><ul className="divide-y divide-border">{data.records.map(row => <li key={row.day} className="flex flex-wrap justify-between gap-2 py-3 text-sm"><span>{row.day}</span><span>{pulseScore(row.energy,row.pressure)} / 100 · {hoursText(row.workMinutes)}</span></li>)}</ul></details>
     </SolidCard>
-    <div className="grid items-start gap-6 lg:grid-cols-2"><CheckInForm key={userId + ":" + data.today + ":" + revision} data={data} refresh={() => report.refetch()} /><CompanyPulseDashboard /></div>
-    <div className="rounded-lg border border-border p-4 text-sm"><p role="status">{message}</p>{confirmClear ? <div className="space-y-3"><p>清除全部个人打卡，并撤回公司统计参与。此操作不可恢复。</p><div className="flex flex-wrap gap-3"><SolidButton variant="risk" disabled={clearing} onClick={() => void clear()}>确认清除全部记录</SolidButton><SolidButton variant="secondary" disabled={clearing} onClick={() => setConfirmClear(false)}>取消</SolidButton></div></div> : <button className="min-h-11 text-muted-foreground underline" onClick={() => setConfirmClear(true)}>清除个人记录与统计授权</button>}<p className="mt-2 text-xs leading-6 text-muted-foreground">日期按北京时间，本周从周一开始；未填的工时和下班时间不估算。凌晨 0–6 点按工作日晚间顺序统计。Pulse 只反映自填工作体验，不是健康诊断或公司评级。</p></div>
+    <CheckInForm key={userId + ":" + data.today + ":" + revision} data={data} refresh={() => report.refetch()} />
+    <CompanyTrendDisclosure />
+    <div className="rounded-lg border border-border p-4 text-sm"><p role="status">{message}</p>{confirmClear ? <div className="space-y-3"><p>清除全部个人打卡，并撤回公司统计参与。此操作不可恢复。</p><div className="flex flex-wrap gap-3"><SolidButton variant="risk" disabled={clearing} onClick={() => void clear()}>确认清除全部记录</SolidButton><SolidButton variant="secondary" disabled={clearing} onClick={() => setConfirmClear(false)}>取消</SolidButton></div></div> : <button className="min-h-11 text-muted-foreground underline" onClick={() => setConfirmClear(true)}>清除个人记录与统计授权</button>}<p className="mt-2 text-xs leading-6 text-muted-foreground">日期按北京时间，本周从周一开始；未填的工时和下班时间不估算。凌晨 0–6 点按工作日晚间顺序统计。记录只反映自填工作体验，不是健康诊断或公司评级。</p></div>
   </>
 }
 
 export function PersonalPulseDashboard() {
   const { user, loading } = useAuth()
   if (loading) return <p role="status">正在加载…</p>
-  return <div className="space-y-6">{user ? <PersonalReport key={user.id} userId={user.id} /> : <><SolidCard className="p-6"><h2 className="text-xl font-semibold">我的工作周报</h2><p className="my-3 text-sm text-muted-foreground">记录精力与压力，查看自己的工作节奏。</p><SolidButton asChild><Link href="/login?next=%2Fpulse">登录后记录今天</Link></SolidButton></SolidCard><CompanyPulseDashboard /></>}</div>
+  return <div className="space-y-6">{user ? <PersonalReport key={user.id} userId={user.id} /> : <><SolidCard className="p-6"><h2 className="text-xl font-semibold">我的工作周报</h2><p className="my-3 text-sm text-muted-foreground">记录精力与压力，查看自己的工作节奏。</p><SolidButton asChild><Link href="/login?next=%2Fme%23work-records">登录后记录今天</Link></SolidButton></SolidCard></>}</div>
 }

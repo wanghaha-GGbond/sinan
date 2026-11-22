@@ -12,7 +12,7 @@ export type WebNavLink = { href: string; label: string; active?: boolean }
 export function WebNav({
   brand = "在场",
   links = [],
-  searchHref = "/search",
+  searchHref = "/community?view=companies#find-company",
   showSearch = true,
   rightSlot,
   className,

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { researchIsInternal } from "@/lib/research-visibility"
 
 import {
   componentLabels,
@@ -11,6 +12,7 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  if (researchIsInternal()) return NextResponse.json({ error: "Not found" }, { status: 404, headers: { "Cache-Control": "private, no-store" } })
   const { slug } = await params
   const result = getResearchCompany(slug)
   if (!result) return NextResponse.json({ error: "Research report not found" }, { status: 404 })

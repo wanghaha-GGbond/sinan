@@ -1,26 +1,28 @@
 import { expect, test } from "@playwright/test"
 
 import { getSafeNextPath, withNext } from "../src/lib/navigation"
-import { isPersonalArea, mainNavigation, personalNavigation } from "../src/lib/app-navigation"
+import { isPersonalArea, mainNavigation } from "../src/lib/app-navigation"
+import { isResearchPath, researchIsInternal } from "../src/lib/research-visibility"
 
-test("primary navigation groups research and check-ins under my space without duplicate active links", () => {
-  for (const path of ["/me", "/me/skills", "/settings/account", "/pulse", "/research", "/research/bytedance"]) {
+test("two primary destinations include companies and scoring inside community", () => {
+  for (const path of ["/me", "/me/skills", "/settings/account", "/pulse"]) {
     expect(isPersonalArea(path)).toBe(true)
     const links = mainNavigation(path)
-    expect(links.map(link => link.href)).toEqual(["/companies", "/community", "/submit/review", "/me"])
+    expect(links.map(link => link.href)).toEqual(["/community", "/me"])
     expect(links.filter(link => link.active).map(link => link.href)).toEqual(["/me"])
   }
-  expect(mainNavigation("/company/abc/community").filter(link => link.active).map(link => link.href)).toEqual(["/community"])
-  expect(mainNavigation("/company/abc/ratings").filter(link => link.active).map(link => link.href)).toEqual(["/companies"])
+  for (const path of ["/", "/community", "/companies", "/company/abc", "/company/abc/community", "/company/abc/ratings", "/search", "/submit/review"]) {
+    expect(mainNavigation(path).filter(link => link.active).map(link => link.href)).toEqual(["/community"])
+  }
   expect(isPersonalArea("/researcher")).toBe(false)
+  expect(isPersonalArea("/research")).toBe(false)
+  expect(mainNavigation("/submit/review").filter(link => link.active).map(link => link.href)).toEqual(["/community"])
 })
 
-test("personal navigation respects Pulse kill switch and keeps existing public research URLs", () => {
-  expect(personalNavigation("/research/bytedance", false)).toEqual([
-    { href: "/me", label: "概览", active: false },
-    { href: "/research", label: "公司研究", active: true },
-  ])
-  expect(personalNavigation("/pulse", true).filter(link => link.active).map(link => link.href)).toEqual(["/pulse"])
+test("research routes are internal and do not match unrelated paths", () => {
+  expect(researchIsInternal()).toBe(true)
+  for (const path of ["/research", "/research/bytedance", "/api/research", "/api/research/bytedance"]) expect(isResearchPath(path)).toBe(true)
+  for (const path of ["/researcher", "/api/researcher", "/company/research"]) expect(isResearchPath(path)).toBe(false)
 })
 
 test("post-auth navigation accepts only same-origin app paths", () => {

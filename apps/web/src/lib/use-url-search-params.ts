@@ -25,8 +25,8 @@ export function useUrlSearchParams() {
   return new URLSearchParams(search)
 }
 
-export function replaceUrlSearchParams(params: URLSearchParams) {
+export function replaceUrlSearchParams(params: URLSearchParams, historyMode: "replace" | "push" = "replace") {
   const search = params.toString()
-  window.history.replaceState(null, "", `${window.location.pathname}${search ? `?${search}` : ""}${window.location.hash}`)
+  window.history[historyMode === "push" ? "pushState" : "replaceState"](null, "", `${window.location.pathname}${search ? `?${search}` : ""}${window.location.hash}`)
   window.dispatchEvent(new Event(changeEvent))
 }

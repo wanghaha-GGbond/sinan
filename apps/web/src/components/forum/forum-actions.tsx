@@ -2,7 +2,8 @@
 import { useRef, useState } from "react"
 import Link from "next/link"
 import { useQueryClient } from "@tanstack/react-query"
-import { ThumbsUp, Share2 } from "lucide-react"
+import { Share2 } from "lucide-react"
+import { ZaichangIcon } from "@/components/ui/zaichang-icon"
 import { useAuth } from "@/lib/auth-context"
 import { withNext } from "@/lib/navigation"
 import { WebButton } from "@/components/ui/web-button"
@@ -28,8 +29,8 @@ export function ForumActions({ postId, usefulCount, isUseful, onRefresh }: { pos
     catch { setError("复制失败，请复制浏览器地址栏中的帖子链接") }
   }
   return <div><div className="flex flex-wrap items-center gap-2">
-    {user ? <WebButton variant="quiet" size="sm" type="button" disabled={busy} aria-pressed={isUseful} onClick={() => void vote()}><ThumbsUp className="size-4" aria-hidden="true" />{isUseful ? "已赞" : "赞同"} · {usefulCount}</WebButton> : <WebButton asChild variant="quiet" size="sm"><Link href={withNext("/login", returnTo)}><ThumbsUp className="size-4" aria-hidden="true" />赞同 · {usefulCount}</Link></WebButton>}
-    <WebButton variant="quiet" size="sm" type="button" onClick={() => void share()}><Share2 className="size-4" aria-hidden="true" />{copied ? "链接已复制" : "分享"}</WebButton>
+    {user ? <WebButton variant="quiet" size="sm" className="px-2 text-xs" type="button" disabled={busy} aria-pressed={isUseful} onClick={() => void vote()}><ZaichangIcon name="agree" className="size-4" />{isUseful ? "已赞" : "赞同"} · {usefulCount}</WebButton> : <WebButton asChild variant="quiet" size="sm" className="px-2 text-xs"><Link href={withNext("/login", returnTo)}><ZaichangIcon name="agree" className="size-4" />赞同 · {usefulCount}</Link></WebButton>}
+    <WebButton variant="quiet" size="sm" className="px-2 text-xs" type="button" onClick={() => void share()}><Share2 className="size-4" aria-hidden="true" />{copied ? "链接已复制" : "分享"}</WebButton>
   </div>{error && <p role="alert" className="mt-2 text-xs text-destructive">{error}</p>}</div>
 }
 export function ForumReport({ postId, replyId }: { postId: string; replyId?: string }) {
