@@ -3,7 +3,7 @@ import { ZaichangIcon } from "@/components/ui/zaichang-icon"
 import { WebButton } from "@/components/ui/web-button"
 import { dialogueStatusLabels, fundingModes, type DialogueSession } from "@/lib/dialogue"
 
-export const dialogueTime = (value: string) => new Intl.DateTimeFormat("zh-CN", { timeZone: "Asia/Shanghai", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(value))
+export const dialogueTime = (value: string) => new Intl.DateTimeFormat("zh-CN", { timeZone: "Asia/Shanghai", year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(value))
 export const dialogueField = "min-h-11 w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-ring"
 export function DialogueMoneyNotice() {
   return <p className="rounded-lg border border-border bg-muted px-4 py-3 text-xs leading-6 text-muted-foreground">当前仅开放免费报名，未开放竞拍、收款或捐赠。资金方案与合作机构确认后另行公布。</p>

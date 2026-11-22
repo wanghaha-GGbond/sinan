@@ -6,7 +6,7 @@ import { CompanySectionNav } from "./company-section-nav"
 import { WebButton } from "@/components/ui/web-button"
 import { publicCompanyWebsite } from "@/lib/company-identity"
 import type { CompanyListItem } from "@/lib/types"
-import { dialogueEnabled } from "@/lib/dialogue"
+import { dialogueEnabled } from "@/lib/dialogue-feature"
 
 export function CompanyPageHeader({ company, active }: { company: CompanyListItem; active: "概览" | "评价" | "评分" | "承诺" | "论坛" }) {
   const count = company.reviewCount ?? 0

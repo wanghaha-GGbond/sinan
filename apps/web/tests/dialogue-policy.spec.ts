@@ -7,12 +7,16 @@ import { POST as apply } from "../src/app/api/dialogues/[id]/applications/route"
 import { GET as mine } from "../src/app/api/me/dialogues/route"
 import { GET as management, POST as create } from "../src/app/api/moderation/dialogues/route"
 import { isDeferredLaunchPath } from "../src/lib/launch-scope"
+import { isDialoguePath } from "../src/lib/dialogue-feature"
+import { proxy } from "../src/proxy"
 
 test("dialogue is explicit opt-in and never enables legacy bidding or money", () => {
   for (const value of [undefined, "false", "1", "TRUE", ""]) expect(dialogueEnabled({ NEXT_PUBLIC_DIALOGUE_ENABLED: value })).toBe(false)
   expect(dialogueEnabled({ NEXT_PUBLIC_DIALOGUE_ENABLED: "true" })).toBe(true)
   expect(dialogueMoneyPolicy).toEqual({ paymentsEnabled: false, biddingEnabled: false, donationStatus: "not_started" })
   for (const path of ["/auction", "/api/auctions", "/api/auctions/a/bids"]) expect(isDeferredLaunchPath(path)).toBe(true)
+  expect(isDialoguePath("/api/dialogues/a/applications")).toBe(true)
+  for (const path of ["/community", "/api/dialogues-other", "/me/dialogues-archive"]) expect(isDialoguePath(path)).toBe(false)
 })
 test("activity inputs reject payment, donation proof, caller identity and extra financial fields", () => {
   const draft = { requestId: randomUUID(), title: "行业经历对话", description: "与受邀嘉宾聊聊真实的工作经历和跨团队协作。", guestName: "测试嘉宾", guestBio: "拥有一线团队管理与协作经验。", durationMinutes: 45, capacity: 1, startsAt: "2030-01-02T04:00:00Z", signupEndsAt: "2030-01-01T04:00:00Z", guestConsentConfirmed: false }
@@ -41,6 +45,12 @@ test("disabled dialogue endpoints fail closed before auth or database access", a
     const request = new NextRequest("https://zaichang.test/api/dialogues")
     const responses = [await list(request), await mine(request), await management(request), await create(new NextRequest(request.url, { method: "POST", body: "{}" })), await apply(new NextRequest(request.url, { method: "POST", body: "{}" }), { params: Promise.resolve({ id: randomUUID() }) })]
     for (const response of responses) { expect(response.status).toBe(404); expect(response.headers.get("cache-control")).toContain("no-store"); expect(await response.json()).toEqual({ error: "Not found" }) }
+    for (const path of ["/community/dialogues", "/me/dialogues", "/moderation/dialogues", "/api/dialogues/a", "/api/me/dialogues", "/api/moderation/dialogues"]) {
+      const response = proxy(new NextRequest(`https://zaichang.test${path}`))
+      expect(response.status).toBe(404); expect(response.headers.get("cache-control")).toContain("no-store")
+      if (path.startsWith("/api/")) expect(await response.json()).toEqual({ error: "Not found" })
+      else expect(response.headers.get("x-middleware-rewrite")).toContain("/__sinan_launch_not_found__")
+    }
   } finally { if (before === undefined) delete process.env.NEXT_PUBLIC_DIALOGUE_ENABLED; else process.env.NEXT_PUBLIC_DIALOGUE_ENABLED = before }
 })
 test("enabled APIs reject anonymous and foreign-origin writes and never fabricate activities without DB", async () => {

@@ -1,9 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server"
-import { dialogueEnabled, DialogueError } from "@/lib/dialogue"
+import { DialogueError } from "@/lib/dialogue"
 import { ForumError } from "@/lib/forum"
+import { dialogueServerEnabled } from "./dialogue-feature"
 export { forumUser as dialogueUser, readForumJson as readDialogueJson, limitForumWrite as limitDialogueWrite } from "./forum-http"
 export function ensureDialogueEnabled() {
-  if (!dialogueEnabled({ NEXT_PUBLIC_DIALOGUE_ENABLED: process.env.NEXT_PUBLIC_DIALOGUE_ENABLED })) throw new DialogueError(404, "Not found")
+  if (!dialogueServerEnabled()) throw new DialogueError(404, "Not found")
 }
 export function dialogueJson(data: unknown, status = 200) { return NextResponse.json(data, { status, headers: { "Cache-Control": "private, no-store" } }) }
 export async function dialogueRoute(action: () => Promise<Response>) {

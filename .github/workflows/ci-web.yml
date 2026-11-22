@@ -79,6 +79,8 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Isolated fixture UI and navigation checks (not a deployed Preview)
         run: npm run test:uiux --workspace=@sinan/web
+      - name: Dialogue runtime shutdown against the opt-in production bundle
+        run: npm run test:dialogue-gate --workspace=@sinan/web
       - name: Community API interactions (isolated fixtures only)
         run: npm exec --workspace=@sinan/web -- playwright test --config=playwright.community-ui.config.ts
       - uses: actions/upload-artifact@v4

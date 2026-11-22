@@ -30,7 +30,7 @@ import { getFavoritedCompanyIds } from "@/lib/favorites-storage"
 import { getMeDashboard } from "@/lib/api/me"
 import { IdentityCard, type IdentityCardData } from "@/components/identity/identity-card"
 import { MyWorkRecords, useWorkRecordsRequested } from "@/components/pulse/my-work-records"
-import { dialogueEnabled } from "@/lib/dialogue"
+import { dialogueEnabled } from "@/lib/dialogue-feature"
 import { withNext } from "@/lib/navigation"
 import { isPulseEnabled } from "@/lib/pulse-feature"
 

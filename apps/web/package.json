@@ -25,6 +25,7 @@
     "test:e2e:release": "node scripts/require-database-url.mjs && playwright test --config=playwright.release.config.ts",
     "test:visual": "playwright test tests/visual.spec.ts",
     "test:uiux": "playwright test --config=playwright.uiux.config.ts",
+    "test:dialogue-gate": "playwright test --config=playwright.dialogue-gate.config.ts",
     "test:visual:update": "playwright test tests/visual.spec.ts --update-snapshots",
     "db:generate": "drizzle-kit generate",
     "db:check": "drizzle-kit check",

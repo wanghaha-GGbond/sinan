@@ -6,7 +6,7 @@ export const fundingModes = { undecided: "资金方案待确认", all_donated: "
 export const dialogueStatusLabels = { draft: "草稿", open: "报名中", closed: "报名已结束", completed: "已结束", cancelled: "已取消", hidden: "暂不可见" } as const
 export const applicationStatusLabels = { submitted: "等待审核", selected: "已入选", not_selected: "本次未入选", withdrawn: "已撤回" } as const
 export const dialogueMoneyPolicy = { paymentsEnabled: false, biddingEnabled: false, donationStatus: "not_started" } as const
-export function dialogueEnabled(env: { NEXT_PUBLIC_DIALOGUE_ENABLED?: string }) { return env.NEXT_PUBLIC_DIALOGUE_ENABLED === "true" }
+export { dialogueEnabled } from "./dialogue-feature"
 export class DialogueError extends Error { constructor(readonly status: number, message: string) { super(message) } }
 const text = (min: number, max: number) => z.string().trim().min(min, `至少填写 ${min} 个字`).max(max, `最多填写 ${max} 个字`)
 export const dialogueDraftInput = z.object({

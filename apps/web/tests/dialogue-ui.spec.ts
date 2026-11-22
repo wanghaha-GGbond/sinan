@@ -33,6 +33,8 @@ for (const width of [320, 390, 1280]) for (const theme of ["light", "dark"]) {
     await expect(page.getByRole("button", { name: /出价|支付|捐款|立即成交/ })).toHaveCount(0)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     await page.screenshot({ path: info.outputPath("dialogue-detail.png"), fullPage: true })
+    await page.getByRole("link", { name: "登录后报名提问" }).click()
+    await expect(page).toHaveURL(url => url.pathname === "/login" && url.searchParams.get("next") === `/community/dialogues/${sessionId}`)
     expect(errors).toEqual([])
   })
 }
