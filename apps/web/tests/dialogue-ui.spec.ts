@@ -115,6 +115,8 @@ test("guests cannot be invited to apply to expired activities and selected ticke
   await page.route("**/api/me/dialogues", route => route.fulfill({ json: { applications: [{ id: applicationId, sessionId, sessionTitle: session.title, sessionStatus: "open", startsAt: session.startsAt, question: "我希望了解跨团队的协作和工作节奏。", status: "selected", decisionNote: "提问适合本次交流", createdAt: session.createdAt, privateInstructions: "隔离测试参与方式，仅本人可见。" }], nextCursor: null } }))
   await page.goto("/me/dialogues")
   await expect(page.getByRole("heading", { name: "仅入选者可见的参与安排" })).toBeVisible()
+  const titleBox = await page.getByRole("heading", { name: session.title, exact: true }).boundingBox()
+  expect(titleBox!.width).toBeGreaterThanOrEqual(160)
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   await page.getByRole("button", { name: "撤回报名", exact: true }).click()
   await page.getByRole("button", { name: "保留报名", exact: true }).click()

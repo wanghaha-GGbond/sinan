@@ -180,8 +180,8 @@
   .detailGrid { grid-template-columns: minmax(0, 1fr); gap: 28px; margin-top: 24px; }
   .bookingPanel { grid-row: 1; } .bookingSummary, .bookingAction { padding: 22px; }
   .bookingNotice { padding-inline: 22px; } .storyParagraph { font-size: 13px; }
-  .myCardHead { flex-wrap: wrap; gap: 12px; padding: 20px; } .dateStamp { width: 46px; padding-right: 12px; }
-  .myCardHead > .statusBadge { margin-left: 58px; } .myCardTitle { font-size: 16px; }
+  .myCardHead { display: grid; grid-template-columns: 46px minmax(0, 1fr); gap: 12px; padding: 20px; } .dateStamp { width: 46px; padding-right: 12px; }
+  .myCardHead > .statusBadge { grid-column: 2; justify-self: start; } .myCardTitle { font-size: 16px; }
   .myCardBody { padding: 0 20px 20px; } .myCardFooter { padding-inline: 20px; }
 }
 @media (max-width: 359px) {
