@@ -192,7 +192,9 @@ export async function decideDialogue(userId: string, id: string, applicationId: 
       if (count.count >= session.capacity) throw new DialogueError(409, "活动名额已满")
     }
     await tx.update(applications).set({ status: decision.status, decisionNote: decision.reason, updatedAt: new Date() }).where(eq(applications.id, applicationId))
-    await audit(tx, id, userId, "decide", row.status, decision.status, decision.reason, applicationId)
+    // Keep the private explanation only on the application so withdrawal and
+    // account deletion can actually erase it; audit only the state transition.
+    await audit(tx, id, userId, "decide", row.status, decision.status, "", applicationId)
     return { id: applicationId, status: decision.status }
   })
 }

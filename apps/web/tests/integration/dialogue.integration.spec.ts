@@ -7,13 +7,14 @@ import { dialogueSessions, dialogueApplications, dialogueAuditEvents } from "../
 import { createDialogue, manageDialogue, getDialogues, getDialogue, applyForDialogue, withdrawDialogue, getMyDialogues, getDialogueApplications, getDialogueManagement, decideDialogue } from "../../src/lib/server/dialogue-service"
 
 const userIds: string[] = [], sessionIds: string[] = []
-let previousFlag: string | undefined
-test.beforeEach(() => { previousFlag = process.env.NEXT_PUBLIC_DIALOGUE_ENABLED; process.env.NEXT_PUBLIC_DIALOGUE_ENABLED = "true" })
+let previousFlag: string | undefined, previousServerFlag: string | undefined
+test.beforeEach(() => { previousFlag = process.env.NEXT_PUBLIC_DIALOGUE_ENABLED; previousServerFlag = process.env.DIALOGUE_ENABLED; process.env.NEXT_PUBLIC_DIALOGUE_ENABLED = "true"; process.env.DIALOGUE_ENABLED = "true" })
 test.afterEach(async () => {
   if (sessionIds.length) await db.delete(dialogueSessions).where(inArray(dialogueSessions.id, sessionIds))
   if (userIds.length) await db.delete(users).where(inArray(users.id, userIds))
   sessionIds.length = userIds.length = 0
   if (previousFlag === undefined) delete process.env.NEXT_PUBLIC_DIALOGUE_ENABLED; else process.env.NEXT_PUBLIC_DIALOGUE_ENABLED = previousFlag
+  if (previousServerFlag === undefined) delete process.env.DIALOGUE_ENABLED; else process.env.DIALOGUE_ENABLED = previousServerFlag
 })
 async function fixture() {
   const people = await db.insert(users).values(["user", "user", "moderator", "moderator"].map((role, i) => ({ email: `${randomUUID()}@dialogue.test`, displayName: `隔离报名者${i}`, role: role as "user" | "moderator" }))).returning()
@@ -40,7 +41,8 @@ test("drafts require consent and moderator role; public views never expose appli
   expect((await getMyDialogues(f.second.id)).applications).toEqual([])
   expect((await getMyDialogues(f.first.id)).applications[0].privateInstructions).toBeNull()
   await expect(getDialogueApplications(f.first.id, f.event.id)).rejects.toMatchObject({ status: 403 })
-  await decideDialogue(f.moderator.id, f.event.id, application.id, { status: "selected", expectedStatus: "submitted", reason: "访谈问题适合本场讨论" })
+  await decideDialogue(f.moderator.id, f.event.id, application.id, { status: "selected", expectedStatus: "submitted", reason: "仅本人可见处理说明 PRIVATE-DECISION-NOTE" })
+  expect(JSON.stringify(await db.select().from(dialogueAuditEvents).where(eq(dialogueAuditEvents.sessionId, f.event.id)))).not.toContain("PRIVATE-DECISION-NOTE")
   expect((await getMyDialogues(f.first.id)).applications[0].privateInstructions).toContain("PRIVATE-MEETING")
   await manageDialogue(f.moderator.id, f.event.id, { action: "hide", reason: "重新核对活动资料" })
   await expect(getDialogue(f.event.id)).rejects.toMatchObject({ status: 404 })

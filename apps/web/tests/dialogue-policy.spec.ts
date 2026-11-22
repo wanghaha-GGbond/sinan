@@ -9,6 +9,7 @@ import { GET as management, POST as create } from "../src/app/api/moderation/dia
 import { isDeferredLaunchPath } from "../src/lib/launch-scope"
 import { isDialoguePath } from "../src/lib/dialogue-feature"
 import { proxy } from "../src/proxy"
+import { dialogueServerEnabled } from "../src/lib/server/dialogue-feature"
 
 test("dialogue is explicit opt-in and never enables legacy bidding or money", () => {
   for (const value of [undefined, "false", "1", "TRUE", ""]) expect(dialogueEnabled({ NEXT_PUBLIC_DIALOGUE_ENABLED: value })).toBe(false)
@@ -54,8 +55,8 @@ test("disabled dialogue endpoints fail closed before auth or database access", a
   } finally { if (before === undefined) delete process.env.NEXT_PUBLIC_DIALOGUE_ENABLED; else process.env.NEXT_PUBLIC_DIALOGUE_ENABLED = before }
 })
 test("enabled APIs reject anonymous and foreign-origin writes and never fabricate activities without DB", async () => {
-  const previous = { enabled: process.env.NEXT_PUBLIC_DIALOGUE_ENABLED, database: process.env.DATABASE_URL }
-  process.env.NEXT_PUBLIC_DIALOGUE_ENABLED = "true"; process.env.DATABASE_URL = ""
+  const previous = { enabled: process.env.NEXT_PUBLIC_DIALOGUE_ENABLED, server: process.env.DIALOGUE_ENABLED, database: process.env.DATABASE_URL }
+  process.env.NEXT_PUBLIC_DIALOGUE_ENABLED = "true"; process.env.DIALOGUE_ENABLED = "true"; process.env.DATABASE_URL = ""
   try {
     const base = "https://zaichang.test/api/dialogues", headers = { Authorization: "Bearer invalid-fixture-token" }
     const unavailable = await list(new NextRequest(base))
@@ -66,6 +67,23 @@ test("enabled APIs reject anonymous and foreign-origin writes and never fabricat
     expect((await apply(new NextRequest(base, { method: "POST", headers: { ...headers, Origin: "https://evil.test" }, body: "{}" }), { params: Promise.resolve({ id: randomUUID() }) })).status).toBe(403)
   } finally {
     if (previous.enabled === undefined) delete process.env.NEXT_PUBLIC_DIALOGUE_ENABLED; else process.env.NEXT_PUBLIC_DIALOGUE_ENABLED = previous.enabled
+    if (previous.server === undefined) delete process.env.DIALOGUE_ENABLED; else process.env.DIALOGUE_ENABLED = previous.server
     if (previous.database === undefined) delete process.env.DATABASE_URL; else process.env.DATABASE_URL = previous.database
+  }
+})
+test("independent server flag can disable an enabled public build", () => {
+  const previous = { public: process.env.NEXT_PUBLIC_DIALOGUE_ENABLED, server: process.env.DIALOGUE_ENABLED }
+  try {
+    process.env.NEXT_PUBLIC_DIALOGUE_ENABLED = "true"
+    for (const value of [undefined, "false", "1", "TRUE"]) {
+      if (value === undefined) delete process.env.DIALOGUE_ENABLED; else process.env.DIALOGUE_ENABLED = value
+      expect(dialogueServerEnabled()).toBe(false)
+      expect(proxy(new NextRequest("https://zaichang.test/api/dialogues")).status).toBe(404)
+    }
+    process.env.DIALOGUE_ENABLED = "true"; expect(dialogueServerEnabled()).toBe(true)
+    process.env.NEXT_PUBLIC_DIALOGUE_ENABLED = "false"; expect(dialogueServerEnabled()).toBe(false)
+  } finally {
+    if (previous.public === undefined) delete process.env.NEXT_PUBLIC_DIALOGUE_ENABLED; else process.env.NEXT_PUBLIC_DIALOGUE_ENABLED = previous.public
+    if (previous.server === undefined) delete process.env.DIALOGUE_ENABLED; else process.env.DIALOGUE_ENABLED = previous.server
   }
 })

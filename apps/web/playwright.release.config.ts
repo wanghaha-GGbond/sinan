@@ -24,7 +24,7 @@ export default defineConfig({
           url: "http://127.0.0.1:3000/api/health/live",
           reuseExistingServer: false,
           timeout: 240_000,
-          env: { NEXT_PUBLIC_APP_ENV: "staging", NEXT_PUBLIC_API_ENABLED: "true", NEXT_PUBLIC_PULSE_ENABLED: "true", NEXT_PUBLIC_DIALOGUE_ENABLED: "true" },
+          env: { NEXT_PUBLIC_APP_ENV: "staging", NEXT_PUBLIC_API_ENABLED: "true", NEXT_PUBLIC_PULSE_ENABLED: "true", NEXT_PUBLIC_DIALOGUE_ENABLED: "true", DIALOGUE_ENABLED: "true" },
         },
       }),
 })

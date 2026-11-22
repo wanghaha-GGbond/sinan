@@ -159,6 +159,7 @@ jobs:
             --env NEXT_PUBLIC_API_ENABLED=true \
             --env NEXT_PUBLIC_PULSE_ENABLED=true \
             --env NEXT_PUBLIC_DIALOGUE_ENABLED=true \
+            --env DIALOGUE_ENABLED=true \
             --env LAUNCH_SCOPE_ONLY=true \
             --env INVITE_REQUIRED=true \
             --env DATABASE_ADAPTER=neon \
@@ -317,6 +318,7 @@ jobs:
             --env NEXT_PUBLIC_API_ENABLED=true \
             --env NEXT_PUBLIC_PULSE_ENABLED=true \
             --env NEXT_PUBLIC_DIALOGUE_ENABLED=true \
+            --env DIALOGUE_ENABLED=true \
             --env LAUNCH_SCOPE_ONLY=true \
             --env INVITE_REQUIRED=true \
             --env DATABASE_ADAPTER=neon \

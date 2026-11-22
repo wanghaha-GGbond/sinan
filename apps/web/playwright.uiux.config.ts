@@ -28,6 +28,7 @@ export default defineConfig({
       SUPPORT_EMAIL: "",
       NEXT_PUBLIC_APP_ENV: "development", NEXT_PUBLIC_API_ENABLED: "true", NEXT_PUBLIC_PULSE_ENABLED: "true",
       NEXT_PUBLIC_DIALOGUE_ENABLED: "true",
+      DIALOGUE_ENABLED: "true",
       NEXT_PUBLIC_APP_URL: "http://127.0.0.1:3108", NEXT_PUBLIC_ICP_FILING_NUMBER: "",
       ALLOW_DEV_AUTH: "true", INVITE_REQUIRED: "true", LAUNCH_SCOPE_ONLY: "true",
     },
