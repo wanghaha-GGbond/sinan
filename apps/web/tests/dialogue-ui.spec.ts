@@ -21,6 +21,7 @@ for (const width of [320, 390, 1280]) for (const theme of ["light", "dark"]) {
     await page.getByRole("link", { name: "对话", exact: true }).click()
     await expect(page).toHaveURL(/\/community\/dialogues$/)
     await expect(page.getByTestId("dialogue-card")).toHaveCount(1)
+    await expect(page.getByTestId("dialogue-editorial-hero").locator('svg[data-dialogue-art="two-chairs"]')).toBeVisible()
     const nav = page.getByRole("navigation", { name: width < 1024 ? "快捷导航" : "主导航" })
     await expect(nav.getByRole("link")).toHaveCount(2)
     await expect(nav.getByRole("link", { name: "社区", exact: true })).toHaveAttribute("aria-current", "page")
@@ -55,6 +56,74 @@ test("honest activity failures support retry and pagination preserves prior card
   fail = false; await page.getByRole("button", { name: "重试更多活动", exact: true }).click()
   await expect(page.getByTestId("dialogue-card")).toHaveCount(2)
 })
+for (const width of [320, 768, 1280]) for (const theme of ["light", "dark"]) {
+  test(`editorial dialogue handles long real-shaped content ${width}px ${theme}`, async ({ page }, info) => {
+    await fixture(page, true)
+    await page.setViewportSize({ width, height: 900 })
+    await page.addInitScript(theme => localStorage.setItem("sinan:theme", theme), theme)
+    const long = { ...session, title: "跨团队协作与真实工作节奏".repeat(8), guestName: "长名字嘉宾".repeat(16), companyName: "一家有很长注册名称的公司".repeat(6), companyId: "60000000-0000-4000-8000-000000000001", description: "隔离测试中的完整话题，验证正文不会被截断或横向溢出。".repeat(20), guestBio: "隔离测试嘉宾介绍，用于检查文字排版和阅读体验。".repeat(20) }
+    await page.route(`**/api/dialogues/${sessionId}`, route => route.fulfill({ json: { session: long } }))
+    await page.goto(`/community/dialogues/${sessionId}`)
+    await expect(page.getByRole("heading", { name: long.title, exact: true })).toBeVisible()
+    await expect(page.getByText(long.description, { exact: true })).toBeVisible()
+    await expect(page.getByRole("link", { name: "全部对话", exact: true })).toHaveAttribute("href", "/community/dialogues")
+    const field = page.getByLabel("报名问题", { exact: true })
+    await field.focus(); await expect(field).toBeFocused()
+    await expect(field).toHaveAccessibleDescription(/问题仅你与活动管理者可见/)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    await page.screenshot({ path: info.outputPath("dialogue-long-content.png"), fullPage: true })
+  })
+}
+test("editorial controls keep contrast, keyboard navigation and reduced-motion preferences", async ({ page }) => {
+  await fixture(page)
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  for (const theme of ["light", "dark"]) {
+    await page.addInitScript(theme => localStorage.setItem("sinan:theme", theme), theme)
+    await page.goto("/community/dialogues")
+    await expect(page.getByTestId("dialogue-card")).toHaveCount(1)
+    const ratios = await page.evaluate(() => {
+      const canvas = document.createElement("canvas"), ctx = canvas.getContext("2d")!
+      const luma = (color: string) => {
+        ctx.clearRect(0, 0, 1, 1); ctx.fillStyle = color; ctx.fillRect(0, 0, 1, 1)
+        const rgb = [...ctx.getImageData(0, 0, 1, 1).data].slice(0, 3).map(v => { const c = v / 255; return c <= .04045 ? c / 12.92 : ((c + .055) / 1.055) ** 2.4 })
+        return rgb[0] * .2126 + rgb[1] * .7152 + rgb[2] * .0722
+      }
+      const hero = document.querySelector('[data-testid="dialogue-editorial-hero"]')!, card = document.querySelector('[data-testid="dialogue-card"]')!
+      const pairs = [[hero.querySelector("h2 span")!, hero], [hero.querySelector("p:not([aria-hidden])")!, hero], [card.querySelector('a:last-child')!, card]]
+      return pairs.map(([text, bg]) => { const a = luma(getComputedStyle(text).color), b = luma(getComputedStyle(bg).backgroundColor); return (Math.max(a, b) + .05) / (Math.min(a, b) + .05) })
+    })
+    expect(ratios.every(value => value >= 4.5)).toBe(true)
+    const jump = page.getByRole("link", { name: "浏览对话", exact: true })
+    await jump.focus(); await expect(jump).toBeFocused(); await page.keyboard.press("Enter")
+    await expect(page).toHaveURL(/#dialogue-events$/)
+    await page.getByTestId("dialogue-card").hover()
+    expect(await page.getByTestId("dialogue-card").evaluate(element => getComputedStyle(element).transform)).toBe("none")
+    // The existing global reduced-motion rule keeps a 0.01ms duration so
+    // transition-end listeners can settle; it is effectively instantaneous.
+    const durations = await page.getByTestId("dialogue-card").evaluate(element => getComputedStyle(element).transitionDuration.split(",").map(value => Number.parseFloat(value)))
+    expect(durations.every(value => value <= .00002)).toBe(true)
+  }
+})
+test("guests cannot be invited to apply to expired activities and selected tickets remain usable on mobile", async ({ page }, info) => {
+  await page.clock.install({ time: new Date("2030-01-01T05:00:00Z") })
+  await fixture(page)
+  await page.goto(`/community/dialogues/${sessionId}`)
+  await expect(page.getByText("本场活动已停止报名。", { exact: true })).toBeVisible()
+  await expect(page.getByRole("link", { name: "登录后报名提问" })).toHaveCount(0)
+  await fixture(page, true)
+  await page.setViewportSize({ width: 320, height: 900 })
+  await page.route("**/api/me/dialogues", route => route.fulfill({ json: { applications: [{ id: applicationId, sessionId, sessionTitle: session.title, sessionStatus: "open", startsAt: session.startsAt, question: "我希望了解跨团队的协作和工作节奏。", status: "selected", decisionNote: "提问适合本次交流", createdAt: session.createdAt, privateInstructions: "隔离测试参与方式，仅本人可见。" }], nextCursor: null } }))
+  await page.goto("/me/dialogues")
+  await expect(page.getByRole("heading", { name: "仅入选者可见的参与安排" })).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  await page.getByRole("button", { name: "撤回报名", exact: true }).click()
+  await page.getByRole("button", { name: "保留报名", exact: true }).click()
+  await page.screenshot({ path: info.outputPath("dialogue-my-ticket-mobile.png"), fullPage: true })
+  await page.route("**/api/me/dialogues", route => route.fulfill({ json: { applications: [{ id: applicationId, sessionId, sessionTitle: session.title, sessionStatus: "cancelled", startsAt: session.startsAt, question: "我希望了解跨团队的协作和工作节奏。", status: "selected", decisionNote: null, createdAt: session.createdAt, privateInstructions: "不应再展示的旧参与安排" }], nextCursor: null } }))
+  await page.getByRole("button", { name: "刷新状态", exact: true }).click()
+  await expect(page.getByText("已入选 · 已取消", { exact: true })).toBeVisible()
+  await expect(page.getByText("不应再展示的旧参与安排", { exact: true })).toHaveCount(0)
+})
 test("failed applications preserve questions and request identity; success means waiting for review", async ({ page }) => {
   await fixture(page, true); let fail = true
   const payloads: { question: string; requestId: string }[] = []
@@ -68,6 +137,7 @@ test("failed applications preserve questions and request identity; success means
   await page.getByRole("button", { name: "免费报名", exact: true }).click()
   await expect(page.locator("form").getByRole("alert")).toHaveText("报名暂时不可用")
   await expect(page.getByLabel("报名问题", { exact: true })).toHaveValue(question)
+  await expect(page.getByLabel("报名问题", { exact: true })).toHaveAttribute("aria-invalid", "false")
   await expect(page.getByText("报名已提交，等待审核。")).toHaveCount(0)
   fail = false; await page.getByRole("button", { name: "免费报名", exact: true }).click()
   await expect(page.getByText("报名已提交，等待审核。")).toBeVisible()

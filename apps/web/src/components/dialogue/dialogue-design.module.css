@@ -1,0 +1,195 @@
+.surface {
+  --dialogue-paper: #f5f5ee;
+  --dialogue-ink: #183b2d;
+  --dialogue-soft: #5b6e63;
+  --dialogue-rule: #d9e1d7;
+  --dialogue-tile: #e7edde;
+  --dialogue-arch: #edf0df;
+  --dialogue-seat: #c98f6f;
+  --dialogue-seat-light: #e8baa0;
+  --dialogue-seat-shadow: #965f49;
+  --dialogue-frame: #28513e;
+  --dialogue-sun: #e1bb76;
+  width: 100%; max-width: 1160px; margin-inline: auto; padding: 24px 20px 56px;
+}
+:global(.dark) .surface {
+  --dialogue-paper: #17251f;
+  --dialogue-ink: #e6eee4;
+  --dialogue-soft: #a7b9ad;
+  --dialogue-rule: #34483c;
+  --dialogue-tile: #22392d;
+  --dialogue-arch: #2a4031;
+  --dialogue-seat: #b68166;
+  --dialogue-seat-light: #e0ac8d;
+  --dialogue-seat-shadow: #79523e;
+  --dialogue-frame: #a2c7aa;
+  --dialogue-sun: #d9b779;
+}
+.heading { margin-bottom: 26px; }
+.backLink { display: inline-flex; min-height: 44px; align-items: center; gap: 7px; font-size: 12px; color: var(--muted-foreground); }
+.backLink:hover { color: var(--foreground); }
+.headingRow { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-top: 12px; }
+.headingTitle { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 650; letter-spacing: -.04em; }
+.eyebrow { font-size: 10px; font-weight: 600; letter-spacing: .19em; line-height: 1.8; }
+.hero { position: relative; display: grid; grid-template-columns: 1.12fr 1fr; overflow: hidden; border: 1px solid var(--dialogue-rule); border-radius: 24px; background: var(--dialogue-paper); color: var(--dialogue-ink); }
+.heroCopy { position: relative; z-index: 1; padding: 42px 0 34px 42px; }
+.heroLabel { display: flex; align-items: center; gap: 10px; color: var(--dialogue-soft); }
+.heroLabel::before { content: ""; width: 21px; height: 1px; background: currentColor; }
+.heroTitle { margin-top: 24px; font-family: Georgia, "Songti SC", STSong, serif; font-size: clamp(36px, 4.2vw, 54px); font-weight: 600; line-height: 1.3; letter-spacing: -.045em; }
+.heroTitle span { color: var(--primary-deep); }
+.heroDescription { max-width: 28ch; margin-top: 18px; color: var(--dialogue-soft); font-size: 13px; line-height: 1.9; }
+.heroAction { margin-top: 26px; display: inline-flex; min-height: 44px; align-items: center; gap: 20px; border-bottom: 1px solid var(--dialogue-ink); font-size: 13px; font-weight: 600; }
+.heroAction svg { transition: transform .2s ease; }
+.heroAction:hover svg { transform: translateX(4px); }
+.heroArt { display: flex; min-width: 0; align-items: center; justify-content: center; padding: 18px 14px 0 0; }
+.roomArt { display: block; width: 100%; height: auto; max-height: 360px; }
+.artArch { fill: var(--dialogue-arch); }
+.artLine { fill: none; stroke: var(--dialogue-frame); stroke-width: 1; opacity: .28; }
+.artFloor { fill: var(--dialogue-tile); }
+.artFrame { fill: var(--dialogue-frame); }
+.artSeat { fill: var(--dialogue-seat); }
+.artSeatLight { fill: var(--dialogue-seat-light); }
+.artSeatShadow { fill: var(--dialogue-seat-shadow); }
+.artSun { fill: var(--dialogue-sun); }
+.artBubble { fill: var(--dialogue-paper); stroke: var(--dialogue-rule); stroke-width: 1.5; }
+.artGround { fill: var(--dialogue-ink); opacity: .07; }
+.heroFoot { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; border-top: 1px solid var(--dialogue-rule); margin-inline: 32px; padding-block: 14px; color: var(--dialogue-soft); font-size: 10px; letter-spacing: .08em; }
+.sectionHeading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding-block: 32px 18px; scroll-margin-top: 90px; }
+.sectionTitle { font-size: 18px; font-weight: 600; letter-spacing: -.035em; }
+.sectionNote { color: var(--muted-foreground); font-size: 12px; }
+.sessionGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+.sessionGrid[data-single="true"] { grid-template-columns: minmax(0, 1fr); }
+.sessionGrid[data-single="true"] .sessionCard { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); }
+.sessionGrid[data-single="true"] .cardArtwork { height: 100%; min-height: 310px; }
+.sessionGrid[data-single="true"] .cardArtwork .roomArt { width: 360px; max-width: 100%; height: auto; }
+.sessionCard { display: flex; min-width: 0; flex-direction: column; overflow: hidden; border: 1px solid var(--border); border-radius: 20px; background: var(--card); transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+.sessionCard:hover, .sessionCard:focus-within { border-color: var(--primary-surface-border); box-shadow: 0 8px 28px color-mix(in srgb, var(--dialogue-ink) 6%, transparent); transform: translateY(-2px); }
+.cardArtwork { position: relative; display: flex; height: 174px; align-items: center; justify-content: center; overflow: hidden; background: var(--dialogue-paper); }
+.cardArtwork .roomArt { width: 272px; height: 204px; flex-shrink: 0; margin-top: 6px; }
+.cardEdition { position: absolute; top: 17px; left: 22px; color: var(--dialogue-soft); font-size: 9px; letter-spacing: .15em; }
+.cardContent { display: flex; flex: 1; flex-direction: column; padding: 22px; }
+.cardMeta { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.guestMini { display: flex; min-width: 0; align-items: center; gap: 9px; }
+.guestInitial { display: flex; width: 34px; height: 34px; flex-shrink: 0; align-items: center; justify-content: center; border: 1px solid var(--dialogue-rule); border-radius: 50%; background: var(--dialogue-paper); color: var(--dialogue-ink); font-family: Georgia, "Songti SC", STSong, serif; font-size: 15px; }
+.guestName { overflow-wrap: anywhere; font-size: 13px; font-weight: 600; line-height: 1.6; }
+.guestCompany { margin-top: 1px; overflow-wrap: anywhere; color: var(--muted-foreground); font-size: 11px; }
+.statusBadge { display: inline-flex; min-height: 26px; flex-shrink: 0; align-items: center; gap: 5px; border: 1px solid var(--border); border-radius: 999px; padding: 3px 9px; color: var(--muted-foreground); font-size: 10px; font-weight: 500; }
+.statusOpen { border-color: var(--primary-surface-border); background: var(--primary-tint); color: var(--primary-deep); }
+.statusDot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.cardTitle { margin-top: 20px; overflow-wrap: anywhere; font-size: 21px; font-weight: 600; line-height: 1.55; letter-spacing: -.035em; }
+.cardTitleLink:hover { color: var(--primary-deep); }
+.cardDescription { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin-top: 10px; overflow-wrap: anywhere; color: var(--muted-foreground); font-size: 13px; line-height: 1.9; }
+.cardSchedule { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 22px; color: var(--muted-foreground); font-size: 11px; line-height: 1.8; }
+.cardFooter { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 18px; }
+.cardFooterText { color: var(--muted-foreground); font-size: 11px; }
+.cardAction { display: inline-flex; min-height: 44px; align-items: center; gap: 10px; color: var(--primary-deep); font-size: 12px; font-weight: 600; }
+.moneyNotice { display: flex; align-items: flex-start; gap: 9px; border-top: 1px solid var(--border); margin-top: 24px; padding-block: 15px; color: var(--muted-foreground); font-size: 11px; line-height: 1.9; }
+.moneyNotice svg { flex-shrink: 0; margin-top: 3px; }
+.emptyState { display: grid; justify-items: center; border: 1px dashed var(--border); border-radius: 20px; padding: 30px 20px 36px; text-align: center; }
+.emptyArt { width: 200px; margin-bottom: 10px; }
+.emptyState h2 { font-size: 17px; font-weight: 600; }
+.emptyState p { max-width: 30ch; margin-top: 10px; color: var(--muted-foreground); font-size: 13px; line-height: 1.8; }
+.loadingGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+.loadingCard { min-height: 360px; border: 1px solid var(--border); border-radius: 20px; background: linear-gradient(var(--dialogue-paper) 0 48%, var(--card) 48%); }
+.errorState { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; border: 1px solid var(--border); border-radius: 16px; background: var(--card); padding: 24px; font-size: 14px; }
+.detailHero { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(240px, .85fr); align-items: center; gap: 24px; border: 1px solid var(--dialogue-rule); border-radius: 24px; padding: 36px 36px 26px; background: var(--dialogue-paper); color: var(--dialogue-ink); }
+.detailIntro { min-width: 0; }
+.detailKicker { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; color: var(--dialogue-soft); }
+.detailTitle { margin-top: 22px; overflow-wrap: anywhere; font-family: Georgia, "Songti SC", STSong, serif; font-size: clamp(28px, 3.6vw, 42px); font-weight: 600; line-height: 1.5; letter-spacing: -.035em; }
+.detailGuest { display: flex; align-items: center; gap: 10px; margin-top: 26px; }
+.detailGuest .guestInitial { width: 40px; height: 40px; background: var(--dialogue-tile); font-size: 18px; }
+.detailArt { max-width: 330px; justify-self: center; }
+.detailGrid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(310px, 1fr); align-items: start; gap: 48px; margin-top: 36px; }
+.storySection { padding-block: 8px 28px; }
+.storySection + .storySection { border-top: 1px solid var(--border); padding-top: 28px; }
+.storyHeading { display: flex; align-items: center; gap: 9px; font-size: 16px; font-weight: 600; }
+.storyParagraph { margin-top: 16px; overflow-wrap: anywhere; white-space: pre-wrap; color: var(--muted-foreground); font-size: 14px; line-height: 2; }
+.companyLink { display: inline-flex; min-height: 44px; align-items: center; gap: 7px; margin-top: 14px; color: var(--primary-deep); font-size: 13px; font-weight: 500; }
+.bookingPanel { min-width: 0; overflow: hidden; border: 1px solid var(--border); border-radius: 20px; background: var(--card); }
+.bookingSummary { padding: 24px; }
+.bookingEyebrow { color: var(--muted-foreground); font-size: 11px; }
+.bookingTitle { margin-top: 7px; font-size: 25px; font-weight: 600; letter-spacing: -.04em; }
+.bookingSubtitle { margin-top: 6px; color: var(--muted-foreground); font-size: 12px; }
+.scheduleList { display: grid; gap: 15px; margin-top: 26px; font-size: 12px; line-height: 1.7; }
+.scheduleList div { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 10px; }
+.scheduleList dt { color: var(--muted-foreground); }
+.scheduleList dd { min-width: 0; overflow-wrap: anywhere; font-weight: 500; }
+.ticketDivider { position: relative; height: 1px; margin-inline: 16px; border-top: 1px dashed var(--input); }
+.ticketDivider::before, .ticketDivider::after { position: absolute; top: -7px; width: 14px; height: 14px; border: 1px solid var(--border); border-radius: 50%; background: var(--background); content: ""; }
+.ticketDivider::before { left: -24px; }
+.ticketDivider::after { right: -24px; }
+.bookingAction { padding: 24px; scroll-margin-top: 90px; }
+.bookingAction > a { width: 100%; }
+.applicationForm { display: grid; gap: 16px; }
+.applicationForm h3 { font-size: 15px; font-weight: 600; }
+.applicationField { display: grid; gap: 8px; font-size: 12px; }
+.applicationTextarea { min-height: 128px; resize: vertical; border: 1px solid var(--input); border-radius: 12px; padding: 13px; background: var(--background); color: var(--foreground); font-size: 13px; line-height: 1.85; }
+.applicationTextarea:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.applicationHelp { color: var(--muted-foreground); font-size: 11px; line-height: 1.9; }
+.applicationActions { display: grid; gap: 6px; }
+.applicationSuccess { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; border-radius: 12px; background: var(--primary-tint); padding: 18px; color: var(--primary-deep); font-size: 13px; line-height: 1.8; }
+.applicationClosed { border-radius: 12px; background: var(--muted); padding: 18px; color: var(--muted-foreground); font-size: 13px; line-height: 1.9; }
+.applicationClosed a, .applicationSuccess a { display: inline-flex; min-height: 44px; align-items: center; gap: 8px; color: var(--primary-deep); font-size: 12px; font-weight: 600; }
+.bookingNotice { padding-inline: 24px; }
+.bookingNotice .moneyNotice { margin: 0; }
+.fundingDetails { border-top: 1px solid var(--border); padding-block: 10px; color: var(--muted-foreground); font-size: 11px; }
+.fundingDetails summary { display: flex; min-height: 44px; cursor: pointer; align-items: center; justify-content: space-between; }
+.fundingDetails summary::after { content: "+"; font-size: 16px; }
+.fundingDetails[open] summary::after { content: "−"; }
+.fundingDetails p { padding-bottom: 8px; line-height: 1.9; }
+.cancelNotice { margin-top: 24px; border-left: 2px solid var(--risk-border); padding: 12px 16px; background: var(--risk-surface); color: var(--risk-foreground); font-size: 13px; line-height: 1.8; }
+.myToolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 24px; }
+.personalSurface { max-width: 760px; }
+.myList { display: grid; gap: 20px; }
+.myCard { min-width: 0; overflow: hidden; border: 1px solid var(--border); border-radius: 20px; background: var(--card); }
+.myCardSelected { border-color: var(--primary-surface-border); }
+.myCardHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 24px; }
+.dateStamp { display: grid; width: 54px; flex-shrink: 0; gap: 2px; border-right: 1px solid var(--border); padding-right: 16px; color: var(--muted-foreground); font-size: 10px; text-align: center; }
+.dateStamp strong { font-family: Georgia, serif; color: var(--foreground); font-size: 29px; font-weight: 500; line-height: 1.1; }
+.myCardTitle { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: 18px; font-weight: 600; line-height: 1.6; letter-spacing: -.025em; }
+.myCardDate { margin-top: 7px; color: var(--muted-foreground); font-size: 11px; font-weight: 400; letter-spacing: normal; }
+.myCardBody { display: grid; gap: 18px; padding: 0 24px 24px; }
+.myQuestion { border-left: 2px solid var(--primary-surface-border); padding-left: 16px; }
+.myQuestionLabel { margin-bottom: 7px; color: var(--muted-foreground); font-size: 11px; }
+.myQuestion p { overflow-wrap: anywhere; white-space: pre-wrap; font-size: 13px; line-height: 1.9; }
+.myArrangements { border-radius: 12px; background: var(--primary-tint); padding: 18px; }
+.myArrangements h3 { display: flex; align-items: center; gap: 8px; color: var(--primary-deep); font-size: 12px; font-weight: 600; }
+.myArrangements p { overflow-wrap: anywhere; white-space: pre-wrap; margin-top: 10px; font-size: 13px; line-height: 1.9; }
+.myArrangements small { display: block; margin-top: 12px; color: var(--muted-foreground); font-size: 11px; line-height: 1.8; }
+.myCardFooter { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px dashed var(--border); padding: 12px 24px; }
+.withdrawConfirmation { width: 100%; padding-block: 8px; font-size: 13px; line-height: 1.9; }
+.withdrawActions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.surface a:focus-visible, .surface summary:focus-visible { border-radius: 4px; outline: 2px solid var(--ring); outline-offset: 4px; }
+@media (min-width: 1280px) { .surface { padding-inline: 32px; } }
+@media (max-width: 767px) {
+  .surface { padding: 16px 16px 36px; }
+  .heading { margin-bottom: 20px; } .headingTitle { font-size: 20px; }
+  .hero { grid-template-columns: minmax(0, 1fr); border-radius: 20px; }
+  .heroCopy { padding: 28px 28px 0; } .heroTitle { margin-top: 18px; font-size: 38px; }
+  .heroDescription { font-size: 12px; } .heroAction { margin-top: 16px; }
+  .heroArt { max-height: 216px; padding: 0 12px; } .heroArt .roomArt { max-width: 310px; }
+  .heroFoot { margin-inline: 24px; padding-block: 12px; font-size: 9px; }
+  .sessionGrid, .loadingGrid { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .sessionGrid[data-single="true"] .sessionCard { display: flex; }
+  .sessionGrid[data-single="true"] .cardArtwork { height: 156px; min-height: 0; }
+  .sessionGrid[data-single="true"] .cardArtwork .roomArt { width: 272px; height: 204px; }
+  .cardArtwork { height: 156px; } .cardContent { padding: 20px; } .cardTitle { font-size: 20px; }
+  .detailHero { grid-template-columns: minmax(0, 1fr); gap: 16px; border-radius: 20px; padding: 26px 24px 20px; }
+  .detailTitle { margin-top: 16px; font-size: 30px; line-height: 1.5; } .detailGuest { margin-top: 18px; }
+  .detailArt { display: none; }
+  .detailGrid { grid-template-columns: minmax(0, 1fr); gap: 28px; margin-top: 24px; }
+  .bookingPanel { grid-row: 1; } .bookingSummary, .bookingAction { padding: 22px; }
+  .bookingNotice { padding-inline: 22px; } .storyParagraph { font-size: 13px; }
+  .myCardHead { flex-wrap: wrap; gap: 12px; padding: 20px; } .dateStamp { width: 46px; padding-right: 12px; }
+  .myCardHead > .statusBadge { margin-left: 58px; } .myCardTitle { font-size: 16px; }
+  .myCardBody { padding: 0 20px 20px; } .myCardFooter { padding-inline: 20px; }
+}
+@media (max-width: 359px) {
+  .heroCopy { padding-inline: 22px; } .heroTitle { font-size: 33px; } .heroFoot { margin-inline: 20px; }
+  .detailHero { padding-inline: 20px; } .detailTitle { font-size: 27px; }
+  .guestName { font-size: 12px; } .statusBadge { font-size: 9px; padding-inline: 7px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sessionCard, .heroAction svg { transition: none; }
+  .sessionCard:hover, .sessionCard:focus-within, .heroAction:hover svg { transform: none; }
+}
