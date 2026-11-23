@@ -4,7 +4,7 @@ import { authContract, digest, releaseConfiguration, verifyRelease, verifyRollba
 
 const sha = "a".repeat(40)
 const fixture = { CF_MAIL_FROM_DOMAIN: "mail.example.invalid", CF_SUPPORT_EMAIL: "support@example.invalid", CF_VALIDATION_ONLY: "true" }
-const good = { format: 1, target: "production", worker: "zaichang", release: sha, authContract, migration: "0021_password_recovery", dirty: false, validationOnly: false, configDigest: "config", bundleDigest: "bundle" }
+const good = { format: 2, portable: true, target: "production", worker: "zaichang", release: sha, authContract, migration: "0021_password_recovery", dirty: false, validationOnly: false, configDigest: "config", bundleDigest: "bundle" }
 const expected = { target: "production", release: sha, configDigest: "config", bundleDigest: "bundle" }
 
 test("points economy is separate opt-in and cannot enable deferred cash auctions", () => {
@@ -47,14 +47,14 @@ test("production uses the owned domain, retains the fallback, disables demo and 
 })
 test("release rejects dirty, validation-only, modified and wrong-environment artifacts", () => {
   assert.doesNotThrow(() => verifyRelease(good, expected))
-  for (const change of [{ dirty: true }, { validationOnly: true }, { target: "staging" }, { release: "b".repeat(40) }, { configDigest: "changed" }, { bundleDigest: "changed" }, { authContract: 0 }, { format: 2 }]) {
+  for (const change of [{ dirty: true }, { validationOnly: true }, { target: "staging" }, { release: "b".repeat(40) }, { configDigest: "changed" }, { bundleDigest: "changed" }, { authContract: 0 }, { format: 1 }, { portable: false }, { portable: undefined }]) {
     assert.throws(() => verifyRelease({ ...good, ...change }, expected))
   }
 })
 test("rollback rejects pre-password-recovery releases and cross-migration/environment targets", () => {
   const previous = { ...good, release: "b".repeat(40) }
   assert.doesNotThrow(() => verifyRollback(good, previous))
-  for (const change of [{ authContract: undefined }, { authContract: 0 }, { authContract: 1 }, { migration: "0020_old" }, { worker: "zaichang-staging" }, { target: "staging" }, { dirty: true }, { validationOnly: true }, { release: sha }, { release: "not-a-sha" }]) {
+  for (const change of [{ authContract: undefined }, { authContract: 0 }, { authContract: 1 }, { migration: "0020_old" }, { worker: "zaichang-staging" }, { target: "staging" }, { dirty: true }, { validationOnly: true }, { release: sha }, { release: "not-a-sha" }, { format: 1 }, { portable: false }]) {
     assert.throws(() => verifyRollback(good, { ...previous, ...change }))
   }
 })

@@ -3,6 +3,7 @@ import { readFileSync, writeFileSync, mkdirSync, readdirSync, lstatSync, existsS
 import { fileURLToPath } from "node:url"
 import path from "node:path"
 import { authContract, digest, releaseConfiguration, verifyRelease, verifyRollback } from "./cloudflare-release-policy.mjs"
+import { normalizeBundleImports } from "./portable-bundle.mjs"
 
 const root = fileURLToPath(new URL("../", import.meta.url))
 const output = path.join(root, ".release")
@@ -59,11 +60,13 @@ try {
     // also prevent Next from loading these names out of a local .env file.
     for (const name of ["DATABASE_URL", "AUTH_SECRET", "CRON_SECRET", "RESEND_API_KEY", "ERROR_REPORTING_WEBHOOK", "CLOUDFLARE_API_TOKEN", "CLOUDFLARE_API_KEY", "CLOUDFLARE_ACCOUNT_ID", "ALIYUN_ACCESS_KEY_ID", "ALIYUN_ACCESS_KEY_SECRET"]) env[name] = ""
     run("opennextjs-cloudflare", ["build", "--config", configPath], env)
+    const normalized = normalizeBundleImports(path.join(root, ".open-next"))
+    console.log(`Portable module imports: ${normalized.imports} in ${normalized.files} generated files.`)
     run("wrangler", ["versions", "upload", "--config", configPath, "--dry-run"], env)
     run("wrangler", ["types", path.join(output, "worker-configuration.d.ts"), "--config", configPath, "--include-runtime", "false"], env)
     const journal = readJson(path.join(root, "src/db/migrations/meta/_journal.json"))
     if (git("rev-parse", "HEAD") !== release) throw new Error("Git HEAD changed during build; rebuild")
-    const manifest = { format: 1, target, worker: config.name, release, dirty: dirty || Boolean(git("status", "--porcelain")), validationOnly: process.env.CF_VALIDATION_ONLY === "true", migration: journal.entries.at(-1).tag, authContract, configDigest: digest(readFileSync(configPath)), bundleDigest: bundleDigest(), builtAt: new Date().toISOString() }
+    const manifest = { format: 2, portable: true, normalizedImports: normalized.imports, target, worker: config.name, release, dirty: dirty || Boolean(git("status", "--porcelain")), validationOnly: process.env.CF_VALIDATION_ONLY === "true", migration: journal.entries.at(-1).tag, authContract, configDigest: digest(readFileSync(configPath)), bundleDigest: bundleDigest(), builtAt: new Date().toISOString() }
     writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n")
     console.log(`Built ${target}: ${release}; ${manifest.migration}. No upload or traffic change performed.`)
   } else if (command === "verify") {

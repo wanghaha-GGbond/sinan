@@ -55,7 +55,7 @@ export function digest(value) {
 }
 
 export function verifyRelease(manifest, { target, release, configDigest, bundleDigest }) {
-  if (manifest.format !== 1 || !["staging", "production"].includes(target)) throw new Error("Unknown release format or target")
+  if (manifest.format !== 2 || manifest.portable !== true || !["staging", "production"].includes(target)) throw new Error("A portable format-2 build and explicit target are required; rebuild")
   if (manifest.target !== target || manifest.release !== release) throw new Error("Build target or Git SHA mismatch; rebuild")
   if (manifest.dirty || manifest.validationOnly) throw new Error("Uncommitted or validation-only builds cannot be released")
   if (manifest.authContract !== authContract) throw new Error("Unsafe authentication rollback target")
@@ -67,5 +67,5 @@ export function verifyRollback(current, previous) {
   if (previous.dirty || previous.validationOnly || previous.authContract !== authContract) throw new Error("Unsafe authentication rollback target")
   if (current.migration !== previous.migration) throw new Error("Cross-migration rollback requires a separate compatibility review")
   if (current.release === previous.release) throw new Error("Rollback target must be a different verified release")
-  if (![current, previous].every((item) => item.format === 1 && /^[a-f0-9]{40}$/.test(item.release))) throw new Error("Invalid release record")
+  if (![current, previous].every((item) => item.format === 2 && item.portable === true && /^[a-f0-9]{40}$/.test(item.release))) throw new Error("Invalid or non-portable release record")
 }
