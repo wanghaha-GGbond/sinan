@@ -1,0 +1,110 @@
+name: Build Cloudflare production artifacts
+
+on:
+  workflow_dispatch:
+    inputs:
+      paused_release_sha:
+        description: "Reviewed main ancestor for the schema-compatible paused-points fallback (full SHA)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-production-artifacts
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Production artifact (${{ matrix.mode }}, no credentials)
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [paused, enabled]
+    env:
+      RELEASE_MODE: ${{ matrix.mode }}
+      PAUSED_RELEASE_SHA: ${{ inputs.paused_release_sha }}
+      CF_VALIDATION_ONLY: "false"
+      CF_MAIL_FROM_DOMAIN: mail.zaichang.space
+      CF_SUPPORT_EMAIL: support@zaichang.space
+      CF_PULSE_ENABLED: "true"
+      CF_DIALOGUE_ENABLED: "true"
+      CF_POINTS_ENABLED: ${{ matrix.mode == 'enabled' && 'true' || 'false' }}
+      NEXT_TELEMETRY_DISABLED: "1"
+      WRANGLER_SEND_METRICS: "false"
+      CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV: "false"
+      DATABASE_URL: ""
+      AUTH_SECRET: ""
+      CRON_SECRET: ""
+      RESEND_API_KEY: ""
+      CLOUDFLARE_ACCOUNT_ID: ""
+      CLOUDFLARE_API_TOKEN: ""
+      CLOUDFLARE_API_KEY: ""
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate and select reviewed main source
+        id: source
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_sha="$GITHUB_SHA"
+          if [[ "$RELEASE_MODE" == paused ]]; then source_sha="$PAUSED_RELEASE_SHA"; fi
+          [[ "$source_sha" =~ ^[a-f0-9]{40}$ ]]
+          git merge-base --is-ancestor "$source_sha" origin/main
+          git switch --detach "$source_sha"
+          [[ -z "$(git status --porcelain)" ]]
+          echo "sha=$source_sha" >> "$GITHUB_OUTPUT"
+          echo "tree=$(git rev-parse HEAD^{tree})" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install reviewed dependencies
+        run: npm ci
+      - name: Reject high or critical production vulnerabilities
+        run: npm audit --workspace=@sinan/web --omit=dev --audit-level=high
+      - name: Check release policies
+        run: npm run test:release-cf --workspace=@sinan/web
+      - name: Build real production package with the existing Turbopack pipeline
+        run: npm run build:cf --workspace=@sinan/web -- production
+      - name: Exercise the actual Worker runtime without application secrets
+        run: npm run test:runtime-cf --workspace=@sinan/web
+      - name: Verify immutable production artifact
+        run: npm run release:verify-cf --workspace=@sinan/web -- production
+      - name: Package artifact and source evidence
+        env:
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+          SOURCE_TREE: ${{ steps.source.outputs.tree }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          jq -e --arg sha "$SOURCE_SHA" '.release == $sha and .target == "production" and .dirty == false and .validationOnly == false' apps/web/.release/manifest.json
+          jq --arg workflowSha "$GITHUB_SHA" --arg tree "$SOURCE_TREE" --arg mode "$RELEASE_MODE" --arg run "$GITHUB_RUN_ID" '. + {workflowSha: $workflowSha, sourceTree: $tree, mode: $mode, runId: $run}' apps/web/.release/manifest.json > "$RUNNER_TEMP/cloudflare-$RELEASE_MODE-source.json"
+          tar -czf "$RUNNER_TEMP/cloudflare-$RELEASE_MODE.tgz" -C apps/web .open-next .release
+          cd "$RUNNER_TEMP"
+          sha256sum "cloudflare-$RELEASE_MODE.tgz" > "cloudflare-$RELEASE_MODE.tgz.sha256"
+          cat "cloudflare-$RELEASE_MODE.tgz.sha256"
+          {
+            echo "### $RELEASE_MODE production artifact"
+            echo "Source: $SOURCE_SHA"
+            echo "Source tree: $SOURCE_TREE"
+            echo "Full Turbopack build, workerd and release integrity checks passed."
+            echo "No cloud/application credentials, migrations, upload or traffic change."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: cloudflare-production-${{ matrix.mode }}-${{ steps.source.outputs.sha }}
+          path: |
+            ${{ runner.temp }}/cloudflare-${{ matrix.mode }}.tgz
+            ${{ runner.temp }}/cloudflare-${{ matrix.mode }}.tgz.sha256
+            ${{ runner.temp }}/cloudflare-${{ matrix.mode }}-source.json
+          retention-days: 14
+          if-no-files-found: error

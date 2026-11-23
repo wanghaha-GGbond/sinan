@@ -2,6 +2,14 @@
 
 范围：海外 Web、Next.js + OpenNext + Cloudflare Workers + Neon；保留 monorepo，iOS 不随 Web 发布。
 
+## 2026-11-23 可复现正式打包
+
+本机打包器受限时，使用 `Build Cloudflare production artifacts` 手动工作流生成正式制品。它只允许从 `main` 调用，不关联 staging/production 密钥环境，不接收数据库或 Cloudflare 凭据；构建使用现有 Turbopack/OpenNext 流程，不能把 validation-only 包改标为正式包。
+
+输入 `paused_release_sha` 为已经评审、位于 main 祖先链中、与本次迁移/认证兼容的完整 SHA。工作流同时产出该提交的暂停积分包和当前 main 的积分开启包，重跑依赖审计、发布策略、完整构建、真实 workerd 与制品完整性检查。源 SHA、代码树、迁移、配置/包摘要、工作流 SHA 和归档校验和随制品保存；不自动迁移、上传或切流量。
+
+下载时必须核对仓库、main、运行 ID、工作流 SHA、两个源 SHA 与成功结果，验证归档 SHA256，检查 tar 路径后再解压到隔离目录。不要解压到生产备份目录；不要混用两份包或手改 manifest。发布前仍需本地 `release:verify-cf`、真实候选探测和回退兼容检查。暂停包与开启包要求不同的已验证发布 SHA，不能关闭现有跨迁移/认证回退门禁。生产数据及应用密钥不会进入这些制品。
+
 ## 2026-11-04 Pulse 升级补充
 
 以下 10 月记录保留作历史，不作为当前状态。当前基线为 web-v0.0.6，main 为 0 强制人工审批、保留全部 CI 与 staging 保护。PR7 已合并。下一次 PR25/原始 PR3 升级包含 `0023`、`0024` 和真实 Pulse，具体规则见 [Pulse 发布说明](pulse-release-20261104.md)。
