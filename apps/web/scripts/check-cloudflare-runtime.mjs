@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { spawn } from "node:child_process"
 import { once } from "node:events"
 import { existsSync, realpathSync } from "node:fs"
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
+import { mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises"
 import { createServer } from "node:net"
 import { tmpdir } from "node:os"
 import path from "node:path"
@@ -20,13 +20,23 @@ const temporary = await mkdtemp(path.join(tmpdir(), "zaichang-runtime-"))
 let worker
 let workerClosed
 let output = ""
+const bundleRoot = path.join(root, ".open-next")
+let relocationDirectory, relocatedBundle
 try {
+  // Remove the original build path while probing. Otherwise absolute imports
+  // can accidentally pass on the builder and break after artifact download.
+  relocationDirectory = await mkdtemp(path.join(root, ".runtime-portability-"))
+  relocatedBundle = path.join(relocationDirectory, ".open-next")
+  await rename(bundleRoot, relocatedBundle)
+  const main = path.relative(bundleRoot, path.resolve(releaseDir, config.main))
+  const assets = path.relative(bundleRoot, path.resolve(releaseDir, config.assets.directory))
+  for (const relative of [main, assets]) assert.ok(relative && relative !== ".." && !relative.startsWith(".." + path.sep) && !path.isAbsolute(relative))
   const local = {
     name: "zaichang-runtime-test",
-    main: path.resolve(releaseDir, config.main),
+    main: path.join(relocatedBundle, main),
     compatibility_date: config.compatibility_date,
     compatibility_flags: config.compatibility_flags,
-    assets: { ...config.assets, directory: path.resolve(releaseDir, config.assets.directory) },
+    assets: { ...config.assets, directory: path.join(relocatedBundle, assets) },
     vars: { ...config.vars, DATABASE_URL: "", AUTH_SECRET: "", CRON_SECRET: "", RESEND_API_KEY: "" },
   }
   const configPath = path.join(temporary, "wrangler.json")
@@ -103,7 +113,7 @@ try {
   assert.equal((await request("/api/forum/follows")).status, 401)
   assert.equal((await request("/api/moderation/forum")).status, 401)
   assert.equal((await request("/auction")).status, 404)
-  console.log(`Cloudflare ${target} runtime passed: live, fail-closed readiness, registration config, account pages and launch boundaries. No remote writes.`)
+  console.log(`Cloudflare ${target} relocated runtime passed: live, fail-closed readiness, registration config, account pages and launch boundaries. No remote writes.`)
 } catch (error) {
   console.error(output)
   throw error
@@ -114,5 +124,9 @@ try {
     await workerClosed
     clearTimeout(force)
   }
+  // Restore before cleanup. If restoration fails, leave the artifact in the
+  // relocation directory for recovery rather than deleting its only copy.
+  if (relocatedBundle && existsSync(relocatedBundle)) await rename(relocatedBundle, bundleRoot)
+  if (relocationDirectory) await rm(relocationDirectory, { recursive: true, force: true })
   await rm(temporary, { recursive: true, force: true })
 }
