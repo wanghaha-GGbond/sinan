@@ -6,13 +6,14 @@ import { CompanyLogo } from "./company-logo"
 
 import type { CompanyListItem } from "@/lib/api/types"
 import type { Company } from "@/lib/types"
+import { companyRatingSampleCount } from "@/lib/company-rating-samples"
 
 type CompanyCardCompany = Company | CompanyListItem
 
 export function CompanyCard({ company, variant = "directory" }: { company: CompanyCardCompany; variant?: "directory" | "feed" }) {
   const displayName = (company as CompanyListItem).shortName ?? company.name
   const reviewCount = company.reviewCount ?? 0
-  const score = companyDisplayScore(company.directionScore, reviewCount)
+  const score = companyDisplayScore(company.directionScore, companyRatingSampleCount(company))
   const summary = company.description || company.highlights?.slice(0, 2).join(" · ")
   const isFeed = variant === "feed"
 

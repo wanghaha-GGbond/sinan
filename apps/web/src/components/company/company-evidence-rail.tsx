@@ -2,11 +2,12 @@ import Link from "next/link"
 import { ArrowUpRight, BrainCircuit, ShieldCheck } from "lucide-react"
 
 import type { CompanyListItem } from "@/lib/types"
+import { companyRatingSampleCount } from "@/lib/company-rating-samples"
 import { CompanyIdentityFacts } from "./company-identity-facts"
 
 export function CompanyEvidenceRail({ company }: { company: CompanyListItem }) {
   const distribution = company.scoreDistribution ?? []
-  const hasSamples = (company.reviewCount ?? 0) > 0
+  const hasSamples = companyRatingSampleCount(company) > 0
   const hasDistribution = hasSamples && distribution.some((item) => item.count > 0)
   const maxCount = Math.max(...distribution.map((item) => item.count), 1)
   const hasRecommendation = hasSamples && typeof company.recommendationRate === "number"

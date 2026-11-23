@@ -7,10 +7,13 @@ import { isMailConfigured } from "@/lib/server/mail"
 import { checkPersistentRateLimit } from "@/lib/server/persistent-rate-limit"
 import { normalizeRegistrationEmail, REGISTRATION_CODE_RESEND_SECONDS } from "@/lib/server/registration-code-policy"
 import { issueRegistrationCode } from "@/lib/server/registration-codes"
+import { checkAuthWriteRequest } from "@/lib/server/auth-request"
 
 const headers = { "Cache-Control": "no-store" }
 
 export async function POST(request: NextRequest) {
+  const denied = checkAuthWriteRequest(request)
+  if (denied) return denied
   let email: string, inviteCode: string | undefined
   try {
     const body = await request.json()

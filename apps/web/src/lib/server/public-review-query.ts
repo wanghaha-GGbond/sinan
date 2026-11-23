@@ -4,6 +4,7 @@ import { companyVerifications } from "@/db/schema/company-verifications"
 import { reviewAuthorBlocks } from "@/db/schema/review-author-blocks"
 import { reviewUsefulVotes } from "@/db/schema/review-useful-votes"
 import { reviews } from "@/db/schema/reviews"
+import { publicReviewCompanyCondition } from "./review-visibility"
 
 type PublicReviewRow = typeof reviews.$inferSelect
 
@@ -141,6 +142,7 @@ export async function findPublicReview(
     eq(reviews.id, reviewId),
     inArray(reviews.status, ["visible", "limited_visible"]),
     isNull(reviews.deletedAt),
+    publicReviewCompanyCondition(),
   ]
   if (companyId) conditions.push(eq(reviews.companyId, companyId))
 

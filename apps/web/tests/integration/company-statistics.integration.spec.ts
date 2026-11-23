@@ -13,10 +13,13 @@ import { users } from "../../src/db/schema/users"
 import { signToken } from "../../src/lib/server/auth"
 
 let companyId = ""
+const ratingAuthorIds: string[] = []
 test.afterEach(async () => {
   if (!companyId) return
   await db.delete(reviews).where(eq(reviews.companyId, companyId))
   await db.delete(companies).where(eq(companies.id, companyId))
+  for (const id of ratingAuthorIds) await db.delete(users).where(eq(users.id, id))
+  ratingAuthorIds.length = 0
   companyId = ""
 })
 
@@ -52,8 +55,10 @@ test("single-query catalog preserves public ratings, CBTI threshold and empty sa
   expect(empty.status).toBe(200)
   expect((await empty.json()).companies[0]).toMatchObject({ reviewCount: 0, directionScore: 0, recommendationRate: 0 })
   const base = { companyId, authorLabel: "匿名同事", title: "隔离查询测试", content: "PRIVATE_REVIEW_TEXT", status: "visible" as const }
+  const authors = await db.insert(users).values(Array.from({ length: 5 }, () => ({ email: `${randomUUID()}@rating-test.invalid` }))).returning()
+  ratingAuthorIds.push(...authors.map(row => row.id))
   await db.insert(reviews).values([
-    ...[0, 2, 4, 8, 10].map((score, index) => ({ ...base, directionScore: String(score), recommendToJoin: index < 3, status: index === 0 ? "limited_visible" as const : "visible" as const })),
+    ...[0, 2, 4, 8, 10].map((score, index) => ({ ...base, authorUserId: authors[index].id, directionScore: String(score), recommendToJoin: index < 3, status: index === 0 ? "limited_visible" as const : "visible" as const })),
     { ...base, directionScore: "10", status: "pending_review" },
     { ...base, directionScore: "10", status: "hidden" },
     { ...base, directionScore: "10", deletedAt: new Date() },
@@ -78,6 +83,33 @@ test("single-query catalog preserves public ratings, CBTI threshold and empty sa
   expect(publicDetail.dimensionSummary).toContainEqual({ key: "salaryScore", score: 0, count: 5 })
   expect(publicDetail.dimensionSummary).toContainEqual({ key: "stabilityScore", score: null, count: 0 })
   expect(JSON.stringify(publicDetail)).not.toContain("PRIVATE_REVIEW_TEXT")
+  for (const author of authors) expect(JSON.stringify(publicDetail)).not.toContain(author.id)
   await db.update(companies).set({ reviewStatus: "rejected" }).where(eq(companies.id, companyId))
   expect((await (await request()).json()).companies).toEqual([])
+})
+
+test("company ratings use the latest public review per account and never count anonymous history as independent people", async () => {
+  const [company] = await db.insert(companies).values({ name: `Independent ${randomUUID()}`, city: "杭州", industry: "软件", reviewStatus: "reviewable" }).returning()
+  companyId = company.id
+  const authors = await db.insert(users).values(Array.from({ length: 5 }, () => ({ email: `${randomUUID()}@rating-test.invalid` }))).returning()
+  ratingAuthorIds.push(...authors.map(row => row.id))
+  const questionnaire = { salaryScore: 0, companyPace: "fast", managementStyle: "process_clear", growthExperience: "very_fast", collaborationStyle: "cross_team" }
+  const base = { companyId, authorLabel: "匿名同事", title: "历史仍保留", content: "隔离测试的真实文本长度，仅用于测试。", directionScore: "2", status: "visible" as const, questionnaire }
+  await db.insert(reviews).values(Array.from({ length: 5 }, (_, index) => ({ ...base, authorUserId: authors[0].id, createdAt: new Date(Date.UTC(2026, 0, index + 1)) })))
+  let result = await getPublicCompanyDetail(companyId)
+  expect(result).toMatchObject({ reviewCount: 5, ratingSampleCount: 1, directionScore: 2 })
+  expect(result?.cbti).toBeUndefined()
+  await db.insert(reviews).values([
+    { ...base, authorUserId: authors[0].id, directionScore: "10", recommendToJoin: true, createdAt: new Date("2026-02-01T00:00:00Z") },
+    { ...base, authorUserId: authors[0].id, directionScore: "0", status: "pending_review", createdAt: new Date("2026-03-01T00:00:00Z") },
+    ...authors.slice(1).map(author => ({ ...base, authorUserId: author.id, directionScore: "10", recommendToJoin: true })),
+    ...Array.from({ length: 5 }, () => ({ ...base, authorUserId: null, directionScore: "0" })),
+  ])
+  result = await getPublicCompanyDetail(companyId)
+  expect(result).toMatchObject({ reviewCount: 15, ratingSampleCount: 5, directionScore: 10, recommendationRate: 100, cbti: { code: "RPGC" } })
+  expect(result?.dimensionSummary).toContainEqual({ key: "salaryScore", count: 5, score: 0 })
+  const catalog = await GET(new NextRequest(`https://example.test/api/companies/search?q=${encodeURIComponent(company.name)}`))
+  expect((await catalog.json()).companies[0]).toMatchObject({ reviewCount: 15, ratingSampleCount: 5, directionScore: 10, cbti: { code: "RPGC" } })
+  const allRows = await db.select({ id: reviews.id }).from(reviews).where(eq(reviews.companyId, companyId))
+  expect(allRows).toHaveLength(16)
 })

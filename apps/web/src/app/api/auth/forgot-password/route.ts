@@ -3,10 +3,13 @@ import { checkAuthAccountLimit, checkAuthIpLimit } from "@/lib/server/auth-rate-
 import { isMailConfigured } from "@/lib/server/mail"
 import { issuePasswordReset } from "@/lib/server/password-recovery"
 import { PASSWORD_RESET_ACCEPTED, passwordResetUrl } from "@/lib/server/password-recovery-policy"
+import { checkAuthWriteRequest } from "@/lib/server/auth-request"
 
 const headers = { "Cache-Control": "no-store" }
 
 export async function POST(request: NextRequest) {
+  const denied = checkAuthWriteRequest(request)
+  if (denied) return denied
   let email: string
   try {
     const body: unknown = await request.json()

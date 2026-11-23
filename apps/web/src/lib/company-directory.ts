@@ -1,7 +1,8 @@
 import type { CompanyListItem } from "./types"
+import { companyRatingSampleCount } from "./company-rating-samples"
 
 export type DirectorySort = "reviews" | "score" | "recommendation" | "recent"
-type DirectoryCompany = Pick<CompanyListItem, "id" | "name" | "shortName" | "englishName" | "aliases" | "industry" | "city" | "createdAt" | "directionScore" | "recommendationRate" | "reviewCount">
+type DirectoryCompany = Pick<CompanyListItem, "id" | "name" | "shortName" | "englishName" | "aliases" | "industry" | "city" | "createdAt" | "directionScore" | "recommendationRate" | "reviewCount" | "ratingSampleCount">
 
 function publicMetric(value: number | undefined, count: number | undefined, maximum: number) {
   return (count ?? 0) > 0 && typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= maximum ? value : -1
@@ -23,8 +24,8 @@ export function filterAndSortCompanies<T extends DirectoryCompany>(
     && (!keyword || [company.name, company.shortName, company.englishName, company.industry, company.city, ...(company.aliases ?? [])]
       .some((value) => value?.toLowerCase().includes(keyword))),
   ).sort((a, b) => {
-    const metric = sort === "score" ? publicMetric(b.directionScore, b.reviewCount, 10) - publicMetric(a.directionScore, a.reviewCount, 10)
-      : sort === "recommendation" ? publicMetric(b.recommendationRate, b.reviewCount, 100) - publicMetric(a.recommendationRate, a.reviewCount, 100)
+    const metric = sort === "score" ? publicMetric(b.directionScore, companyRatingSampleCount(b), 10) - publicMetric(a.directionScore, companyRatingSampleCount(a), 10)
+      : sort === "recommendation" ? publicMetric(b.recommendationRate, companyRatingSampleCount(b), 100) - publicMetric(a.recommendationRate, companyRatingSampleCount(a), 100)
       : sort === "recent" ? dateValue(b.createdAt) - dateValue(a.createdAt)
       : (b.reviewCount ?? 0) - (a.reviewCount ?? 0)
     return metric || a.name.localeCompare(b.name, "zh-CN") || a.id.localeCompare(b.id)

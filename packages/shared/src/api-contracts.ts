@@ -44,6 +44,7 @@ export type CompanyApiItem = {
   directionScore?: number
   recommendationRate?: number
   reviewCount?: number
+  ratingSampleCount?: number
   salaryRange?: string | null
   riskLevel?: string
   riskTags?: string[]
@@ -230,6 +231,7 @@ export function isCompanyApiItem(value: unknown): value is CompanyApiItem {
     (value.directionScore === undefined || isNumber(value.directionScore)) &&
     (value.recommendationRate === undefined || isNumber(value.recommendationRate)) &&
     (value.reviewCount === undefined || isNumber(value.reviewCount)) &&
+    (value.ratingSampleCount === undefined || (isNumber(value.ratingSampleCount) && Number.isInteger(value.ratingSampleCount) && value.ratingSampleCount >= 0)) &&
     (value.salaryRange === undefined || hasNullableString(value, "salaryRange")) &&
     (value.riskLevel === undefined || isString(value.riskLevel)) &&
     (value.riskTags === undefined || isStringArray(value.riskTags)) &&
