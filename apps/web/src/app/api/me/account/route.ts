@@ -27,6 +27,7 @@ import {
   buildDeletedUserValues,
 } from "@/lib/server/account-deletion"
 import { clearAuthCookie, requireAuthUser } from "@/lib/server/auth"
+import { lockPointsEconomy, deleteUserPoints } from "@/lib/server/points-service"
 
 export async function DELETE(request: NextRequest) {
   let authUser
@@ -55,7 +56,9 @@ export async function DELETE(request: NextRequest) {
     const { db } = await import("@/db/client")
     const deletedAt = new Date()
     const deletedUser = await db.transaction(async (tx) => {
+      await lockPointsEconomy(tx)
       await tx.select({ id: users.id }).from(users).where(eq(users.id, authUser.userId)).for("update")
+      await deleteUserPoints(tx, authUser.userId)
       await tx.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, authUser.userId))
       await tx.delete(pulseCheckins).where(eq(pulseCheckins.userId, authUser.userId))
       await tx.delete(dialogueApplications).where(eq(dialogueApplications.userId, authUser.userId))

@@ -7,6 +7,18 @@ const fixture = { CF_MAIL_FROM_DOMAIN: "mail.example.invalid", CF_SUPPORT_EMAIL:
 const good = { format: 1, target: "production", worker: "zaichang", release: sha, authContract, migration: "0021_password_recovery", dirty: false, validationOnly: false, configDigest: "config", bundleDigest: "bundle" }
 const expected = { target: "production", release: sha, configDigest: "config", bundleDigest: "bundle" }
 
+test("points economy is separate opt-in and cannot enable deferred cash auctions", () => {
+  const disabled = releaseConfiguration("production", fixture, sha)
+  assert.equal(disabled.vars.NEXT_PUBLIC_POINTS_ENABLED, "false")
+  assert.equal(disabled.vars.POINTS_ENABLED, "false")
+  const active = releaseConfiguration("production", { ...fixture, CF_DIALOGUE_ENABLED: "true", CF_POINTS_ENABLED: "true" }, sha)
+  assert.equal(active.vars.POINTS_ENABLED, "true")
+  assert.equal(active.vars.DIALOGUE_ENABLED, "true")
+  assert.equal(active.vars.LAUNCH_SCOPE_ONLY, "true")
+  assert.throws(() => releaseConfiguration("production", { ...fixture, CF_POINTS_ENABLED: "true" }, sha))
+  assert.throws(() => releaseConfiguration("production", { ...fixture, CF_POINTS_ENABLED: "yes" }, sha))
+})
+
 test("targets are explicit and secrets are never copied into Worker vars", () => {
   for (const target of [undefined, "", "prod", "beta"]) assert.throws(() => releaseConfiguration(target, {}, sha))
   const config = releaseConfiguration("staging", { DATABASE_URL: "secret", RESEND_API_KEY: "secret", NEXT_PUBLIC_APP_ENV: "production" }, sha)

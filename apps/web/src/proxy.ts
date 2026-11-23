@@ -12,6 +12,7 @@ import { isPulseEnabled } from "@/lib/pulse-feature"
 import { isResearchPath, researchIsInternal } from "@/lib/research-visibility"
 import { isDialoguePath } from "@/lib/dialogue-feature"
 import { dialogueServerEnabled } from "@/lib/server/dialogue-feature"
+import { pointsServerEnabled } from "@/lib/server/points-feature"
 
 const isProd = process.env.NODE_ENV === "production"
 
@@ -55,6 +56,12 @@ function withSecurityHeaders(response: NextResponse): NextResponse {
 }
 
 export function proxy(request: NextRequest) {
+  const path = request.nextUrl.pathname
+  if (["/me/points", "/api/me/points", "/api/moderation/points"].some(base => path === base || path.startsWith(base + "/")) && !pointsServerEnabled()) {
+    const response = path.startsWith("/api/") ? NextResponse.json({ error: "Not found" }, { status: 404 }) : NextResponse.rewrite(new URL("/__sinan_launch_not_found__", request.url), { status: 404 })
+    response.headers.set("Cache-Control", "private, no-store")
+    return withSecurityHeaders(response)
+  }
   if (isDialoguePath(request.nextUrl.pathname) && !dialogueServerEnabled()) {
     const response = request.nextUrl.pathname.startsWith("/api/")
       ? NextResponse.json({ error: "Not found" }, { status: 404 })

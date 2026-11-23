@@ -1,6 +1,7 @@
 export * from "./enums"
 export * from "./forum"
 export * from "./dialogues"
+export * from "./points"
 export * from "./users"
 export * from "./pulse-checkins"
 export * from "./password-reset-tokens"

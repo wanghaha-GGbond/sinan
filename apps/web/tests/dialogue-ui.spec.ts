@@ -25,7 +25,7 @@ for (const width of [320, 390, 1280]) for (const theme of ["light", "dark"]) {
     const nav = page.getByRole("navigation", { name: width < 1024 ? "快捷导航" : "主导航" })
     await expect(nav.getByRole("link")).toHaveCount(2)
     await expect(nav.getByRole("link", { name: "社区", exact: true })).toHaveAttribute("aria-current", "page")
-    await expect(page.getByText(/未开放竞拍、收款或捐赠/)).toBeVisible()
+    await expect(page.getByText(/不可充值、转让或提现/)).toBeVisible()
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     await page.screenshot({ path: info.outputPath("dialogue-list.png"), fullPage: true })
     await page.getByRole("link", { name: "查看活动", exact: true }).click()

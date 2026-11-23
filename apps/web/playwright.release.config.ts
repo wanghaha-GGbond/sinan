@@ -4,7 +4,7 @@ const releaseBaseURL = process.env.RELEASE_BASE_URL?.trim() || "http://127.0.0.1
 
 export default defineConfig({
   testDir: "./tests/release",
-  testMatch: ["dialogue.release.spec.ts", "forum.release.spec.ts", "core-api-flow.spec.ts", "password-recovery.release.spec.ts", "owner-registration.mail.spec.ts"],
+  testMatch: ["points.release.spec.ts", "dialogue.release.spec.ts", "forum.release.spec.ts", "core-api-flow.spec.ts", "password-recovery.release.spec.ts", "owner-registration.mail.spec.ts"],
   timeout: 60_000,
   workers: 1,
   outputDir: "./test-results/release",
@@ -24,7 +24,7 @@ export default defineConfig({
           url: "http://127.0.0.1:3000/api/health/live",
           reuseExistingServer: false,
           timeout: 240_000,
-          env: { NEXT_PUBLIC_APP_ENV: "staging", NEXT_PUBLIC_API_ENABLED: "true", NEXT_PUBLIC_PULSE_ENABLED: "true", NEXT_PUBLIC_DIALOGUE_ENABLED: "true", DIALOGUE_ENABLED: "true" },
+          env: { NEXT_PUBLIC_APP_ENV: "staging", NEXT_PUBLIC_API_ENABLED: "true", NEXT_PUBLIC_PULSE_ENABLED: "true", NEXT_PUBLIC_DIALOGUE_ENABLED: "true", DIALOGUE_ENABLED: "true", NEXT_PUBLIC_POINTS_ENABLED: "true", POINTS_ENABLED: "true" },
         },
       }),
 })

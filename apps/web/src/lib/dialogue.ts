@@ -16,7 +16,9 @@ export const dialogueDraftInput = z.object({
   startsAt: z.iso.datetime({ offset: true }), signupEndsAt: z.iso.datetime({ offset: true }),
   fundingMode: z.enum(["undecided", "all_donated", "host_and_donation"]).default("undecided"),
   guestConsentConfirmed: z.boolean(),
+  selectionMode: z.enum(["manual", "points"]).default("manual"), minBidPoints: z.number().int().min(1).max(1_000_000).default(1),
 }).strict().refine(value => Date.parse(value.signupEndsAt) < Date.parse(value.startsAt), { message: "报名截止必须早于活动开始", path: ["signupEndsAt"] })
+  .refine(value => value.selectionMode !== "points" || (value.capacity === 1 && value.fundingMode === "undecided"), { message: "积分竞拍仅设 1 个名额，不涉及报酬或捐赠", path: ["capacity"] })
 export const dialogueApplicationInput = z.object({ question: text(10, 800), requestId: z.uuid() }).strict()
 export const dialogueActionInput = z.discriminatedUnion("action", [
   z.object({ action: z.literal("publish") }).strict(),
@@ -29,7 +31,7 @@ export const dialogueActionInput = z.discriminatedUnion("action", [
 ])
 export const dialogueDecisionInput = z.object({ status: z.enum(["selected", "not_selected"]), expectedStatus: z.enum(["submitted", "selected", "not_selected"]), reason: text(2, 160) }).strict()
 export const dialoguePageInput = z.object({ companyId: z.uuid().optional(), cursor: z.string().max(600).optional() }).strict()
-export type DialogueDraft = z.infer<typeof dialogueDraftInput>
+export type DialogueDraft = z.input<typeof dialogueDraftInput>
 export type DialogueAction = z.infer<typeof dialogueActionInput>
 export type DialogueDecision = z.infer<typeof dialogueDecisionInput>
 export type DialogueStatus = typeof dialogueStatuses[number]
@@ -39,8 +41,10 @@ export type DialogueSession = {
   durationMinutes: number; capacity: number; startsAt: string; signupEndsAt: string; fundingMode: keyof typeof fundingModes;
   status: DialogueStatus; recap: string; cancelReason: string | null; createdAt: string;
   paymentsEnabled: false; biddingEnabled: false; donationStatus: "not_started";
+  selectionMode?: "manual" | "points"; minBidPoints?: number; pointsSettledAt?: string | null;
+  pointsBiddingEnabled?: boolean;
 }
-export type DialogueApplication = { id: string; sessionId: string; question: string; status: ApplicationStatus; decisionNote: string | null; createdAt: string }
+export type DialogueApplication = { id: string; sessionId: string; question: string; status: ApplicationStatus; decisionNote: string | null; createdAt: string; bidPoints?: number; pointsState?: "none" | "held" | "spent" | "released" }
 export type MyDialogueApplication = DialogueApplication & { sessionTitle: string; sessionStatus: DialogueStatus; startsAt: string; privateInstructions: string | null }
 export type DialogueAdminSession = DialogueSession & { guestConsentConfirmed: boolean; privateInstructions: string }
 

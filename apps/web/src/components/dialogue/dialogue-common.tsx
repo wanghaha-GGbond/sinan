@@ -9,8 +9,8 @@ import styles from "./dialogue-design.module.css"
 
 export const dialogueTime = (value: string) => new Intl.DateTimeFormat("zh-CN", { timeZone: "Asia/Shanghai", year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(value))
 export const dialogueField = "min-h-11 w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-ring"
-export function DialogueMoneyNotice() {
-  return <p className={styles.moneyNotice}><LockKeyhole size={14} aria-hidden="true" /><span>当前仅开放免费报名，未开放竞拍、收款或捐赠。资金方案与合作机构确认后另行公布。</span></p>
+export function DialogueMoneyNotice({ points = false }: { points?: boolean }) {
+  return <p className={styles.moneyNotice}><LockKeyhole size={14} aria-hidden="true" /><span>{points ? "积分仅用于站内活动，不可充值、转让或提现，不兑换现金，也不代表捐款。" : "当前仅开放免费报名，未开放竞拍、收款或捐赠。资金方案与合作机构确认后另行公布。"}</span></p>
 }
 export function DialogueHeading({ title, children, backHref = "/community", backLabel = "返回社区" }: { title: string; children?: React.ReactNode; backHref?: string; backLabel?: string }) {
   return <header className={styles.heading}><Link className={styles.backLink} href={backHref}><ArrowLeft size={13} aria-hidden="true" />{backLabel}</Link><div className={styles.headingRow}><h1 className={styles.headingTitle}><ZaichangIcon name="conversation" className="size-6 text-primary-deep" />{title}</h1>{children}</div></header>
@@ -31,7 +31,7 @@ export function DialogueCard({ session }: { session: DialogueSession }) {
       <Link href={"/community/dialogues/" + session.id} className={styles.cardTitleLink}><h2 className={styles.cardTitle}>{session.title}</h2></Link>
       <p className={styles.cardDescription}>{session.description}</p>
       <p className={styles.cardSchedule}><CalendarDays size={13} aria-hidden="true" /><time dateTime={session.startsAt}>{dialogueTime(session.startsAt)}（北京时间）</time><span>· {session.durationMinutes} 分钟</span></p>
-      <div className={styles.cardFooter}><span className={styles.cardFooterText}>免费报名 · {session.capacity} 个入选名额</span><Link href={"/community/dialogues/" + session.id} className={styles.cardAction}>查看活动<ArrowUpRight size={16} aria-hidden="true" /></Link></div>
+      <div className={styles.cardFooter}><span className={styles.cardFooterText}>{session.selectionMode === "points" ? `积分竞拍 · ${session.minBidPoints} 积分起` : `免费报名 · ${session.capacity} 个入选名额`}</span><Link href={"/community/dialogues/" + session.id} className={styles.cardAction}>查看活动<ArrowUpRight size={16} aria-hidden="true" /></Link></div>
     </div>
   </article>
 }
