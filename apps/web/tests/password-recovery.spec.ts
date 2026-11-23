@@ -78,7 +78,7 @@ test("disabled mail rejects recovery uniformly instead of pretending to send", a
   process.env.MAIL_PROVIDER = "disabled"
   for (const email of ["existing@example.test", "unknown@example.test"]) {
     const response = await forgotPassword(new NextRequest("https://app.example/api/auth/forgot-password", {
-      method: "POST", body: JSON.stringify({ email }),
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }),
     }))
     expect(response.status).toBe(503)
     expect(response.headers.get("cache-control")).toBe("no-store")
@@ -88,10 +88,10 @@ test("disabled mail rejects recovery uniformly instead of pretending to send", a
 test("recovery endpoints reject malformed bodies before database or mail access", async () => {
   for (const body of [null, [], {}, { email: "bad" }]) {
     expect((await forgotPassword(new NextRequest("https://app.example/api/auth/forgot-password", {
-      method: "POST", body: JSON.stringify(body),
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
     }))).status).toBe(400)
     expect((await resetPassword(new NextRequest("https://app.example/api/auth/reset-password", {
-      method: "POST", body: JSON.stringify(body),
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
     }))).status).toBe(400)
   }
 })

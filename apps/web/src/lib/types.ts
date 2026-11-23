@@ -38,6 +38,7 @@ export type CompanyListItem = {
   directionScore?: number
   recommendationRate?: number
   reviewCount?: number
+  ratingSampleCount?: number
   salaryRange?: string | null
   riskLevel?: string
   riskTags?: string[]

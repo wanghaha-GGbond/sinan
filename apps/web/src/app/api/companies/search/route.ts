@@ -83,13 +83,15 @@ export async function GET(request: NextRequest) {
       {
         companies: rows.map(({ company: row, statistics: aggregate }) => {
           const reviewCount = Number(aggregate?.totalCount ?? 0)
+          const ratingSampleCount = Number(aggregate?.ratingCount ?? 0)
           return {
             ...toPublicCompanyView(row),
-            directionScore: reviewCount ? Number(aggregate?.avgDirection ?? 0) : 0,
-            recommendationRate: reviewCount
-              ? Math.round((Number(aggregate?.recommendCount ?? 0) / reviewCount) * 100)
+            directionScore: ratingSampleCount ? Number(aggregate?.avgDirection ?? 0) : 0,
+            recommendationRate: ratingSampleCount
+              ? Math.round((Number(aggregate?.recommendCount ?? 0) / ratingSampleCount) * 100)
               : 0,
             reviewCount,
+            ratingSampleCount,
             cbti: inferPublicCBTI(aggregate.signals),
           }
         }),

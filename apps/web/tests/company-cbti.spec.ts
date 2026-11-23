@@ -5,7 +5,8 @@ import { summarizeCompanyDimensions } from "../src/lib/server/company-dimensions
 import { buildQuestionnaireSession } from "../src/lib/questionnaire/question-bank"
 
 function rows(count: number) {
-  return Array.from({ length: count }, () => ({
+  return Array.from({ length: count }, (_, index) => ({
+    authorUserId: `independent-author-${index}`,
     directionScore: 8,
     questionnaire: {
       workLifeBalanceScore: 7,
@@ -40,6 +41,13 @@ test("CBTI does not infer a profile from empty questionnaires", () => {
       Array.from({ length: 5 }, () => ({ directionScore: 8, questionnaire: {} }))
     )
   ).toBeUndefined()
+})
+
+test("one account cannot satisfy the CBTI sample threshold with repeated reviews", () => {
+  expect(inferPublicCBTI(rows(5).map(row => ({ ...row, authorUserId: "same-account" })))).toBeUndefined()
+  expect(inferPublicCBTI(rows(5).map(row => ({ ...row, authorUserId: null })))).toBeUndefined()
+  expect(inferPublicCBTI([...rows(4), ...rows(4)])).toBeUndefined()
+  expect(inferPublicCBTI([...rows(5), ...rows(5)])).toMatchObject({ code: "RPGC" })
 })
 
 test("each CBTI axis needs five answers, with no default profile or tied-axis inference", () => {

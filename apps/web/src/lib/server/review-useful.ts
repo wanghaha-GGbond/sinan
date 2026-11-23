@@ -2,6 +2,7 @@ import { and, count, eq, inArray, isNull } from "drizzle-orm"
 
 import { reviewUsefulVotes } from "@/db/schema/review-useful-votes"
 import { reviews } from "@/db/schema/reviews"
+import { publicReviewCompanyCondition } from "./review-visibility"
 
 export type ReviewUsefulResult =
   | {
@@ -34,7 +35,8 @@ export async function setReviewUseful(input: {
         and(
           eq(reviews.id, input.reviewId),
           inArray(reviews.status, ["visible", "limited_visible"]),
-          isNull(reviews.deletedAt)
+          isNull(reviews.deletedAt),
+          publicReviewCompanyCondition(),
         )
       )
       .for("update")

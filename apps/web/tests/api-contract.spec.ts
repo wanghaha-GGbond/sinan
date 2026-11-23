@@ -118,6 +118,10 @@ test("Web and iOS accept the same core API response contracts", () => {
   expect(isAuthApiResponse({ user: { id: "user-1", displayName: "匿名用户", role: "user" }, token: "jwt" })).toBe(true)
   expect(isCompanySearchApiResponse({ companies: [company] })).toBe(true)
   expect(isCompanyDetailApiResponse({ company })).toBe(true)
+  expect(isCompanyDetailApiResponse({ company: { ...company, ratingSampleCount: 0 } })).toBe(true)
+  for (const ratingSampleCount of [-1, 1.5, "2", null]) {
+    expect(isCompanyDetailApiResponse({ company: { ...company, ratingSampleCount } })).toBe(false)
+  }
   expect(isReviewListApiResponse({ reviews: [review] })).toBe(true)
   expect(isReviewDetailApiResponse({ review })).toBe(true)
   expect(isReviewUsefulApiResponse({ usefulCount: 4, isUsefulByCurrentUser: true })).toBe(true)

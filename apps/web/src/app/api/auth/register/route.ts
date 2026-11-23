@@ -13,10 +13,13 @@ import {
 import { isDevAuthEnabled } from "@/lib/server/dev-auth"
 import { isRegistrationCode } from "@/lib/server/registration-code-policy"
 import { consumeRegistrationCode } from "@/lib/server/registration-codes"
+import { checkAuthWriteRequest } from "@/lib/server/auth-request"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export async function POST(request: NextRequest) {
+  const denied = checkAuthWriteRequest(request)
+  if (denied) return denied
   const nativeClient = request.headers.get("x-sinan-client") === "ios"
   let body: Record<string, unknown>
   try {

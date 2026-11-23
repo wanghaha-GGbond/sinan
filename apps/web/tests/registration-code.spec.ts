@@ -66,7 +66,7 @@ test("no browser or native client can skip the email code or register an unverif
       { email: "person@example.test", password: "RegistrationTest123!", verificationCode: "12a456" },
     ]) {
       const response = await register(new NextRequest("https://example.test/api/auth/register", {
-        method: "POST", headers: { "x-sinan-client": client }, body: JSON.stringify(body),
+        method: "POST", headers: { "Content-Type": "application/json", "x-sinan-client": client }, body: JSON.stringify(body),
       }))
       expect(response.status).toBe(400)
     }
@@ -77,7 +77,7 @@ test("disabled mail returns an error rather than a fake code-sent result", async
   process.env.INVITE_REQUIRED = "false"
   process.env.MAIL_PROVIDER = "disabled"
   const response = await requestCode(new NextRequest("https://example.test/api/auth/register-code", {
-    method: "POST", body: JSON.stringify({ email: "person@example.test" }),
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: "person@example.test" }),
   }))
   expect(response.status).toBe(503)
   expect(response.headers.get("cache-control")).toBe("no-store")
@@ -86,12 +86,12 @@ test("disabled mail returns an error rather than a fake code-sent result", async
 
 test("malformed code requests and missing invitations fail before delivery", async () => {
   for (const body of [null, [], {}, { email: "bad" }]) {
-    const response = await requestCode(new NextRequest("https://example.test", { method: "POST", body: JSON.stringify(body) }))
+    const response = await requestCode(new NextRequest("https://example.test", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }))
     expect(response.status).toBe(400)
   }
   process.env.INVITE_REQUIRED = "true"
   const response = await requestCode(new NextRequest("https://example.test", {
-    method: "POST", body: JSON.stringify({ email: "person@example.test" }),
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: "person@example.test" }),
   }))
   expect(response.status).toBe(403)
 })

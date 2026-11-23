@@ -3,6 +3,7 @@ import { and, eq, isNull, inArray, desc, lt, or } from "drizzle-orm"
 import { companies } from "@/db/schema/companies"
 import { reviews } from "@/db/schema/reviews"
 import { toPublicReviewView } from "@/lib/server/review-view"
+import { publicReviewCompanyCondition } from "@/lib/server/review-visibility"
 import { getAuthUserFromRequest } from "@/lib/server/auth"
 import {
   getBlockedReviewAuthorKeys,
@@ -101,6 +102,7 @@ export async function GET(
       eq(reviews.companyId, companyId),
       inArray(reviews.status, ["visible", "limited_visible"]),
       isNull(reviews.deletedAt),
+      publicReviewCompanyCondition(),
     ]
 
     // Cursor-based pagination: row-comparison on the same

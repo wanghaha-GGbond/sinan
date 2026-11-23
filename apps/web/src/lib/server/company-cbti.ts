@@ -2,17 +2,20 @@ import type { CBTIProfile } from "@/lib/types"
 import { sanitizePublicQuestionnaire, type PublicReviewQuestionnaire } from "@/lib/review-questionnaire"
 
 export const CBTI_MIN_AXIS_SAMPLES = 5
-type SignalRow = { directionScore: unknown; questionnaire: unknown }
+type SignalRow = { authorUserId?: string | null; directionScore: unknown; questionnaire: unknown }
 
 function numeric(q: PublicReviewQuestionnaire, key: string, threshold: number, positiveAbove = true) {
   const value = q[key]
   return typeof value === "number" ? (positiveAbove ? value >= threshold : value < threshold) : null
 }
 
-/** Each review contributes at most one vote per axis; missing answers contribute none.
+/** Call with latest-public-review rows. Each known account contributes once per axis.
+ * Anonymous history without a remaining account link cannot establish a sample.
  * No default axes or conversion of legacy five-point ratings into ten-point answers. */
 export function inferPublicCBTI(rows: SignalRow[]): CBTIProfile | undefined {
-  const questionnaires = rows.map(row => sanitizePublicQuestionnaire(row.questionnaire)).filter((q): q is PublicReviewQuestionnaire => q !== null)
+  const independent = new Map<string, SignalRow>()
+  for (const row of rows) if (row.authorUserId && !independent.has(row.authorUserId)) independent.set(row.authorUserId, row)
+  const questionnaires = [...independent.values()].map(row => sanitizePublicQuestionnaire(row.questionnaire)).filter((q): q is PublicReviewQuestionnaire => q !== null)
   const axes = [
     questionnaires.map(q => typeof q.companyPace === "string" ? ["very_fast", "fast"].includes(q.companyPace) : typeof q.overtimeLevel === "string" ? ["very_high", "high"].includes(q.overtimeLevel) : numeric(q, "workLifeBalanceScore", 6.6, false)),
     questionnaires.map(q => typeof q.managementStyle === "string" ? ["process_clear", "process_heavy"].includes(q.managementStyle) : numeric(q, "managementClarityScore", 7.2)),

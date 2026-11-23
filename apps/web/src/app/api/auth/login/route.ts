@@ -4,8 +4,11 @@ import { users } from "@/db/schema/users"
 import { verifyPassword, setAuthCookie } from "@/lib/server/auth"
 import { checkAuthAccountLimit, checkAuthIpLimit } from "@/lib/server/auth-rate-limit"
 import { isDevAuthEnabled } from "@/lib/server/dev-auth"
+import { checkAuthWriteRequest } from "@/lib/server/auth-request"
 
 export async function POST(request: NextRequest) {
+  const denied = checkAuthWriteRequest(request)
+  if (denied) return denied
   const nativeClient = request.headers.get("x-sinan-client") === "ios"
   let body: Record<string, unknown>
   try {

@@ -6,10 +6,13 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react"
 import { useRouter } from "next/navigation"
+import { useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -23,6 +26,7 @@ export type AuthUser = {
 type AuthState = {
   user: AuthUser | null
   loading: boolean
+  loggingOut: boolean
   login: (params: LoginParams) => Promise<{ error?: string }>
   register: (params: RegisterParams) => Promise<{ error?: string }>
   logout: () => Promise<void>
@@ -50,21 +54,26 @@ const AuthContext = createContext<AuthState | null>(null)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loggingOut, setLoggingOut] = useState(false)
+  const sessionRevision = useRef(0)
+  const logoutLock = useRef(false)
+  const queryClient = useQueryClient()
   const router = useRouter()
 
   const refresh = useCallback(async () => {
+    const revision = ++sessionRevision.current
     try {
-      const res = await fetch("/api/auth/me")
+      const res = await fetch("/api/auth/me", { cache: "no-store" })
       if (!res.ok) {
-        setUser(null)
+        if (revision === sessionRevision.current) setUser(null)
         return
       }
       const data = await res.json()
-      setUser(data.user ?? null)
+      if (revision === sessionRevision.current) setUser(data.user ?? null)
     } catch {
-      setUser(null)
+      if (revision === sessionRevision.current) setUser(null)
     } finally {
-      setLoading(false)
+      if (revision === sessionRevision.current) setLoading(false)
     }
   }, [])
 
@@ -88,12 +97,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!res.ok) {
         return { error: data.error ?? "登录失败" }
       }
+      ++sessionRevision.current
+      await queryClient.cancelQueries()
+      queryClient.clear()
       setUser(data.user)
       return {}
     } catch {
       return { error: "网络错误，请稍后重试" }
+    } finally {
+      setLoading(false)
     }
-  }, [])
+  }, [queryClient])
 
   const register = useCallback(async (params: RegisterParams) => {
     try {
@@ -106,30 +120,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!res.ok) {
         return { error: data.error ?? "注册失败" }
       }
+      ++sessionRevision.current
+      await queryClient.cancelQueries()
+      queryClient.clear()
       setUser(data.user)
       return {}
     } catch {
       return { error: "网络错误，请稍后重试" }
+    } finally {
+      setLoading(false)
     }
-  }, [])
+  }, [queryClient])
 
   const logout = useCallback(async () => {
-    // Clear the httpOnly cookie via a simple endpoint or just clear state
-    // The cookie is httpOnly so we can't delete it from JS.
-    // We'll create a logout endpoint, but for now just clear local state
-    // and redirect — the cookie will expire eventually.
+    if (logoutLock.current) return
+    logoutLock.current = true
+    setLoggingOut(true)
+    ++sessionRevision.current
     try {
-      await fetch("/api/auth/logout", { method: "POST" })
+      const response = await fetch("/api/auth/logout", { method: "POST" })
+      if (!response.ok || (await response.json()).success !== true) throw new Error("Logout not confirmed")
+      ++sessionRevision.current
+      await queryClient.cancelQueries()
+      queryClient.clear()
+      setUser(null)
+      router.replace("/")
+      router.refresh()
     } catch {
-      // If logout endpoint doesn't exist yet, just clear local state
+      // The httpOnly cookie may still be valid. Never show a false sign-out.
+      toast.error("未能确认退出，请重试")
+    } finally {
+      logoutLock.current = false
+      setLoggingOut(false)
+      setLoading(false)
     }
-    setUser(null)
-    router.push("/")
-  }, [router])
+  }, [router, queryClient])
 
   const value = useMemo<AuthState>(
-    () => ({ user, loading, login, register, logout, refresh }),
-    [user, loading, login, register, logout, refresh]
+    () => ({ user, loading, loggingOut, login, register, logout, refresh }),
+    [user, loading, loggingOut, login, register, logout, refresh]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

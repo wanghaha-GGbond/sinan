@@ -2,6 +2,7 @@ import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm"
 
 import { companies } from "@/db/schema/companies"
 import { reviews } from "@/db/schema/reviews"
+import { companyReviewHistoryCount, independentCompanyRatingCondition, publicReviewCompanyCondition } from "./review-visibility"
 import type { Company, CompanyListItem, Review, ReviewListItem } from "@/lib/types"
 import { companies as mockCompanies } from "@/lib/mock-data"
 import { toPublicCompanyView } from "@/lib/server/company-view"
@@ -155,7 +156,8 @@ export async function getPublicCompanyDetail(
       .select({
         avgDirection: sql<number>`round(avg(${reviews.directionScore})::numeric, 1)`,
         recommendCount: sql<number>`count(*) filter (where ${reviews.recommendToJoin} = true)`,
-        totalCount: sql<number>`count(*)`,
+        totalCount: companyReviewHistoryCount(companyId),
+        ratingCount: sql<number>`count(*)`,
         score0to2: sql<number>`count(*) filter (where ${reviews.directionScore} < 2)`,
         score2to4: sql<number>`count(*) filter (where ${reviews.directionScore} >= 2 and ${reviews.directionScore} < 4)`,
         score4to6: sql<number>`count(*) filter (where ${reviews.directionScore} >= 4 and ${reviews.directionScore} < 6)`,
@@ -166,33 +168,33 @@ export async function getPublicCompanyDetail(
       .where(
         and(
           eq(reviews.companyId, companyId),
-          inArray(reviews.status, ["visible", "limited_visible"]),
-          isNull(reviews.deletedAt),
+          independentCompanyRatingCondition(),
         ),
       ),
     db
-      .select({ directionScore: reviews.directionScore, questionnaire: reviews.questionnaire })
+      .select({ authorUserId: reviews.authorUserId, directionScore: reviews.directionScore, questionnaire: reviews.questionnaire })
       .from(reviews)
       .where(
         and(
           eq(reviews.companyId, companyId),
-          inArray(reviews.status, ["visible", "limited_visible"]),
-          isNull(reviews.deletedAt),
+          independentCompanyRatingCondition(),
         ),
       ),
   ])
   const aggregate = aggregateRows[0]
 
   const reviewCount = Number(aggregate?.totalCount ?? 0)
+  const ratingSampleCount = Number(aggregate?.ratingCount ?? 0)
 
   return {
     ...toPublicCompanyView(companyRow),
-    directionScore: reviewCount > 0 ? Number(aggregate?.avgDirection ?? 0) : 0,
+    directionScore: ratingSampleCount > 0 ? Number(aggregate?.avgDirection ?? 0) : 0,
     recommendationRate:
-      reviewCount > 0
-        ? Math.round((Number(aggregate?.recommendCount ?? 0) / reviewCount) * 100)
+      ratingSampleCount > 0
+        ? Math.round((Number(aggregate?.recommendCount ?? 0) / ratingSampleCount) * 100)
         : 0,
     reviewCount,
+    ratingSampleCount,
     salaryRange: null,
     riskLevel: "低",
     riskTags: [],
@@ -228,6 +230,7 @@ export async function getPublicCompanyReviews(
           eq(reviews.companyId, companyId),
           inArray(reviews.status, ["visible", "limited_visible"]),
           isNull(reviews.deletedAt),
+          publicReviewCompanyCondition(),
         ),
       )
       .orderBy(desc(reviews.usefulCount), desc(reviews.createdAt), desc(reviews.id))

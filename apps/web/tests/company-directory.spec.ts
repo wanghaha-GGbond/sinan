@@ -21,3 +21,9 @@ test("directory absorbs PR5 recency and filters while preserving deterministic t
   for (const query of [" north STAR ", "北星"]) expect(filterAndSortCompanies(companies, { ...filters, query })).toHaveLength(2)
   expect(filterAndSortCompanies(companies, { ...filters, city: "北京" })).toEqual([])
 })
+
+test("unattributed review history is not mistaken for a zero-valued independent rating", () => {
+  const companies = [{ ...company("history", 8, 10), ratingSampleCount: 0 }, { ...company("rated", 1, 0), ratingSampleCount: 1 }]
+  for (const sort of ["score", "recommendation"] as const) expect(filterAndSortCompanies(companies, { ...filters, sort }).map(c => c.id)).toEqual(["rated", "history"])
+  expect(filterAndSortCompanies(companies, filters).map(c => c.id)).toEqual(["history", "rated"])
+})

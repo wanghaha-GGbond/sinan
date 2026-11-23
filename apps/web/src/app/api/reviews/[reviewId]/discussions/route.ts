@@ -9,6 +9,7 @@ import { getOrCreateAnonymousProfile } from "@/lib/server/anonymous-profile"
 import { hasSensitive, hasAttackWord } from "@/lib/content-guard"
 import { getRateLimitKey } from "@/lib/server/rate-limit"
 import { checkPersistentRateLimit } from "@/lib/server/persistent-rate-limit"
+import { publicReviewCompanyCondition } from "@/lib/server/review-visibility"
 
 type DiscussionSortKey = "useful" | "latest"
 
@@ -79,7 +80,7 @@ export async function GET(
     const [review] = await db
       .select({ id: reviews.id, status: reviews.status })
       .from(reviews)
-      .where(and(eq(reviews.id, reviewId), isNull(reviews.deletedAt)))
+      .where(and(eq(reviews.id, reviewId), isNull(reviews.deletedAt), publicReviewCompanyCondition()))
       .limit(1)
 
     if (!review) {
@@ -263,7 +264,7 @@ export async function POST(
     const [review] = await db
       .select({ id: reviews.id, status: reviews.status, companyId: reviews.companyId })
       .from(reviews)
-      .where(and(eq(reviews.id, reviewId), isNull(reviews.deletedAt)))
+      .where(and(eq(reviews.id, reviewId), isNull(reviews.deletedAt), publicReviewCompanyCondition()))
       .limit(1)
 
     if (!review) {

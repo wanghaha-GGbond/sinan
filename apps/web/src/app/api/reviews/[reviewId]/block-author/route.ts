@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { reviewAuthorBlocks } from "@/db/schema/review-author-blocks"
 import { reviews } from "@/db/schema/reviews"
+import { publicReviewCompanyCondition } from "@/lib/server/review-visibility"
 import { requireAuthUser } from "@/lib/server/auth"
 
 type ReviewAuthorTarget = {
@@ -43,6 +44,7 @@ async function loadReviewTarget(reviewId: string) {
         eq(reviews.id, reviewId),
         inArray(reviews.status, ["visible", "limited_visible"]),
         isNull(reviews.deletedAt),
+        publicReviewCompanyCondition(),
       ),
     )
     .limit(1)

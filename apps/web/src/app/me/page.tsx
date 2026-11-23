@@ -7,7 +7,6 @@ import {
   BadgeCheck,
   Bookmark,
   ChevronRight,
-  Flame,
   Lock,
   LogIn,
   LogOut,
@@ -127,26 +126,8 @@ type DashboardData = {
 }
 
 // Fallback values when API not available yet
-const DEFAULT_STATS = { directionPoints: 0, nextLevelPoints: 100, streakDays: 0, helpedCount: 0 }
-const DEFAULT_TASKS: DailyTask[] = [
-  { id: "task-read-review", title: "阅读一篇点评", rewardPoints: 5, progress: 0, target: 1, completed: false, href: "/search", hint: "帮助他人做出更好的选择" },
-  { id: "task-write-review", title: "撰写一篇公司点评", rewardPoints: 20, progress: 0, target: 1, completed: false, hint: "分享你的职场经验" },
-  { id: "task-useful-vote", title: "对 3 篇点评点有帮助", rewardPoints: 10, progress: 0, target: 3, completed: false, hint: "发现有价值的点评" },
-  { id: "task-complete-profile", title: "完善个人资料", rewardPoints: 15, progress: 0, target: 1, completed: false, hint: "让社区更了解你" },
-  { id: "task-invite-friend", title: "邀请好友加入指路人", rewardPoints: 30, progress: 0, target: 1, completed: false, hint: "分享指路人给他人" },
-]
-const DEFAULT_BADGES: Badge[] = [
-  { id: "badge-first-review", name: "初来乍到", description: "撰写第一篇公司点评", unlocked: false, progress: 0, target: 1 },
-  { id: "badge-review-5", name: "点评新星", description: "累计撰写 5 篇点评", unlocked: false, progress: 0, target: 5 },
-  { id: "badge-review-20", name: "资深指路人", description: "累计撰写 20 篇点评", unlocked: false, progress: 0, target: 20 },
-  { id: "badge-helpful-10", name: "慧眼识珠", description: "累计给 10 篇点评点有帮助", unlocked: false, progress: 0, target: 10 },
-  { id: "badge-helpful-50", name: "伯乐之眼", description: "累计给 50 篇点评点有帮助", unlocked: false, progress: 0, target: 50 },
-  { id: "badge-streak-7", name: "连续 7 天", description: "连续 7 天完成每日任务", unlocked: false, progress: 0, target: 7 },
-  { id: "badge-streak-30", name: "坚持不懈", description: "连续 30 天完成每日任务", unlocked: false, progress: 0, target: 30 },
-  { id: "badge-trust-level-2", name: "信任新星", description: "信任等级达到 2 级", unlocked: false, progress: 0, target: 2 },
-  { id: "badge-trust-level-5", name: "值得信赖", description: "信任等级达到 5 级", unlocked: false, progress: 0, target: 5 },
-  { id: "badge-early-adopter", name: "先驱者", description: "在产品早期加入指路人", unlocked: false },
-]
+const DEFAULT_TASKS: DailyTask[] = []
+const DEFAULT_BADGES: Badge[] = []
 
 export default function MePage() {
   const workRecordsRequested = useWorkRecordsRequested()
@@ -274,9 +255,8 @@ export default function MePage() {
   // ── Logged in ──────────────────────────────────────────────────────────
   if (!dashboard) return null
 
-  const stats = dashboard.stats ?? DEFAULT_STATS
-  const dailyTasks = dashboard.dailyTasks?.length ? dashboard.dailyTasks : DEFAULT_TASKS
-  const badges = dashboard.badges?.length ? dashboard.badges : DEFAULT_BADGES
+  const dailyTasks = dashboard.dailyTasks ?? DEFAULT_TASKS
+  const badges = dashboard.badges ?? DEFAULT_BADGES
   const myReviews = dashboard.myReviews ?? []
   const favoriteCompanies = dashboard.favoriteCompanies ?? []
   const verifications = dashboard.verifications ?? []
@@ -296,7 +276,6 @@ export default function MePage() {
     <MeContent
       displayName={displayName}
       trustLevel={trustLevel}
-      stats={stats}
       dailyTasks={dailyTasks}
       myReviews={myReviews}
       badges={badges}
@@ -327,7 +306,6 @@ export default function MePage() {
 type MeContentProps = {
   displayName: string
   trustLevel: number
-  stats: { directionPoints: number; nextLevelPoints: number; streakDays: number; helpedCount: number }
   dailyTasks: DailyTask[]
   myReviews: MyReview[]
   badges: Badge[]
@@ -357,7 +335,6 @@ const PROOF_LABELS: Record<string, string> = {
 function MeContent({
   displayName,
   trustLevel,
-  stats,
   dailyTasks,
   myReviews,
   badges,
@@ -369,7 +346,7 @@ function MeContent({
   invites = { total: 0, used: 0, unused: [] },
   identity,
 }: MeContentProps) {
-  const { logout } = useAuth()
+  const { logout, loggingOut } = useAuth()
   const [favoritesOpen, setFavoritesOpen] = useState(false)
   const [badgesOpen, setBadgesOpen] = useState(false)
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
@@ -383,11 +360,7 @@ function MeContent({
     })
   }
 
-  const levelGap = stats.nextLevelPoints - stats.directionPoints
-  const levelProgress = stats.nextLevelPoints > 0
-    ? Math.round((stats.directionPoints / stats.nextLevelPoints) * 100)
-    : 0
-  const isNewUser = stats.directionPoints === 0 && stats.helpedCount === 0 && myReviews.length === 0
+  const isNewUser = myReviews.length === 0
   const visibleTasks = isNewUser ? dailyTasks.slice(0, 2) : dailyTasks
 
   return (
@@ -403,7 +376,7 @@ function MeContent({
         </div>
         <div className="flex items-center gap-2">
           <WebButton asChild variant="secondary" size="sm"><Link href="/settings/account">账号与数据</Link></WebButton>
-          <WebButton type="button" variant="ghost" size="sm" onClick={() => void logout()} aria-label="退出登录">
+          <WebButton type="button" variant="ghost" size="sm" disabled={loggingOut} onClick={() => void logout()} aria-label="退出登录">
             <LogOut className="size-4" aria-hidden="true" />
             <span className="hidden sm:inline">退出</span>
           </WebButton>
@@ -449,47 +422,7 @@ function MeContent({
             </WebButton>
           </div>
         </section>
-      ) : (
-      <div className="grid gap-4 md:grid-cols-3">
-        <WebSurface variant="default" className="p-5">
-          <div className="mb-3 flex items-center gap-2">
-            <div className="flex size-9 items-center justify-center rounded-xl bg-muted">
-              <Navigation className="size-4 text-secondary-foreground" />
-            </div>
-            <span className="text-sm font-medium text-muted-foreground">方向值</span>
-          </div>
-          <p className="text-3xl font-semibold text-foreground" data-testid="me-direction-points">
-            {stats.directionPoints}
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">距离下一阶段还差 {levelGap}</p>
-          <Progress value={levelProgress} className="mt-3 h-1.5" />
-        </WebSurface>
-
-        <WebSurface variant="default" className="p-5">
-          <div className="mb-3 flex items-center gap-2">
-            <div className="flex size-9 items-center justify-center rounded-xl bg-risk-surface">
-              <Flame className="size-4 text-risk" />
-            </div>
-            <span className="text-sm font-medium text-muted-foreground">连续点灯</span>
-          </div>
-          <p className="text-3xl font-semibold text-foreground" data-testid="me-streak-days">
-            {stats.streakDays} 天
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">今天再看 1 条评价即可保持</p>
-        </WebSurface>
-
-        <WebSurface variant="default" className="p-5">
-          <div className="mb-3 flex items-center gap-2">
-            <div className="flex size-9 items-center justify-center rounded-xl bg-foreground">
-              <Award className="size-4 text-background" />
-            </div>
-            <span className="text-sm font-medium text-muted-foreground">指路等级</span>
-          </div>
-          <p className="text-3xl font-semibold text-foreground">L{trustLevel}</p>
-          <p className="mt-1 text-xs text-muted-foreground">已帮助 {stats.helpedCount} 位后来者</p>
-        </WebSurface>
-      </div>
-      )}
+      ) : null}
 
       {/* Verification status */}
       <section className="border-t border-border pt-6">
@@ -609,7 +542,7 @@ function MeContent({
       )}
 
       {/* Daily tasks */}
-      <section>
+      {dailyTasks.length > 0 ? (<section>
         <h2 className="mb-4 text-base font-semibold text-foreground">今日指路任务</h2>
         <div className="grid gap-3" data-testid="me-daily-tasks">
           {visibleTasks.map((task) => (
@@ -643,7 +576,7 @@ function MeContent({
         {isNewUser && dailyTasks.length > visibleTasks.length ? (
           <p className="mt-3 text-sm text-muted-foreground">完成第一次行动后，将解锁更多日常任务。</p>
         ) : null}
-      </section>
+      </section>) : null}
 
       {/* My reviews */}
       <section className="border-t border-border pt-6">
@@ -754,7 +687,7 @@ function MeContent({
       </section>
 
       {/* Badges — also distilled (collapsed by default, summary count visible). */}
-      <section className="border-t border-border py-2">
+      {badges.length > 0 ? (<section className="border-t border-border py-2">
         <button
           type="button"
           className="flex min-h-11 w-full items-center justify-between text-left"
@@ -812,7 +745,7 @@ function MeContent({
             })}
           </div>
         ) : null}
-      </section>
+      </section>) : null}
     </section>
   )
 }

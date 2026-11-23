@@ -12,6 +12,7 @@ import { reviewRatingDimensionsSchema } from "@/lib/review-ratings"
 import { extractPublicDimensionScores } from "@/lib/review-questionnaire"
 import { getRateLimitKey } from "@/lib/server/rate-limit"
 import { checkPersistentRateLimit } from "@/lib/server/persistent-rate-limit"
+import { publicReviewCompanyCondition } from "@/lib/server/review-visibility"
 import {
   getBlockedReviewAuthorKeys,
   getPublicReviewMetadata,
@@ -366,6 +367,7 @@ export async function GET(request: NextRequest) {
     const conditions = [
       isNull(reviews.deletedAt),
       inArray(reviews.status, VISIBLE_STATUSES),
+      publicReviewCompanyCondition(),
     ]
 
     if (companyId) {
