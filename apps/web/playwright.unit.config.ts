@@ -4,6 +4,8 @@ export default defineConfig({
   testDir: "./tests",
   testMatch: [
     "forum.spec.ts",
+    "dialogue-policy.spec.ts",
+    "points-policy.spec.ts",
     "curated-company-source.spec.ts",
     "company-logo.spec.ts",
     "mail-configuration.spec.ts",

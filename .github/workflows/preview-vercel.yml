@@ -122,6 +122,8 @@ jobs:
           NEXT_PUBLIC_APP_ENV: staging
           NEXT_PUBLIC_API_ENABLED: "true"
           NEXT_PUBLIC_PULSE_ENABLED: "true"
+          NEXT_PUBLIC_DIALOGUE_ENABLED: "true"
+          NEXT_PUBLIC_POINTS_ENABLED: "true"
           SUPPORT_EMAIL: support@sinanapp.cn
           ERROR_REPORTING_MODE: stdout
           INVITE_REQUIRED: "true"
@@ -148,6 +150,8 @@ jobs:
             --build-env NEXT_PUBLIC_APP_ENV=staging \
             --build-env NEXT_PUBLIC_API_ENABLED=true \
             --build-env NEXT_PUBLIC_PULSE_ENABLED=true \
+            --build-env NEXT_PUBLIC_DIALOGUE_ENABLED=true \
+            --build-env NEXT_PUBLIC_POINTS_ENABLED=true \
             --build-env NEXT_PUBLIC_ICP_FILING_NUMBER= \
             --build-env LAUNCH_SCOPE_ONLY=true \
             --env NEXT_PUBLIC_APP_URL=https://sinan-staging.vercel.app \
@@ -156,6 +160,10 @@ jobs:
             --env NEXT_PUBLIC_APP_ENV=staging \
             --env NEXT_PUBLIC_API_ENABLED=true \
             --env NEXT_PUBLIC_PULSE_ENABLED=true \
+            --env NEXT_PUBLIC_DIALOGUE_ENABLED=true \
+            --env DIALOGUE_ENABLED=true \
+            --env NEXT_PUBLIC_POINTS_ENABLED=true \
+            --env POINTS_ENABLED=true \
             --env LAUNCH_SCOPE_ONLY=true \
             --env INVITE_REQUIRED=true \
             --env DATABASE_ADAPTER=neon \
@@ -279,6 +287,8 @@ jobs:
           NEXT_PUBLIC_APP_ENV: staging
           NEXT_PUBLIC_API_ENABLED: "true"
           NEXT_PUBLIC_PULSE_ENABLED: "true"
+          NEXT_PUBLIC_DIALOGUE_ENABLED: "true"
+          NEXT_PUBLIC_POINTS_ENABLED: "true"
           SUPPORT_EMAIL: support@sinanapp.cn
           ERROR_REPORTING_MODE: stdout
           INVITE_REQUIRED: "true"
@@ -303,6 +313,8 @@ jobs:
             --build-env NEXT_PUBLIC_APP_ENV=staging \
             --build-env NEXT_PUBLIC_API_ENABLED=true \
             --build-env NEXT_PUBLIC_PULSE_ENABLED=true \
+            --build-env NEXT_PUBLIC_DIALOGUE_ENABLED=true \
+            --build-env NEXT_PUBLIC_POINTS_ENABLED=true \
             --build-env NEXT_PUBLIC_ICP_FILING_NUMBER= \
             --build-env LAUNCH_SCOPE_ONLY=true \
             --env NEXT_PUBLIC_APP_URL=https://sinan-staging.vercel.app \
@@ -311,6 +323,10 @@ jobs:
             --env NEXT_PUBLIC_APP_ENV=staging \
             --env NEXT_PUBLIC_API_ENABLED=true \
             --env NEXT_PUBLIC_PULSE_ENABLED=true \
+            --env NEXT_PUBLIC_DIALOGUE_ENABLED=true \
+            --env DIALOGUE_ENABLED=true \
+            --env NEXT_PUBLIC_POINTS_ENABLED=true \
+            --env POINTS_ENABLED=true \
             --env LAUNCH_SCOPE_ONLY=true \
             --env INVITE_REQUIRED=true \
             --env DATABASE_ADAPTER=neon \

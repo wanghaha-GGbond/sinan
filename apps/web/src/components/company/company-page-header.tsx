@@ -6,6 +6,7 @@ import { CompanySectionNav } from "./company-section-nav"
 import { WebButton } from "@/components/ui/web-button"
 import { publicCompanyWebsite } from "@/lib/company-identity"
 import type { CompanyListItem } from "@/lib/types"
+import { dialogueEnabled } from "@/lib/dialogue-feature"
 
 export function CompanyPageHeader({ company, active }: { company: CompanyListItem; active: "概览" | "评价" | "评分" | "承诺" | "论坛" }) {
   const count = company.reviewCount ?? 0
@@ -34,8 +35,9 @@ export function CompanyPageHeader({ company, active }: { company: CompanyListIte
       {active === "概览" && company.description && <p className="mt-4 max-w-2xl break-words text-sm leading-6 text-foreground/80">{company.description}</p>}
       <div className="flex flex-wrap items-center justify-between gap-3 py-4">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1"><CompanyRating score={companyDisplayScore(company.directionScore, count)} prominent /><Link href={`${base}/reviews`} className="inline-flex min-h-11 items-center text-sm text-muted-foreground hover:underline">{count.toLocaleString()} 条公开评价</Link></div>
-        <div className="flex items-center gap-3">{active === "概览" && website && <a href={website} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-primary-deep hover:underline">官网<ArrowUpRight className="size-4" aria-hidden="true" /></a>}
+        <div className="flex flex-wrap items-center gap-3">{active === "概览" && website && <a href={website} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-primary-deep hover:underline">官网<ArrowUpRight className="size-4" aria-hidden="true" /></a>}
           {active !== "评分" && <WebButton asChild><Link href={`/submit/review?companyId=${encodeURIComponent(company.id)}`}><PenLine className="size-4" aria-hidden="true" />写评价</Link></WebButton>}
+          {dialogueEnabled({ NEXT_PUBLIC_DIALOGUE_ENABLED: process.env.NEXT_PUBLIC_DIALOGUE_ENABLED }) ? <WebButton asChild variant="quiet"><Link href={`/community/dialogues?companyId=${encodeURIComponent(company.id)}`}>对话活动</Link></WebButton> : null}
         </div>
       </div>
       {count > 0 && <p className="pb-3 text-xs text-muted-foreground">{company.verifiedIdentityCount ?? 0} 位验证贡献者</p>}

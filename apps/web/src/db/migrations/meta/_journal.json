@@ -183,6 +183,20 @@
       "when": 1794009600000,
       "tag": "0025_company_forums",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1795305600000,
+      "tag": "0026_dialogue_pilot",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1795392000000,
+      "tag": "0027_points_auctions",
+      "breakpoints": true
     }
   ]
 }

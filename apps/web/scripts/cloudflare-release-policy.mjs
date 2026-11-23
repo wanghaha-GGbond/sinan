@@ -8,6 +8,9 @@ export function releaseConfiguration(target, env, release) {
   const production = target === "production"
   const pulseEnabled = env.CF_PULSE_ENABLED ?? "true"
   if (!["true", "false"].includes(pulseEnabled)) throw new Error("CF_PULSE_ENABLED must be true or false")
+  const dialogueEnabled = env.CF_DIALOGUE_ENABLED ?? "false", pointsEnabled = env.CF_POINTS_ENABLED ?? "false"
+  if (![dialogueEnabled, pointsEnabled].every(value => ["true", "false"].includes(value))) throw new Error("Dialogue and points flags must be true or false")
+  if (pointsEnabled === "true" && dialogueEnabled !== "true") throw new Error("Points auctions require dialogue enabled")
   const appUrl = production ? "https://zaichang.space" : "https://staging.zaichang.space"
   const mailDomain = env.CF_MAIL_FROM_DOMAIN?.trim() || (production ? "" : "example.invalid")
   const supportEmail = env.CF_SUPPORT_EMAIL?.trim() || (production ? "" : "support@example.invalid")
@@ -36,6 +39,8 @@ export function releaseConfiguration(target, env, release) {
       DEPLOYMENT_REGION: "global", DATABASE_ADAPTER: "neon",
       NEXT_PUBLIC_APP_URL: appUrl, NEXT_PUBLIC_APP_ENV: target,
       NEXT_PUBLIC_API_ENABLED: "true", NEXT_PUBLIC_PULSE_ENABLED: pulseEnabled,
+      NEXT_PUBLIC_DIALOGUE_ENABLED: dialogueEnabled, DIALOGUE_ENABLED: dialogueEnabled,
+      NEXT_PUBLIC_POINTS_ENABLED: pointsEnabled, POINTS_ENABLED: pointsEnabled,
       LAUNCH_SCOPE_ONLY: "true", INVITE_REQUIRED: production ? "false" : "true",
       MAIL_PROVIDER: production ? "resend" : "disabled",
       MAIL_FROM_DOMAIN: mailDomain, SUPPORT_EMAIL: supportEmail,

@@ -11,7 +11,7 @@ async function fixtures(page: Page, trustLevel?: number) {
   })
 }
 
-for (const theme of ["light", "dark"]) for (const width of [390, 1280]) {
+for (const theme of ["light", "dark"]) for (const width of [320, 390, 1280]) {
   test(`company sections retain identity and reachable navigation ${theme} ${width}`, async ({ page }, testInfo) => {
     await fixtures(page)
     await page.setViewportSize({ width, height: 844 })

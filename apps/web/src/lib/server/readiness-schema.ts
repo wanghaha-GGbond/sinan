@@ -18,4 +18,9 @@ export async function verifyReadinessSchema(execute: (query: SQL) => Promise<{ r
   `)
   await execute(sql`select f.status, f.company_id, f.request_id, r.post_id, r.request_id, v.user_id, s.company_id, p.reason, e.to_status
     from forum_posts f, forum_replies r, forum_votes v, forum_follows s, forum_reports p, forum_moderation_events e where false`)
+  await execute(sql`select s.status, s.request_id, s.guest_consent_confirmed, s.recap_consent_confirmed, s.private_instructions,
+    s.selection_mode, s.min_bid_points, s.points_settled_at, a.user_id, a.request_id, a.question, a.status, a.bid_points, a.points_state, e.actor_user_id
+    from dialogue_sessions s, dialogue_applications a, dialogue_audit_events e where false`)
+  await execute(sql`select a.available, a.frozen, e.operation_key, e.available_delta, e.frozen_delta, e.available_after, e.frozen_after
+    from point_accounts a, point_entries e where false`)
 }
