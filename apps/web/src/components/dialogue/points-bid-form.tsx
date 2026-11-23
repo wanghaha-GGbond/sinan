@@ -37,9 +37,9 @@ function BidEditor({ userId, session, wallet, previous }: { userId: string; sess
   }
   return <form onSubmit={submit} className="space-y-4" aria-busy={busy}><div className="flex flex-wrap items-center justify-between gap-2 text-sm"><p>可用 {wallet.available} 积分{held ? ` · 本场已冻结 ${held}` : ""}</p><Link className="min-h-11 py-3 text-primary underline" href="/me/points">领取积分</Link></div>
     {held ? <p role="status" className="text-sm">出价已记录，积分已冻结。可继续加价，或在我的报名中撤回。</p> : null}
-    <label htmlFor={id + "-points"} className="grid gap-2 text-sm">本次出价（积分）<input id={id + "-points"} type="number" inputMode="numeric" required min={minimum} max={maximum} step={1} value={points} onChange={e => setPoints(e.target.value)} className={dialogueField} /></label>
-    <label htmlFor={id + "-question"} className="grid gap-2 text-sm">想聊的问题<textarea id={id + "-question"} required minLength={10} maxLength={800} rows={4} className={dialogueField} value={question} onChange={e => setQuestion(e.target.value)} /></label>
-    <p className="text-xs leading-6 text-muted-foreground">盲拍，出价和问题不向其他用户公开。最高积分中选，同分按本次有效出价先后排序。未中选或活动取消退回；中选扣除积分，个人放弃不退回。每场最多 50 人。</p>
+    <div className="grid gap-2 text-sm"><label htmlFor={id + "-points"}>本次出价（积分）</label><input id={id + "-points"} type="number" inputMode="numeric" required min={minimum} max={maximum} step={1} value={points} onChange={e => setPoints(e.target.value)} className={dialogueField} aria-describedby={id + "-policy"} /></div>
+    <div className="grid gap-2 text-sm"><label htmlFor={id + "-question"}>想聊的问题</label><textarea id={id + "-question"} required minLength={10} maxLength={800} rows={4} className={dialogueField} value={question} onChange={e => setQuestion(e.target.value)} aria-describedby={id + "-policy"} /></div>
+    <p id={id + "-policy"} className="text-xs leading-6 text-muted-foreground">盲拍，出价和问题不向其他用户公开。最高积分中选，同分按本次有效出价先后排序。未中选或活动取消退回；中选扣除积分，个人放弃不退回。每场最多 50 人。</p>
     {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}{maximum < minimum ? <p className="text-sm">积分不足，先去领取任务奖励。</p> : null}
     <WebButton type="submit" className="w-full" disabled={busy || maximum < minimum}>{busy ? "正在提交…" : held ? "确认加价并冻结积分" : "确认出价并冻结积分"}</WebButton><Link className="inline-flex min-h-11 items-center text-sm underline" href="/me/dialogues">查看或撤回我的出价</Link>
   </form>
