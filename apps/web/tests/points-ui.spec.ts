@@ -54,7 +54,7 @@ test("failed point bids preserve input and request identity; only a confirmed ho
   await page.getByLabel("本次出价（积分）", { exact: true }).fill("10")
   await page.getByLabel("想聊的问题", { exact: true }).fill(question)
   await page.getByRole("button", { name: "确认出价并冻结积分", exact: true }).click()
-  await expect(page.getByRole("alert")).toHaveText("积分暂时不可用")
+  await expect(page.locator("form").getByRole("alert")).toHaveText("积分暂时不可用")
   await expect(page.getByLabel("想聊的问题", { exact: true })).toHaveValue(question)
   await expect(page.getByText(/出价已记录/)).toHaveCount(0)
   fail = false
@@ -68,7 +68,7 @@ test("wallet failure is not a fake zero balance; task reward needs a real succes
   await page.route("**/api/me/points", route => route.fulfill(fail ? { status: 503, json: { error: "钱包不可用" } } : { json: wallet(available, 0, claimed) }))
   await page.route("**/api/me/points/claim", route => { available = 20; claimed = true; return route.fulfill({ json: { claimed: true, awarded: 20 } }) })
   await page.goto("/me/points")
-  await expect(page.getByRole("alert")).toContainText("积分暂时无法加载")
+  await expect(page.getByRole("main").getByRole("alert")).toContainText("积分暂时无法加载")
   await expect(page.getByTestId("points-available")).toHaveCount(0)
   fail = false; await page.getByRole("button", { name: "重试", exact: true }).click()
   await page.getByRole("button", { name: "完成邮箱注册领取积分", exact: true }).click()
