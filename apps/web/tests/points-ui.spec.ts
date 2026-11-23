@@ -6,6 +6,15 @@ async function auth(page: Page) {
   await page.route("**/api/auth/me", route => route.fulfill({ json: { user: { id: "points-ui", role: "user" } } }))
   await page.route("**/api/companies/search**", route => route.fulfill({ json: { companies: [] } }))
 }
+test("points wallet keeps maximum balance readable on a 320px screen", async ({ page }, info) => {
+  await auth(page); await page.setViewportSize({ width: 320, height: 900 })
+  await page.route("**/api/me/points", route => route.fulfill({ json: wallet(1_000_000, 0) }))
+  await page.goto("/me/points")
+  await expect(page.getByTestId("points-available")).toHaveText("1000000")
+  expect(await page.getByTestId("points-available").evaluate(e => e.scrollWidth <= e.clientWidth)).toBe(true)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  await page.screenshot({ path: info.outputPath("points-wallet-maximum.png"), fullPage: true })
+})
 for (const width of [320, 390, 1280]) for (const theme of ["light", "dark"]) {
   test(`points ticket is earned-only and usable ${width}px ${theme}`, async ({ page }, info) => {
     await auth(page); await page.setViewportSize({ width, height: 900 })

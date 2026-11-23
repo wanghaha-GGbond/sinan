@@ -30,6 +30,25 @@ const offer = (points: number) => ({ requestId: randomUUID(), points, question: 
 async function end(id: string) { await db.update(dialogueSessions).set({ signupEndsAt: new Date(Date.now() - 60_000) }).where(eq(dialogueSessions.id, id)) }
 async function balances(userId: string) { return (await db.select().from(pointAccounts).where(eq(pointAccounts.userId, userId)))[0] }
 
+test("refund capacity is reserved at the cap; hiding a completed activity never refunds consumed benefits", async () => {
+  const f = await fixture(); await claimPointTask(f.first.id, "verified_email")
+  // An isolated fixture balance and matching ledger, never a grant API bypass.
+  await db.update(pointAccounts).set({ available: 1_000_000 }).where(eq(pointAccounts.userId, f.first.id))
+  await db.insert(pointEntries).values({ userId: f.first.id, operationKey: "fixture-cap", kind: "activity", availableDelta: 999980, frozenDelta: 0, availableAfter: 1000000, frozenAfter: 0 })
+  await placePointBid(f.first.id, f.event.id, offer(20)); await end(f.event.id); await settlePointAuction(f.moderator.id, f.event.id)
+  await expect(claimPointTask(f.first.id, "daily_visit")).rejects.toMatchObject({ status: 409 })
+  await manageDialogue(f.moderator.id, f.event.id, { action: "cancel", reason: "活动取消完整退回" })
+  expect(await balances(f.first.id)).toMatchObject({ available: 1_000_000, frozen: 0 })
+  const other = await createDialogue(f.moderator.id, { ...f.data, requestId: randomUUID() }); events.push(other.id)
+  await manageDialogue(f.moderator.id, other.id, { action: "publish" })
+  await placePointBid(f.first.id, other.id, offer(20)); await end(other.id); await settlePointAuction(f.moderator.id, other.id)
+  await db.update(dialogueSessions).set({ startsAt: new Date(Date.now() - 2 * 86400_000), signupEndsAt: new Date(Date.now() - 3 * 86400_000) }).where(eq(dialogueSessions.id, other.id))
+  await manageDialogue(f.moderator.id, other.id, { action: "complete", recap: "", recapConsentConfirmed: false })
+  await claimPointTask(f.first.id, "daily_visit")
+  await manageDialogue(f.moderator.id, other.id, { action: "hide", reason: "已完成活动调整展示" })
+  expect(await balances(f.first.id)).toMatchObject({ available: 999985, frozen: 0 })
+})
+
 test("concurrent task claims award once and preserve an auditable balance", async () => {
   const f = await fixture()
   const results = await Promise.all([claimPointTask(f.first.id, "verified_email"), claimPointTask(f.first.id, "verified_email")])

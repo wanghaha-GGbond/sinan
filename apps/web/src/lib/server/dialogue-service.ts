@@ -105,7 +105,7 @@ export async function manageDialogue(userId: string, id: string, action: Dialogu
     } else if (action.action === "hide") {
       if (!row.publishedAt || row.status === "hidden") throw new DialogueError(409, "活动当前不可隐藏")
       patch.status = "hidden"; patch.privateInstructions = ""
-      if (row.selectionMode === "points") await refundPointSession(tx, id)
+      if (row.selectionMode === "points" && row.status !== "completed") await refundPointSession(tx, id)
     } else if (action.action === "arrangements") {
       if (!["open", "closed"].includes(row.status)) throw new DialogueError(409, "活动当前不可更新参与安排")
       patch.privateInstructions = action.privateInstructions

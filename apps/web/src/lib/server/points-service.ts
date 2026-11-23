@@ -30,6 +30,14 @@ async function change(tx: PointsTx, userId: string, operationKey: string, kind: 
   const [account] = await tx.select().from(accounts).where(eq(accounts.userId, userId)).for("update").limit(1)
   const available = account.available + availableDelta, frozen = account.frozen + frozenDelta
   if (!Number.isSafeInteger(available) || !Number.isSafeInteger(frozen) || available < 0 || frozen < 0 || available + frozen > POINTS_LIMIT) throw new DialogueError(409, available < 0 ? "可用积分不足" : "积分余额不一致，请联系支持")
+  if (kind === "task" || kind === "activity") {
+    // Keep capacity for refunds of awarded-but-not-yet-completed activities.
+    // Otherwise earning up to the cap after winning could make cancellation
+    // refunds impossible. This query shares the economy transaction lock.
+    const [reserved] = await tx.select({ points: sql<number>`coalesce(sum(${applications.bidPoints}), 0)::int` }).from(applications)
+      .innerJoin(sessions, eq(sessions.id, applications.sessionId)).where(and(eq(applications.userId, userId), eq(applications.pointsState, "spent"), eq(sessions.status, "closed")))
+    if (available + frozen + reserved.points > POINTS_LIMIT) throw new DialogueError(409, "积分已达上限（含待完成活动的可退积分），请在活动完成后领取")
+  }
   await tx.update(accounts).set({ available, frozen, updatedAt: new Date() }).where(eq(accounts.userId, userId))
   await tx.insert(entries).values({ userId, operationKey, kind, availableDelta, frozenDelta, availableAfter: available, frozenAfter: frozen, sessionId, actorUserId, reason })
 }
@@ -142,11 +150,12 @@ export async function settlePointAuction(userId: string, sessionId: string) {
     await lockPointsEconomy(tx); await actor(tx, userId, true, false)
     const [session] = await tx.select().from(sessions).where(eq(sessions.id, sessionId)).for("update").limit(1)
     if (!session || session.selectionMode !== "points") throw new DialogueError(404, "积分竞拍不存在")
+    if (!["open", "closed"].includes(session.status)) throw new DialogueError(409, "活动当前不可确认中选")
     if (session.pointsSettledAt) return { settled: true, status: session.status }
     if (!["open", "closed"].includes(session.status) || session.signupEndsAt > new Date() || session.startsAt <= new Date()) throw new DialogueError(409, "截止后、活动开始前才能确认中选结果")
     const rows = await tx.select().from(applications).where(and(eq(applications.sessionId, sessionId), eq(applications.status, "submitted"), eq(applications.pointsState, "held")))
       .orderBy(desc(applications.bidPoints), asc(applications.bidPlacedAt), asc(applications.id))
-    const eligible = rows.length ? await tx.select({ id: users.id }).from(users).where(and(inArray(users.id, rows.map(row => row.userId)), eq(users.status, "active"), isNull(users.deletedAt), sql`${users.emailVerifiedAt} IS NOT NULL`)) : []
+    const eligible = rows.length ? await tx.select({ id: users.id }).from(users).where(and(inArray(users.id, rows.map(row => row.userId)), eq(users.status, "active"), isNull(users.deletedAt), sql`${users.emailVerifiedAt} IS NOT NULL`)).for("update") : []
     const winner = rows.find(row => eligible.some(user => user.id === row.userId))
     for (const row of rows) {
       if (row.id === winner?.id) {
