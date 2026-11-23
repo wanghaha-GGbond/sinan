@@ -3,8 +3,10 @@ import { dialogueSessions as sessions, dialogueApplications as applications, dia
 import { users } from "@/db/schema/users"
 import { companies } from "@/db/schema/companies"
 import { hasSensitive } from "@/lib/content-guard"
-import { DialogueError, dialogueCursor, parseDialogueCursor, dialogueMoneyPolicy, type DialogueDraft, type DialogueAction, type DialogueDecision, type DialogueSession, type DialogueApplication, type ApplicationStatus, type DialogueStatus } from "@/lib/dialogue"
+import { DialogueError, dialogueDraftInput, dialogueCursor, parseDialogueCursor, dialogueMoneyPolicy, type DialogueDraft, type DialogueAction, type DialogueDecision, type DialogueSession, type DialogueApplication, type ApplicationStatus, type DialogueStatus } from "@/lib/dialogue"
 import { ensureDialogueEnabled } from "./dialogue-http"
+import { ensurePointsEnabled, pointsServerEnabled } from "./points-feature"
+import { lockPointsEconomy, refundPointSession, releasePointApplication } from "./points-service"
 
 type Database = typeof import("@/db/client").db
 type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0]
@@ -33,10 +35,11 @@ function view(row: Session, companyName: string | null): DialogueSession {
     companyId: row.companyId, companyName, durationMinutes: row.durationMinutes, capacity: row.capacity,
     startsAt: row.startsAt.toISOString(), signupEndsAt: row.signupEndsAt.toISOString(), fundingMode: row.fundingMode as DialogueSession["fundingMode"],
     status: row.status as DialogueStatus, recap: row.status === "completed" && row.recapConsentConfirmed ? row.recap : "",
-    cancelReason: row.status === "cancelled" ? row.cancelReason : null, createdAt: row.createdAt.toISOString(), ...dialogueMoneyPolicy }
+    cancelReason: row.status === "cancelled" ? row.cancelReason : null, createdAt: row.createdAt.toISOString(), ...dialogueMoneyPolicy,
+    selectionMode: row.selectionMode as "manual" | "points", minBidPoints: row.minBidPoints, pointsSettledAt: row.pointsSettledAt?.toISOString() ?? null, pointsBiddingEnabled: row.selectionMode === "points" && pointsServerEnabled() }
 }
 function applicationView(row: Application): DialogueApplication {
-  return { id: row.id, sessionId: row.sessionId, question: row.status === "withdrawn" ? "" : row.question, status: row.status as ApplicationStatus, decisionNote: row.decisionNote, createdAt: row.createdAt.toISOString() }
+  return { id: row.id, sessionId: row.sessionId, question: row.status === "withdrawn" ? "" : row.question, status: row.status as ApplicationStatus, decisionNote: row.decisionNote, createdAt: row.createdAt.toISOString(), bidPoints: row.bidPoints, pointsState: row.pointsState as DialogueApplication["pointsState"] }
 }
 function pagePosition(table: typeof sessions | typeof applications, cursor: ReturnType<typeof parseDialogueCursor>) {
   return cursor ? or(lt(table.createdAt, cursor.date), and(eq(table.createdAt, cursor.date), lt(table.id, cursor.id))) : undefined
@@ -52,7 +55,7 @@ function audit(tx: Tx, sessionId: string, actorUserId: string, action: string, f
 export async function getDialogues(companyId?: string, cursor?: string) {
   const scope = `public:${companyId ?? "all"}`, position = parseDialogueCursor(scope, cursor), db = await database()
   const rows = await db.select({ row: sessions, companyName: companies.name }).from(sessions).leftJoin(companies, eq(companies.id, sessions.companyId))
-    .where(and(visible, companyId ? eq(sessions.companyId, companyId) : undefined, pagePosition(sessions, position))).orderBy(desc(sessions.createdAt), desc(sessions.id)).limit(21)
+    .where(and(visible, pointsServerEnabled() ? undefined : eq(sessions.selectionMode, "manual"), companyId ? eq(sessions.companyId, companyId) : undefined, pagePosition(sessions, position))).orderBy(desc(sessions.createdAt), desc(sessions.id)).limit(21)
   const page = rows.slice(0, 20), last = page.at(-1)
   return { sessions: page.map(r => view(r.row, r.companyName)), nextCursor: rows.length > 20 && last ? dialogueCursor(scope, last.row) : null }
 }
@@ -60,16 +63,19 @@ export async function getDialogue(id: string) {
   const db = await database()
   const [item] = await db.select({ row: sessions, companyName: companies.name }).from(sessions).leftJoin(companies, eq(companies.id, sessions.companyId)).where(and(eq(sessions.id, id), visible)).limit(1)
   if (!item) throw new DialogueError(404, "活动不存在或暂不可见")
+  if (item.row.selectionMode === "points") ensurePointsEnabled()
   return view(item.row, item.companyName)
 }
-export async function createDialogue(userId: string, data: DialogueDraft) {
+export async function createDialogue(userId: string, input: DialogueDraft) {
+  const data = dialogueDraftInput.parse(input)
+  if (data.selectionMode === "points") ensurePointsEnabled()
   cleanPublicText([data.title, data.description, data.guestName, data.guestBio].join("\n"))
   const db = await database()
   return db.transaction(async tx => {
     await actor(tx, userId, true); await checkCompany(tx, data.companyId)
     const [existing] = await tx.select().from(sessions).where(and(eq(sessions.createdBy, userId), eq(sessions.requestId, data.requestId))).limit(1)
     if (existing) {
-      const same = existing.title === data.title && existing.description === data.description && existing.guestName === data.guestName && existing.guestBio === data.guestBio && existing.companyId === data.companyId && existing.durationMinutes === data.durationMinutes && existing.capacity === data.capacity && existing.startsAt.getTime() === Date.parse(data.startsAt) && existing.signupEndsAt.getTime() === Date.parse(data.signupEndsAt) && existing.fundingMode === data.fundingMode && existing.guestConsentConfirmed === data.guestConsentConfirmed
+      const same = existing.title === data.title && existing.description === data.description && existing.guestName === data.guestName && existing.guestBio === data.guestBio && existing.companyId === data.companyId && existing.durationMinutes === data.durationMinutes && existing.capacity === data.capacity && existing.startsAt.getTime() === Date.parse(data.startsAt) && existing.signupEndsAt.getTime() === Date.parse(data.signupEndsAt) && existing.fundingMode === data.fundingMode && existing.guestConsentConfirmed === data.guestConsentConfirmed && existing.selectionMode === data.selectionMode && existing.minBidPoints === data.minBidPoints
       if (!same) throw new DialogueError(409, "重复请求内容不一致，请刷新后重试")
       return { id: existing.id, status: existing.status }
     }
@@ -81,10 +87,12 @@ export async function createDialogue(userId: string, data: DialogueDraft) {
 export async function manageDialogue(userId: string, id: string, action: DialogueAction) {
   const db = await database()
   return db.transaction(async tx => {
+    await lockPointsEconomy(tx)
     await actor(tx, userId, true)
     const row = await lockedSession(tx, id), now = new Date()
     const patch: Partial<typeof sessions.$inferInsert> = { updatedAt: now }
     if (action.action === "publish") {
+      if (row.selectionMode === "points") ensurePointsEnabled()
       if (row.status !== "draft" || !row.guestConsentConfirmed || row.signupEndsAt <= now) throw new DialogueError(409, "请确认嘉宾授权和有效的报名时间后发布")
       await checkCompany(tx, row.companyId); patch.status = "open"; patch.publishedAt = now
     } else if (action.action === "close") {
@@ -93,13 +101,16 @@ export async function manageDialogue(userId: string, id: string, action: Dialogu
     } else if (action.action === "cancel") {
       if (!["draft", "open", "closed"].includes(row.status)) throw new DialogueError(409, "活动当前不可取消")
       cleanPublicText(action.reason); patch.status = "cancelled"; patch.cancelReason = action.reason; patch.privateInstructions = ""
+      if (row.selectionMode === "points") await refundPointSession(tx, id)
     } else if (action.action === "hide") {
       if (!row.publishedAt || row.status === "hidden") throw new DialogueError(409, "活动当前不可隐藏")
       patch.status = "hidden"; patch.privateInstructions = ""
+      if (row.selectionMode === "points" && row.status !== "completed") await refundPointSession(tx, id)
     } else if (action.action === "arrangements") {
       if (!["open", "closed"].includes(row.status)) throw new DialogueError(409, "活动当前不可更新参与安排")
       patch.privateInstructions = action.privateInstructions
     } else {
+      if (row.selectionMode === "points" && !row.pointsSettledAt) throw new DialogueError(409, "请先确认竞拍结果，或取消活动退回积分")
       if (row.status !== "closed" || row.startsAt.getTime() + row.durationMinutes * 60_000 > now.getTime()) throw new DialogueError(409, "活动实际结束后才能完成并发布纪要")
       if (action.recap && !action.recapConsentConfirmed) throw new DialogueError(400, "公开纪要需要相关参与者授权")
       cleanPublicText(action.recap); patch.status = "completed"; patch.recap = action.recap; patch.recapConsentConfirmed = action.recapConsentConfirmed; patch.privateInstructions = ""
@@ -115,6 +126,7 @@ export async function applyForDialogue(userId: string, id: string, data: { quest
   return db.transaction(async tx => {
     await actor(tx, userId)
     const session = await lockedSession(tx, id), now = new Date()
+    if (session.selectionMode === "points") throw new DialogueError(409, "本场使用积分竞拍，请通过出价入口参加")
     if (session.status !== "open" || !session.publishedAt || session.signupEndsAt <= now || session.startsAt <= now) throw new DialogueError(409, "报名已结束或活动暂不可报名")
     await checkCompany(tx, session.companyId)
     const [existing] = await tx.select().from(applications).where(and(eq(applications.sessionId, id), eq(applications.userId, userId))).for("update").limit(1)
@@ -134,6 +146,7 @@ export async function applyForDialogue(userId: string, id: string, data: { quest
 export async function withdrawDialogue(userId: string, id: string) {
   const db = await database()
   return db.transaction(async tx => {
+    await lockPointsEconomy(tx)
     await actor(tx, userId)
     const [found] = await tx.select({ sessionId: applications.sessionId }).from(applications).where(and(eq(applications.id, id), eq(applications.userId, userId))).limit(1)
     if (!found) throw new DialogueError(404, "报名不存在")
@@ -141,6 +154,7 @@ export async function withdrawDialogue(userId: string, id: string) {
     const [row] = await tx.select().from(applications).where(and(eq(applications.id, id), eq(applications.userId, userId))).for("update").limit(1)
     if (!row) throw new DialogueError(404, "报名不存在")
     if (row.status !== "withdrawn") {
+      await releasePointApplication(tx, row)
       await tx.update(applications).set({ status: "withdrawn", question: "", decisionNote: null, updatedAt: new Date() }).where(eq(applications.id, id))
       await audit(tx, row.sessionId, userId, "withdraw", row.status, "withdrawn", "", id)
     }
@@ -183,6 +197,7 @@ export async function decideDialogue(userId: string, id: string, applicationId: 
   return db.transaction(async tx => {
     await actor(tx, userId, true)
     const session = await lockedSession(tx, id)
+    if (session.selectionMode === "points") throw new DialogueError(409, "积分竞拍由系统按最高积分排序，不支持人工改选")
     if (!["open", "closed"].includes(session.status) || session.startsAt <= new Date()) throw new DialogueError(409, "活动已结束，不能变更入选结果")
     const [row] = await tx.select().from(applications).where(and(eq(applications.id, applicationId), eq(applications.sessionId, id))).for("update").limit(1)
     if (!row) throw new DialogueError(404, "报名不存在")

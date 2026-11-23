@@ -10,6 +10,7 @@ import { forumBody, forumFetch } from "@/components/forum/forum-client"
 import { WebButton } from "@/components/ui/web-button"
 import { dialogueTime, DialogueErrorState, DialogueHeading, DialogueMoneyNotice, DialogueGuestInitial, DialogueStatusBadge } from "./dialogue-common"
 import { DialogueRoomArt } from "./dialogue-room-art"
+import { PointsBidForm } from "./points-bid-form"
 import { useDeadlinePassed } from "./use-deadline-passed"
 import styles from "./dialogue-design.module.css"
 
@@ -36,15 +37,15 @@ export function DialogueDetail({ id }: { id: string }) {
           {session.recap ? <section className={styles.storySection}><h3 className={styles.storyHeading}>访谈纪要</h3><p className={styles.storyParagraph}>{session.recap}</p></section> : null}
         </div>
         <aside className={styles.bookingPanel} aria-label="对话报名">
-          <div className={styles.bookingSummary}><p className={styles.bookingEyebrow}>参与本场对话</p><h3 className={styles.bookingTitle}>免费报名</h3><p className={styles.bookingSubtitle}>先留下问题，入选后一起聊。</p><dl className={styles.scheduleList}>
+          <div className={styles.bookingSummary}><p className={styles.bookingEyebrow}>参与本场对话</p><h3 className={styles.bookingTitle}>{session.selectionMode === "points" ? "积分竞拍" : "免费报名"}</h3><p className={styles.bookingSubtitle}>{session.selectionMode === "points" ? `${session.minBidPoints} 积分起 · 不使用现金` : "先留下问题，入选后一起聊。"}</p><dl className={styles.scheduleList}>
             <div><dt>活动时间</dt><dd><time dateTime={session.startsAt}>{dialogueTime(session.startsAt)}</time><span className="block text-xs font-normal text-muted-foreground">北京时间</span></dd></div>
             <div><dt>对话时长</dt><dd>{session.durationMinutes} 分钟</dd></div>
             <div><dt>入选名额</dt><dd>{session.capacity} 人</dd></div>
             <div><dt>报名截止</dt><dd><time dateTime={session.signupEndsAt}>{dialogueTime(session.signupEndsAt)}</time><span className="block text-xs font-normal text-muted-foreground">北京时间</span></dd></div>
           </dl></div>
           <div className={styles.ticketDivider} aria-hidden="true" />
-          <div className={styles.bookingAction} id="dialogue-application">{loading ? <p role="status" className="text-sm text-muted-foreground">正在检查登录状态…</p> : closed ? <ClosedApplication /> : !user ? <WebButton asChild><Link href={withNext("/login", "/community/dialogues/" + id)}>登录后报名提问<ArrowRight size={16} aria-hidden="true" /></Link></WebButton> : <DialogueApplicationForm key={user.id + ":" + id} userId={user.id} session={session} />}</div>
-          <div className={styles.bookingNotice}><DialogueMoneyNotice /><details className={styles.fundingDetails}><summary>资金方案</summary><p>{fundingModes[session.fundingMode]}，不是已完成的捐赠。</p></details></div>
+          <div className={styles.bookingAction} id="dialogue-application">{loading ? <p role="status" className="text-sm text-muted-foreground">正在检查登录状态…</p> : closed ? <ClosedApplication /> : !user ? <WebButton asChild><Link href={withNext("/login", "/community/dialogues/" + id)}>{session.selectionMode === "points" ? "登录后使用积分参加" : "登录后报名提问"}<ArrowRight size={16} aria-hidden="true" /></Link></WebButton> : session.selectionMode === "points" ? <PointsBidForm key={user.id + ":" + id} userId={user.id} session={session} /> : <DialogueApplicationForm key={user.id + ":" + id} userId={user.id} session={session} />}</div>
+          <div className={styles.bookingNotice}><DialogueMoneyNotice points={session.selectionMode === "points"} />{session.selectionMode !== "points" ? <details className={styles.fundingDetails}><summary>资金方案</summary><p>{fundingModes[session.fundingMode]}，不是已完成的捐赠。</p></details> : null}</div>
         </aside>
       </div>
     </>}

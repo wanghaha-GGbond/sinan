@@ -4,6 +4,7 @@ import { ArrowRight, Ticket } from "lucide-react"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { useAuth } from "@/lib/auth-context"
 import type { DialogueSession } from "@/lib/dialogue"
+import { pointsEnabled } from "@/lib/points"
 import { forumFetch } from "@/components/forum/forum-client"
 import { WebButton } from "@/components/ui/web-button"
 import { useUrlSearchParams } from "@/lib/use-url-search-params"
@@ -35,6 +36,7 @@ export function DialogueHub() {
     {events.isPending ? <div role="status" aria-label="正在加载对话活动" className={styles.loadingGrid}><span className="sr-only">正在加载对话活动…</span><div className={styles.loadingCard} aria-hidden="true" /><div className={styles.loadingCard} aria-hidden="true" /></div> : events.isError && !events.isFetchNextPageError ? <DialogueErrorState message="对话活动暂时无法加载" retry={() => void events.refetch()} /> : !rows.length ? <div className={styles.emptyState}><h2>还没有公开的对话活动</h2><p>新活动会出现在这里，先去社区逛逛。</p><WebButton asChild variant="secondary" className="mt-5"><Link href="/community">先去社区聊聊</Link></WebButton></div> : <div className={styles.sessionGrid} data-single={rows.length === 1}>{rows.map(row => <DialogueCard key={row.id} session={row} />)}</div>}
     {events.isFetchNextPageError ? <p role="alert" className="py-4 text-sm text-destructive">后续活动加载失败，已加载内容保留。</p> : null}
     {events.hasNextPage ? <WebButton variant="secondary" className="my-5 w-full" disabled={events.isFetchingNextPage} onClick={() => void events.fetchNextPage()}>{events.isFetchingNextPage ? "正在加载…" : events.isFetchNextPageError ? "重试更多活动" : "更多活动"}</WebButton> : null}
-    <DialogueMoneyNotice />
+    {pointsEnabled() ? <Link href="/me/points" className="inline-flex min-h-11 items-center text-sm text-primary underline">我的积分与任务</Link> : null}
+    <DialogueMoneyNotice points={pointsEnabled()} />
   </section>
 }

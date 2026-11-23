@@ -31,6 +31,7 @@ function MyDialogueList({ userId }: { userId: string }) {
   </>
 }
 function MyDialogueCard({ application, refresh }: { application: MyDialogueApplication; refresh: () => Promise<unknown> }) {
+  const client = useQueryClient()
   const [confirm, setConfirm] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState(""), lock = useRef(false)
   async function withdraw() {
     if (lock.current) return
@@ -38,7 +39,7 @@ function MyDialogueCard({ application, refresh }: { application: MyDialogueAppli
     try {
       const result = await forumFetch<{ id: string; status: string }>("/api/me/dialogues/" + application.id, { method: "DELETE" })
       if (result.id !== application.id || result.status !== "withdrawn") throw new Error("未能确认撤回结果，请刷新")
-      setConfirm(false); await refresh()
+      setConfirm(false); await Promise.all([refresh(), client.invalidateQueries({ queryKey: ["points"] }), client.invalidateQueries({ queryKey: ["points-bid"] })])
     } catch (error) { setError(error instanceof Error ? error.message : "撤回失败，请重试") }
     finally { lock.current = false; setBusy(false) }
   }
@@ -50,11 +51,12 @@ function MyDialogueCard({ application, refresh }: { application: MyDialogueAppli
   return <article data-testid="my-dialogue-application" className={styles.myCard + (activeSelection ? " " + styles.myCardSelected : "")}>
     <div className={styles.myCardHead}><div className={styles.dateStamp} aria-hidden="true"><span>{month}</span><strong>{day.replace("日", "")}</strong></div><div className={styles.myCardTitle}><h2>{application.sessionStatus === "hidden" ? application.sessionTitle : <Link className="hover:underline" href={"/community/dialogues/" + application.sessionId}>{application.sessionTitle}</Link>}</h2><p className={styles.myCardDate}><time dateTime={application.startsAt}>{dialogueTime(application.startsAt)}（北京时间）</time></p></div><span className={styles.statusBadge + (activeSelection ? " " + styles.statusOpen : "")}>{applicationStatusLabels[application.status]}{inactive ? " · " + dialogueStatusLabels[application.sessionStatus] : ""}</span></div>
     <div className={styles.myCardBody}>
+      {(application.bidPoints ?? 0) > 0 ? <p className="text-sm font-medium">出价 {application.bidPoints} 积分 · {application.pointsState === "held" ? "已冻结" : application.pointsState === "spent" ? "中选已扣除" : "已退回"}</p> : null}
       {application.question ? <div className={styles.myQuestion}><span className={styles.myQuestionLabel}>我的问题</span><p>{application.question}</p></div> : null}
       {application.decisionNote ? <p className="text-xs leading-6 text-muted-foreground">处理说明：{application.decisionNote}</p> : null}
       {activeSelection && application.privateInstructions ? <div className={styles.myArrangements}><h3><LockKeyhole size={14} aria-hidden="true" />仅入选者可见的参与安排</h3><p>{application.privateInstructions}</p><small>本阶段不收款，请勿向任何人转账。</small></div> : null}
       {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
     </div>
-    <div className={styles.myCardFooter}>{application.status !== "withdrawn" ? confirm ? <div className={styles.withdrawConfirmation}><p>撤回后会清除报名问题并放弃入选名额，确定撤回？</p><div className={styles.withdrawActions}><WebButton variant="danger" disabled={busy} onClick={() => void withdraw()}>{busy ? "正在撤回…" : "确认撤回报名"}</WebButton><WebButton variant="secondary" disabled={busy} onClick={() => setConfirm(false)}>保留报名</WebButton></div></div> : <><span className="text-xs text-muted-foreground">报名内容仅本人和活动管理者可见</span><WebButton variant="quiet" onClick={() => setConfirm(true)}>撤回报名</WebButton></> : <p className="py-3 text-xs text-muted-foreground">报名问题已清除</p>}</div>
+    <div className={styles.myCardFooter}>{application.status !== "withdrawn" ? confirm ? <div className={styles.withdrawConfirmation}><p>撤回后会清除报名问题并放弃入选名额，确定撤回？{application.pointsState === "held" ? "冻结积分将退回。" : application.pointsState === "spent" ? "中选积分已扣除，个人放弃不退回；活动取消会退回。" : ""}</p><div className={styles.withdrawActions}><WebButton variant="danger" disabled={busy} onClick={() => void withdraw()}>{busy ? "正在撤回…" : "确认撤回报名"}</WebButton><WebButton variant="secondary" disabled={busy} onClick={() => setConfirm(false)}>保留报名</WebButton></div></div> : <><span className="text-xs text-muted-foreground">报名内容仅本人和活动管理者可见</span><WebButton variant="quiet" onClick={() => setConfirm(true)}>撤回报名</WebButton></> : <p className="py-3 text-xs text-muted-foreground">报名问题已清除</p>}</div>
   </article>
 }

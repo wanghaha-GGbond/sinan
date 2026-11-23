@@ -3,7 +3,7 @@ import { defineConfig, devices } from "@playwright/test"
 // A loopback-only visual fixture server. Never reuse a developer/production DB.
 export default defineConfig({
   testDir: "./tests",
-  testMatch: ["dialogue-ui.spec.ts", "community-design.spec.ts", "personal-navigation.spec.ts", "forum-ui.spec.ts", "research-results.spec.ts", "company-ux.spec.ts", "pulse-ui.spec.ts", "scoring-flow.spec.ts", "uiux-v1.spec.ts", "account-onboarding.spec.ts", "copy-interactions.spec.ts", "navigation-performance.spec.ts", "company-logo-ui.spec.ts", "ui-foundations.spec.ts", "glassdoor-redesign.spec.ts", "community-ui.spec.ts", "login-theme.spec.ts"],
+  testMatch: ["points-ui.spec.ts", "dialogue-ui.spec.ts", "community-design.spec.ts", "personal-navigation.spec.ts", "forum-ui.spec.ts", "research-results.spec.ts", "company-ux.spec.ts", "pulse-ui.spec.ts", "scoring-flow.spec.ts", "uiux-v1.spec.ts", "account-onboarding.spec.ts", "copy-interactions.spec.ts", "navigation-performance.spec.ts", "company-logo-ui.spec.ts", "ui-foundations.spec.ts", "glassdoor-redesign.spec.ts", "community-ui.spec.ts", "login-theme.spec.ts"],
   timeout: 60_000,
   workers: 1,
   outputDir: "./test-results/uiux-v1",
@@ -29,6 +29,7 @@ export default defineConfig({
       NEXT_PUBLIC_APP_ENV: "development", NEXT_PUBLIC_API_ENABLED: "true", NEXT_PUBLIC_PULSE_ENABLED: "true",
       NEXT_PUBLIC_DIALOGUE_ENABLED: "true",
       DIALOGUE_ENABLED: "true",
+      NEXT_PUBLIC_POINTS_ENABLED: "true", POINTS_ENABLED: "true",
       NEXT_PUBLIC_APP_URL: "http://127.0.0.1:3108", NEXT_PUBLIC_ICP_FILING_NUMBER: "",
       ALLOW_DEV_AUTH: "true", INVITE_REQUIRED: "true", LAUNCH_SCOPE_ONLY: "true",
     },

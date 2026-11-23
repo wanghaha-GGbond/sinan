@@ -3,6 +3,8 @@ import { NextResponse } from "next/server"
 import { readinessContract, verifyReadinessSchema } from "@/lib/server/readiness-schema"
 import { mailConfigurationErrors } from "@/lib/server/mail-configuration.mjs"
 import { registrationConfigurationErrors } from "@/lib/server/registration-configuration.mjs"
+import { dialogueServerEnabled } from "@/lib/server/dialogue-feature"
+import { pointsServerEnabled } from "@/lib/server/points-feature"
 
 export const dynamic = "force-dynamic"
 
@@ -74,7 +76,7 @@ export async function GET() {
       )
     }
     return NextResponse.json(
-      { status: "ready", configuration: "valid", database: "reachable", schema: "compatible", release: process.env.APP_RELEASE, ...readinessContract },
+      { status: "ready", configuration: "valid", database: "reachable", schema: "compatible", release: process.env.APP_RELEASE, ...readinessContract, features: { dialogue: dialogueServerEnabled(), points: pointsServerEnabled() } },
       { headers: { "Cache-Control": "no-store" } }
     )
   } catch {
