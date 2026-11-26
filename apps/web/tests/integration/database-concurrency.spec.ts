@@ -105,6 +105,20 @@ test("quick reviews do not lower department rating anonymity or invent zero aver
   expect(await getDepartmentInsights(company.id)).toEqual([])
   await db.update(reviews).set({ ratingDimensions: complete }).where(eq(reviews.id, createdReviewIds[4]))
   expect(await getDepartmentInsights(company.id)).toMatchObject([{ verifiedAuthorCount: 5, reviewCount: 5, ratings: complete }])
+  // Six complete reviews, but still only five independent ratings. A later
+  // partial quick review does not displace the same colleague's complete one.
+  const latest = { ...complete, growth: 5 }
+  for (const [offset, dimensions] of [latest, { growth: 1 }].entries()) {
+    const [row] = await db.insert(reviews).values({
+      companyId: company.id, departmentId: department.id, authorUserId: createdUserIds[0],
+      authorLabel: "匿名同事", title: "补充评价", content: "隔离评分测试", status: "visible",
+      directionScore: "8", ratingDimensions: dimensions, createdAt: new Date(Date.now() + 60_000 + offset),
+    }).returning({ id: reviews.id })
+    createdReviewIds.push(row.id)
+  }
+  expect(await getDepartmentInsights(company.id)).toMatchObject([{
+    verifiedAuthorCount: 5, reviewCount: 6, ratings: { ...complete, growth: 4.2 },
+  }])
 })
 
 test("an invite can be consumed by only one concurrent registration", async () => {

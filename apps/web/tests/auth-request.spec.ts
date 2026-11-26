@@ -7,6 +7,34 @@ import { POST as code } from "../src/app/api/auth/register-code/route"
 import { POST as forgot } from "../src/app/api/auth/forgot-password/route"
 import { POST as reset } from "../src/app/api/auth/reset-password/route"
 import { POST as logout } from "../src/app/api/auth/logout/route"
+import { GET as session } from "../src/app/api/auth/me/route"
+import { GET as dashboard } from "../src/app/api/me/route"
+import { getAuthUserFromRequest, signToken } from "../src/lib/server/auth"
+
+test("an unverified database session is unavailable, not a signed-out response", async () => {
+  const previous = [process.env.DATABASE_URL, process.env.NEXT_PUBLIC_APP_ENV, process.env.AUTH_SECRET]
+  try {
+    delete process.env.DATABASE_URL
+    process.env.NEXT_PUBLIC_APP_ENV = "staging"
+    process.env.AUTH_SECRET = "isolated-session-lookup-fixture-not-for-deployment"
+    const token = await signToken({ userId: "01234567-89ab-4def-8123-456789012345", role: "user" })
+    const bearer = (value: string) => new NextRequest("https://fixture.test/api/auth/me", { headers: { Authorization: `Bearer ${value}` } })
+    for (const handler of [session, dashboard]) {
+      const result = await handler(bearer(token))
+      expect(result.status).toBe(503)
+      expect(result.headers.get("cache-control")).toContain("no-store")
+    }
+    expect(await getAuthUserFromRequest(bearer(token))).toBeNull()
+    const invalid = await session(bearer("invalid-fixture"))
+    expect(invalid.status).toBe(200)
+    expect(await invalid.json()).toEqual({ user: null })
+  } finally {
+    for (const [i, key] of ["DATABASE_URL", "NEXT_PUBLIC_APP_ENV", "AUTH_SECRET"].entries()) {
+      if (previous[i] === undefined) delete process.env[key]
+      else process.env[key] = previous[i]
+    }
+  }
+})
 
 function request(headers: Record<string, string>, url = "https://zaichang.test/api/auth/login") {
   return new NextRequest(url, { method: "POST", headers, body: "{}" })

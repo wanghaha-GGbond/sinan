@@ -1,15 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 
 import { WebButton } from "@/components/ui/web-button"
 import { Input } from "@/components/ui/input"
 
 const CONFIRMATION = "DELETE"
 
-export function DeleteAccountForm() {
-  const router = useRouter()
+export function DeleteAccountForm({ onDeleted }: { onDeleted: () => void }) {
   const [confirmation, setConfirmation] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -26,13 +24,12 @@ export function DeleteAccountForm() {
       })
       const result = await response.json()
 
-      if (!response.ok) {
-        setError(result.error ?? "注销失败，请稍后再试")
+      if (!response.ok || result?.success !== true) {
+        setError(result?.error ?? "未能确认注销结果，请重试")
         return
       }
 
-      router.replace("/")
-      router.refresh()
+      onDeleted()
     } catch {
       setError("网络异常，请稍后再试")
     } finally {

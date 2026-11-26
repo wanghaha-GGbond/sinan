@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthUserFromRequest } from "@/lib/server/auth"
 import { checkRateLimit, getRateLimitKey } from "@/lib/server/rate-limit"
+import { getMyReviewPage } from "@/lib/server/my-reviews"
+import type { MyReview } from "@/lib/my-reviews"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -48,18 +50,6 @@ type Badge = {
   target?: number
 }
 
-type MyReview = {
-  id: string
-  companyId: string
-  companyName: string
-  title: string
-  score: number
-  shortComment: string
-  helpful: number
-  commentCount: number
-  createdAt: string
-}
-
 type FavoriteCompany = {
   companyId: string
   companyName: string
@@ -86,6 +76,7 @@ type DashboardResponse = {
   dailyTasks: DailyTask[]
   badges: Badge[]
   myReviews: MyReview[]
+  myReviewsNextCursor: string | null
   favoriteCompanies: FavoriteCompany[]
   verifications: VerificationSummary[]
   invites: InviteStats
@@ -132,7 +123,13 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const authUser = await getAuthUserFromRequest(request)
+  const headers = { "Cache-Control": "private, no-store" }
+  let authUser
+  try {
+    authUser = await getAuthUserFromRequest(request, { reportUnavailable: true })
+  } catch {
+    return NextResponse.json({ error: "Service unavailable" }, { status: 503, headers })
+  }
 
   // Default fallback when not authenticated
   const emptyResponse = (): DashboardResponse => ({
@@ -141,25 +138,25 @@ export async function GET(request: NextRequest) {
     dailyTasks: getDefaultDailyTasks(),
     badges: getDefaultBadges(),
     myReviews: [],
+    myReviewsNextCursor: null,
     favoriteCompanies: [],
     verifications: [],
     invites: { total: 0, used: 0, unused: [] },
   })
 
   if (!authUser) {
-    return NextResponse.json(emptyResponse())
+    return NextResponse.json(emptyResponse(), { headers })
   }
 
   let dbUser: DashboardUser | null = null
   let myReviews: MyReview[] = []
+  let myReviewsNextCursor: string | null = null
   let verifications: VerificationSummary[] = []
   let invites: InviteStats = { total: 0, used: 0, unused: [] }
 
   try {
     const { db } = await import("@/db/client")
     const { users } = await import("@/db/schema/users")
-    const { reviews } = await import("@/db/schema/reviews")
-    const { companies } = await import("@/db/schema/companies")
     const { companyVerifications } = await import("@/db/schema/company-verifications")
     const { eq, desc, and } = await import("drizzle-orm")
 
@@ -219,39 +216,12 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Fetch user's reviews with company name
-    const reviewRows = await db
-      .select({
-        id: reviews.id,
-        companyId: reviews.companyId,
-        companyName: companies.name,
-        title: reviews.title,
-        directionScore: reviews.directionScore,
-        summary: reviews.summary,
-        usefulCount: reviews.usefulCount,
-        discussionCount: reviews.discussionCount,
-        createdAt: reviews.createdAt,
-      })
-      .from(reviews)
-      .innerJoin(companies, eq(reviews.companyId, companies.id))
-      .where(eq(reviews.authorUserId, authUser.userId))
-      .orderBy(reviews.createdAt)
-      .limit(20)
-
-    myReviews = reviewRows.map((r) => ({
-      id: r.id,
-      companyId: r.companyId,
-      companyName: r.companyName,
-      title: r.title,
-      score: Number(r.directionScore),
-      shortComment: r.summary ?? "",
-      helpful: r.usefulCount ?? 0,
-      commentCount: r.discussionCount ?? 0,
-      createdAt: r.createdAt?.toISOString() ?? "",
-    }))
+    const reviewPage = await getMyReviewPage(authUser.userId)
+    myReviews = reviewPage.reviews
+    myReviewsNextCursor = reviewPage.nextCursor
 
     if (dbUser) {
-      dbUser.usefulCount = myReviews.reduce((total, review) => total + review.helpful, 0)
+      dbUser.usefulCount = reviewPage.totalUseful
     }
 
     const verifRows = await db
@@ -293,10 +263,11 @@ export async function GET(request: NextRequest) {
     // response containing fabricated account state. Local development can
     // still render the static shell while the database is being configured.
     if (process.env.NEXT_PUBLIC_APP_ENV === "staging" || process.env.NEXT_PUBLIC_APP_ENV === "production") {
-      return NextResponse.json({ error: "Service unavailable" }, { status: 503 })
+      return NextResponse.json({ error: "Service unavailable" }, { status: 503, headers })
     }
     dbUser = null
     myReviews = []
+    myReviewsNextCursor = null
     verifications = []
     invites = { total: 0, used: 0, unused: [] }
   }
@@ -307,8 +278,9 @@ export async function GET(request: NextRequest) {
     dailyTasks: getDefaultDailyTasks(),
     badges: getDefaultBadges(),
     myReviews,
+    myReviewsNextCursor,
     favoriteCompanies: [],
     verifications,
     invites,
-  } satisfies DashboardResponse)
+  } satisfies DashboardResponse, { headers })
 }

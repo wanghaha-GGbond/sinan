@@ -25,6 +25,7 @@ import { validateCompanySubmission } from "@/lib/content-guard"
 import { buildQuestionnaireSession } from "@/lib/questionnaire/question-bank"
 import { searchCompanies, getCompany } from "@/lib/api/companies"
 import { useAuth } from "@/lib/auth-context"
+import { SessionUnavailable } from "@/components/common/session-unavailable"
 import { withNext } from "@/lib/navigation"
 import { ratingDraftScore } from "@/lib/rating-navigation"
 import type { Company, CompanyListItem } from "@/lib/types"
@@ -248,17 +249,19 @@ function FieldError({ message }: { message?: string }) {
 }
 
 export default function SubmitReviewPage() {
-  const { user, loading } = useAuth()
+  const { user, loading, sessionUnavailable } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const query = searchParams.toString()
   const nextPath = `/submit/review${query ? `?${query}` : ""}`
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !sessionUnavailable && !user) {
       router.replace(withNext("/login", nextPath))
     }
-  }, [loading, nextPath, router, user])
+  }, [loading, nextPath, router, sessionUnavailable, user])
+
+  if (!loading && sessionUnavailable && !user) return <SessionUnavailable />
 
   if (loading || !user) {
     return (

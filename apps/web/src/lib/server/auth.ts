@@ -10,7 +10,7 @@
 import { cookies } from "next/headers"
 import { SignJWT, jwtVerify } from "jose"
 import crypto from "node:crypto"
-import type { NextRequest } from "next/server"
+import type { NextRequest, NextResponse } from "next/server"
 import { isDevAuthEnabled } from "@/lib/server/dev-auth"
 import { isCurrentSession } from "@/lib/server/password-recovery-policy"
 
@@ -154,8 +154,8 @@ export async function setAuthCookie(user: AuthUser): Promise<string> {
   return token
 }
 
-export async function clearAuthCookie(): Promise<void> {
-  const jar = await cookies()
+export async function clearAuthCookie(response?: NextResponse): Promise<void> {
+  const jar = response?.cookies ?? await cookies()
   jar.delete(TOKEN_COOKIE)
 }
 
@@ -167,9 +167,15 @@ export async function clearAuthCookie(): Promise<void> {
  * Extract the current user from an incoming request's auth cookie.
  * Returns null if no valid token is present.
  */
-async function validateActiveAuthUser(user: AuthUser | null): Promise<AuthUser | null> {
+type AuthLookupOptions = { reportUnavailable?: boolean }
+
+async function validateActiveAuthUser(user: AuthUser | null, options?: AuthLookupOptions): Promise<AuthUser | null> {
   if (!user) return null
-  if (!process.env.DATABASE_URL) return isDevAuthEnabled() ? user : null
+  if (!process.env.DATABASE_URL) {
+    if (isDevAuthEnabled()) return user
+    if (options?.reportUnavailable) throw new Error("Session store unavailable")
+    return null
+  }
 
   try {
     const { and, eq, isNull } = await import("drizzle-orm")
@@ -187,26 +193,27 @@ async function validateActiveAuthUser(user: AuthUser | null): Promise<AuthUser |
       ? { ...user, role: active.role }
       : null
   } catch {
+    if (options?.reportUnavailable) throw new Error("Session store unavailable")
     return null
   }
 }
 
-export async function getAuthUser(): Promise<AuthUser | null> {
+export async function getAuthUser(options?: AuthLookupOptions): Promise<AuthUser | null> {
   const jar = await cookies()
   const token = jar.get(TOKEN_COOKIE)?.value
   if (!token) return null
-  return validateActiveAuthUser(await verifyToken(token))
+  return validateActiveAuthUser(await verifyToken(token), options)
 }
 
 /** Native clients authenticate with the same JWT via Authorization. */
-export async function getAuthUserFromRequest(request: NextRequest): Promise<AuthUser | null> {
+export async function getAuthUserFromRequest(request: NextRequest, options?: AuthLookupOptions): Promise<AuthUser | null> {
   const authorization = request.headers.get("authorization")
 
   if (authorization?.startsWith("Bearer ")) {
     const token = authorization.slice(7).trim()
-    if (token) return validateActiveAuthUser(await verifyToken(token))
+    if (token) return validateActiveAuthUser(await verifyToken(token), options)
   } else {
-    return getAuthUser()
+    return getAuthUser(options)
   }
   return null
 }

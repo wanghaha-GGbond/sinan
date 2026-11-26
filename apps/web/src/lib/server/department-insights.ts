@@ -24,17 +24,15 @@ export async function getDepartmentInsights(
 ): Promise<DepartmentInsight[]> {
   try {
     const { db } = await import("@/db/client")
-    const rows = await db
+    const ranked = db
       .select({
         id: departments.id,
         name: departments.name,
-        verifiedAuthorCount: sql<number>`count(distinct ${reviews.authorUserId})`,
-        reviewCount: sql<number>`count(${reviews.id})`,
-        payWorth: sql<number>`avg((${reviews.ratingDimensions}->>'pay_worth')::numeric)`,
-        growth: sql<number>`avg((${reviews.ratingDimensions}->>'growth')::numeric)`,
-        leader: sql<number>`avg((${reviews.ratingDimensions}->>'leader')::numeric)`,
-        overtimeTruth: sql<number>`avg((${reviews.ratingDimensions}->>'overtime_truth')::numeric)`,
-        promiseDelivery: sql<number>`avg((${reviews.ratingDimensions}->>'promise_delivery')::numeric)`,
+        ratings: reviews.ratingDimensions,
+        ratingRank: sql<number>`row_number() over (
+          partition by ${departments.id}, ${reviews.authorUserId}
+          order by ${reviews.createdAt} desc, ${reviews.id} desc
+        )`.as("rating_rank"),
       })
       .from(departments)
       .innerJoin(
@@ -61,10 +59,24 @@ export async function getDepartmentInsights(
           eq(departments.status, "active")
         )
       )
-      .groupBy(departments.id, departments.name)
-      .having(
-        sql`count(distinct ${reviews.authorUserId}) >= ${DEPARTMENT_K_THRESHOLD}`
-      )
+      .as("department_ratings")
+    const first = sql`${ranked.ratingRank} = 1`
+    const authorCount = sql<number>`count(*) filter (where ${first})`
+    const average = (dimension: string) =>
+      sql<number>`avg((${ranked.ratings}->>${dimension})::numeric) filter (where ${first})`
+    const rows = await db.select({
+      id: ranked.id,
+      name: ranked.name,
+      verifiedAuthorCount: authorCount,
+      reviewCount: sql<number>`count(*)`,
+      payWorth: average("pay_worth"),
+      growth: average("growth"),
+      leader: average("leader"),
+      overtimeTruth: average("overtime_truth"),
+      promiseDelivery: average("promise_delivery"),
+    }).from(ranked)
+      .groupBy(ranked.id, ranked.name)
+      .having(sql`${authorCount} >= ${DEPARTMENT_K_THRESHOLD}`)
 
     return rows.map((row) => ({
       id: row.id,

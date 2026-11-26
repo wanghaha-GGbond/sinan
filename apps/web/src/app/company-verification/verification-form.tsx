@@ -16,6 +16,7 @@ import { WebButton } from "@/components/ui/web-button"
 import { WebSurface } from "@/components/ui/web-surface"
 import { Textarea } from "@/components/ui/textarea"
 import { useAuth } from "@/lib/auth-context"
+import { SessionUnavailable } from "@/components/common/session-unavailable"
 import { useCompanySearch } from "@/lib/queries/company-search"
 
 type ProofType = "work_email" | "business_document"
@@ -27,7 +28,7 @@ export function VerificationForm({
   initialCompanyId: string
   initialCompanyName: string
 }) {
-  const { user, loading } = useAuth()
+  const { user, loading, sessionUnavailable } = useAuth()
   const { data: companyOptions = [] } = useCompanySearch()
   const [companyId, setCompanyId] = useState(initialCompanyId)
   const [companyName, setCompanyName] = useState(initialCompanyName)
@@ -136,6 +137,8 @@ export function VerificationForm({
       setCodeConfirming(false)
     }
   }
+
+  if (!loading && sessionUnavailable && !user) return <SessionUnavailable />
 
   if (!loading && !user) {
     return (
