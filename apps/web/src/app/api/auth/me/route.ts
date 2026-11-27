@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthUserFromRequest } from "@/lib/server/auth"
 
+const headers = { "Cache-Control": "private, no-store" }
+
 export async function GET(request: NextRequest) {
-  const user = await getAuthUserFromRequest(request)
+  let user
+  try {
+    user = await getAuthUserFromRequest(request, { reportUnavailable: true })
+  } catch {
+    return NextResponse.json({ error: "Service unavailable" }, { status: 503, headers })
+  }
 
   if (!user) {
-    return NextResponse.json({ user: null })
+    return NextResponse.json({ user: null }, { headers })
   }
 
   try {
@@ -27,7 +34,7 @@ export async function GET(request: NextRequest) {
       .limit(1)
 
     if (!row) {
-      return NextResponse.json({ user: null })
+      return NextResponse.json({ user: null }, { headers })
     }
 
     return NextResponse.json({
@@ -37,13 +44,13 @@ export async function GET(request: NextRequest) {
         role: row.role,
         trustLevel: row.trustLevel,
       },
-    })
+    }, { headers })
   } catch {
     // A deployed request must not turn a database outage into a successful
     // response containing a fabricated identity. Local development keeps the
     // explicit dev identities usable while the database is being configured.
     if (process.env.NEXT_PUBLIC_APP_ENV === "staging" || process.env.NEXT_PUBLIC_APP_ENV === "production") {
-      return NextResponse.json({ error: "Service unavailable" }, { status: 503 })
+      return NextResponse.json({ error: "Service unavailable" }, { status: 503, headers })
     }
     return NextResponse.json({
       user: {
@@ -56,6 +63,6 @@ export async function GET(request: NextRequest) {
               : undefined,
         role: user.role,
       },
-    })
+    }, { headers })
   }
 }

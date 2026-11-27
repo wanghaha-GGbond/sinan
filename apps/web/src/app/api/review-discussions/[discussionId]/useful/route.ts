@@ -1,173 +1,87 @@
 import { NextRequest, NextResponse } from "next/server"
-import { and, eq, isNull, count } from "drizzle-orm"
+import { and, count, desc, eq, inArray, isNull, sql } from "drizzle-orm"
 import { z } from "zod"
 import { reviewDiscussions } from "@/db/schema/review-discussions"
 import { discussionUsefulVotes } from "@/db/schema/discussion-useful-votes"
+import { reviews } from "@/db/schema/reviews"
+import { users } from "@/db/schema/users"
 import { requireAuthUser } from "@/lib/server/auth"
+import { publicReviewCompanyCondition } from "@/lib/server/review-visibility"
+
+const bodySchema = z.object({ useful: z.boolean() }).strict()
+const headers = { "Cache-Control": "private, no-store" }
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ discussionId: string }> }
 ) {
   const { discussionId } = await params
+  if (!z.uuid().safeParse(discussionId).success) return NextResponse.json({ error: "Discussion not found" }, { status: 404, headers })
 
-  let body: Record<string, unknown>
-  try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
-  }
-
-  const parsed = z.object({ useful: z.boolean() }).strict().safeParse(body)
+  const parsed = bodySchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) {
-    return NextResponse.json({ error: "useful must be a boolean" }, { status: 400 })
+    return NextResponse.json({ error: "useful must be a boolean" }, { status: 400, headers })
   }
-  const useful = parsed.data.useful
+  const { useful } = parsed.data
 
   try {
+    const { userId, sessionVersion } = await requireAuthUser(request)
     const { db } = await import("@/db/client")
-
-    // Verify discussion exists and is public
-    const [discussion] = await db
-      .select({
-        id: reviewDiscussions.id,
-        status: reviewDiscussions.status,
-        usefulCount: reviewDiscussions.usefulCount,
-      })
-      .from(reviewDiscussions)
-      .where(
-        and(eq(reviewDiscussions.id, discussionId), isNull(reviewDiscussions.deletedAt))
-      )
-      .limit(1)
-
-    if (!discussion) {
-      return NextResponse.json({ error: "Discussion not found" }, { status: 404 })
-    }
-
-    if (!["visible", "limited_visible"].includes(discussion.status)) {
-      return NextResponse.json(
-        { error: "Only public discussions can be voted useful" },
-        { status: 403 }
-      )
-    }
-
-    // Require voter identity
-    const authUser = await requireAuthUser(request)
-
-    if (useful) {
-      // Check for any existing vote (active or soft-deleted)
-      const [existing] = await db
-        .select({
-          id: discussionUsefulVotes.id,
-          deletedAt: discussionUsefulVotes.deletedAt,
-        })
-        .from(discussionUsefulVotes)
-        .where(
-          and(
-            eq(discussionUsefulVotes.discussionId, discussionId),
-            eq(discussionUsefulVotes.userId, authUser.userId)
-          )
-        )
+    return await db.transaction(async (tx) => {
+      // Hold a shared account lock so an in-flight vote cannot outlive
+      // account deletion (or password reset) after the first auth check.
+      const [active] = await tx.select({ id: users.id }).from(users)
+        .where(and(eq(users.id, userId), eq(users.status, "active"), isNull(users.deletedAt),
+          eq(users.sessionVersion, sessionVersion ?? 0))).for("share").limit(1)
+      if (!active) return NextResponse.json({ error: "Authentication required" }, { status: 401, headers })
+      // Serialize vote mutations AND recounts on the same discussion row.
+      const [discussion] = await tx.select({ status: reviewDiscussions.status, visibleToPublic: reviewDiscussions.visibleToPublic })
+        .from(reviewDiscussions)
+        .innerJoin(reviews, and(eq(reviews.id, reviewDiscussions.reviewId), eq(reviews.companyId, reviewDiscussions.companyId)))
+        .where(and(
+          eq(reviewDiscussions.id, discussionId),
+          isNull(reviewDiscussions.deletedAt),
+          isNull(reviews.deletedAt),
+          inArray(reviews.status, ["visible", "limited_visible"]),
+          publicReviewCompanyCondition(),
+        ))
+        .for("update", { of: reviewDiscussions })
         .limit(1)
 
-      if (existing) {
-        if (existing.deletedAt !== null) {
-          // Reactivate soft-deleted vote
-          await db
-            .update(discussionUsefulVotes)
-            .set({ deletedAt: null, useful: true, updatedAt: new Date() })
+      if (!discussion) return NextResponse.json({ error: "Discussion not found" }, { status: 404, headers })
+      if (!discussion.visibleToPublic || !["visible", "limited_visible"].includes(discussion.status)) {
+        return NextResponse.json({ error: "Only public discussions can be voted useful" }, { status: 403, headers })
+      }
+
+      const now = new Date()
+      const ownVote = and(eq(discussionUsefulVotes.discussionId, discussionId), eq(discussionUsefulVotes.userId, userId))
+      if (useful) {
+        // Prefer the active row, otherwise reuse a removed vote rather than
+        // growing the ledger every time someone toggles the same button.
+        const [existing] = await tx.select({ id: discussionUsefulVotes.id, deletedAt: discussionUsefulVotes.deletedAt, useful: discussionUsefulVotes.useful })
+          .from(discussionUsefulVotes).where(ownVote)
+          .orderBy(sql`${discussionUsefulVotes.deletedAt} desc nulls first`, desc(discussionUsefulVotes.id)).limit(1)
+        if (!existing) {
+          await tx.insert(discussionUsefulVotes).values({ discussionId, userId, useful: true })
+        } else if (existing.deletedAt || !existing.useful) {
+          await tx.update(discussionUsefulVotes).set({ useful: true, deletedAt: null, updatedAt: now })
             .where(eq(discussionUsefulVotes.id, existing.id))
         }
-        // If already active, idempotent — still re-count below
       } else {
-        // Insert new vote. onConflictDoNothing handles concurrent inserts
-        // where another request already created a row between our SELECT and INSERT.
-        await db
-          .insert(discussionUsefulVotes)
-          .values({
-            discussionId,
-            userId: authUser.userId,
-            useful: true,
-          })
-          .onConflictDoNothing()
+        await tx.update(discussionUsefulVotes).set({ deletedAt: now, updatedAt: now })
+          .where(and(ownVote, isNull(discussionUsefulVotes.deletedAt)))
       }
 
-      // Re-count from DB after mutation — avoids race conditions on
-      // increment-based counting (two concurrent +1 would lose a count).
-      const [{ cnt }] = await db
-        .select({ cnt: count() })
-        .from(discussionUsefulVotes)
-        .where(
-          and(
-            eq(discussionUsefulVotes.discussionId, discussionId),
-            eq(discussionUsefulVotes.useful, true),
-            isNull(discussionUsefulVotes.deletedAt)
-          )
-        )
+      const [{ total }] = await tx.select({ total: count() }).from(discussionUsefulVotes)
+        .where(and(eq(discussionUsefulVotes.discussionId, discussionId), eq(discussionUsefulVotes.useful, true), isNull(discussionUsefulVotes.deletedAt)))
+      const usefulCount = Number(total)
+      await tx.update(reviewDiscussions).set({ usefulCount }).where(eq(reviewDiscussions.id, discussionId))
 
-      const newCount = Number(cnt ?? 0)
-      await db
-        .update(reviewDiscussions)
-        .set({ usefulCount: newCount })
-        .where(eq(reviewDiscussions.id, discussionId))
-
-      return NextResponse.json({
-        usefulCount: newCount,
-        isUsefulByCurrentUser: true,
-      })
-    } else {
-      // Remove vote (soft delete)
-      const [existingVote] = await db
-        .select({ id: discussionUsefulVotes.id })
-        .from(discussionUsefulVotes)
-        .where(
-          and(
-            eq(discussionUsefulVotes.discussionId, discussionId),
-            eq(discussionUsefulVotes.userId, authUser.userId),
-            isNull(discussionUsefulVotes.deletedAt)
-          )
-        )
-        .limit(1)
-
-      if (existingVote) {
-        await db
-          .update(discussionUsefulVotes)
-          .set({ deletedAt: new Date(), updatedAt: new Date() })
-          .where(eq(discussionUsefulVotes.id, existingVote.id))
-
-        // Re-count for consistency
-        const [{ cnt }] = await db
-          .select({ cnt: count() })
-          .from(discussionUsefulVotes)
-          .where(
-            and(
-              eq(discussionUsefulVotes.discussionId, discussionId),
-              eq(discussionUsefulVotes.useful, true),
-              isNull(discussionUsefulVotes.deletedAt)
-            )
-          )
-
-        const newCount = Number(cnt ?? 0)
-        await db
-          .update(reviewDiscussions)
-          .set({ usefulCount: newCount })
-          .where(eq(reviewDiscussions.id, discussionId))
-
-        return NextResponse.json({
-          usefulCount: newCount,
-          isUsefulByCurrentUser: false,
-        })
-      }
-
-      // No vote to remove — idempotent
-      return NextResponse.json({
-        usefulCount: discussion.usefulCount,
-        isUsefulByCurrentUser: false,
-      })
-    }
+      return NextResponse.json({ usefulCount, isUsefulByCurrentUser: useful }, { headers })
+    })
   } catch (error) {
     if (error instanceof Response) return error
-    console.error("POST /api/review-discussions/:discussionId/useful failed:", error)
-    return NextResponse.json({ error: "Database not configured" }, { status: 503 })
+    console.error(JSON.stringify({ event: "discussion_useful_failed", release: process.env.APP_RELEASE }))
+    return NextResponse.json({ error: "讨论投票暂时不可用，请重试" }, { status: 503, headers })
   }
 }

@@ -1,22 +1,35 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 import { WebSurface } from "@/components/ui/web-surface"
+import { SessionUnavailable } from "@/components/common/session-unavailable"
 import { useAuth } from "@/lib/auth-context"
 import { withNext } from "@/lib/navigation"
 
 import { DeleteAccountForm } from "./delete-account-form"
 
 export function AccountSettingsClient() {
-  const { user, loading } = useAuth()
+  const { user, loading, sessionUnavailable, clearSession } = useAuth()
   const router = useRouter()
+  const leavingAfterDeletion = useRef(false)
 
   useEffect(() => {
-    if (!loading && !user) router.replace(withNext("/login", "/settings/account"))
-  }, [loading, router, user])
+    if (!leavingAfterDeletion.current && !loading && !sessionUnavailable && !user) {
+      router.replace(withNext("/login", "/settings/account"))
+    }
+  }, [loading, router, sessionUnavailable, user])
+
+  function onDeleted() {
+    leavingAfterDeletion.current = true
+    clearSession()
+    router.replace("/")
+    router.refresh()
+  }
+
+  if (!loading && sessionUnavailable && !user) return <SessionUnavailable />
 
   if (loading || !user) {
     return (
@@ -42,7 +55,7 @@ export function AccountSettingsClient() {
             私聊和个人功能内容会删除。为维护社区审核和争议处理，已审核公开内容可能保留，但会解除账号与匿名画像关联。依法需要留存的最小安全与审计记录会在目的完成后清理。
           </p>
         </div>
-        <DeleteAccountForm />
+        <DeleteAccountForm onDeleted={onDeleted} />
       </WebSurface>
     </section>
   )

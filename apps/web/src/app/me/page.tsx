@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import {
   Award,
   BadgeCheck,
@@ -22,11 +22,13 @@ import {
 import { WebButton } from "@/components/ui/web-button"
 import { WebSurface } from "@/components/ui/web-surface"
 import { WebEmptyState } from "@/components/ui/web-empty-state"
+import { SessionUnavailable } from "@/components/common/session-unavailable"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/lib/auth-context"
 import { getFavoritedCompanyIds } from "@/lib/favorites-storage"
 import { getMeDashboard } from "@/lib/api/me"
+import type { MyReview, MyReviewPage } from "@/lib/my-reviews"
 import { IdentityCard, type IdentityCardData } from "@/components/identity/identity-card"
 import { MyWorkRecords, useWorkRecordsRequested } from "@/components/pulse/my-work-records"
 import { dialogueEnabled } from "@/lib/dialogue-feature"
@@ -58,18 +60,6 @@ type Badge = {
   unlocked: boolean
   progress?: number
   target?: number
-}
-
-type MyReview = {
-  id: string
-  companyId: string
-  companyName: string
-  title: string
-  score: number
-  shortComment: string
-  helpful: number
-  commentCount: number
-  createdAt: string
 }
 
 type FavoriteCompany = {
@@ -120,6 +110,7 @@ type DashboardData = {
   dailyTasks: DailyTask[]
   badges: Badge[]
   myReviews: MyReview[]
+  myReviewsNextCursor?: string | null
   favoriteCompanies: FavoriteCompany[]
   verifications: VerificationSummary[]
   invites: InviteStats
@@ -131,8 +122,9 @@ const DEFAULT_BADGES: Badge[] = []
 
 export default function MePage() {
   const workRecordsRequested = useWorkRecordsRequested()
-  const { user: authUser, loading: authLoading } = useAuth()
-  const [dashboard, setDashboard] = useState<DashboardData | null>(null)
+  const { user: authUser, loading: authLoading, sessionUnavailable } = useAuth()
+  const [snapshot, setSnapshot] = useState<{ owner: string; data: DashboardData } | null>(null)
+  const dashboard = snapshot && snapshot.owner === authUser?.id ? snapshot.data : null
   const [dashboardLoading, setDashboardLoading] = useState(true)
   const [dashboardError, setDashboardError] = useState<string | null>(null)
   const [hydrated, setHydrated] = useState(false)
@@ -155,6 +147,7 @@ export default function MePage() {
       return
     }
 
+    const owner = authUser.id
     let cancelled = false
     setDashboardLoading(true)
     setDashboardError(null)
@@ -170,7 +163,7 @@ export default function MePage() {
       }
 
       if (result.data) {
-        setDashboard(result.data)
+        setSnapshot({ owner, data: result.data })
       }
       setDashboardLoading(false)
     }
@@ -178,6 +171,8 @@ export default function MePage() {
     load()
     return () => { cancelled = true }
   }, [authUser, authLoading])
+
+  if (!authLoading && sessionUnavailable && !authUser) return <SessionUnavailable />
 
   // ── Not logged in ──────────────────────────────────────────────────────
   if (!authLoading && !authUser) {
@@ -274,10 +269,12 @@ export default function MePage() {
 
   return (
     <MeContent
+      key={authUser?.id}
       displayName={displayName}
       trustLevel={trustLevel}
       dailyTasks={dailyTasks}
       myReviews={myReviews}
+      myReviewsNextCursor={dashboard.myReviewsNextCursor ?? null}
       badges={badges}
       favoriteCompanies={favoriteCompanies}
       favoriteSet={favoriteSet}
@@ -308,6 +305,7 @@ type MeContentProps = {
   trustLevel: number
   dailyTasks: DailyTask[]
   myReviews: MyReview[]
+  myReviewsNextCursor: string | null
   badges: Badge[]
   favoriteCompanies: FavoriteCompany[]
   favoriteSet: Set<string>
@@ -337,6 +335,7 @@ function MeContent({
   trustLevel,
   dailyTasks,
   myReviews,
+  myReviewsNextCursor,
   badges,
   favoriteCompanies,
   favoriteSet,
@@ -351,6 +350,36 @@ function MeContent({
   const [badgesOpen, setBadgesOpen] = useState(false)
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
   const [cardData, setCardData] = useState(identity)
+  const [olderReviews, setOlderReviews] = useState<MyReview[]>([])
+  const [nextCursor, setNextCursor] = useState(myReviewsNextCursor)
+  const [loadingOlder, setLoadingOlder] = useState(false)
+  const [olderError, setOlderError] = useState(false)
+  const olderRequest = useRef(false)
+
+  async function loadOlderReviews() {
+    if (!nextCursor || olderRequest.current) return
+    olderRequest.current = true
+    setLoadingOlder(true)
+    setOlderError(false)
+    try {
+      const response = await fetch(`/api/me/reviews?cursor=${encodeURIComponent(nextCursor)}`, { cache: "no-store" })
+      if (!response.ok) throw new Error("Page unavailable")
+      const page = await response.json() as MyReviewPage
+      if (!Array.isArray(page.reviews) || (page.nextCursor !== null && typeof page.nextCursor !== "string") || page.nextCursor === nextCursor) {
+        throw new Error("Invalid review page")
+      }
+      setOlderReviews(previous => {
+        const seen = new Set([...myReviews, ...previous].map(review => review.id))
+        return [...previous, ...page.reviews.filter(review => !seen.has(review.id))]
+      })
+      setNextCursor(page.nextCursor)
+    } catch {
+      setOlderError(true)
+    } finally {
+      olderRequest.current = false
+      setLoadingOlder(false)
+    }
+  }
 
   function copyCode(code: string) {
     const link = `${typeof window !== "undefined" ? window.location.origin : ""}/invite/${code}`
@@ -597,7 +626,7 @@ function MeContent({
           />
         ) : (
           <div className="grid gap-3" data-testid="me-my-reviews">
-            {myReviews.map((review) => (
+            {[...myReviews, ...olderReviews].map((review) => (
               <Link
                 key={review.id}
                 href={`/company/${review.companyId}`}
@@ -618,6 +647,12 @@ function MeContent({
                 </p>
               </Link>
             ))}
+            {olderError ? <p role="alert" className="text-sm text-destructive">更早的评价暂时无法加载。</p> : null}
+            {nextCursor ? (
+              <WebButton variant="secondary" disabled={loadingOlder} onClick={() => void loadOlderReviews()}>
+                {loadingOlder ? "正在加载…" : olderError ? "重试加载更早评价" : "加载更早评价"}
+              </WebButton>
+            ) : null}
           </div>
         )}
       </section>

@@ -1,4 +1,4 @@
-import { and, count, eq, inArray, or } from "drizzle-orm"
+import { and, asc, count, eq, inArray, isNull, or, sql } from "drizzle-orm"
 import { NextRequest, NextResponse } from "next/server"
 
 import { users } from "@/db/schema/users"
@@ -78,11 +78,27 @@ export async function DELETE(request: NextRequest) {
         .where(eq(anonymousProfiles.userId, authUser.userId))
       const profileIds = profileRows.map((row) => row.id)
 
+      // Vote writers lock the account before the discussion. Take discussion
+      // locks in stable order before deleting votes or anonymizing authors.
+      const ownVote = or(eq(discussionUsefulVotes.userId, authUser.userId),
+        profileIds.length ? inArray(discussionUsefulVotes.anonymousProfileId, profileIds) : undefined)
+      const affected = await tx.select({ id: reviewDiscussions.id }).from(reviewDiscussions)
+        .where(inArray(reviewDiscussions.id, tx.select({ id: discussionUsefulVotes.discussionId })
+          .from(discussionUsefulVotes).where(and(ownVote, isNull(discussionUsefulVotes.deletedAt)))))
+        .orderBy(asc(reviewDiscussions.id)).for("update")
+      await tx.delete(discussionUsefulVotes).where(ownVote)
+      if (affected.length) {
+        await tx.update(reviewDiscussions).set({
+          usefulCount: sql`(select count(*) from ${discussionUsefulVotes}
+            where ${discussionUsefulVotes.discussionId} = ${reviewDiscussions.id}
+              and ${discussionUsefulVotes.useful} and ${discussionUsefulVotes.deletedAt} is null)`,
+        }).where(inArray(reviewDiscussions.id, affected.map(row => row.id)))
+      }
+
       if (profileIds.length > 0) {
         await tx.update(reviews).set({ anonymousProfileId: null }).where(inArray(reviews.anonymousProfileId, profileIds))
         await tx.update(reviewDiscussions).set({ anonymousProfileId: null }).where(inArray(reviewDiscussions.anonymousProfileId, profileIds))
         await tx.update(reviewReports).set({ reporterAnonymousProfileId: null }).where(inArray(reviewReports.reporterAnonymousProfileId, profileIds))
-        await tx.delete(discussionUsefulVotes).where(inArray(discussionUsefulVotes.anonymousProfileId, profileIds))
         await tx.update(promiseRecords).set({ anonymousProfileId: null }).where(inArray(promiseRecords.anonymousProfileId, profileIds))
         await tx.update(companyCorrections).set({ submitterAnonymousProfileId: null }).where(inArray(companyCorrections.submitterAnonymousProfileId, profileIds))
         await tx.update(companyAppeals).set({ submitterAnonymousProfileId: null }).where(inArray(companyAppeals.submitterAnonymousProfileId, profileIds))
@@ -94,7 +110,6 @@ export async function DELETE(request: NextRequest) {
       await tx.update(reviews).set({ authorUserId: null, authorFingerprintHash: null }).where(eq(reviews.authorUserId, authUser.userId))
       await tx.update(reviewDiscussions).set({ authorUserId: null, authorFingerprintHash: null }).where(eq(reviewDiscussions.authorUserId, authUser.userId))
       await tx.update(reviewReports).set({ reporterUserId: null, reporterFingerprintHash: null }).where(eq(reviewReports.reporterUserId, authUser.userId))
-      await tx.delete(discussionUsefulVotes).where(eq(discussionUsefulVotes.userId, authUser.userId))
       const reviewVoteRows = await tx
         .select({ reviewId: reviewUsefulVotes.reviewId })
         .from(reviewUsefulVotes)
@@ -169,13 +184,11 @@ export async function DELETE(request: NextRequest) {
       return row
     })
 
-    if (!deletedUser) {
-      await clearAuthCookie()
-      return NextResponse.json({ error: "Account not found" }, { status: 404 })
-    }
-
-    await clearAuthCookie()
-    return NextResponse.json({ success: true })
+    const response = deletedUser
+      ? NextResponse.json({ success: true })
+      : NextResponse.json({ error: "Account not found" }, { status: 404 })
+    await clearAuthCookie(response)
+    return response
   } catch (error) {
     console.error("DELETE /api/me/account failed:", error)
     return NextResponse.json(

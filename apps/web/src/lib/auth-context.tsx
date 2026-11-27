@@ -26,11 +26,13 @@ export type AuthUser = {
 type AuthState = {
   user: AuthUser | null
   loading: boolean
+  sessionUnavailable: boolean
   loggingOut: boolean
   login: (params: LoginParams) => Promise<{ error?: string }>
   register: (params: RegisterParams) => Promise<{ error?: string }>
   logout: () => Promise<void>
   refresh: () => Promise<void>
+  clearSession: () => void
 }
 
 export type LoginParams = {
@@ -54,24 +56,37 @@ const AuthContext = createContext<AuthState | null>(null)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
+  const [sessionUnavailable, setSessionUnavailable] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
   const sessionRevision = useRef(0)
   const logoutLock = useRef(false)
   const queryClient = useQueryClient()
   const router = useRouter()
 
+  // Only call after a confirmed server-side sign-out or account deletion.
+  const clearSession = useCallback(() => {
+    ++sessionRevision.current
+    void queryClient.cancelQueries()
+    queryClient.clear()
+    setUser(null)
+    setSessionUnavailable(false)
+    setLoading(false)
+  }, [queryClient])
+
   const refresh = useCallback(async () => {
     const revision = ++sessionRevision.current
+    setLoading(true)
     try {
       const res = await fetch("/api/auth/me", { cache: "no-store" })
-      if (!res.ok) {
-        if (revision === sessionRevision.current) setUser(null)
-        return
-      }
+      if (!res.ok) throw new Error("Session lookup failed")
       const data = await res.json()
-      if (revision === sessionRevision.current) setUser(data.user ?? null)
+      if (data?.user !== null && typeof data?.user?.id !== "string") throw new Error("Invalid session response")
+      if (revision === sessionRevision.current) {
+        setUser(data.user)
+        setSessionUnavailable(false)
+      }
     } catch {
-      if (revision === sessionRevision.current) setUser(null)
+      if (revision === sessionRevision.current) setSessionUnavailable(true)
     } finally {
       if (revision === sessionRevision.current) setLoading(false)
     }
@@ -101,6 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await queryClient.cancelQueries()
       queryClient.clear()
       setUser(data.user)
+      setSessionUnavailable(false)
       return {}
     } catch {
       return { error: "网络错误，请稍后重试" }
@@ -124,6 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await queryClient.cancelQueries()
       queryClient.clear()
       setUser(data.user)
+      setSessionUnavailable(false)
       return {}
     } catch {
       return { error: "网络错误，请稍后重试" }
@@ -140,10 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await fetch("/api/auth/logout", { method: "POST" })
       if (!response.ok || (await response.json()).success !== true) throw new Error("Logout not confirmed")
-      ++sessionRevision.current
-      await queryClient.cancelQueries()
-      queryClient.clear()
-      setUser(null)
+      clearSession()
       router.replace("/")
       router.refresh()
     } catch {
@@ -154,11 +168,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoggingOut(false)
       setLoading(false)
     }
-  }, [router, queryClient])
+  }, [router, clearSession])
 
   const value = useMemo<AuthState>(
-    () => ({ user, loading, loggingOut, login, register, logout, refresh }),
-    [user, loading, loggingOut, login, register, logout, refresh]
+    () => ({ user, loading, sessionUnavailable, loggingOut, login, register, logout, refresh, clearSession }),
+    [user, loading, sessionUnavailable, loggingOut, login, register, logout, refresh, clearSession]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

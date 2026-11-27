@@ -1,4 +1,5 @@
 import type { ApiResponse } from './types'
+import type { MyReview } from '@/lib/my-reviews'
 
 export async function getMeDashboard(): Promise<ApiResponse<{
   user: {
@@ -18,13 +19,14 @@ export async function getMeDashboard(): Promise<ApiResponse<{
   stats: { directionPoints: number; nextLevelPoints: number; streakDays: number; helpedCount: number };
   dailyTasks: Array<{ id: string; title: string; rewardPoints: number; progress: number; target: number; completed: boolean; href?: string; hint?: string }>;
   badges: Array<{ id: string; name: string; description: string; unlocked: boolean; progress?: number; target?: number }>;
-  myReviews: Array<{ id: string; companyId: string; companyName: string; title: string; score: number; shortComment: string; helpful: number; commentCount: number; createdAt: string }>;
+  myReviews: MyReview[];
+  myReviewsNextCursor?: string | null;
   favoriteCompanies: Array<{ companyId: string; companyName: string; createdAt: string }>;
   verifications: Array<{ id: string; companyName: string; proofType: string; status: string; createdAt: string }>;
   invites: { total: number; used: number; unused: Array<{ id: string; code: string; status: string; createdAt: string }> };
 }>> {
   try {
-    const res = await fetch('/api/me', { credentials: 'include' })
+    const res = await fetch('/api/me', { credentials: 'include', cache: 'no-store' })
     if (!res.ok) {
       return { data: null, loading: false, error: `HTTP ${res.status}` }
     }
